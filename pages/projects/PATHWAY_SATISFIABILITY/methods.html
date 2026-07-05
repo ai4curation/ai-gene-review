@@ -365,21 +365,242 @@
 
     <div class="content">
         <h1 id="methods-reproduction">Methods &amp; reproduction</h1>
-<p>Companion to <a href="../PATHWAY_SATISFIABILITY.html">Pathway satisfiability</a>. This page holds the<br />
-model, the engine internals, and the commands to reproduce every result. Nothing here is<br />
-needed to read the main page — start there for the bottom line.</p>
+<p>Companion to <a href="../PATHWAY_SATISFIABILITY.html">Pathway satisfiability</a> and<br />
+<a href="background.html">Background: pathway hole filling</a>. This page holds the actual model, the engine<br />
+API, the module-YAML shape, the oracle interface, and the commands to reproduce every result.<br />
+Nothing here is needed to read the main page — start there for the bottom line.</p>
+<p>The whole thing is ~330 lines of pure-logic Python (<code>module_logic.py</code>, doctested and mypy-clean)<br />
+plus a handful of per-context oracle/resolver scripts. The logic core carries <strong>no biological<br />
+data</strong>; only the oracle changes between contexts. That separation is the whole design.</p>
 <h2 id="the-model">The model</h2>
-<p>A curation <strong>module</strong> (<code>modules/*.yaml</code>, the <code>ModuleReview</code> schema) is treated as a monotone<br />
+<p>A curation <strong>module</strong> (<code>modules/*.yaml</code>, the <code>ModuleReview</code> schema) is compiled into a monotone<br />
 boolean circuit and evaluated against a <em>context oracle</em>:</p>
 <ul>
-<li>a module's <strong>parts / annotons are AND</strong>; its <strong>variant_sets are OR</strong>;</li>
-<li>a leaf <strong>annoton (a step) is an atom</strong> whose truth value comes from the oracle;</li>
-<li>the engine enumerates <strong>routes</strong> (one branch per variant set), tests <strong>satisfiability</strong><br />
-  in a context, finds the <strong>gate</strong> atoms required by every route, and reports the<br />
-<strong>unsatisfied steps</strong> (gaps).</li>
+<li>a node's <strong><code>parts</code> and <code>annotons</code> are conjunctive</strong> → <code>And</code>;</li>
+<li>a <strong><code>variant_sets</code> entry is disjunctive</strong> (at-least-one for satisfiability) → <code>Or</code>;</li>
+<li>an <strong><code>optional</code> part</strong> compiles to <code>Or(sub, empty)</code>, i.e. always satisfiable;</li>
+<li>a leaf <strong>annoton (a step) is an <code>Atom</code></strong> whose truth value is supplied externally by a<br />
+  per-context <strong>predicate</strong> (e.g. "is this participant gene expressed in this tissue / cell-zone?"<br />
+  or "is this step's ortholog encoded in this genome?").</li>
 </ul>
-<p>The logic core carries no biological data; only the oracle changes between contexts. This is<br />
-deliberately the eukaryotic analogue of GapMind's prokaryotic step-finding.</p>
+<h3 id="data-model-srcai_gene_reviewmodule_logicpy">Data model (<code>src/ai_gene_review/module_logic.py</code>)</h3>
+<div class="codehilite"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Atom</span><span class="p">:</span>                 <span class="c1"># a leaf step: a participant gene, truth value from an oracle</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">gene_symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">];</span> <span class="n">uniprot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">And</span><span class="p">:</span>                  <span class="c1"># satisfied iff every child is satisfied</span>
+    <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Circuit&quot;</span><span class="p">]</span>
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Or</span><span class="p">:</span>                   <span class="c1"># disjunction over variant branches (&gt;=1 for satisfiability)</span>
+    <span class="n">set_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">selection</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Circuit&quot;</span><span class="p">]</span>
+
+<span class="n">Circuit</span>   <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Atom</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">]</span>
+<span class="n">Predicate</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Atom</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>     <span class="c1"># the oracle: does this atom hold?</span>
+</code></pre></div>
+
+<h3 id="engine-api">Engine API</h3>
+<p>Everything below is a top-level function in <code>module_logic.py</code>; each is doctested.</p>
+<table>
+<thead>
+<tr>
+<th>function</th>
+<th>signature</th>
+<th>what it returns</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>compile_module</code></td>
+<td><code>(doc: dict) -&gt; And</code></td>
+<td>compile a loaded <code>ModuleReview</code> doc's <code>module</code> into a circuit</td>
+</tr>
+<tr>
+<td><code>compile_module_file</code></td>
+<td><code>(path) -&gt; And</code></td>
+<td>load a <code>ModuleReview</code> YAML and compile it</td>
+</tr>
+<tr>
+<td><code>enumerate_routes</code></td>
+<td><code>(circuit) -&gt; list[list[Atom]]</code></td>
+<td>every route (one branch per <code>Or</code>); Cartesian over OR-nodes</td>
+</tr>
+<tr>
+<td><code>is_satisfied</code></td>
+<td><code>(circuit, holds: Predicate) -&gt; bool</code></td>
+<td>evaluate the circuit under a per-atom predicate</td>
+</tr>
+<tr>
+<td><code>active_routes</code></td>
+<td><code>(circuit, holds) -&gt; list[list[Atom]]</code></td>
+<td>the routes whose every atom holds</td>
+</tr>
+<tr>
+<td><code>core_atoms</code></td>
+<td><code>(circuit) -&gt; list[Atom]</code></td>
+<td>the <strong>AND-core</strong>: atoms required by <em>every</em> route (gate candidates)</td>
+</tr>
+<tr>
+<td><code>unsatisfied_steps</code></td>
+<td><code>(circuit, holds) -&gt; list[Circuit]</code></td>
+<td>the <strong>gaps</strong>: top-level steps with no satisfiable variant</td>
+</tr>
+<tr>
+<td><code>abduce</code></td>
+<td><code>(circuit, holds, asserted_active: bool) -&gt; Abduction</code></td>
+<td>reconcile satisfiability with an independent activity claim</td>
+</tr>
+</tbody>
+</table>
+<p><code>enumerate_routes</code> grows multiplicatively (route count = product of branch counts across OR<br />
+nodes); curated modules are small (≤ tens of routes), and satisfiability/gap queries never<br />
+materialise all routes, so they are the primitives to reach for at scale.</p>
+<h3 id="worked-example-the-module-docstring-doctest-verbatim">Worked example (the module docstring doctest, verbatim)</h3>
+<p>A tiny pathway: one required entry step, then a two-way isozyme choice.</p>
+<div class="codehilite"><pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="n">doc</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;module&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;parts&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="o">...</span>   <span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;entry&quot;</span><span class="p">,</span> <span class="s2">&quot;annotons&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="o">...</span>      <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;a_act&quot;</span><span class="p">,</span> <span class="s2">&quot;participant&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gene&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;preferred_term&quot;</span><span class="p">:</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span>
+<span class="o">...</span>         <span class="s2">&quot;term&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;UniProtKB:P1&quot;</span><span class="p">}}}}]}},</span>
+<span class="o">...</span>   <span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;node&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;iso&quot;</span><span class="p">,</span> <span class="s2">&quot;variant_sets&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="o">...</span>      <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;vs&quot;</span><span class="p">,</span> <span class="s2">&quot;selection&quot;</span><span class="p">:</span> <span class="s2">&quot;ONE_OR_MORE&quot;</span><span class="p">,</span> <span class="s2">&quot;variants&quot;</span><span class="p">:</span> <span class="p">[</span>
+<span class="o">...</span>         <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;annotons&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;b_act&quot;</span><span class="p">,</span> <span class="s2">&quot;participant&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gene&quot;</span><span class="p">:</span>
+<span class="o">...</span>            <span class="p">{</span><span class="s2">&quot;preferred_term&quot;</span><span class="p">:</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;term&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;UniProtKB:P2&quot;</span><span class="p">}}}}]},</span>
+<span class="o">...</span>         <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="s2">&quot;annotons&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;c_act&quot;</span><span class="p">,</span> <span class="s2">&quot;participant&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gene&quot;</span><span class="p">:</span>
+<span class="o">...</span>            <span class="p">{</span><span class="s2">&quot;preferred_term&quot;</span><span class="p">:</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;term&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;UniProtKB:P3&quot;</span><span class="p">}}}}]}]}]}},</span>
+<span class="o">...</span> <span class="p">]}}</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">circuit</span> <span class="o">=</span> <span class="n">compile_module</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[[</span><span class="n">a</span><span class="o">.</span><span class="n">gene_symbol</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">r</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">enumerate_routes</span><span class="p">(</span><span class="n">circuit</span><span class="p">)]</span>
+<span class="p">[[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">]]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">gene_symbol</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">core_atoms</span><span class="p">(</span><span class="n">circuit</span><span class="p">)]</span>          <span class="c1"># A is on every route -&gt; the gate</span>
+<span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">is_satisfied</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">atom</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">gene_symbol</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">})</span>
+<span class="kc">True</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">is_satisfied</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">atom</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">gene_symbol</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">})</span>   <span class="c1"># missing A -&gt; gated</span>
+<span class="kc">False</span>
+</code></pre></div>
+
+<p><code>core_atoms</code> returning <code>['A']</code> is the whole idea in miniature: the entry step is on every route,<br />
+so its absence gates the module regardless of which isozyme branch is chosen — the same way<br />
+<code>G6PC1·SLC37A4</code> gates real gluconeogenesis in every non-gluconeogenic tissue.</p>
+<h2 id="the-module-yaml-shape">The module YAML shape</h2>
+<p>A step is a <code>ModuleNode</code> with <code>annotons</code> (its genes) and/or <code>variant_sets</code> (isozyme choices).<br />
+Trimmed from <code>modules/gluconeogenesis_human.yaml</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">module</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gluconeogenesis_human</span>
+<span class="w">  </span><span class="nt">parts</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">                      </span><span class="c1"># a required step -&gt; AND conjunct</span>
+<span class="w">      </span><span class="nt">node</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pyruvate_carboxylase_step</span>
+<span class="w">        </span><span class="nt">annotons</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PC_activity</span><span class="w">          </span><span class="c1"># -&gt; Atom(gene_symbol=&quot;PC&quot;, uniprot=&quot;P11498&quot;)</span>
+<span class="w">            </span><span class="nt">participant</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">gene</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">preferred_term</span><span class="p">:</span><span class="w"> </span><span class="nv">PC (pyruvate carboxylase)</span><span class="p p-Indicator">,</span>
+<span class="nt">                     term</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">UniProtKB</span><span class="p p-Indicator">:</span><span class="nv">P11498</span><span class="p p-Indicator">}}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">order</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w">                      </span><span class="c1"># the terminal, tissue-restricting step</span>
+<span class="w">      </span><span class="nt">node</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">glucose_release_step</span>
+<span class="w">        </span><span class="nt">variant_sets</span><span class="p">:</span><span class="w">               </span><span class="c1"># -&gt; Or(...) but grounded to the gluconeogenic isozyme</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">g6pc_catalytic</span>
+<span class="w">            </span><span class="nt">selection</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ONE_OR_MORE</span>
+<span class="w">            </span><span class="nt">variants</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="nv">G6PC1</span><span class="p p-Indicator">,</span><span class="nt"> annotons</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">... G6PC1 ...</span><span class="w"> </span><span class="p p-Indicator">]}</span><span class="w">   </span><span class="c1"># G6PC2/G6PC3 = paralog trap, excluded</span>
+</code></pre></div>
+
+<p><code>gene_symbol</code> is the leading token of <code>preferred_term</code> (<code>"PC (pyruvate carboxylase)"</code> → <code>PC</code>);<br />
+<code>uniprot</code> is the bare accession from <code>term.id</code>. The point of grounding the terminal step to<br />
+<code>G6PC1</code> specifically (not "any glucose-6-phosphatase") is exactly the paralog-overannotation<br />
+caution: the near-ubiquitous <code>G6PC3</code> must not satisfy the gate.</p>
+<h2 id="the-oracle-interface">The oracle interface</h2>
+<p>An oracle is just a <code>Predicate = Callable[[Atom], bool]</code>. Each resolver builds one from a<br />
+cached data matrix and hands it to <code>is_satisfied</code> / <code>unsatisfied_steps</code> / <code>abduce</code>:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># resolve_context.py, in essence: a GTEx tissue column becomes a predicate</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">load_gtex_matrix</span><span class="p">()</span>                          <span class="c1"># gene x tissue median TPM (cached TSV)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">holds</span><span class="p">(</span><span class="n">atom</span><span class="p">,</span> <span class="n">tissue</span><span class="o">=</span><span class="n">tissue</span><span class="p">,</span> <span class="n">thr</span><span class="o">=</span><span class="n">threshold</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">matrix</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">atom</span><span class="o">.</span><span class="n">gene_symbol</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tissue</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">thr</span>
+<span class="n">satisfiable</span> <span class="o">=</span> <span class="n">is_satisfied</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">holds</span><span class="p">)</span>
+<span class="n">gaps</span>        <span class="o">=</span> <span class="n">unsatisfied_steps</span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span> <span class="n">holds</span><span class="p">)</span>      <span class="c1"># which step failed, in this tissue</span>
+</code></pre></div>
+
+<p>Four oracles, one engine — only the predicate's data source changes:</p>
+<table>
+<thead>
+<tr>
+<th>oracle</th>
+<th>file</th>
+<th>atom truth =</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GTEx bulk tissue</td>
+<td><code>gtex_oracle.py</code></td>
+<td>median TPM ≥ threshold in the tissue</td>
+</tr>
+<tr>
+<td>liver zonation</td>
+<td><code>zonation_oracle.py</code></td>
+<td>Halpern 2017 layer profile ≥ relative threshold</td>
+</tr>
+<tr>
+<td>substrate entry</td>
+<td>(GTEx, substrate module)</td>
+<td>precursor-route genes expressed</td>
+</tr>
+<tr>
+<td>genome presence</td>
+<td><code>kegg_oracle.py</code></td>
+<td>step's KO encoded in the genome (GapMind-style)</td>
+</tr>
+</tbody>
+</table>
+<p><code>gtex_oracle.py</code> is a real GTEx v8 API client (resolves symbol → versioned GENCODE id,<br />
+alias-aware e.g. <code>G6PC1</code>→<code>G6PC</code>; caches a gene×tissue TSV) — it does not fabricate values.</p>
+<h2 id="abduction-a-gap-is-a-hypothesis">Abduction: a gap is a hypothesis</h2>
+<p><code>abduce(circuit, holds, asserted_active)</code> crosses satisfiability with an <strong>independent</strong> activity<br />
+claim (a growth phenotype, a documented tissue function) and returns an <code>Abduction</code> with one of<br />
+four <code>Classification</code> values:</p>
+<table>
+<thead>
+<tr>
+<th>classification</th>
+<th>satisfiable?</th>
+<th>asserted active?</th>
+<th>meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CONSISTENT_ACTIVE</code></td>
+<td>yes</td>
+<td>yes</td>
+<td>pathway reconstructable &amp; known to run</td>
+</tr>
+<tr>
+<td><code>CONSISTENT_INACTIVE</code></td>
+<td>no</td>
+<td>no</td>
+<td>gap correctly predicts a known absence (e.g. auxotrophy)</td>
+</tr>
+<tr>
+<td><code>ABDUCTION_TARGET</code></td>
+<td>no</td>
+<td><strong>yes</strong></td>
+<td><strong>runs but a step has no candidate → a reviewable lead</strong></td>
+</tr>
+<tr>
+<td><code>OVERPREDICTION</code></td>
+<td>yes</td>
+<td>no</td>
+<td>encoded yet not realised (regulation off, or the claim is wrong)</td>
+</tr>
+</tbody>
+</table>
+<p>For an <code>ABDUCTION_TARGET</code> the engine attaches <code>gap_candidates</code> (the absent genes per gap step)<br />
+and a fixed <code>GAP_HYPOTHESES</code> set: non-orthologous/unannotated enzyme · unmodelled alternative<br />
+route · <strong>not cell-autonomous</strong> (intermediate supplied by another cell/organ — the metazoan-only<br />
+explanation) · the activity assertion itself is wrong. The activity column is independent of the<br />
+oracle, so a scored gap is a genuine prediction, not a circular restatement.</p>
 <h2 id="architecture">Architecture</h2>
 <div class="mermaid">
 flowchart LR
@@ -395,31 +616,47 @@ flowchart LR
   A --> H[reviewable gap hypothesis]
 </div>
 
-<p>The engine lives at <code>src/ai_gene_review/module_logic.py</code> (frozen <code>Atom</code>; <code>compile_module</code>,<br />
-<code>enumerate_routes</code>, <code>is_satisfied</code>, <code>core_atoms</code>, <code>unsatisfied_steps</code>, <code>abduce</code>; doctested,<br />
-mypy-clean) with <code>tests/test_module_logic.py</code>. The oracles and per-context resolvers are in<br />
-<code>modules/experimental/gluconeogenesis-context/</code> (see its <code>RESULTS.md</code> for full output).</p>
 <h2 id="reproduce">Reproduce</h2>
 <div class="codehilite"><pre><span></span><code><span class="c1"># engine + tests</span>
-uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/test_module_logic.py<span class="w"> </span>-q
-uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>--doctest-modules<span class="w"> </span>src/ai_gene_review/module_logic.py
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>--doctest-modules<span class="w"> </span>src/ai_gene_review/module_logic.py<span class="w">   </span><span class="c1"># logic doctests</span>
+uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>tests/test_module_logic.py<span class="w"> </span>-q<span class="w">                          </span><span class="c1"># engine unit tests</span>
+
+<span class="c1"># routes + gate for a module, ad hoc</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from ai_gene_review.module_logic import compile_module_file, enumerate_routes, core_atoms; \</span>
+<span class="s2">c=compile_module_file(&#39;modules/gluconeogenesis_human.yaml&#39;); \</span>
+<span class="s2">print(len(enumerate_routes(c)), &#39;routes; gate&#39;, [a.gene_symbol for a in core_atoms(c)])&quot;</span>
 
 <span class="c1"># per-context resolvers (from modules/experimental/gluconeogenesis-context/)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_context.py<span class="w">       </span><span class="c1"># between organs (GTEx)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_zonation.py<span class="w">      </span><span class="c1"># within liver (Halpern zonation)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_substrates.py<span class="w">    </span><span class="c1"># which precursor per tissue</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_genomes.py<span class="w">       </span><span class="c1"># methionine across genomes (KEGG)</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_abduction.py<span class="w">     </span><span class="c1"># microbial gaps vs phenotype → leads / auxotrophy</span>
-uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_eukaryotic_abduction.py<span class="w">   </span><span class="c1"># tissue gaps vs function (ketolysis, gluconeogenesis)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>gtex_oracle.py<span class="w">                     </span><span class="c1"># refresh GTEx v8 cache</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_context.py<span class="w">                 </span><span class="c1"># between organs (GTEx) + validation</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_context.py<span class="w"> </span>--threshold<span class="w"> </span><span class="m">5</span><span class="w">   </span><span class="c1"># graded gate</span>
+uv<span class="w"> </span>run<span class="w"> </span>--with<span class="w"> </span>openpyxl<span class="w"> </span>python<span class="w"> </span>zonation_oracle.py<span class="w"> </span><span class="c1"># fetch/cache Halpern zonation</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_zonation.py<span class="w">                </span><span class="c1"># within liver (periportal restriction)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_substrates.py<span class="w">              </span><span class="c1"># which precursor per tissue</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_genomes.py<span class="w">                 </span><span class="c1"># methionine across genomes (KEGG)</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_abduction.py<span class="w">               </span><span class="c1"># microbial gaps vs phenotype → leads / auxotrophy</span>
+uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>resolve_eukaryotic_abduction.py<span class="w">    </span><span class="c1"># tissue gaps vs function (ketolysis, gluconeogenesis)</span>
 </code></pre></div>
 
 <h2 id="artifacts">Artifacts</h2>
 <ul>
-<li>Engine: <code>src/ai_gene_review/module_logic.py</code>; tests: <code>tests/test_module_logic.py</code></li>
-<li>Modules: <code>modules/gluconeogenesis_human.yaml</code>, <code>modules/gluconeogenesis_human_substrates.yaml</code>,<br />
-<code>modules/methionine_biosynthesis.yaml</code>, <code>modules/ketone_body_oxidation.yaml</code></li>
-<li>Oracles &amp; resolvers + full results: <code>modules/experimental/gluconeogenesis-context/</code><br />
-  (<code>RESULTS.md</code>)</li>
+<li><strong>Engine:</strong> <code>src/ai_gene_review/module_logic.py</code> · <strong>tests:</strong> <code>tests/test_module_logic.py</code></li>
+<li><strong>Modules:</strong> <code>modules/gluconeogenesis_human.yaml</code>,<br />
+<code>modules/gluconeogenesis_human_substrates.yaml</code>, <code>modules/methionine_biosynthesis.yaml</code>,<br />
+<code>modules/ketone_body_oxidation.yaml</code></li>
+<li><strong>Report figures:</strong> <code>fig-tissues.svg</code>, <code>fig-lobule.svg</code> are generated (never hardcoded) from<br />
+  the engine + committed caches by<br />
+<code>modules/experimental/gluconeogenesis-context/figures.py</code><br />
+  (<code>uv run --with matplotlib python figures.py</code>); the satisfiable/blocked colouring is the<br />
+  engine's own verdict.</li>
+<li><strong>Demos:</strong> <code>demo.py</code> (interactive, needs the project env), <code>demo_standalone.py</code> (import-free,<br />
+  generated by <code>build_standalone_demo.py</code>). The committed static snapshot <code>demo.html</code> is<br />
+  regenerated with<br />
+<code>uv run --with marimo marimo export html projects/PATHWAY_SATISFIABILITY/demo_standalone.py -o projects/PATHWAY_SATISFIABILITY/demo.html -f</code>.</li>
+<li><strong>Oracles &amp; resolvers + the full, exhaustive results walk-through:</strong><br />
+<code>modules/experimental/gluconeogenesis-context/</code> — see its <code>RESULTS.md</code> for the complete<br />
+  per-context output (threshold sweeps, zonation layers, per-genome routes, abduction tables)<br />
+  that the main page summarises.</li>
 </ul>
     </div>
 
