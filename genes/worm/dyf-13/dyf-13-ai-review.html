@@ -1,0 +1,3254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dyf-13 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dyf-13</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q95QT8" target="_blank" class="term-link">
+                        Q95QT8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dyf-13";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q95QT8" data-a="DESCRIPTION: dyf-13 encodes the C. elegans ortholog of tetratri..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>dyf-13 encodes the C. elegans ortholog of tetratricopeptide-repeat protein 26 (TTC26/IFT56/IFT-B protein 56), a tetratricopeptide-repeat (TPR) scaffold subunit of the intraflagellar transport complex B (IFT-B). IFT-B, together with IFT-A and kinesin-2/dynein-2 motors, drives the bidirectional transport of ciliary cargo along the axoneme that builds and maintains cilia. DYF-13 is expressed in ciliated sensory neurons, localizes to the cilium, and itself undergoes intraflagellar transport; its ciliary localization depends on other IFT and BBS proteins. Loss of dyf-13 produces short sensory cilia that lack their distal segments and a dye-filling-defective (Dyf) phenotype, and DYF-13 is a component of the IFT-B complex required for anterograde cargo transport and for ciliary entry of the retrograde dynein-2 motor. The gene is one of the founding dye-filling-defective (dyf-1 to dyf-13) loci and is a target of the RFX transcription factor DAF-19 via an X-box promoter motif.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0036064" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IFT proteins, including IFT-B/TTC26 orthologs, accumulate at and turn around at the ciliary base/basal body region. This IBA localization is consistent with DYF-13 being a core IFT component whose transport begins at the ciliary base.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established role of DYF-13 as a core IFT component that accumulates at the ciliary base; a supporting (non-core) location rather than the primary functional assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a ciliary protein that undergoes IFT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0030992" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-13/TTC26 is an integral subunit of the IFT-B complex. This is directly supported in C. elegans by affinity-purification/mass-spectrometry identification of dyf-13 within IFT complex B, and in mammals TTC26/IFT56 is assigned to the IFT-B complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core structural assignment; DYF-13 is a bona fide IFT-B subunit (ComplexPortal CPX-1290), confirmed biochemically in worm and mammals.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" target="_blank" class="term-link">
+                                        PMID:26980730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">neither of which was included with certainty in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                    GO:0035720
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary anterograde transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0035720" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an IFT-B subunit, DYF-13 participates in kinesin-2-driven anterograde transport that carries cargo from the ciliary base toward the tip. Loss of dyf-13 causes distal-segment defects consistent with impaired anterograde delivery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process for an IFT-B subunit; anterograde transport is the direction driven by the kinesin-2/IFT-B machinery that DYF-13 belongs to.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a ciliary protein that undergoes IFT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035735" target="_blank" class="term-link">
+                                    GO:0035735
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport involved in cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0035735" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-13 is required for building and maintaining cilia: dyf-13(mn396) mutants have short cilia lacking distal portions, and the protein is a novel core IFT component required for cilia function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; captures the specific role of IFT in cilium assembly, strongly supported by the dyf-13 mutant structural phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is a novel core IFT component required for cilia function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                    GO:0097546
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary base</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0097546" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IFT particles, including DYF-13, are active at the ciliary base where anterograde trains assemble and retrograde trains are remodeled. Consistent with DYF-13 undergoing IFT that initiates at the base.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supporting (non-core) location consistent with IFT-B biology; complements the primary cilium/axoneme localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a ciliary protein that undergoes IFT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120170" target="_blank" class="term-link">
+                                    GO:0120170
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0120170" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The molecular function of DYF-13/TTC26 within the cilium is to associate with the IFT-B particle. As a TPR-repeat scaffold subunit it binds the IFT-B complex; this is the most specific molecular-function term currently available for an IFT-B structural subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Best-available molecular-function term for an IFT-B subunit; more informative than generic protein binding. DYF-13 co-purifies within IFT complex B, and functions as a cargo-selective IFT-B adapter rather than a core-structural requirement (it associates with, but is not essential for, IFT-particle assembly).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:worm/dyf-13/dyf-13-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">IFT56 is not required for assembly or movement of IFT particles themselves</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt SubCell-derived electronic annotation placing DYF-13 in the cilium. Correct but general; concordant with the experimentally supported ciliary localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct general localization (cilium), consistent with primary evidence that DYF-13 is a ciliary protein undergoing IFT.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a ciliary protein that undergoes IFT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0005929" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation to cilium based on the IFT-B complex membership reported in Yi et al. 2017. Correct but general localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct ciliary localization; supported by identification of dyf-13 in the ciliary IFT-B complex.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0030992" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation, from the same study that identified dyf-13 as a component of IFT complex B by affinity purification and mass spectrometry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core structural assignment corroborating the IBA IFT-B membership; directly supported by the primary study.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0042073" data-r="PMID:28479320" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General intraflagellar-transport process annotation for an IFT-B subunit. Correct but less specific than the anterograde/assembly terms; the parent process under which DYF-13 acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general parent term; the more specific anterograde-transport and transport-in-cilium-assembly terms better capture the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a ciliary protein that undergoes IFT</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q95QT8" data-a="GO:0060271" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-13 is required for cilium assembly; dyf-13 mutants have short cilia lacking distal segments. This general BP term is well supported, with the more specific IFT-in-cilium-assembly term giving the mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct biological process; the dyf-13 loss-of-function structural cilia phenotype directly supports a cilium-assembly role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                        PMID:15916950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is a novel core IFT component required for cilia function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DYF-13/TTC26 is a tetratricopeptide-repeat (TPR) scaffold subunit of the intraflagellar transport complex B (IFT-B). Its core molecular role is to associate with the IFT-B particle, contributing to anterograde, kinesin-2-driven transport of ciliary cargo that assembles and maintains sensory cilia. Loss of dyf-13 gives short cilia lacking distal segments.</h3>
+                <span class="vote-buttons" data-g="Q95QT8" data-a="FUNCTION: DYF-13/TTC26 is a tetratricopeptide-repeat (TPR) s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120170" target="_blank" class="term-link">
+                            intraciliary transport particle B binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035735" target="_blank" class="term-link">
+                                intraciliary transport involved in cilium assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035720" target="_blank" class="term-link">
+                                intraciliary anterograde transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                            intraciliary transport particle B
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                                PMID:15916950
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">is a novel core IFT component required for cilia function</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                PMID:28479320
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" target="_blank" class="term-link">
+                            PMID:15916950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional genomics of the cilium, a sensory organelle.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">dyf-13 (C27H5.7a) encodes a ciliary protein that undergoes intraflagellar transport; its ciliary localization and transport depend on other IFT and BBS genes, and it is a novel core IFT component required for cilia function.</div>
+
+                        <div class="finding-text">"One of these, C27H5.7a, encodes a ciliary protein that undergoes IFT."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                            PMID:28479320
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans Sensory Cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">dyf-13 is a component of IFT complex B (identified by affinity purification and mass spectrometry); disruption of the IFT-B complex abolishes ciliary localization of the dynein-2 heavy chain.</div>
+
+                        <div class="finding-text">"Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization, revealing their important roles in ciliary entry of dynein-2."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" target="_blank" class="term-link">
+                            PMID:18316409
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Caenorhabditis elegans nephrocystins act as global modifiers of cilium structure.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DYF-13::GFP is used as an intraflagellar-transport reporter and localizes along amphid channel cilia; the dyf-13 mutant occasionally lacks the IFT-B cargo OSM-6 in amphid distal segments, consistent with an anterograde/IFT-B role.</div>
+
+                        <div class="finding-text">"The dyf-13 mutant, similar to nphp-4 animals, occasionally lacks OSM-6"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" target="_blank" class="term-link">
+                            PMID:16957054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Caenorhabditis elegans DYF-2, an orthologue of human WDR19, is a component of the intraflagellar transport machinery in sensory cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes the C. elegans dye-filling-defective (dyf) IFT gene class to which dyf-13 belongs; the paralogous dyf-2/WDR19 associates with IFT particle complex B, providing IFT-machinery context for the DYF-13 IFT-B annotations.</div>
+
+                        <div class="finding-text">"we conclude that DYF-2 can associate with IFT particle complex B"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18369462" target="_blank" class="term-link">
+                            PMID:18369462
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An essential role for DYF-11/MIP-T3 in assembling functional intraflagellar transport complexes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">DYF-13 is listed among the conserved C. elegans IFT-associated proteins whose orthologs are enriched in the Chlamydomonas flagellar proteome, supporting its status as a conserved IFT component.</div>
+
+                        <div class="finding-text">"DYF-3 [34], DYF-13 [35], and IFTA-1 [36]"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" target="_blank" class="term-link">
+                            PMID:26980730
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Overall Architecture of the Intraflagellar Transport (IFT)-B Complex Containing Cluap1/IFT38 as an Essential Component of the IFT-B Peripheral Subcomplex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The mammalian ortholog TTC26/IFT56 was identified as an integral component of the IFT-B core subcomplex, establishing that TTC26/IFT56 (the DYF-13 family) is a genuine IFT-B subunit.</div>
+
+                        <div class="finding-text">"we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with certainty in"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular activity of DYF-13/TTC26 beyond intraciliary-transport-particle-B binding is undefined. It is unknown which specific IFT-B subunit(s) DYF-13 contacts within the C. elegans complex and which ciliary cargo(es) it directly binds or is required to transport; cargo specificity (e.g. for the retrograde motor che-3/dynein-2) is stated only as a hypothesis.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that DYF-13 is an IFT-B subunit (co-purifies within IFT complex B), localizes to the cilium and undergoes IFT, is required for cilium assembly (dyf-13 mutants have short cilia lacking distal segments), and that IFT-B integrity is required for ciliary entry of dynein-2. Its fold is a TPR-repeat (alpha-solenoid) scaffold.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> IFT-B subunits are structural adaptors whose specific cargo/partner contacts determine which proteins a cilium can import; TTC26/IFT56 loss in vertebrates selectively perturbs Hedgehog and motility-related ciliary cargo, so mapping DYF-13&#39;s direct interactions would explain the specificity of its transport role. There is also no GO molecular-function term for a structural constituent of an IFT particle, forcing an IFT-B subunit to be annotated with the complex-binding term, which is why the gene reads as MF-dark.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Proximity/affinity proteomics and cross-linking mass spectrometry to map DYF-13&#39;s direct IFT-B neighbors; cargo-specific transport assays in dyf-13 mutants; a GO molecular-function term for an IFT-particle structural constituent.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"neither of which was included with certainty in"</em> — PMID:26980730</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether C. elegans DYF-13 occupies the IFT-B core or peripheral sub-architecture has not been determined biochemically. Mammalian TTC26/IFT56 was assigned to the IFT-B core subcomplex, but the sub-complex position of the worm ortholog and the consequences of its loss for IFT-B stability in vivo are unmapped.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> DYF-13 is confirmed as part of the IFT-B complex in C. elegans (mass spectrometry) and TTC26/IFT56 is placed in the IFT-B core in the mammalian interaction map, but the two have not been reconciled for the worm protein.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Knowing whether DYF-13 is a core or peripheral IFT-B subunit predicts how severely its loss should destabilize the whole particle versus a specific cargo-adaptor arm, informing interpretation of the dyf-13 mutant phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Salt-dissociation and reconstitution of the C. elegans IFT-B complex, or quantitative proteomics of IFT-B in dyf-13 mutants, to place DYF-13 in the core/peripheral architecture.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"we identified"</em> — PMID:26980730</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dyf-13-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q95QT8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">10 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T19:27:30.270211</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dyf-13-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-dyf-13-ift56ttc26-in-caenorhabditis-elegans">Comprehensive Research Report: <em>dyf-13</em> (IFT56/TTC26) in <em>Caenorhabditis elegans</em></h2>
+<h3 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h3>
+<p>The <em>C. elegans</em> gene <em>dyf-13</em> (ORF name C27H5.7; UniProt Q95QT8) encodes intraflagellar transport protein 56 homolog (IFT56), also known in vertebrates as tetratricopeptide repeat domain 26 (TTC26). The protein is a highly conserved member of the IFT56 family, present in all ciliated organisms but absent from non-ciliated species, underscoring its dedicated role in ciliary biology (ishikawa2014ttc26dyf13isan pages 3-4, ishikawa2014ttc26dyf13isan pages 15-17). IFT56 (also known as TTC26, DYF-13, and PIFTC3) is a highly conserved intraflagellar transport complex B (IFT-B) protein (xin2017ift56regulatesvertebrate pages 1-2, ishikawa2014ttc26dyf13isan pages 1-2). The protein contains TPR-like helical domain superfamily features and TTC26/TPR_19 domains, consistent with tetratricopeptide repeat-mediated protein–protein interactions typical of IFT scaffold/adapter proteins (ishikawa2014ttc26dyf13isan pages 13-15).</p>
+<p>The following table summarizes the key properties of dyf-13/IFT56/TTC26:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene names and aliases</td>
+<td><strong>dyf-13</strong> in <em>Caenorhabditis elegans</em>; orthologous/alias names include <strong>TTC26</strong>, <strong>IFT56</strong>, and <strong>PIFTC3</strong>. Literature explicitly equates TTC26/DYF13/IFT56 across ciliated organisms, validating that the requested gene identity matches the UniProt entry for the worm dyf-13 protein (ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 1-2, xin2017ift56regulatesvertebrate pages 1-2).</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td>The target gene/protein is from <strong><em>Caenorhabditis elegans</em></strong>, where it functions in sensory cilia of amphid and phasmid neurons; cross-species functional data are available from zebrafish, mouse, mammalian cultured cells, and <em>Chlamydomonas</em> ortholog studies (efimenko2006caenorhabditiselegansdyf2an pages 2-3, zhang2012knockdownofttc26 pages 1-2, xin2017ift56regulatesvertebrate pages 1-2).</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>DYF-13 belongs to the conserved <strong>IFT56/TTC26 family</strong>, a cilia-associated family present in ciliated organisms and absent from non-ciliated organisms, consistent with a dedicated role in intraflagellar transport and ciliary biology (ishikawa2014ttc26dyf13isan pages 3-4, ishikawa2014ttc26dyf13isan pages 15-17, xin2017ift56regulatesvertebrate pages 1-2).</td>
+</tr>
+<tr>
+<td>Domain structure</td>
+<td>UniProt annotates DYF-13/Q95QT8 with <strong>TPR-like helical superfamily</strong> features and <strong>TTC26 / TPR_19</strong> domains, consistent with tetratricopeptide repeat-mediated protein interaction/adaptor functions typical of IFT-associated scaffold proteins; this agrees with the experimentally supported role of IFT56/TTC26 as an IFT-B-associated adaptor rather than an enzyme (ishikawa2014ttc26dyf13isan pages 13-15, ishikawa2014ttc26dyf13isan pages 12-13).</td>
+</tr>
+<tr>
+<td>IFT-B subcomplex position</td>
+<td>IFT56/TTC26/DYF-13 is a component of <strong>IFT complex B</strong>, specifically placed in the <strong>IFT-B1b subgroup</strong> together with IFT46, IFT52, IFT70, and IFT88. Recent assembly work indicates IFT56 is part of the IFT-B1 branch and is linked through the IFT46-IFT52 module to other IFT-B subcomplexes (ishikawa2014ttc26dyf13isan pages 7-9, tasaki2025assemblyandmother pages 1-5).</td>
+</tr>
+<tr>
+<td>Primary function</td>
+<td>The best-supported primary function is as a <strong>cargo-selective IFT-B-associated adapter/regulator</strong>, not a catalytic protein. IFT56/TTC26/DYF-13 is dispensable for basic IFT train assembly/motility in some systems but is required for transport of a subset of ciliary cargoes, especially <strong>motility-related proteins</strong> such as inner dynein arm components, dynein regulatory complex proteins, and central pair-associated factors (ishikawa2014ttc26dyf13isan pages 10-12, ishikawa2014ttc26dyf13isan pages 7-9, ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 13-15).</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>IFT56/TTC26/DYF-13 localizes to <strong>cilia/flagella</strong> and <strong>basal body-associated regions</strong>, with a punctate distribution characteristic of IFT proteins. In mammalian cells it undergoes bidirectional IFT; in zebrafish and photoreceptors, Ttc26 was also observed at the <strong>transition zone</strong>. Reported mammalian transport speeds for TTC26-GFP are ~<strong>1.22 ± 0.17 μm/s anterograde</strong> and <strong>0.92 ± 0.24 μm/s retrograde</strong> (ishikawa2014ttc26dyf13isan pages 2-3, ishikawa2014ttc26dyf13isan pages 6-7, zhang2012knockdownofttc26 pages 1-2, zhang2012knockdownofttc26 pages 2-4).</td>
+</tr>
+<tr>
+<td>Key phenotypes in <em>C. elegans</em></td>
+<td>dyf-13 is one of the classic <strong>Dyf (dye-filling defective)</strong> genes required for proper amphid/phasmid sensory cilium function. The Dyf class is associated with failed DiI filling of sensory neurons and abnormal ciliary structure. Prior work cited in later studies indicates <strong>shortened cilia</strong> in <em>C. elegans</em> dyf-13 mutants, and dyf-13 has been linked to regulation of OSM-3-kinesin/IFT-B behavior in sensory cilia (efimenko2006caenorhabditiselegansdyf2an pages 2-3, ishikawa2014ttc26dyf13isan pages 2-3, ishikawa2014ttc26dyf13isan pages 12-13).</td>
+</tr>
+<tr>
+<td>Key phenotypes in other organisms</td>
+<td>In <strong>zebrafish</strong>, ttc26 knockdown causes shortened or missing photoreceptor outer segments, pronephric cilia defects, kidney duct dilation, body curvature, edema, abnormal fluid flow, and reduced cilia length/number in Kupffer’s vesicle. In <strong>mouse/vertebrate systems</strong>, Ift56 loss causes developmental patterning defects, male sterility, gait abnormalities, shortened/abnormal cilia, and disorganized axonemal microtubules (zhang2012knockdownofttc26 pages 1-2, zhang2012knockdownofttc26 pages 6-7, zhang2012knockdownofttc26 pages 4-5, ishikawa2014ttc26dyf13isan pages 3-4, xin2017ift56regulatesvertebrate pages 1-2, xin2017ift56regulatesvertebrate pages 5-7).</td>
+</tr>
+<tr>
+<td>Signaling pathway involvement</td>
+<td>IFT56 is implicated in <strong>cilium-dependent Hedgehog signaling</strong>. In mouse Ift56/hop mutants, cilia form but fail to properly accumulate <strong>Gli2</strong> and <strong>Gli3</strong> at ciliary tips, while Smoothened localization can remain relatively normal; this leads to defective Shh-dependent patterning in limb and neural tube development. Thus, IFT56 supports signaling competence by maintaining IFT-B integrity and ciliary architecture needed for Gli trafficking (xin2017ift56regulatesvertebrate pages 4-5, xin2017ift56regulatesvertebrate pages 1-2, xin2017ift56regulatesvertebrate pages 2-3, xin2017ift56regulatesvertebrate pages 3-4).</td>
+</tr>
+<tr>
+<td>Human disease associations</td>
+<td>Human <strong>TTC26/IFT56</strong> has been linked to <strong>severe biliary ciliopathy</strong> by biallelic mutation studies, and broader cross-species work places IFT56 among IFT-B components whose dysfunction can contribute to ciliopathy phenotypes. Although the detailed clinical text was not retrievable here, the paper metadata and abstract identify TTC26 as a human disease gene in severe biliary ciliopathy (xin2017ift56regulatesvertebrate pages 5-7).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table condenses the main verified properties of the C. elegans dyf-13 gene product and its orthologs, including molecular function, localization, phenotypes, and pathway relevance. It is useful as a quick-reference functional annotation summary grounded in the retrieved evidence.</em></p>
+<h3 id="2-primary-function-cargo-selective-adapter-in-intraflagellar-transport">2. Primary Function: Cargo-Selective Adapter in Intraflagellar Transport</h3>
+<p>DYF-13/IFT56/TTC26 is not an enzyme or transporter in the classical sense; rather, it functions as a <strong>cargo-selective adapter protein</strong> within the intraflagellar transport (IFT) machinery. The landmark study by Ishikawa et al. (2014) in <em>eLife</em> demonstrated that TTC26/DYF13 is an IFT complex B protein required for the transport of motility-related proteins into flagella (ishikawa2014ttc26dyf13isan pages 10-12, ishikawa2014ttc26dyf13isan pages 2-3). Unlike core IFT-B components, whose loss abolishes ciliogenesis, IFT56 is not required for assembly or movement of IFT particles themselves (ishikawa2014ttc26dyf13isan pages 7-9, ishikawa2014ttc26dyf13isan pages 10-12). Instead, <em>dyf13</em> mutant flagella in <em>Chlamydomonas reinhardtii</em> still assemble and IFT particle speed remains normal, but a specific subset of ciliary proteins is selectively depleted (ishikawa2014ttc26dyf13isan pages 10-12).</p>
+<p>Proteomic and biochemical analyses of <em>C. reinhardtii</em> <em>dyf13</em> mutant flagella revealed that the proteins requiring DYF13 for import are predominantly motility-related, including:<br />
+- <strong>Inner dynein arm components</strong> (species a, f, and g)<br />
+- <strong>Dynein regulatory complex</strong> proteins (e.g., PF2/DRC4)<br />
+- <strong>Central pair complex</strong> proteins<br />
+- Additional flagellar proteins such as FAP59, tektin, centrin, and enolase (ishikawa2014ttc26dyf13isan pages 13-15, ishikawa2014ttc26dyf13isan pages 10-12)</p>
+<p>This led to the concept that IFT56 functions as an adaptor between the main IFT complex and its cargo proteins, possibly by recruiting PIH proteins (specifically TWI1) that pre-assemble dynein arms to the IFT complex for transport (ishikawa2014ttc26dyf13isan pages 12-13). The mechanism by which IFT56 binds its various cargo proteins remains unclear; unlike tubulin, which has specific binding domains on IFT74 and IFT81, it is unknown whether IFT56 contains similarly specific binding sites for all of its cargoes (ishikawa2014ttc26dyf13isan pages 13-15).</p>
+<p>This finding supports the broader concept that different IFT proteins are responsible for different cargo subsets, providing a possible explanation for the complexity of the IFT machinery with its &gt;20 subunits (ishikawa2014ttc26dyf13isan pages 2-3).</p>
+<h3 id="3-position-within-the-ift-b-complex-architecture">3. Position within the IFT-B Complex Architecture</h3>
+<p>IFT56/TTC26/DYF-13 is a component of the <strong>IFT-B1b subgroup</strong> within the larger IFT-B complex. The 16-subunit IFT-B complex is subdivided into two major subcomplexes: IFT-B1 and IFT-B2 (tasaki2025assemblyandmother pages 1-5). IFT-B1 is further divided into IFT-B1a (containing IFT22, IFT25, IFT27, IFT74, IFT81) and IFT-B1b (containing <strong>IFT46, IFT52, IFT56, IFT70, and IFT88</strong>) (tasaki2025assemblyandmother pages 1-5). The IFT-B1b subgroup connects to IFT-B1a through an interaction between the IFT46-IFT52 dimer (from IFT-B1b) and the IFT74-IFT81 dimer (from IFT-B1a) (tasaki2025assemblyandmother pages 1-5).</p>
+<p>Through tandem affinity purification (TAP) analysis, TTC26/DYF13 was shown to physically interact with all known IFT complex B proteins but not with IFT complex A proteins or motor proteins (ishikawa2014ttc26dyf13isan pages 7-9). Sucrose density gradient analysis confirmed that TTC26/DYF13 comigrates with other IFT complex B proteins such as IFT46 and IFT74 (ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 7-9). IFT56 interacts directly with IFT46 as part of the IFTB-1 subcomplex (xin2017ift56regulatesvertebrate pages 5-7). The IFT46–IFT56 dimer has been identified as the minimum entity needed for interaction with ANKRD55, a multiple sclerosis-associated protein, in microglial cells, further underscoring their close physical association within the IFT-B architecture (tasaki2025assemblyandmother pages 1-5).</p>
+<p>Despite being an IFT-B component, IFT56 acts as a <strong>peripheral</strong> rather than core structural component; its loss does not entirely abolish IFT-B complex assembly or IFT train movement, consistent with its role as a cargo-adapter module rather than a structural requirement for the transport machinery itself (ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 7-9).</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>IFT56/TTC26/DYF-13 localizes to <strong>primary cilia and basal bodies</strong>, displaying a punctate distribution along the ciliary length that is characteristic of IFT proteins (ishikawa2014ttc26dyf13isan pages 2-3, ishikawa2014ttc26dyf13isan pages 3-4). The protein undergoes <strong>bidirectional intraflagellar transport</strong> along the ciliary axoneme. In mammalian cells, TTC26-GFP moves at anterograde speeds of 1.22 ± 0.17 μm/s and retrograde speeds of 0.92 ± 0.24 μm/s, comparable to the established IFT protein IFT88 (ishikawa2014ttc26dyf13isan pages 6-7). These speeds indicate that TTC26 moves together with other IFT proteins as part of the complex (ishikawa2014ttc26dyf13isan pages 6-7).</p>
+<p>In zebrafish, Ttc26 was specifically localized to the <strong>transition zone</strong> of both photoreceptor sensory cilia and primary cilia in cultured renal cells (zhang2012knockdownofttc26 pages 1-2, zhang2012knockdownofttc26 pages 2-4). In <em>C. elegans</em>, DYF-13 protein undergoes IFT motion in sensory cilia of amphid and phasmid neurons (ishikawa2014ttc26dyf13isan pages 6-7). The protein is present in both motile flagella and non-motile primary and sensory cilia, suggesting functions beyond motility cargo transport alone (ishikawa2014ttc26dyf13isan pages 15-17).</p>
+<h3 id="5-phenotypes-in-c-elegans">5. Phenotypes in <em>C. elegans</em></h3>
+<p>The gene name <em>dyf-13</em> derives from the <strong>Dye-Filling defective (Dyf)</strong> phenotype class in <em>C. elegans</em>. The <em>dyf</em> class consists of 13 members (<em>dyf-1</em> to <em>dyf-13</em>), all exhibiting reduced fluorescent dye (DiI) filling of amphid and phasmid sensory neurons, indicative of structural defects in the environmentally exposed cilia of these neurons (efimenko2006caenorhabditiselegansdyf2an pages 2-3). <em>dyf-13</em> mutants display abnormally <strong>short cilia</strong>, consistent with a role for DYF-13 in determining proper cilium length (ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 2-3).</p>
+<p>Previous studies suggested that DYF-13 may function as an IFT regulator that modulates either the activity of the <strong>OSM-3-kinesin</strong> motor or its association with IFT subcomplex B in <em>C. elegans</em> sensory cilia (ishikawa2014ttc26dyf13isan pages 12-13, ishikawa2014ttc26dyf13isan pages 2-3). In the <em>C. elegans</em> sensory cilium, IFT is driven cooperatively by two kinesin motors: heterotrimeric <strong>kinesin-II</strong> and homodimeric <strong>OSM-3/KIF17</strong>. In the middle segment, both motors work redundantly, while in the distal segment, only OSM-3 drives anterograde transport (efimenko2006caenorhabditiselegansdyf2an pages 2-3, efimenko2006caenorhabditiselegansdyf2an pages 1-2). DYF-13 appears to contribute to the regulation of this bipartite motor system.</p>
+<p>Importantly, <em>dyf-13</em> mutants display a distinct phenotype compared to other IFT-B mutants in <em>C. elegans</em> when probed by quantitative imaging of ARL-13/ARL13B compartmentalization. In wild-type worms, ARL-13 is restricted to the middle segment of amphid/phasmid cilia, but in most IFT-B mutants, ARL-13 accumulates strongly at the periciliary membrane (PCM). Notably, <em>dyf-13/TTC26</em> mutants showed only moderate periciliary ARL-13 accumulation and moderately fast FRAP (fluorescence recovery after photobleaching) rates between ciliary and PCM pools (half-time recovery of ~50–78 seconds), distinct from other IFT-B mutants that displayed much slower exchange (cevik2013activetransportand pages 6-8). Furthermore, <em>dyf-13;nphp-4</em> double mutants possessed even faster bidirectional recovery kinetics (half-time ~14–34 seconds), suggesting partially redundant functions for these genes in regulating ARL-13 diffusion at the ciliary/PCM boundary (cevik2013activetransportand pages 6-8). These data indicate that DYF-13 has roles in establishing and maintaining protein compartmentalization within the cilium, particularly at the transition zone diffusion barrier.</p>
+<p>The <em>dyf-13</em> gene has also been implicated in anthelmintic drug uptake. DYF-13 was identified among genes involved in dynein import, alongside OSM-1 and DAF-6, that contribute to intraflagellar transport in the ciliary distal segment of amphid neurons and influence avermectin susceptibility in <em>C. elegans</em> (brinzer2021theuptakeof pages 4-7).</p>
+<h3 id="6-conserved-functions-evidence-from-other-organisms">6. Conserved Functions: Evidence from Other Organisms</h3>
+<p><strong>Zebrafish:</strong> Morpholino knockdown of <em>ttc26</em> in zebrafish embryos produced multiple cilia-related defects: shortened or absent photoreceptor outer segments, pronephric cilia defects with disrupted and disorganized cilia, pronephric duct dilation, body curvature, cardiac edema, reduced cilia length and number in Kupffer's vesicle, and abolished directional fluid flow (zhang2012knockdownofttc26 pages 1-2, zhang2012knockdownofttc26 pages 6-7, zhang2012knockdownofttc26 pages 4-5, ishikawa2014ttc26dyf13isan pages 3-4). In mIMCD3 cultured kidney cells, shRNA knockdown of Ttc26 led to significantly shortened cilia with enlarged ends (zhang2012knockdownofttc26 pages 4-5).</p>
+<p><strong><em>Chlamydomonas reinhardtii</em>:</strong> Mutation of <em>DYF13</em> in <em>Chlamydomonas</em> produced short flagella with pronounced motility defects, while IFT particle assembly and speed were normal—the key finding that established IFT56 as a cargo-specific adapter (ishikawa2014ttc26dyf13isan pages 10-12, ishikawa2014ttc26dyf13isan pages 7-9).</p>
+<p><strong>Mouse:</strong> The <em>Ift56^hop</em> (Hsp90-opposing protein) mutant mouse provided critical insights into vertebrate IFT56 function. <em>Ift56^hop</em> mutants form normal numbers of cilia but the cilia lack IFT56 protein (xin2017ift56regulatesvertebrate pages 2-3). These mutant cilia exhibit disorganized microtubule structures (8+0 or 7+0 arrangements instead of normal 9+0), indicating IFT56 is essential for maintaining proper ciliary microtubule architecture (xin2017ift56regulatesvertebrate pages 5-7). IFT81 and IFT27 are significantly reduced in <em>Ift56^hop</em> cilia, while IFT88 accumulates abnormally at the ciliary base rather than distributing along the axoneme, demonstrating IFT56's importance for IFT-B complex integrity (xin2017ift56regulatesvertebrate pages 5-7, xin2017ift56regulatesvertebrate pages 4-5). The mutant mice display <strong>preaxial polydactyly</strong>, gait abnormalities, and <strong>male sterility</strong> (xin2017ift56regulatesvertebrate pages 1-2).</p>
+<h3 id="7-signaling-pathway-involvement-hedgehog-signaling">7. Signaling Pathway Involvement: Hedgehog Signaling</h3>
+<p>A major function revealed by the mouse <em>Ift56^hop</em> mutant is the requirement for IFT56 in <strong>cilium-dependent Hedgehog (Hh) signaling</strong>. Both Gli2 and Gli3 show significantly reduced localization to ciliary tips in <em>Ift56^hop</em> cells, with over half of mutant cilia lacking detectable Gli2 and approximately 80% lacking Gli3 (xin2017ift56regulatesvertebrate pages 4-5, xin2017ift56regulatesvertebrate pages 1-2). Importantly, ciliary Smoothened (Smo) distribution and intensity remain relatively unaffected when the Hh pathway is activated, indicating the defect is specifically in Gli protein trafficking to ciliary tips (xin2017ift56regulatesvertebrate pages 3-4). The <em>Ift56^hop</em> phenotype results primarily from impaired Gli repressor (GliR) function rather than ectopic Shh pathway activation, leading to developmental patterning defects including preaxial polydactyly (an extra anterior digit) and differential effects in rostral versus caudal neural tube specification (xin2017ift56regulatesvertebrate pages 3-4, xin2017ift56regulatesvertebrate pages 2-3). The reduction in IFT27 in <em>Ift56^hop</em> cilia is particularly notable, as IFT27 has been independently linked to Hedgehog signaling through BBSome regulation (xin2017ift56regulatesvertebrate pages 4-5). While <em>C. elegans</em> lacks a canonical Hedgehog signaling pathway, these vertebrate findings illuminate the broader conserved role of IFT56 in maintaining IFT-B complex integrity for ciliary cargo trafficking.</p>
+<h3 id="8-human-disease-relevance">8. Human Disease Relevance</h3>
+<p>Human <strong>TTC26</strong> mutations have been linked to <strong>severe biliary ciliopathy</strong> through biallelic mutation studies, where patient cells displayed disrupted ciliary staining for IFT-B markers and abnormal sonic hedgehog signaling. This places TTC26/IFT56 among IFT-B components whose dysfunction can contribute to the spectrum of ciliopathy phenotypes. These findings were corroborated by the <em>Ift56^hop</em> mouse phenotype, which contrasts with other IFT-B mutants in that cilia still form but have impaired function (xin2017ift56regulatesvertebrate pages 5-7, xin2017ift56regulatesvertebrate pages 7-8). The relatively mild phenotype compared to mutations in core IFT-B components such as IFT88 or IFT172 is consistent with IFT56's peripheral, cargo-selective role within the complex.</p>
+<h3 id="9-summary-and-conclusions">9. Summary and Conclusions</h3>
+<p>DYF-13 (Q95QT8) in <em>C. elegans</em> is the nematode ortholog of vertebrate TTC26/IFT56, a tetratricopeptide repeat-containing component of the IFT-B1b subgroup within the intraflagellar transport complex B. The protein is not an enzyme or transporter but functions as a <strong>cargo-selective adapter</strong> that facilitates the transport of specific ciliary cargo proteins—particularly motility-related components such as inner dynein arms, dynein regulatory complex proteins, and central pair components—via IFT trains from the cell body into cilia and flagella. In <em>C. elegans</em>, DYF-13 localizes to the sensory cilia of amphid and phasmid neurons, undergoes bidirectional IFT movement, and is required for proper cilium length, ciliary protein compartmentalization, and sensory neuron dye-filling. Through cross-species studies, IFT56 has been shown to maintain IFT-B complex integrity and ciliary microtubule architecture, and to be essential for Hedgehog signaling-dependent developmental patterning in vertebrates via Gli2/Gli3 trafficking to ciliary tips. Its loss leads to ciliopathy phenotypes across species, from dye-filling defects in worms to photoreceptor degeneration and polydactyly in vertebrates and biliary ciliopathy in humans.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 3-4): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 15-17): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 1-2): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 1-2): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 13-15): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 12-13): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(efimenko2006caenorhabditiselegansdyf2an pages 2-3): Evgeni Efimenko, Oliver E. Blacque, Guangshuo Ou, Courtney J. Haycraft, Bradley K. Yoder, Jonathan M. Scholey, Michel R. Leroux, and Peter Swoboda. <i>caenorhabditis elegans</i>dyf-2, an orthologue of human wdr19, is a component of the intraflagellar transport machinery in sensory cilia. Molecular Biology of the Cell, 17:4801-4811, Nov 2006. URL: https://doi.org/10.1091/mbc.e06-04-0260, doi:10.1091/mbc.e06-04-0260. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012knockdownofttc26 pages 1-2): Qi Zhang, Qin Liu, Chrissy Austin, Iain Drummond, and Eric A. Pierce. Knockdown of ttc26 disrupts ciliogenesis of the photoreceptor cells and the pronephros in zebrafish. Molecular Biology of the Cell, 23:3069-3078, Aug 2012. URL: https://doi.org/10.1091/mbc.e12-01-0019, doi:10.1091/mbc.e12-01-0019. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 7-9): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tasaki2025assemblyandmother pages 1-5): Koshi Tasaki, Yohei Katoh, Hye-Won Shin, and Kazuhisa Nakayama. Assembly and mother centriole recruitment of ift-b subcomplexes to form ift-b holocomplex. Cell structure and function, 50:157-168, Jun 2025. URL: https://doi.org/10.1247/csf.25027, doi:10.1247/csf.25027. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 10-12): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 2-3): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ishikawa2014ttc26dyf13isan pages 6-7): Hiroaki Ishikawa, Takahiro Ide, Toshiki Yagi, Xue Jiang, Masafumi Hirono, Hiroyuki Sasaki, Haruaki Yanagisawa, Kimberly A Wemmer, Didier YR Stainier, Hongmin Qin, Ritsu Kamiya, and Wallace F Marshall. Ttc26/dyf13 is an intraflagellar transport protein required for transport of motility-related proteins into flagella. eLife, Mar 2014. URL: https://doi.org/10.7554/elife.01566, doi:10.7554/elife.01566. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012knockdownofttc26 pages 2-4): Qi Zhang, Qin Liu, Chrissy Austin, Iain Drummond, and Eric A. Pierce. Knockdown of ttc26 disrupts ciliogenesis of the photoreceptor cells and the pronephros in zebrafish. Molecular Biology of the Cell, 23:3069-3078, Aug 2012. URL: https://doi.org/10.1091/mbc.e12-01-0019, doi:10.1091/mbc.e12-01-0019. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012knockdownofttc26 pages 6-7): Qi Zhang, Qin Liu, Chrissy Austin, Iain Drummond, and Eric A. Pierce. Knockdown of ttc26 disrupts ciliogenesis of the photoreceptor cells and the pronephros in zebrafish. Molecular Biology of the Cell, 23:3069-3078, Aug 2012. URL: https://doi.org/10.1091/mbc.e12-01-0019, doi:10.1091/mbc.e12-01-0019. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012knockdownofttc26 pages 4-5): Qi Zhang, Qin Liu, Chrissy Austin, Iain Drummond, and Eric A. Pierce. Knockdown of ttc26 disrupts ciliogenesis of the photoreceptor cells and the pronephros in zebrafish. Molecular Biology of the Cell, 23:3069-3078, Aug 2012. URL: https://doi.org/10.1091/mbc.e12-01-0019, doi:10.1091/mbc.e12-01-0019. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 5-7): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 4-5): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 2-3): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 3-4): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(efimenko2006caenorhabditiselegansdyf2an pages 1-2): Evgeni Efimenko, Oliver E. Blacque, Guangshuo Ou, Courtney J. Haycraft, Bradley K. Yoder, Jonathan M. Scholey, Michel R. Leroux, and Peter Swoboda. <i>caenorhabditis elegans</i>dyf-2, an orthologue of human wdr19, is a component of the intraflagellar transport machinery in sensory cilia. Molecular Biology of the Cell, 17:4801-4811, Nov 2006. URL: https://doi.org/10.1091/mbc.e06-04-0260, doi:10.1091/mbc.e06-04-0260. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cevik2013activetransportand pages 6-8): Sebiha Cevik, Anna A. W. M. Sanders, Erwin Van Wijk, Karsten Boldt, Lara Clarke, Jeroen van Reeuwijk, Yuji Hori, Nicola Horn, Lisette Hetterschijt, Anita Wdowicz, Andrea Mullins, Katarzyna Kida, Oktay I. Kaplan, Sylvia E. C. van Beersum, Ka Man Wu, Stef J. F. Letteboer, Dorus A. Mans, Toshiaki Katada, Kenji Kontani, Marius Ueffing, Ronald Roepman, Hannie Kremer, and Oliver E. Blacque. Active transport and diffusion barriers restrict joubert syndrome-associated arl13b/arl-13 to an inv-like ciliary membrane subdomain. PLoS Genetics, 9:e1003977, Dec 2013. URL: https://doi.org/10.1371/journal.pgen.1003977, doi:10.1371/journal.pgen.1003977. This article has 115 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brinzer2021theuptakeof pages 4-7): Robert A. Brinzer, David J. France, Claire McMaster, Stuart Ruddell, Alan D. Winter, and Antony P. Page. The uptake of avermectins in caenorhabditis elegans is dependent on intra-flagellar transport and other protein trafficking pathways. bioRxiv, Oct 2021. URL: https://doi.org/10.1101/2021.10.22.465401, doi:10.1101/2021.10.22.465401. This article has 1 citations.</p>
+</li>
+<li>
+<p>(xin2017ift56regulatesvertebrate pages 7-8): Daisy Xin, Kasey J. Christopher, Lewie Zeng, Yong Kong, and Scott D. Weatherbee. Ift56 regulates vertebrate developmental patterning by maintaining iftb complex integrity and ciliary microtubule architecture. Journal of Cell Science, 130:e1.2-e1.2, May 2017. URL: https://doi.org/10.1242/jcs.205013, doi:10.1242/jcs.205013. This article has 38 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dyf-13-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tasaki2025assemblyandmother pages 1-5</li>
+<li>cevik2013activetransportand pages 6-8</li>
+<li>brinzer2021theuptakeof pages 4-7</li>
+<li>https://doi.org/10.7554/elife.01566,</li>
+<li>https://doi.org/10.1242/jcs.205013,</li>
+<li>https://doi.org/10.1091/mbc.e06-04-0260,</li>
+<li>https://doi.org/10.1091/mbc.e12-01-0019,</li>
+<li>https://doi.org/10.1247/csf.25027,</li>
+<li>https://doi.org/10.1371/journal.pgen.1003977,</li>
+<li>https://doi.org/10.1101/2021.10.22.465401,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dyf-13-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q95QT8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dyf-13-c-elegans-research-notes">dyf-13 (C. elegans) research notes</h1>
+<p>UniProt: Q95QT8 (IFT56_CAEEL). WormBase: WBGene00001129 / C27H5.7. Gene name from Starich<br />
+et al. 1995 dye-filling-defective screen.</p>
+<h2 id="molecular-identity-verified-from-uniprot-record">Molecular identity (verified from UniProt record)</h2>
+<ul>
+<li><code>RecName: Intraflagellar transport protein 56 homolog</code>; <code>AltName: Abnormal dye filling
+  protein 13</code>. Belongs to the <strong>IFT56 family</strong> (SIMILARITY block). PANTHER family<br />
+<strong>PTHR14781 "INTRAFLAGELLAR TRANSPORT PROTEIN 56"</strong>; InterPro <strong>IPR030511 TTC26</strong>.</li>
+<li>Therefore dyf-13 is the C. elegans ortholog of vertebrate <strong>TTC26 / IFT56 / IFT-B protein<br />
+  56</strong>. 574 aa, contains multiple <strong>TPR repeats</strong> (UniProt annotates TPR 1/2/3; Pfam<br />
+  PF14559 TPR_19; SUPFAM TPR-like). Architecture = tetratricopeptide-repeat (α-solenoid)<br />
+  scaffold protein, the canonical fold of many IFT-B peripheral subunits.</li>
+<li>Two isoforms by alternative splicing: Q95QT8-1 (displayed) and Q95QT8-2 ("b", VSP_057361,<br />
+  missing residues 1–22). No evidence of isoform-specific function.</li>
+<li>ComplexPortal: CPX-1290 "Intraflagellar transport complex B".</li>
+</ul>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<h3 id="core-identity-a-novel-core-ift-component-required-for-cilium-function">Core identity: a novel core IFT component required for cilium function</h3>
+<ul>
+<li>dyf-13 was cloned by Blacque et al. 2005 and shown to be the gene disrupted in dyf-13(mn396):<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15916950" title="we demonstrate that the ciliary structural defect of C. elegans dyf-13(mn396)   mutants is caused by a mutation in C27H5.7a">PMID:15916950</a>. The gene product <strong>undergoes IFT</strong> like other<br />
+  IFT proteins: <a href="https://pubmed.ncbi.nlm.nih.gov/15916950" title="One of these, C27H5.7a, encodes a ciliary protein that undergoes   IFT. As with other IFT proteins, its ciliary localization and transport is disrupted by   mutations in IFT and bbs genes.">PMID:15916950</a> Conclusion of that paper:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15916950" title="DYF-13, an evolutionarily conserved protein, is a novel core IFT component   required for cilia function.">PMID:15916950</a></li>
+</ul>
+<h3 id="localization-cilium-undergoes-ift">Localization: cilium / undergoes IFT</h3>
+<ul>
+<li>DYF-13::GFP is a bona fide IFT reporter that localizes along amphid channel cilia (TZ, middle<br />
+  and distal segments) and is transported: <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" title="Localization of both DYF-1∷GFP (g1–g3)   and DYF-13∷GFP (g1–g4) appears normal.">PMID:18316409</a> (used as an IFT reporter, strain Ex[DYF-13∷GFP]).</li>
+<li>UniProt SUBCELLULAR LOCATION: Cell projection, cilium (by similarity to mouse Q5PR66).</li>
+<li>ComplexPortal (NAS, PMID:28479320) locates it to the cilium.</li>
+</ul>
+<h3 id="part-of-ift-b-complex">Part of IFT-B complex</h3>
+<ul>
+<li>Yi et al. 2017 identified dyf-13 as a component of IFT complex B by affinity purification /<br />
+  mass spectrometry: UniProt SUBUNIT: "Component of the IFT complex B composed of at least che-2,<br />
+  che-13, dyf-1, dyf-3, dyf-6, dyf-11, dyf-13, ift-20, ift-74, ift-81, ifta-2, osm-1, osm-5 and<br />
+  osm-6" {ECO:0000269|PubMed:28479320}. The paper shows disruption of the IFT-B complex abolishes<br />
+  dynein-2's ciliary localization: <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" title="Disruption of the dynein-2 tail domain, light   intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2's ciliary   localization, revealing their important roles in ciliary entry of dynein-2.">PMID:28479320</a></li>
+<li>Mammalian TTC26/IFT56 was assigned to the IFT-B core subcomplex by Katoh et al. 2016:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26980730" title="we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with   certainty in previous models of the IFT-B complex, as integral components of the core and   peripheral subcomplexes, respectively.">PMID:26980730</a></li>
+</ul>
+<h3 id="function-anterograde-transport-cilium-assembly">Function: anterograde transport / cilium assembly</h3>
+<ul>
+<li>UniProt FUNCTION: "Component of the intraflagellar transport (IFT) complex B required for<br />
+  transport of proteins in the motile cilium (PubMed:15916950, PubMed:28479320). May be required<br />
+  for ciliary entrance and transport of specific ciliary cargo proteins such as che-3 which are<br />
+  related to motility (PubMed:28479320)." Note: the "motile cilium" phrasing is UniProt boilerplate<br />
+  transferred from the vertebrate ortholog; C. elegans sensory cilia are non-motile, but the<br />
+  IFT/assembly role is conserved.</li>
+<li>Disruption phenotype (structural): UniProt DISRUPTION PHENOTYPE "Structural cilia defect: cilia<br />
+  are short and lack distal portions." {ECO:0000269|PubMed:15916950}. Consistent with an IFT-B/<br />
+  anterograde defect (distal-segment loss).</li>
+<li>The dyf-13 mutant shows partial IFT-cargo defects: <a href="https://pubmed.ncbi.nlm.nih.gov/18316409" title="The dyf-13 mutant, similar to   nphp-4 animals, occasionally lacks OSM-6∷GFP in amphid distal segments (Blacque et al., 2005;   Ou et al., 2005).">PMID:18316409</a></li>
+</ul>
+<h3 id="dye-filling-sensory-phenotype-and-x-box-regulation">Dye-filling / sensory phenotype and X-box regulation</h3>
+<ul>
+<li>Named for the Dyf (dye-filling defective) phenotype indicative of general cilium structural<br />
+  defects; part of the dyf-1..dyf-13 class: <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="this class of ciliary mutants, which   is comprised of 13 members, dyf-1 to dyf-13.">PMID:16957054</a> dyf-13 is a DAF-19/RFX X-box-regulated ciliary<br />
+  gene, cloned via the X-box motif: <a href="https://pubmed.ncbi.nlm.nih.gov/16957054" title="threedyfgenes (dyf-1,dyf-3anddyf-13) were   cloned and their importance for the development of cilia has been demonstrated">PMID:16957054</a>.</li>
+<li>Conserved IFT component enriched in the Chlamydomonas flagellar proteome:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18369462" title="several other proteins associated with and necessary for the function of the IFT   machinery and cilium formation have been discovered in C. elegans , namely DYF-1 [32] DYF-2 [33],   DYF-3 [34], DYF-13 [35], and IFTA-1 [36]. Like known IFT particle subcomplex A/B components,   orthologs of these C. elegans proteins are enriched within the membrane-plus-matrix fraction of   the recently identified Chlamydomonas flagellar proteome">PMID:18369462</a>.</li>
+</ul>
+<h2 id="not-known-open-questions">NOT known / open questions</h2>
+<ul>
+<li><strong>Molecular activity beyond "IFT-B particle binding" is undefined.</strong> dyf-13/TTC26/IFT56 is a<br />
+  TPR-scaffold subunit; which specific IFT-B subunit(s) it contacts and which cargo(es) it directly<br />
+  binds within the worm complex are not experimentally mapped. UniProt frames cargo specificity as<br />
+  a hypothesis ("May be required for ... transport of specific ciliary cargo proteins such as che-3").<br />
+  This is the classic structural-subunit MF-dark/ontology-gap situation described in<br />
+  projects/FUNCTION_KNOWLEDGE_GAPS.md.</li>
+<li><strong>Core vs. peripheral position of the worm protein is not directly determined.</strong> Mammalian<br />
+  TTC26/IFT56 was placed in the IFT-B <em>core</em> by Katoh 2016 (PMID:26980730); whether C. elegans<br />
+  dyf-13 occupies the same sub-architectural position has not been shown biochemically.</li>
+<li><strong>No direct enzymatic activity</strong> is expected or reported (TPR scaffold; no catalytic motifs).</li>
+<li>Basal body vs. ciliary-base pool: the IBA annotations place it at the ciliary basal body and<br />
+  ciliary base, but there is no worm-specific experimental sub-ciliary localization beyond<br />
+  "along the cilium".</li>
+</ul>
+<h2 id="annotation-review-orientation">Annotation review orientation</h2>
+<p>GOA has 11 annotations:<br />
+- 6 IBA (GO_REF:0000033) from PANTHER PTHR14781: ciliary basal body, intraciliary transport<br />
+  particle B, intraciliary anterograde transport, intraciliary transport involved in cilium<br />
+  assembly, ciliary base, intraciliary transport particle B binding. All consistent with an<br />
+  IFT-B subunit — ACCEPT (the last three are core; basal body/base are supporting locations).<br />
+- 1 IEA (GO_REF:0000044, UniProt SubCell) cilium — ACCEPT (redundant with NAS cilium).<br />
+- 4 NAS (PMID:28479320, ComplexPortal): cilium, intraciliary transport particle B, intraciliary<br />
+  transport, cilium assembly. All consistent — ACCEPT; the two most specific (IFT particle B,<br />
+  cilium assembly / intraciliary transport) are core.</p>
+<p>No REMOVE candidates: every annotation is on-pathway for an IFT-B/TTC26 ortholog. No experimental<br />
+annotations are being second-guessed. The IBA/NAS evidence is coherent with strong primary<br />
+experimental literature (PMID:15916950, PMID:28479320).</p>
+<h2 id="references-used">References used</h2>
+<ul>
+<li>PMID:15916950 Blacque et al. 2005, Curr Biol — cloning of dyf-13; core IFT component. HIGH.</li>
+<li>PMID:28479320 Yi et al. 2017, Curr Biol — dyf-13 in IFT-B by MS; IFT-B needed for dynein-2 entry. HIGH.</li>
+<li>PMID:18316409 Jauregui et al. 2008, JCB — DYF-13::GFP IFT reporter, cargo (OSM-6) defect. MEDIUM.</li>
+<li>PMID:16957054 Efimenko/Blacque et al. 2006, Mol Biol Cell — dyf gene class, X-box regulation. MEDIUM.</li>
+<li>PMID:18369462 Bacaj et al. 2008 (DYF-11), Curr Biol — DYF-13 as conserved IFT component. LOW/MEDIUM.</li>
+<li>PMID:26980730 Katoh et al. 2016, Mol Biol Cell — mammalian TTC26/IFT56 IFT-B architecture. MEDIUM (ortholog).<br />
+</content><br />
+</invoke></li>
+</ul>
+<h2 id="deep-research-falcon-edison-synthesis-added-after-review-draft">Deep research (falcon / Edison) synthesis — added after review draft</h2>
+<p>A genuine falcon deep-research report (<code>dyf-13-deep-research-falcon.md</code>, Edison Scientific<br />
+Literature, ~28 min, 10 citations) completed and corroborates the review. Key points (its<br />
+internal citation keys, e.g. <code>ishikawa2014ttc26dyf13isan</code>, <code>xin2017ift56regulatesvertebrate</code>,<br />
+<code>zhang2012knockdownofttc26</code>, are falcon-internal and were NOT independently verified against<br />
+cached PMIDs, so they are not used as <code>supporting_text</code> in the YAML):</p>
+<ul>
+<li>IFT56/TTC26/DYF-13 is a <strong>cargo-selective IFT-B adapter</strong>, not an enzyme; TPR/α-solenoid<br />
+  scaffold. Placed in the IFT-B1 (B1b) branch (with IFT46, IFT52, IFT70, IFT88).</li>
+<li>Cross-species nuance: in <em>Chlamydomonas</em> and some vertebrate systems IFT56/TTC26 is<br />
+<strong>dispensable for basic IFT train assembly/motility</strong> but required for import of a subset of<br />
+  cargo (notably motility-related axonemal proteins). This contrasts with the <em>C. elegans</em><br />
+  dyf-13(mn396) structural phenotype (short cilia lacking distal segments; Blacque 2005,<br />
+  PMID:15916950), which the review anchors on. The species difference (cargo-selectivity vs.<br />
+  overt structural defect) is itself part of the open question about DYF-13's precise role.</li>
+<li>Vertebrate orthologs: mouse Ift56/hop mutants mislocalize Gli2/Gli3 (Hedgehog signaling);<br />
+  zebrafish ttc26 morphants have short photoreceptor/pronephric cilia; human TTC26/IFT56 linked<br />
+  to severe biliary ciliopathy. These are ortholog data, not C. elegans-specific.</li>
+</ul>
+<p>This supports the two knowledge_gaps recorded (undefined direct cargo/partner contacts; core vs<br />
+peripheral sub-architecture of the worm protein) and the framing of DYF-13 as an IFT-B<br />
+structural/adapter subunit.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q95QT8
+gene_symbol: dyf-13
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  dyf-13 encodes the C. elegans ortholog of tetratricopeptide-repeat protein 26
+  (TTC26/IFT56/IFT-B protein 56), a tetratricopeptide-repeat (TPR) scaffold
+  subunit of the intraflagellar transport complex B (IFT-B). IFT-B, together with
+  IFT-A and kinesin-2/dynein-2 motors, drives the bidirectional transport of
+  ciliary cargo along the axoneme that builds and maintains cilia. DYF-13 is
+  expressed in ciliated sensory neurons, localizes to the cilium, and itself
+  undergoes intraflagellar transport; its ciliary localization depends on other
+  IFT and BBS proteins. Loss of dyf-13 produces short sensory cilia that lack
+  their distal segments and a dye-filling-defective (Dyf) phenotype, and DYF-13 is
+  a component of the IFT-B complex required for anterograde cargo transport and
+  for ciliary entry of the retrograde dynein-2 motor. The gene is one of the
+  founding dye-filling-defective (dyf-1 to dyf-13) loci and is a target of the
+  RFX transcription factor DAF-19 via an X-box promoter motif.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q95QT8-1
+- name: b
+  id: Q95QT8-2
+  sequence_note: VSP_057361
+existing_annotations:
+- term:
+    id: GO:0036064
+    label: ciliary basal body
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IFT proteins, including IFT-B/TTC26 orthologs, accumulate at and turn around
+      at the ciliary base/basal body region. This IBA localization is consistent
+      with DYF-13 being a core IFT component whose transport begins at the ciliary
+      base.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the established role of DYF-13 as a core IFT component that
+      accumulates at the ciliary base; a supporting (non-core) location rather than
+      the primary functional assignment.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: encodes a ciliary protein that undergoes IFT
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      DYF-13/TTC26 is an integral subunit of the IFT-B complex. This is directly
+      supported in C. elegans by affinity-purification/mass-spectrometry
+      identification of dyf-13 within IFT complex B, and in mammals TTC26/IFT56 is
+      assigned to the IFT-B complex.
+    action: ACCEPT
+    reason: &gt;-
+      Core structural assignment; DYF-13 is a bona fide IFT-B subunit
+      (ComplexPortal CPX-1290), confirmed biochemically in worm and mammals.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+    - reference_id: PMID:26980730
+      supporting_text: neither of which was included with certainty in
+- term:
+    id: GO:0035720
+    label: intraciliary anterograde transport
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      As an IFT-B subunit, DYF-13 participates in kinesin-2-driven anterograde
+      transport that carries cargo from the ciliary base toward the tip. Loss of
+      dyf-13 causes distal-segment defects consistent with impaired anterograde
+      delivery.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for an IFT-B subunit; anterograde transport is the
+      direction driven by the kinesin-2/IFT-B machinery that DYF-13 belongs to.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: encodes a ciliary protein that undergoes IFT
+- term:
+    id: GO:0035735
+    label: intraciliary transport involved in cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      DYF-13 is required for building and maintaining cilia: dyf-13(mn396) mutants
+      have short cilia lacking distal portions, and the protein is a novel core IFT
+      component required for cilia function.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process; captures the specific role of IFT in cilium
+      assembly, strongly supported by the dyf-13 mutant structural phenotype.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: is a novel core IFT component required for cilia function
+- term:
+    id: GO:0097546
+    label: ciliary base
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IFT particles, including DYF-13, are active at the ciliary base where
+      anterograde trains assemble and retrograde trains are remodeled. Consistent
+      with DYF-13 undergoing IFT that initiates at the base.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supporting (non-core) location consistent with IFT-B biology; complements the
+      primary cilium/axoneme localization.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: encodes a ciliary protein that undergoes IFT
+- term:
+    id: GO:0120170
+    label: intraciliary transport particle B binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The molecular function of DYF-13/TTC26 within the cilium is to associate with
+      the IFT-B particle. As a TPR-repeat scaffold subunit it binds the IFT-B
+      complex; this is the most specific molecular-function term currently available
+      for an IFT-B structural subunit.
+    action: ACCEPT
+    reason: &gt;-
+      Best-available molecular-function term for an IFT-B subunit; more informative
+      than generic protein binding. DYF-13 co-purifies within IFT complex B, and
+      functions as a cargo-selective IFT-B adapter rather than a core-structural
+      requirement (it associates with, but is not essential for, IFT-particle assembly).
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+    - reference_id: file:worm/dyf-13/dyf-13-deep-research-falcon.md
+      supporting_text: IFT56 is not required for assembly or movement of IFT particles themselves
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt SubCell-derived electronic annotation placing DYF-13 in the cilium.
+      Correct but general; concordant with the experimentally supported ciliary
+      localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct general localization (cilium), consistent with primary evidence that
+      DYF-13 is a ciliary protein undergoing IFT.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: encodes a ciliary protein that undergoes IFT
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ComplexPortal NAS annotation to cilium based on the IFT-B complex membership
+      reported in Yi et al. 2017. Correct but general localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct ciliary localization; supported by identification of dyf-13 in the
+      ciliary IFT-B complex.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal NAS annotation, from the same study that identified dyf-13 as a
+      component of IFT complex B by affinity purification and mass spectrometry.
+    action: ACCEPT
+    reason: &gt;-
+      Core structural assignment corroborating the IBA IFT-B membership; directly
+      supported by the primary study.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+- term:
+    id: GO:0042073
+    label: intraciliary transport
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General intraflagellar-transport process annotation for an IFT-B subunit.
+      Correct but less specific than the anterograde/assembly terms; the parent
+      process under which DYF-13 acts.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but general parent term; the more specific anterograde-transport and
+      transport-in-cilium-assembly terms better capture the core function.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: encodes a ciliary protein that undergoes IFT
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      DYF-13 is required for cilium assembly; dyf-13 mutants have short cilia
+      lacking distal segments. This general BP term is well supported, with the more
+      specific IFT-in-cilium-assembly term giving the mechanism.
+    action: ACCEPT
+    reason: &gt;-
+      Correct biological process; the dyf-13 loss-of-function structural cilia
+      phenotype directly supports a cilium-assembly role.
+    supported_by:
+    - reference_id: PMID:15916950
+      supporting_text: is a novel core IFT component required for cilia function
+core_functions:
+- description: &gt;-
+    DYF-13/TTC26 is a tetratricopeptide-repeat (TPR) scaffold subunit of the
+    intraflagellar transport complex B (IFT-B). Its core molecular role is to
+    associate with the IFT-B particle, contributing to anterograde,
+    kinesin-2-driven transport of ciliary cargo that assembles and maintains
+    sensory cilia. Loss of dyf-13 gives short cilia lacking distal segments.
+  molecular_function:
+    id: GO:0120170
+    label: intraciliary transport particle B binding
+  directly_involved_in:
+  - id: GO:0035735
+    label: intraciliary transport involved in cilium assembly
+  - id: GO:0035720
+    label: intraciliary anterograde transport
+  locations:
+  - id: GO:0005929
+    label: cilium
+  in_complex:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  supported_by:
+  - reference_id: PMID:15916950
+    supporting_text: is a novel core IFT component required for cilia function
+  - reference_id: PMID:28479320
+    supporting_text: intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular activity of DYF-13/TTC26 beyond intraciliary-transport-particle-B
+    binding is undefined. It is unknown which specific IFT-B subunit(s) DYF-13
+    contacts within the C. elegans complex and which ciliary cargo(es) it directly
+    binds or is required to transport; cargo specificity (e.g. for the retrograde
+    motor che-3/dynein-2) is stated only as a hypothesis.
+  boundary: &gt;-
+    It is firmly established that DYF-13 is an IFT-B subunit (co-purifies within IFT
+    complex B), localizes to the cilium and undergoes IFT, is required for cilium
+    assembly (dyf-13 mutants have short cilia lacking distal segments), and that
+    IFT-B integrity is required for ciliary entry of dynein-2. Its fold is a
+    TPR-repeat (alpha-solenoid) scaffold.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    IFT-B subunits are structural adaptors whose specific cargo/partner contacts
+    determine which proteins a cilium can import; TTC26/IFT56 loss in vertebrates
+    selectively perturbs Hedgehog and motility-related ciliary cargo, so mapping
+    DYF-13&#39;s direct interactions would explain the specificity of its transport
+    role. There is also no GO molecular-function term for a structural constituent
+    of an IFT particle, forcing an IFT-B subunit to be annotated with the
+    complex-binding term, which is why the gene reads as MF-dark.
+  resolution: &gt;-
+    Proximity/affinity proteomics and cross-linking mass spectrometry to map
+    DYF-13&#39;s direct IFT-B neighbors; cargo-specific transport assays in dyf-13
+    mutants; a GO molecular-function term for an IFT-particle structural
+    constituent.
+  provenance:
+  - reference_id: PMID:26980730
+    supporting_text: neither of which was included with certainty in
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    Whether C. elegans DYF-13 occupies the IFT-B core or peripheral sub-architecture
+    has not been determined biochemically. Mammalian TTC26/IFT56 was assigned to the
+    IFT-B core subcomplex, but the sub-complex position of the worm ortholog and the
+    consequences of its loss for IFT-B stability in vivo are unmapped.
+  boundary: &gt;-
+    DYF-13 is confirmed as part of the IFT-B complex in C. elegans (mass
+    spectrometry) and TTC26/IFT56 is placed in the IFT-B core in the mammalian
+    interaction map, but the two have not been reconciled for the worm protein.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Knowing whether DYF-13 is a core or peripheral IFT-B subunit predicts how
+    severely its loss should destabilize the whole particle versus a specific
+    cargo-adaptor arm, informing interpretation of the dyf-13 mutant phenotype.
+  resolution: &gt;-
+    Salt-dissociation and reconstitution of the C. elegans IFT-B complex, or
+    quantitative proteomics of IFT-B in dyf-13 mutants, to place DYF-13 in the
+    core/peripheral architecture.
+  provenance:
+  - reference_id: PMID:26980730
+    supporting_text: we identified
+    reference_section_type: ABSTRACT
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:15916950
+  title: &#34;Functional genomics of the cilium, a sensory organelle.&#34;
+  findings:
+  - statement: &gt;-
+      dyf-13 (C27H5.7a) encodes a ciliary protein that undergoes intraflagellar
+      transport; its ciliary localization and transport depend on other IFT and BBS
+      genes, and it is a novel core IFT component required for cilia function.
+    supporting_text: &gt;-
+      One of these, C27H5.7a, encodes a ciliary protein that undergoes IFT.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary paper that clones dyf-13 (C27H5.7a) and establishes it as a novel core
+      IFT component required for cilia function; the ciliary structural defect of
+      dyf-13(mn396) is caused by a mutation in C27H5.7a. Verbatim quotes confirmed
+      against the cached record.
+- id: PMID:28479320
+  title: Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans
+    Sensory Cilia.
+  findings:
+  - statement: &gt;-
+      dyf-13 is a component of IFT complex B (identified by affinity purification and
+      mass spectrometry); disruption of the IFT-B complex abolishes ciliary
+      localization of the dynein-2 heavy chain.
+    supporting_text: &gt;-
+      Disruption of the dynein-2 tail domain, light intermediate chain, or
+      intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+      localization, revealing their important roles in ciliary entry of dynein-2.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of the UniProt IFT-B SUBUNIT composition (lists dyf-13) and of the
+      ComplexPortal NAS annotations. Abstract-only in cache; the IFT-B membership and
+      dynein-2-entry roles are stated in the abstract and match the annotations.
+- id: PMID:18316409
+  title: &#34;The Caenorhabditis elegans nephrocystins act as global modifiers of cilium structure.&#34;
+  findings:
+  - statement: &gt;-
+      DYF-13::GFP is used as an intraflagellar-transport reporter and localizes along
+      amphid channel cilia; the dyf-13 mutant occasionally lacks the IFT-B cargo
+      OSM-6 in amphid distal segments, consistent with an anterograde/IFT-B role.
+    supporting_text: &gt;-
+      The dyf-13 mutant, similar to nphp-4 animals, occasionally lacks OSM-6
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text (PMC) paper using DYF-13::GFP as an IFT reporter; supports ciliary
+      localization/IFT and a distal-segment cargo (OSM-6) defect in dyf-13 mutants.
+- id: PMID:16957054
+  title: &#34;Caenorhabditis elegans DYF-2, an orthologue of human WDR19, is a component of the intraflagellar transport machinery in sensory cilia.&#34;
+  findings:
+  - statement: &gt;-
+      Establishes the C. elegans dye-filling-defective (dyf) IFT gene class to which
+      dyf-13 belongs; the paralogous dyf-2/WDR19 associates with IFT particle complex
+      B, providing IFT-machinery context for the DYF-13 IFT-B annotations.
+    supporting_text: &gt;-
+      we conclude that DYF-2 can associate with IFT particle complex B
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Background/context reference for the dyf IFT gene class; primarily about the
+      paralog dyf-2/WDR19 (IFT complex-B associated). Only the abstract is cached, so
+      supporting_text is quoted verbatim from the abstract; the dyf-13-specific X-box
+      cloning detail is not stated in the cached abstract and is not asserted here.
+- id: PMID:18369462
+  title: &#34;An essential role for DYF-11/MIP-T3 in assembling functional intraflagellar transport complexes.&#34;
+  findings:
+  - statement: &gt;-
+      DYF-13 is listed among the conserved C. elegans IFT-associated proteins whose
+      orthologs are enriched in the Chlamydomonas flagellar proteome, supporting its
+      status as a conserved IFT component.
+    supporting_text: &gt;-
+      DYF-3 [34], DYF-13 [35], and IFTA-1 [36]
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Corroborates evolutionary conservation of DYF-13 as an IFT component; the paper
+      itself is about the IFT-B protein DYF-11.
+- id: PMID:26980730
+  title: &gt;-
+    Overall Architecture of the Intraflagellar Transport (IFT)-B Complex Containing
+    Cluap1/IFT38 as an Essential Component of the IFT-B Peripheral Subcomplex.
+  findings:
+  - statement: &gt;-
+      The mammalian ortholog TTC26/IFT56 was identified as an integral component of
+      the IFT-B core subcomplex, establishing that TTC26/IFT56 (the DYF-13 family) is
+      a genuine IFT-B subunit.
+    supporting_text: &gt;-
+      we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with
+      certainty in
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Mammalian IFT-B interaction-map paper; supports the family-level IFT-B
+      (TTC26/IFT56) assignment used for the orthology-based annotations. Ortholog
+      evidence, not C. elegans-specific.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
