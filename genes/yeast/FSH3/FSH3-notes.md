@@ -27,8 +27,10 @@ KNOWN (defensible):
 NOT KNOWN (the gaps — primary deliverable):
 - The physiological substrate and the specific reaction it catalyzes. UniProt states
   "Serine hydrolase of unknown specificity" and assigns only EC 3.1.-.- (uncommitted esterase).
-- The in-vivo biological role / pathway. Deletion has no reported growth phenotype under
-  standard conditions; phenotypes are seen only on overexpression.
+- The in-vivo biological role / pathway. Single deletion has no reported *growth* phenotype
+  under standard conditions, but a double-deletion (Δlpx1Δfsh3) shows reduced peroxisomal
+  β-oxidation activity [PMID:36164978], implicating FSH3 (redundantly with Lpx1) in
+  peroxisomal fatty-acid β-oxidation. The specific molecular step/substrate remains unassigned.
 - Functional redundancy with paralogs FSH1 and FSH2 (double-deletion data below suggest
   partial redundancy / opposing roles but do not assign a molecular function).
 - Whether the PC reduction on overexpression reflects a direct enzymatic activity on a
@@ -120,6 +122,21 @@ peroxisomal protein (basis of the SGD IDA C:peroxisome annotation).
 - Supports: C:peroxisome (IDA); a lipid-metabolism-linked phenotype on overexpression
   (reduction of phosphatidylcholine). Note this is an overexpression lipidome effect, not
   proof of a direct PC-hydrolase activity.
+- IMPORTANT (deletion-based phenotype, from full text): a peroxisomal β-oxidation activity
+  assay of single and double deletions shows Δfsh3 contributes to β-oxidation:
+  [PMID:36164978 "A β‐oxidation activity assay of Δlpx1, Δfsh3, and Δlpx1Δfsh3 strains
+  supplemented with labeled 8 carbon‐ or 18 carbon‐free fatty acids in media supplemented
+  with 0.5% glucose shows a significant reduction in β‐oxidation activity compared to the
+  control strain and the two single mutants, suggesting an overlapping role for Fsh3 with
+  Lpx1."]. Lpx1 is the peroxisomal lipase; the double mutant Δlpx1Δfsh3 (but not either
+  single mutant) has reduced β-oxidation. This is a concrete deletion (loss-of-function)
+  clue that FSH3 has a redundant/overlapping role in peroxisomal fatty-acid β-oxidation —
+  consistent with the peroxisomal localization and the PC-reduction lipidome result. It
+  refines the "no deletion phenotype" statement: single-deletion *growth* is silent, but
+  a biochemical double-mutant β-oxidation phenotype exists and points to a candidate
+  pathway (GO:0006635 fatty acid beta-oxidation; in yeast this is exclusively peroxisomal).
+  This is why single fsh/lpx1 deletions look silent (redundancy). The molecular role of
+  FSH3 in that pathway (which acyl-ester substrate it hydrolyzes) is still unassigned.
 
 ### PMID:30776074 (Gowsalya et al. 2019, FEMS Yeast Res) — overexpression apoptosis, NUC1
 - [PMID:30776074 "hydrogen peroxide (H2O2) exposure increased the expression of both mRNA and
@@ -159,10 +176,16 @@ of GXSXG serine hydrolases acting in peroxisomal/lipid metabolism (not a FSH3-sp
   (superseded by informative annotations we now have / the IBA hydrolase annotation).
 
 ## Open questions / gaps (primary deliverable)
-1. Physiological substrate + specific reaction (only EC 3.1.-.-; "unknown specificity").
-2. In-vivo biological role/pathway (no deletion phenotype under standard conditions).
-3. Redundancy vs FSH1/FSH2 (double-deletion growth effects; molecular function still unassigned).
-4. Whether peroxisomal FSH3 acts directly on a glycerophospholipid (PC) or the PC change is
-   indirect.
+1. Physiological substrate + specific reaction (only EC 3.1.-.-; "unknown specificity"). The
+   Δlpx1Δfsh3 β-oxidation phenotype nudges this toward a fatty-acyl/lipid ester substrate.
+2. In-vivo biological role/pathway. Refined: single-deletion growth is silent, but a
+   double-mutant (Δlpx1Δfsh3) β-oxidation defect implicates FSH3 in peroxisomal fatty-acid
+   β-oxidation (GO:0006635, peroxisomal in yeast), overlapping with the lipase Lpx1. The
+   precise molecular contribution is still unknown.
+3. Redundancy vs paralogs and vs Lpx1: fsh double deletions grow faster [PMID:30776074],
+   and Δlpx1Δfsh3 (but not single mutants) reduces β-oxidation [PMID:36164978] — redundancy
+   is the likely reason single deletions look silent; molecular function still unassigned.
+4. Whether peroxisomal FSH3 acts directly on a glycerophospholipid (PC) / fatty-acyl ester,
+   or the PC/β-oxidation effects are indirect.
 </content>
 </invoke>
