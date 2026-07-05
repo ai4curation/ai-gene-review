@@ -1,0 +1,3184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPM3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GPM3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q12326" target="_blank" class="term-link">
+                        Q12326
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GPM3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q12326" data-a="DESCRIPTION: GPM3 (systematic name YOL056W) is one of three pho..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GPM3 (systematic name YOL056W) is one of three phosphoglycerate-mutase-family paralogs in Saccharomyces cerevisiae, alongside the sole functional glycolytic mutase GPM1 and the second homolog GPM2. It is a cytoplasmic protein of the histidine-phosphatase superfamily (cofactor/2,3-bisphosphoglycerate-dependent phosphoglycerate mutase, dPGM, subfamily) and retains the family&#39;s catalytic histidine residues. Despite this, GPM3 has no detectable phosphoglycerate mutase activity even when strongly overexpressed, and its deletion (alone or together with GPM2) causes no growth defect on diverse carbon sources and no change in key glycolytic-intermediate levels. It arose by gene duplication and is regarded as a probable non-functional homolog; it is expressed as a low-abundance protein (thousands of molecules per cell) whose molecular activity and biological role remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0004619" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) transfer of the family&#39;s phosphoglycerate mutase activity to GPM3. GPM3 was experimentally assayed and shown to lack detectable mutase activity even when strongly overexpressed (Heinisch et al. 1998), so this is an over-propagation of the ancestral family activity onto a probable non-functional paralog. GPM1 is the sole functional yeast phosphoglycerate mutase. Marked as over-annotated rather than removed because the evidence is contradictory rather than merely thin: UniProt itself hedges (&#34;Could be non-functional&#34;), the dPGM catalytic histidines are conserved in sequence, and weak, expression-limited residual activity below the original assay&#39;s detection cannot be fully excluded (forced overexpression did partially complement gpm1). The term should not, however, be retained as a functional annotation for this paralog.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002630707</span>
+
+                                    &middot; PGAM ancestral node (PTHR11931)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Ancestral PGAM activity is real for the family and for GPM1, but GPM3 has direct experimental evidence of no detectable mutase activity; catalytic histidines are present in sequence, so this is functional divergence rather than an obvious active-site lesion.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of cytosolic localization. This is consistent with the independent experimental (HDA) cytoplasm localization of GPM3 and with the cytoplasmic nature of the family, so the location is reasonable. Kept as non-core because GPM3 has no demonstrated activity for which the location would represent a core function; the &#34;is_active_in&#34; qualifier overstates a demonstrated activity at this site. This IBA cytosol call is independently corroborated by the experimental (HDA) cytoplasm localization of GPM3 (GO:0005737, PMID:14562095), which is why the location itself is accepted even though the accompanying activity is not.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Global analysis of protein localization in budding yeast.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0061621" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic transfer of a glycolytic role. GPM3 is not a functional glycolytic enzyme: it has no detectable mutase activity, and deletion of GPM3 (with or without GPM2) does not perturb growth on diverse carbon sources or the levels of key glycolytic intermediates (Heinisch et al. 1998). This is an over-annotation of the family process onto a non-functional paralog.
+                        </div>
+
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">WRONG ORTHOLOG OR PARALOG</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002630707</span>
+
+                                    &middot; PGAM ancestral node (PTHR11931)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Canonical glycolysis is correct for GPM1 but propagates to a paralog whose deletion is metabolically silent and which lacks the enabling enzymatic activity.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deletion of either GPM2 or GPM3, or the two deletions in concert, did not produce any obvious lesions for growth on a variety of different carbon sources, nor did they change the levels of key intermediary metabolites.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic catalytic-activity term applied electronically from InterPro membership. No catalytic activity of any kind has been demonstrated for GPM3; the assayed mutase activity was undetectable. This is uninformative and, given the negative functional evidence, an over-annotation from family membership.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0004619" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of phosphoglycerate mutase activity from the UniProt EC/Rhea mapping (EC 5.4.2.11) attached to the BPG-dependent PGAM subfamily. As with the IBA copy of this term, this is a family-level inference contradicted by the direct experimental finding of no detectable mutase activity for GPM3; the same UniProt entry states the protein &#34;Could be non-functional&#34;. Marked as over-annotated rather than removed for the same reason as the IBA copy: the catalytic histidines are conserved and expression-limited residual activity cannot be fully excluded, so the call is deliberately conservative.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer of the glycolytic-process role from family/pathway mapping. Over-annotation for the same reasons as the canonical-glycolysis IBA term: GPM3 deletion is metabolically and phenotypically silent and the enzyme lacks detectable activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deletion of either GPM2 or GPM3, or the two deletions in concert, did not produce any obvious lesions for growth on a variety of different carbon sources, nor did they change the levels of key intermediary metabolites.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016868" target="_blank" class="term-link">
+                                    GO:0016868
+                                </a>
+                            </span>
+                            <span class="term-label">intramolecular phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0016868" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The specific mechanistic MF term for the dPGM reaction (intramolecular phosphotransfer), applied electronically from InterPro. No such activity has been demonstrated for GPM3; it is an over-annotation of the family mechanism onto a non-functional paralog.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                        PMID:9544241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0005737" data-r="PMID:14562095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (high-throughput direct assay) localization of GPM3 to the cytoplasm from the genome-wide GFP-fusion study. This is a well-supported, correct location annotation and the only positively demonstrated attribute of GPM3 besides its expression. Retained; it is a location rather than a core molecular/biological function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Global analysis of protein localization in budding yeast.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function with the ND (no biological data) evidence code, assigned by SGD. This honestly reflects the true state of knowledge: no molecular activity has been positively demonstrated for GPM3, and the assayed mutase activity was undetectable. Retained as an accurate no-data placeholder.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q12326" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process with the ND evidence code. Consistent with the absence of any demonstrated in-vivo role: GPM3 deletion is phenotypically silent under the conditions tested. Retained as an accurate no-data placeholder.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>No molecular function can be positively assigned to GPM3. It is a member of the phosphoglycerate mutase / histidine-phosphatase superfamily that retains the dPGM catalytic histidine residues, but the family phosphoglycerate mutase activity was experimentally undetectable even on forced overexpression, and no alternative activity, substrate, or biological role has been demonstrated. It is a stably expressed cytoplasmic protein of unknown function, most consistent with a probable non-functional homolog produced by gene duplication.</h3>
+                <span class="vote-buttons" data-g="Q12326" data-a="FUNCTION: No molecular function can be positively assigned t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                PMID:9544241
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                                PMID:9544241
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We conclude that both genes evolved from duplication events and that they probably constitute non-functional homologues in yeast.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" target="_blank" class="term-link">
+                            PMID:9544241
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Investigation of two yeast genes encoding putative isoenzymes of phosphoglycerate mutase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GPM1 is the only functional phosphoglycerate mutase in yeast; GPM2 and GPM3 were detected as homologous sequences during genome sequencing.</div>
+
+                        <div class="finding-text">"Our previous data indicated that GPM1 encodes the only functional phosphoglycerate mutase in yeast. However, in the course of the yeast genome sequencing project, two homologous sequences, designated GPM2 and GPM3, were detected."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The catalytic residues of the mutase active site are conserved in GPM3.</div>
+
+                        <div class="finding-text">"Key residues in the deduced amino acid sequence, shown to be involved in catalysis for Gpm1 (i.e. His8, Arg59, His181) are conserved in both enzymes."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Forced high-level expression of GPM3 partially complemented gpm1 defects but did not restore any detectable enzymatic activity.</div>
+
+                        <div class="finding-text">"Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of GPM2 and/or GPM3 produced no growth lesions and no change in key metabolite levels; both are probable non-functional homologs arising by duplication.</div>
+
+                        <div class="finding-text">"deletion of either GPM2 or GPM3, or the two deletions in concert, did not produce any obvious lesions for growth on a variety of different carbon sources, nor did they change the levels of key intermediary metabolites."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide GFP study assigning GPM3 to the cytoplasm.</div>
+
+                        <div class="finding-text">"Global analysis of protein localization in budding yeast."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562106" target="_blank" class="term-link">
+                            PMID:14562106
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein expression in yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide expression study; source of the ~3730 molecules/cell abundance value for GPM3 recorded in UniProt.</div>
+
+                        <div class="finding-text">"Global analysis of protein expression in yeast."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does GPM3 have any residual or alternative catalytic activity (e.g. phosphatase or a non-glycolytic phosphotransfer) despite lacking detectable phosphoglycerate mutase activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="Q: Does GPM3 have any residual or alternative catalyt..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is GPM3 conditionally functional or important under a stress or nutrient state not tested in the original characterization?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="Q: Is GPM3 conditionally functional or important unde..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Given that the dPGM catalytic histidines are conserved in sequence, is the folded GPM3 active site competent, and does the GPM3-specific disordered insertion (residues ~168-198) disrupt folding or substrate binding?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="Q: Given that the dPGM catalytic histidines are conse..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant GPM3 and assay it across a panel of phosphoglycerate mutase (with and without 2,3-bisphosphoglycerate priming) and histidine-phosphatase substrate reactions to test for any residual or alternative activity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GPM3 has no residual mutase activity but may retain a weak alternative phosphotransfer/phosphatase activity typical of the histidine-phosphatase superfamily.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzymatic assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="EXPERIMENT: Express and purify recombinant GPM3 and assay it a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform condition/stress phenotyping (e.g. carbon-source shifts, oxidative, osmotic, and stationary-phase stresses) of gpm3, gpm2 gpm3, and gpm1(ts) gpm3 strains to detect any conditional requirement for GPM3.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GPM3 is required only under a specific, previously untested condition.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="EXPERIMENT: Perform condition/stress phenotyping (e.g. carbon-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the GPM3 interactome by affinity purification / proximity labeling to test whether it acts as a partner or scaffold rather than an enzyme.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: GPM3 has a non-catalytic role mediated by protein partners.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q12326" data-a="EXPERIMENT: Determine the GPM3 interactome by affinity purific..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether GPM3 has any catalytic or other molecular activity, what (if any) its in-vivo biological role is, and why S. cerevisiae retains a stably expressed third phosphoglycerate-mutase homolog that is dispensable and lacks detectable mutase activity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> GPM3 is firmly established as a phosphoglycerate-mutase-family protein (histidine- phosphatase superfamily, BPG-dependent PGAM subfamily) that retains the dPGM catalytic histidine residues, is expressed as a low-abundance protein (~3730 molecules/cell) and localizes to the cytoplasm. It has been directly assayed for phosphoglycerate mutase activity and none was detectable even under forced (PFK2- promoter) overexpression, and deletion of GPM3 alone or together with GPM2 causes no growth defect on diverse carbon sources and no change in key glycolytic- intermediate levels. GPM1 is the sole functional yeast phosphoglycerate mutase.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> GPM3 is a clean example of a conserved-looking paralog whose active-site residues are intact yet which has no directly measured ancestral activity. It is unresolved whether the protein is truly catalytically dead or retains weak residual activity that is masked physiologically by very low native expression: the same PFK2-driven overexpression that partially complements a gpm1 deletion on non-fermentable carbon also failed to restore detectable enzymatic activity in the original assay. Determining whether GPM3 has been pseudogenized at the protein level, retains weak residual activity limited by expression, acquired a new (non-mutase) activity, or is retained for a condition-specific role would clarify the fate of duplicated metabolic-enzyme genes and prevent electronic propagation of functional glycolytic-mutase annotations onto physiologically non-functional homologs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Broad enzymatic screening of purified recombinant GPM3 (including 2,3-BPG-primed mutase and phosphatase assays) to test for any residual or alternative activity; condition/stress-specific phenotyping of gpm3 and gpm1 gpm3 / gpm2 gpm3 mutants; affinity/proximity proteomics to identify partners; structural characterization to test whether the family fold and active site are competent despite the conserved residues, given the ~30-residue disordered insertion unique to GPM3.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity."</em> — PMID:9544241</li>
+
+                <li><em>"We conclude that both genes evolved from duplication events and that they probably constitute non-functional homologues in yeast."</em> — PMID:9544241</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GPM3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12326" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: GPM3 (YOL056W) — Phosphoglycerate Mutase 3 in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T02:22:15.667775</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="GPM3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="GPM3-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-gpm3-yol056w-phosphoglycerate-mutase-3-in-saccharomyces-cerevisiae">Comprehensive Research Report: GPM3 (YOL056W) — Phosphoglycerate Mutase 3 in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>GPM3 (systematic name YOL056W; UniProt Q12326) is located on the left arm of chromosome XV in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). It encodes Phosphoglycerate Mutase 3 (PGAM 3), a member of the 2,3-bisphosphoglycerate (BPG)-dependent phosphoglycerate mutase family (EC 5.4.2.11). The protein belongs to the histidine phosphatase superfamily and contains the His_Pase_superF_clade-1 domain (IPR013078), His_PPase_superfam domain (IPR029033), and the Phosphogly_mut1 domain (IPR005952), which are characteristic of cofactor-dependent phosphoglycerate mutases (dPGMs) (papini2010phosphoglyceratemutaseknock‐out pages 1-2, jedrzejas2001comparisonofthe pages 2-3).</p>
+<p>The following summary encapsulates the key functional annotation findings for GPM3:</p>
+<blockquote>
+<p>GPM3 (YOL056W; UniProt Q12326) in <em>Saccharomyces cerevisiae</em> S288c is best annotated as a putative 2,3-bisphosphoglycerate-dependent phosphoglycerate mutase (EC 5.4.2.11) of the phosphoglycerate mutase family, consistent with its assignment to the histidine phosphatase superfamily and the His_Pase_superF_clade-1/PG-BPG mutase domain architecture. (papini2010phosphoglyceratemutaseknock‐out pages 1-2, jedrzejas2001comparisonofthe pages 2-3, bond2001highresolutionstructure pages 1-1)</p>
+<p>By family-level inference and paralog comparison, the expected catalytic role of Gpm3 is the reversible interconversion of 3-phosphoglycerate and 2-phosphoglycerate in lower glycolysis and gluconeogenesis, using the canonical cofactor-dependent phosphoglycerate mutase mechanism in which 2,3-bisphosphoglycerate primes an active-site phosphohistidine intermediate. (papini2010phosphoglyceratemutaseknock‐out pages 1-2, jedrzejas2001comparisonofthe pages 2-3, bond2001highresolutionstructure pages 1-1, bond2001highresolutionstructure pages 3-4)</p>
+<p>The strongest organism-specific evidence indicates that GPM3 is a high-homology duplicate of the major phosphoglycerate mutase gene GPM1, but at endogenous expression levels it behaves as a non-functional or physiologically negligible homolog: GPM3 is expressed too weakly to support significant glycolytic flux, and overexpression from its native promoter does not rescue a <em>gpm1Δ</em> strain. (papini2010phosphoglyceratemutaseknock‐out pages 1-2, papini2010phosphoglyceratemutaseknock‐out pages 6-8)</p>
+<p>However, GPM3 is not necessarily a completely dead enzyme: when expressed from the stronger <em>PFK2</em> promoter, GPM3 can partially complement the growth defect of <em>gpm1Δ</em> cells on glycerol/ethanol after prolonged incubation, implying residual catalytic competence despite poor native expression. (papini2010phosphoglyceratemutaseknock‐out pages 1-2)</p>
+<p>Functionally, GPM3 is therefore best viewed as a weakly expressed paralog of the main glycolytic/gluconeogenic phosphoglycerate mutase rather than the primary enzyme carrying this step in vivo; GPM1 remains the dominant physiological phosphoglycerate mutase in yeast. (papini2010phosphoglyceratemutaseknock‐out pages 1-2)</p>
+<p>Subcellularly, Gpm3 is expected to function in the cytoplasm, matching the usual localization of soluble glycolytic enzymes and available yeast localization resources; unlike Gpm1, there is no strong evidence for a characterized cell-wall moonlighting role for Gpm3. (papini2010phosphoglyceratemutaseknock‐out pages 1-2, rodicio2009sugarmetabolismby pages 8-9)</p>
+<p>Evolutionarily, GPM3 appears to have arisen through gene-duplication events that generated the GPM1/GPM2/GPM3 family; comparative analyses of glycolytic duplicates support broader retention of glycolytic paralogs in yeast evolution, although GPM2/GPM3 were treated separately from canonical retained whole-genome-duplication pairs in one comparative study. (papini2010phosphoglyceratemutaseknock‐out pages 1-2, conant2007increasedglycolyticflux pages 4-5, conant2007increasedglycolyticflux pages 3-4)</p>
+</blockquote>
+<p><em>Blockquote: This blockquote condenses the main functional annotation conclusions for yeast GPM3, integrating direct organism-specific evidence with enzyme-family mechanistic inference. It is useful as a concise evidence-backed summary of likely function, pathway role, localization, and evolutionary origin.</em></p>
+<h2 id="2-enzymatic-function-and-catalytic-mechanism">2. Enzymatic Function and Catalytic Mechanism</h2>
+<h3 id="21-predicted-reaction">2.1. Predicted Reaction</h3>
+<p>By sequence homology and domain architecture, GPM3 encodes a 2,3-bisphosphoglycerate-dependent phosphoglycerate mutase predicted to catalyze the reversible interconversion of 3-phosphoglycerate (3-PG) and 2-phosphoglycerate (2-PG), a step in the lower portion of the Embden-Meyerhof-Parnas glycolytic pathway and in gluconeogenesis (papini2010phosphoglyceratemutaseknock‐out pages 1-2).</p>
+<h3 id="22-catalytic-mechanism-of-the-dpgm-family">2.2. Catalytic Mechanism of the dPGM Family</h3>
+<p>The catalytic mechanism of dPGMs is well characterized through structural and biochemical studies of the related yeast Gpm1 enzyme and the <em>E. coli</em> dPGM. The enzyme requires the cofactor 2,3-bisphosphoglycerate (2,3-BPG) for activation. The native (unactivated) protein must first be phosphorylated by 2,3-BPG at a conserved nucleophilic histidine residue (His10 in the <em>E. coli</em> numbering, His8 in the yeast enzyme), generating a phosphoenzyme intermediate and releasing either 2-PG or 3-PG (jedrzejas2001comparisonofthe pages 2-3, bond2001highresolutionstructure pages 1-1, bond2001highresolutionstructure pages 1-2). The catalytic mechanism involves a pair of histidine residues: one histidine accepts the phosphoryl group from the cofactor (nucleophilic histidine), while a second histidine (His183 in <em>E. coli</em>) serves as a proton source during catalysis (jedrzejas2001comparisonofthe pages 2-3, bond2001highresolutionstructure pages 3-4). Notably, no metal ions are required for dPGM catalysis, distinguishing it from the cofactor-independent phosphoglycerate mutases (iPGMs) (jedrzejas2001comparisonofthe pages 2-3).</p>
+<p>Beyond its mutase activity, the dPGM family possesses two additional catalytic activities: a phosphatase activity that converts 2,3-bisphosphoglycerate to monophosphoglycerate plus phosphate, and a synthase activity that converts 1,3-bisphosphoglycerate to 2,3-bisphosphoglycerate (bond2001highresolutionstructure pages 1-1).</p>
+<h3 id="23-structural-basis">2.3. Structural Basis</h3>
+<p>The crystal structure of the yeast dPGM (Gpm1) was first solved in 1974 (PDB: 3PGM), with multiple subsequent structures determined at increasing resolution (PDB entries 4PGM, 5PGM, 1BQ3, 1BQ4, 1QHF) (bond2001highresolutionstructure pages 1-1). The monomer adopts an α/β fold featuring a six-stranded β-sheet (C-B-D-A-E-F, with all but E parallel) flanked by six α-helices. The active site is located at the C-terminal edge of the β-sheet and is cup-shaped, approximately 16 Å deep and 10 × 8 Å wide with a volume of ~1200 Å³ (bond2001highresolutionstructure pages 1-2, bond2001highresolutionstructure pages 3-4). Key conserved active-site residues include His10 (nucleophilic), His183, Glu88, Arg61, Asn16, and Ser57, which are conserved across <em>E. coli</em>, <em>S. cerevisiae</em>, <em>S. pombe</em>, and human dPGM enzymes (bond2001highresolutionstructure pages 3-4). The yeast Gpm1 forms a tetramer, distinguishing it from the <em>E. coli</em> enzyme which is dimeric (bond2001highresolutionstructure pages 1-1, bond2001highresolutionstructure pages 1-2). Given the high sequence homology between GPM3 and GPM1, Gpm3 is predicted to share this overall fold and domain architecture.</p>
+<h2 id="3-relationship-to-the-phosphoglycerate-mutase-gene-family-in-yeast">3. Relationship to the Phosphoglycerate Mutase Gene Family in Yeast</h2>
+<p><em>S. cerevisiae</em> harbors three genes encoding putative phosphoglycerate mutases: GPM1 (YKL152C), GPM2 (YDL021W), and GPM3 (YOL056W). The following table summarizes their comparative properties:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Systematic name</th>
+<th>Chromosomal location</th>
+<th>Expression level</th>
+<th>Functional status</th>
+<th>Ability to complement <strong>gpm1Δ</strong></th>
+<th>Key evidence/references</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GPM1</strong></td>
+<td><strong>YKL152C</strong></td>
+<td>Right arm of chromosome VIII</td>
+<td>High/constitutive; major expressed phosphoglycerate mutase isoform</td>
+<td>Major functional phosphoglycerate mutase for glycolysis and gluconeogenesis; enzyme catalyzes 3-phosphoglycerate ↔ 2-phosphoglycerate</td>
+<td>Native functional gene; deletion causes severe growth defect and inability to grow on glucose alone</td>
+<td>Papini et al. 2010; Rodicio &amp; Heinisch 2009 (papini2010phosphoglyceratemutaseknock‐out pages 1-2, rodicio2009sugarmetabolismby pages 8-9)</td>
+</tr>
+<tr>
+<td><strong>GPM2</strong></td>
+<td><strong>YDL021W</strong></td>
+<td>Left arm of chromosome IV</td>
+<td>Very low endogenous expression</td>
+<td>Non-functional/weakly functional homolog of <strong>GPM1</strong> formed by duplication; does not contribute significantly to glycolytic flux at native expression</td>
+<td><strong>No</strong> complementation under own promoter; <strong>partial</strong> complementation only when overexpressed from <strong>PFK2</strong> promoter on glycerol/ethanol after prolonged incubation</td>
+<td>Papini et al. 2010 (summarizing Heinisch et al.) (papini2010phosphoglyceratemutaseknock‐out pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>GPM3</strong></td>
+<td><strong>YOL056W</strong></td>
+<td>Left arm of chromosome XV</td>
+<td>Very low endogenous expression</td>
+<td>Non-functional/weakly functional homolog of <strong>GPM1</strong>; likely retains residual catalytic capacity but is not expressed enough to support significant flux</td>
+<td><strong>No</strong> complementation under own promoter; <strong>partial</strong> complementation only when overexpressed from <strong>PFK2</strong> promoter on glycerol/ethanol after prolonged incubation</td>
+<td>Papini et al. 2010; targeted proteomics shows low expression and close regulatory clustering with Gpm1/Gpm3 family behavior (papini2010phosphoglyceratemutaseknock‐out pages 1-2, papini2010phosphoglyceratemutaseknock‐out pages 6-8, costenoble2011comprehensivequantitativeanalysis pages 6-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares the three phosphoglycerate mutase genes in Saccharomyces cerevisiae, highlighting that GPM1 is the major functional isoform, whereas GPM2 and GPM3 are very weakly expressed homologs with only partial rescue capacity when strongly overexpressed. It is useful for distinguishing primary enzyme function from paralog redundancy.</em></p>
+<p>GPM1 is the major glycolytic and gluconeogenic phosphoglycerate mutase in yeast. It encodes a constitutively expressed enzyme that forms a tetramer of four identical subunits, each approximately 28 kDa (papini2010phosphoglyceratemutaseknock‐out pages 1-2). Deletion of GPM1 renders cells unable to grow on glucose as a sole carbon source; growth is only possible when glycerol and ethanol are provided together, with glycerol feeding gluconeogenesis and ethanol providing energy through respiration (papini2010phosphoglyceratemutaseknock‐out pages 1-2).</p>
+<p>GPM2 and GPM3 were identified through genome sequencing as genes with high sequence homology to GPM1. However, Heinisch and colleagues demonstrated that both are effectively non-functional homologs under physiological conditions: overexpression of GPM2 or GPM3 on multicopy vectors under the control of their own promoters does not complement a <em>gpm1</em> deletion mutant when grown on complex media containing glucose or a mixture of glycerol/ethanol (papini2010phosphoglyceratemutaseknock‐out pages 1-2). Further analysis of the GPM2 and GPM3 promoters indicated that these genes are expressed at levels too low to contribute to a significant glycolytic flux (papini2010phosphoglyceratemutaseknock‐out pages 1-2). Transcriptome analysis of a Δ<em>gpm1</em> mutant confirmed that GPM2 and GPM3 display very low expression levels even when the primary phosphoglycerate mutase is absent (papini2010phosphoglyceratemutaseknock‐out pages 6-8).</p>
+<p>Critically, GPM3 retains some residual catalytic capacity: when GPM2 or GPM3 are overexpressed under the control of the stronger PFK2 promoter, they can partially complement the growth defect of the <em>gpm1</em> deletion strain on synthetic and complex media containing glycerol and ethanol, but only after prolonged incubation (papini2010phosphoglyceratemutaseknock‐out pages 1-2). This indicates that the Gpm3 protein likely retains enzymatic function, but its physiological insignificance is primarily due to insufficient endogenous expression rather than complete loss of catalytic competence.</p>
+<p>Targeted proteomics studies using selected reaction monitoring (SRM) mass spectrometry have corroborated these findings. Costenoble et al. (2011) detected both Gpm1 and Gpm3 across multiple metabolic steady states and found that the Gpm1/Gpm3 pair clustered in proximate branches in hierarchical clustering analysis, suggesting similar regulatory patterns across growth conditions (costenoble2011comprehensivequantitativeanalysis pages 6-8). This proximity in expression regulation, combined with the partial complementation data, is consistent with Gpm3 being a weakly expressed but functionally related paralog of Gpm1.</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>Gpm3 is predicted to localize to the cytoplasm, consistent with its role as a soluble glycolytic enzyme. This localization matches that assigned to Gpm3 in the global yeast GFP-tagged protein localization study (Huh et al. 2003, <em>Nature</em> 425:686–691). By contrast, the major paralog Gpm1 is primarily cytoplasmic but has also been found in significant amounts in the yeast cell wall, where it retains enzymatic activity when released by alkaline treatment, although the specific role of Gpm1 in the cell wall remains largely unknown (papini2010phosphoglyceratemutaseknock‐out pages 1-2). There is no experimental evidence indicating that Gpm3 has a similar cell wall–associated moonlighting function.</p>
+<h2 id="5-pathway-context-glycolysis-and-gluconeogenesis">5. Pathway Context: Glycolysis and Gluconeogenesis</h2>
+<p>The phosphoglycerate mutase reaction occupies a critical position in lower glycolysis, connecting the output of phosphoglycerate kinase (which produces 3-PG) to the input of enolase (which consumes 2-PG to produce phosphoenolpyruvate). In the gluconeogenic direction, the same reaction runs in reverse to convert 2-PG to 3-PG. Deletion of GPM1, the primary enzyme catalyzing this step, leads to a severely impaired growth phenotype: the Δ<em>gpm1</em> mutant shows increased transcript levels of genes involved in the pentose phosphate pathway and the glyoxylate shunt, indicating an attempt to compensate for the energy imbalance caused by the deletion of this glycolytic/gluconeogenic gene (papini2010phosphoglyceratemutaseknock‐out pages 1-2). The inability of GPM2 and GPM3 to rescue this phenotype under normal expression conditions underscores the dominance of GPM1 in this metabolic step.</p>
+<p>In the context of glycolysis humanization, Boonekamp et al. (2021) replaced yeast glycolytic enzymes with human orthologs and found that human phosphoglycerate mutase 2 (HsPGAM2) showed significantly lower activity than the yeast enzyme and required adaptive laboratory evolution to achieve adequate flux, further highlighting the importance of this enzymatic step to glycolytic throughput (boonekamp2021ayeastwith pages 10-12, boonekamp2021ayeastwith pages 12-15, boonekamp2021ayeastwith pages 15-19).</p>
+<h2 id="6-moonlighting-functions-of-the-phosphoglycerate-mutase-family">6. Moonlighting Functions of the Phosphoglycerate Mutase Family</h2>
+<p>While GPM3 itself has no characterized moonlighting roles, the broader phosphoglycerate mutase family in yeasts has well-documented moonlighting functions. In <em>Candida albicans</em>, Gpm1 localizes to the cell surface, particularly at hyphal tips, where it binds plasminogen through lysine-binding domains and enables its activation to plasmin by urokinase-type plasminogen activator, facilitating fibrinolysis and extracellular matrix degradation for cell invasion (gancedo2016theexpandinglandscape pages 6-7). Additionally, cell-surface Gpm1 in <em>C. albicans</em> binds complement regulators FH and FHL-1, helping the pathogen evade complement-mediated immune responses (gancedo2016theexpandinglandscape pages 7-8). In <em>S. cerevisiae</em>, Gpm1 is present and enzymatically active in the cell wall, though its specific functional role there remains unclear (papini2010phosphoglyceratemutaseknock‐out pages 1-2). Given GPM3's very low expression, it is unlikely to contribute meaningfully to any such moonlighting role.</p>
+<h2 id="7-evolutionary-context">7. Evolutionary Context</h2>
+<p>GPM2 and GPM3 arose through gene duplication events in the <em>S. cerevisiae</em> lineage (papini2010phosphoglyceratemutaseknock‐out pages 1-2). Conant and Wolfe (2007) demonstrated that glycolytic gene duplicates retained after the ancient whole-genome duplication (WGD) in the <em>Saccharomyces</em> lineage were preferentially preserved relative to the genome-wide average (Fisher's exact test, P = 0.0014), suggesting selective advantage through increased enzymatic dosage and glycolytic flux (conant2007increasedglycolyticflux pages 4-5, conant2007increasedglycolyticflux pages 3-4). However, the GPM2/GPM3 pair was specifically excluded from their main statistical analysis of WGD-retained duplicates, suggesting these paralogs may have arisen through a different duplication mechanism or may have diverged to the point of near non-functionality, unlike the retained WGD duplicates that maintained high expression and contributed to increased glycolytic capacity (conant2007increasedglycolyticflux pages 4-5). Rodicio and Heinisch (2009) listed Gpm1, Gpm2, and Gpm3 as homodimeric phosphoglycerate mutases in their review of yeast sugar metabolism, noting them as putative isoenzymes (rodicio2009sugarmetabolismby pages 8-9).</p>
+<h2 id="8-summary">8. Summary</h2>
+<p>GPM3 (YOL056W) in <em>Saccharomyces cerevisiae</em> encodes a putative 2,3-bisphosphoglycerate-dependent phosphoglycerate mutase (EC 5.4.2.11) that is a high-homology paralog of the major glycolytic enzyme GPM1. By domain architecture and family membership, Gpm3 is predicted to catalyze the reversible interconversion of 3-phosphoglycerate and 2-phosphoglycerate using a phosphohistidine intermediate mechanism requiring 2,3-BPG as cofactor. The protein localizes to the cytoplasm. However, under physiological conditions, GPM3 is expressed at negligibly low levels and does not contribute significantly to glycolytic or gluconeogenic flux. Overexpression experiments demonstrate that Gpm3 retains some residual catalytic capacity, as it can partially complement a <em>gpm1Δ</em> deletion when driven by a strong heterologous promoter, but only on non-fermentable carbon sources and after extended incubation. GPM3 is therefore best characterized as a weakly expressed, largely non-functional paralog of GPM1 that arose through gene duplication, with the primary functional constraint being transcriptional silencing rather than complete loss of enzymatic activity.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(papini2010phosphoglyceratemutaseknock‐out pages 1-2): Marta Papini, Intawat Nookaew, Gionata Scalcinati, Verena Siewers, and Jens Nielsen. Phosphoglycerate mutase knock‐out mutant saccharomyces cerevisiae: physiological investigation and transcriptome analysis. Biotechnology Journal, 5:1016-1027, Oct 2010. URL: https://doi.org/10.1002/biot.201000199, doi:10.1002/biot.201000199. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jedrzejas2001comparisonofthe pages 2-3): Mark J. Jedrzejas and Peter Setlow. Comparison of the binuclear metalloenzymes diphosphoglycerate-independent phosphoglycerate mutase and alkaline phosphatase: their mechanism of catalysis via a phosphoserine intermediate. Chemical Reviews, 101:607-618, Feb 2001. URL: https://doi.org/10.1021/cr000253a, doi:10.1021/cr000253a. This article has 156 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bond2001highresolutionstructure pages 1-1): Charles S. Bond, Malcolm F. White, and William N. Hunter. High resolution structure of the phosphohistidine-activated form of escherichia coli cofactor-dependent phosphoglycerate mutase*. The Journal of Biological Chemistry, 276:3247-3253, Feb 2001. URL: https://doi.org/10.1074/jbc.m007318200, doi:10.1074/jbc.m007318200. This article has 83 citations.</p>
+</li>
+<li>
+<p>(bond2001highresolutionstructure pages 3-4): Charles S. Bond, Malcolm F. White, and William N. Hunter. High resolution structure of the phosphohistidine-activated form of escherichia coli cofactor-dependent phosphoglycerate mutase*. The Journal of Biological Chemistry, 276:3247-3253, Feb 2001. URL: https://doi.org/10.1074/jbc.m007318200, doi:10.1074/jbc.m007318200. This article has 83 citations.</p>
+</li>
+<li>
+<p>(papini2010phosphoglyceratemutaseknock‐out pages 6-8): Marta Papini, Intawat Nookaew, Gionata Scalcinati, Verena Siewers, and Jens Nielsen. Phosphoglycerate mutase knock‐out mutant saccharomyces cerevisiae: physiological investigation and transcriptome analysis. Biotechnology Journal, 5:1016-1027, Oct 2010. URL: https://doi.org/10.1002/biot.201000199, doi:10.1002/biot.201000199. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rodicio2009sugarmetabolismby pages 8-9): Rosaura Rodicio and Jürgen J. Heinisch. Sugar metabolism by saccharomyces and non-saccharomyces yeasts. ArXiv, pages 113-134, 2009. URL: https://doi.org/10.1007/978-3-540-85463-0_6, doi:10.1007/978-3-540-85463-0_6. This article has 40 citations.</p>
+</li>
+<li>
+<p>(conant2007increasedglycolyticflux pages 4-5): Gavin C Conant and Kenneth H Wolfe. Increased glycolytic flux as an outcome of whole-genome duplication in yeast. Molecular Systems Biology, Jul 2007. URL: https://doi.org/10.1038/msb4100170, doi:10.1038/msb4100170. This article has 312 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(conant2007increasedglycolyticflux pages 3-4): Gavin C Conant and Kenneth H Wolfe. Increased glycolytic flux as an outcome of whole-genome duplication in yeast. Molecular Systems Biology, Jul 2007. URL: https://doi.org/10.1038/msb4100170, doi:10.1038/msb4100170. This article has 312 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bond2001highresolutionstructure pages 1-2): Charles S. Bond, Malcolm F. White, and William N. Hunter. High resolution structure of the phosphohistidine-activated form of escherichia coli cofactor-dependent phosphoglycerate mutase*. The Journal of Biological Chemistry, 276:3247-3253, Feb 2001. URL: https://doi.org/10.1074/jbc.m007318200, doi:10.1074/jbc.m007318200. This article has 83 citations.</p>
+</li>
+<li>
+<p>(costenoble2011comprehensivequantitativeanalysis pages 6-8): Roeland Costenoble, Paola Picotti, Lukas Reiter, Robert Stallmach, Matthias Heinemann, Uwe Sauer, and Ruedi Aebersold. Comprehensive quantitative analysis of central carbon and amino-acid metabolism in saccharomyces cerevisiae under multiple conditions by targeted proteomics. Molecular Systems Biology, 7:464-464, Feb 2011. URL: https://doi.org/10.1038/msb.2010.122, doi:10.1038/msb.2010.122. This article has 144 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(boonekamp2021ayeastwith pages 10-12): Francine J. Boonekamp, Ewout Knibbe, Marcel A. Vieira-Lara, Melanie Wijsman, Marijke A.H. Luttik, Karen van Eunen, Maxime den Ridder, Reinier Bron, Ana Maria Almonacid Suarez, Patrick van Rijn, Justina C. Wolters, Martin Pabst, Jean-Marc Daran, Barbara Bakker, and Pascale Daran-Lapujade. A yeast with muscle doesn’t run faster: full humanization of the glycolytic pathway in saccharomyces cerevisiae. bioRxiv, Sep 2021. URL: https://doi.org/10.1101/2021.09.28.462164, doi:10.1101/2021.09.28.462164. This article has 3 citations.</p>
+</li>
+<li>
+<p>(boonekamp2021ayeastwith pages 12-15): Francine J. Boonekamp, Ewout Knibbe, Marcel A. Vieira-Lara, Melanie Wijsman, Marijke A.H. Luttik, Karen van Eunen, Maxime den Ridder, Reinier Bron, Ana Maria Almonacid Suarez, Patrick van Rijn, Justina C. Wolters, Martin Pabst, Jean-Marc Daran, Barbara Bakker, and Pascale Daran-Lapujade. A yeast with muscle doesn’t run faster: full humanization of the glycolytic pathway in saccharomyces cerevisiae. bioRxiv, Sep 2021. URL: https://doi.org/10.1101/2021.09.28.462164, doi:10.1101/2021.09.28.462164. This article has 3 citations.</p>
+</li>
+<li>
+<p>(boonekamp2021ayeastwith pages 15-19): Francine J. Boonekamp, Ewout Knibbe, Marcel A. Vieira-Lara, Melanie Wijsman, Marijke A.H. Luttik, Karen van Eunen, Maxime den Ridder, Reinier Bron, Ana Maria Almonacid Suarez, Patrick van Rijn, Justina C. Wolters, Martin Pabst, Jean-Marc Daran, Barbara Bakker, and Pascale Daran-Lapujade. A yeast with muscle doesn’t run faster: full humanization of the glycolytic pathway in saccharomyces cerevisiae. bioRxiv, Sep 2021. URL: https://doi.org/10.1101/2021.09.28.462164, doi:10.1101/2021.09.28.462164. This article has 3 citations.</p>
+</li>
+<li>
+<p>(gancedo2016theexpandinglandscape pages 6-7): Carlos Gancedo, Carmen-Lisset Flores, and Juana M. Gancedo. The expanding landscape of moonlighting proteins in yeasts. Microbiology and Molecular Biology Reviews, 80:765-777, Sep 2016. URL: https://doi.org/10.1128/mmbr.00012-16, doi:10.1128/mmbr.00012-16. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gancedo2016theexpandinglandscape pages 7-8): Carlos Gancedo, Carmen-Lisset Flores, and Juana M. Gancedo. The expanding landscape of moonlighting proteins in yeasts. Microbiology and Molecular Biology Reviews, 80:765-777, Sep 2016. URL: https://doi.org/10.1128/mmbr.00012-16, doi:10.1128/mmbr.00012-16. This article has 82 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="GPM3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="GPM3-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>jedrzejas2001comparisonofthe pages 2-3</li>
+<li>bond2001highresolutionstructure pages 1-1</li>
+<li>bond2001highresolutionstructure pages 3-4</li>
+<li>costenoble2011comprehensivequantitativeanalysis pages 6-8</li>
+<li>gancedo2016theexpandinglandscape pages 6-7</li>
+<li>gancedo2016theexpandinglandscape pages 7-8</li>
+<li>conant2007increasedglycolyticflux pages 4-5</li>
+<li>rodicio2009sugarmetabolismby pages 8-9</li>
+<li>conant2007increasedglycolyticflux pages 3-4</li>
+<li>bond2001highresolutionstructure pages 1-2</li>
+<li>boonekamp2021ayeastwith pages 10-12</li>
+<li>boonekamp2021ayeastwith pages 12-15</li>
+<li>boonekamp2021ayeastwith pages 15-19</li>
+<li>https://doi.org/10.1002/biot.201000199,</li>
+<li>https://doi.org/10.1021/cr000253a,</li>
+<li>https://doi.org/10.1074/jbc.m007318200,</li>
+<li>https://doi.org/10.1007/978-3-540-85463-0_6,</li>
+<li>https://doi.org/10.1038/msb4100170,</li>
+<li>https://doi.org/10.1038/msb.2010.122,</li>
+<li>https://doi.org/10.1101/2021.09.28.462164,</li>
+<li>https://doi.org/10.1128/mmbr.00012-16,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GPM3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q12326" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gpm3-yol056w-curation-notes">GPM3 (YOL056W) — curation notes</h1>
+<p><em>S. cerevisiae</em> GPM3 / systematic name YOL056W. UniProt Q12326 (PMG3_YEAST). One of three<br />
+phosphoglycerate-mutase-family paralogs in budding yeast (GPM1, GPM2, GPM3). This is an<br />
+<strong>understudied / dark</strong> gene: it is a sequence homolog of the glycolytic mutase GPM1, but has<br />
+no demonstrated mutase activity and no assigned in-vivo role. The primary curation deliverable<br />
+is an honest knowledge-gaps statement plus carefully-attributed core-functions/description that<br />
+never invents function.</p>
+<h2 id="provenance-rule-for-these-notes">Provenance rule for these notes</h2>
+<p>Every substantive claim carries inline <code>[PMID:xxxx "verbatim quote"]</code> or a <code>[file:...]</code><br />
+provenance pointer. Domain reasoning done inline (see "Domain / pseudoenzyme analysis") is my<br />
+own analysis of the UniProt record and a pairwise alignment I ran locally.</p>
+<h2 id="identity-and-paralogy-keep-gpm3-separate-from-gpm1gpm2">Identity and paralogy (KEEP GPM3 SEPARATE FROM GPM1/GPM2)</h2>
+<ul>
+<li><strong>GPM1 (P00950, PGM1_YEAST)</strong> is the <em>only functional</em> phosphoglycerate mutase in yeast — the<br />
+  real 2,3-bisphosphoglycerate-dependent (cofactor-dependent, dPGM) glycolytic enzyme. This is<br />
+  the enzyme that carries the experimentally established EC 5.4.2.11 activity. <strong>Do not attribute<br />
+  GPM1's biochemistry to GPM3.</strong></li>
+<li><strong>GPM2 (P37012, PMG2_YEAST)</strong> and <strong>GPM3 (Q12326)</strong> are homologous ORFs detected during the<br />
+  genome-sequencing project; both are reported to be non-functional homologs.</li>
+<li>Heinisch et al. 1998 is the definitive characterization of GPM2 + GPM3:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="Our previous data indicated that GPM1 encodes the only functional phosphoglycerate mutase in yeast. However, in the course of the yeast genome sequencing project, two homologous sequences, designated GPM2 and GPM3, were detected.">PMID:9544241</a></li>
+</ul>
+<h2 id="what-is-known-about-gpm3">What is KNOWN about GPM3</h2>
+<ol>
+<li><strong>It is a phosphoglycerate-mutase-family protein (histidine-phosphatase superfamily, dPGM/BPG-dependent subfamily).</strong></li>
+<li>UniProt SIMILARITY: "Belongs to the phosphoglycerate mutase family. BPG-dependent PGAM subfamily."</li>
+<li>
+<p>Domain architecture from the UniProt DR block: Pfam PF00300 (His_Phos_1), CDD cd07067<br />
+     (HP_PGM_like), Gene3D 3.40.50.1240 (Phosphoglycerate mutase-like), PANTHER PTHR11931,<br />
+     PROSITE PS00175 (PG_MUTASE). <code>[file:yeast/GPM3/GPM3-uniprot.txt]</code></p>
+</li>
+<li>
+<p><strong>The catalytic residues of the dPGM active site are conserved in GPM3.</strong></p>
+</li>
+<li>Heinisch: <a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="Key residues in the deduced amino acid sequence, shown to be involved in catalysis for Gpm1 (i.e. His8, Arg59, His181) are conserved in both enzymes.">PMID:9544241</a></li>
+<li>
+<p>My own inline alignment confirms this (see Domain analysis below).</p>
+</li>
+<li>
+<p><strong>GPM3 has NO detectable phosphoglycerate mutase activity, even when forced to express.</strong></p>
+</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="Higher level expression under the control of the yeast PFK2 promoter partially complemented the gpm1 defects, without restoring detectable enzymatic activity.">PMID:9544241</a></li>
+<li>
+<p>Under its own (weak) promoter it does not complement a gpm1 deletion at all:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="Overexpression of the genes under control of their own promoters in a gpm1 deletion mutant did not complement for any of the phenotypes.">PMID:9544241</a></p>
+</li>
+<li>
+<p><strong>Deleting GPM3 (alone or with GPM2) has no detectable phenotype.</strong></p>
+</li>
+<li>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="Nevertheless, deletion of either GPM2 or GPM3, or the two deletions in concert, did not produce any obvious lesions for growth on a variety of different carbon sources, nor did they change the levels of key intermediary metabolites.">PMID:9544241</a></p>
+</li>
+<li>
+<p><strong>The protein is expressed (at low abundance) and is cytoplasmic.</strong></p>
+</li>
+<li>Expression: UniProt MISCELLANEOUS "Present with 3730 molecules/cell in log phase SD medium"<br />
+     with evidence <code>ECO:0000269|PubMed:14562106</code> — i.e. the Ghaemmaghami et al. 2003 global protein<br />
+     expression study. <code>[file:yeast/GPM3/GPM3-uniprot.txt]</code></li>
+<li>Localization: GOA records <code>located_in cytoplasm</code> (GO:0005737, HDA) from the Huh et al. 2003<br />
+     genome-wide GFP-localization study [PMID:14562095, "Global analysis of protein localization in budding yeast."].</li>
+<li>
+<p>PE level 1 (evidence at protein level) in UniProt, consistent with the two proteomic datasets.</p>
+</li>
+<li>
+<p><strong>Evolutionary origin: gene duplication, probable non-functional homolog.</strong></p>
+</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9544241" title="We conclude that both genes evolved from duplication events and that they probably constitute non-functional homologues in yeast.">PMID:9544241</a></li>
+</ol>
+<h2 id="what-is-not-known-about-gpm3-the-gap">What is NOT known about GPM3 (the gap)</h2>
+<ul>
+<li><strong>Whether GPM3 has ANY catalytic activity at all</strong> (mutase or otherwise). The mutase reaction<br />
+  was assayed and not detected (Heinisch 1998); no other activity has ever been tested.</li>
+<li><strong>Its in-vivo molecular function or biological role.</strong> Deletion is phenotypically silent under<br />
+  the conditions tested; no condition-specific role, partner, or substrate is known.</li>
+<li><strong>Why the cell retains a third mutase homolog.</strong> GPM3 is expressed as a stable protein<br />
+  (~3730 molecules/cell) yet is dispensable and (as far as tested) inactive — the selective<br />
+  rationale (if any) for its retention is unknown.</li>
+<li><strong>Whether the catalytic His residues, though present in sequence, are competent in the folded<br />
+  protein.</strong> Heinisch note the residues are conserved yet no activity is recovered even on forced<br />
+  expression, so the loss of function is not explained by an obvious active-site lesion.</li>
+</ul>
+<h2 id="domain-pseudoenzyme-analysis-my-own-inline-analysis">Domain / pseudoenzyme analysis (my own inline analysis)</h2>
+<p>I read <code>GPM3-uniprot.txt</code> and ran a local BLOSUM62 global pairwise alignment of GPM3 (Q12326,<br />
+303 aa) vs GPM1 (P00950, 247 aa); GPM3 is 42.5% identical to GPM1 over the aligned region. The<br />
+three catalytic motifs of the dPGM (cofactor-dependent PGAM; histidine-phosphatase superfamily<br />
+clade 1) active site map as follows (GPM3 numbering, motif shown):</p>
+<table>
+<thead>
+<tr>
+<th>dPGM catalytic element</th>
+<th>GPM1 motif</th>
+<th>GPM3 motif</th>
+<th>GPM3 residue status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N-terminal catalytic His (forms phospho-His intermediate)</td>
+<td><code>V**RHG**QSEW</code> (His8)</td>
+<td><code>L**RHG**QSEL</code> (His14)</td>
+<td><strong>conserved</strong> (His14; UniProt ACT_SITE 14)</td>
+</tr>
+<tr>
+<td>Proton donor/acceptor His (RHYG motif)</td>
+<td><code>NE**RHYG**D</code> (His88)</td>
+<td><code>NE**RHYG**A</code> (His122)</td>
+<td>His <strong>conserved</strong> (the D→A after it differs)</td>
+</tr>
+<tr>
+<td>C-terminal transition-state His (AHGN motif)</td>
+<td><code>IA**AHGN**S</code> (His181)</td>
+<td><code>IV**GHGS**S</code> (His235)</td>
+<td>His <strong>conserved</strong> (UniProt SITE 235); flanking A→G, N→S</td>
+</tr>
+</tbody>
+</table>
+<p>Interpretation: <strong>GPM3 is NOT a classic degenerate pseudoenzyme with an ablated active site.</strong><br />
+The three essential catalytic histidines (equivalent to GPM1 His8/His88/His181, i.e. Heinisch's<br />
+His8/Arg59/His181 catalytic set) are all retained in GPM3, matching Heinisch's own statement that<br />
+"key residues ... involved in catalysis ... are conserved". This makes GPM3 an unusual case:<br />
+catalytic residues present, but no measurable activity. Candidate (untested) explanations<br />
+supported by the sequence:</p>
+<ul>
+<li><strong>A large disordered insertion unique to GPM3.</strong> UniProt annotates a disordered region 168–198<br />
+  (<code>REGION 168..198 /note="Disordered"</code>, MobiDB-lite) with a basic-and-acidic compositional bias<br />
+  (COMPBIAS 177..198). My alignment shows this maps to an ~30-residue insertion that is absent<br />
+  from GPM1 (GPM1 has a short <code>YKYVD</code> where GPM3 has <code>NRHLKYGPEEKANERLP...</code>). Such an insertion in<br />
+  the mutase fold could perturb folding, substrate-channel geometry, or the required 2,3-BPG<br />
+  cofactor priming.</li>
+<li><strong>Substitutions in second-shell / substrate-binding positions</strong> (e.g. the RHYG→RHYGA change and<br />
+  the AHGN→GHGS change adjacent to the retained catalytic His) could impair substrate binding or<br />
+  transition-state stabilization even with the catalytic His intact.</li>
+</ul>
+<p>These are hypotheses, not demonstrated mechanisms; the honest position is that the biochemical<br />
+reason for GPM3's inactivity is undetermined. I did NOT run structure prediction; this is a<br />
+sequence-level analysis of the UniProt record plus a pairwise alignment.</p>
+<p>Note on UniProt EC/pathway annotations: the UniProt entry carries <code>EC=5.4.2.11</code>,<br />
+<code>PATHWAY: glycolysis</code>, and a Rhea reaction. These are propagated from the family SIMILARITY<br />
+rule (BPG-dependent PGAM subfamily), NOT from measured GPM3 activity — the same entry's FUNCTION<br />
+line reads "Could be non-functional." The EC/pathway are therefore family-level inferences, in<br />
+tension with the direct experimental finding of no detectable activity.</p>
+<h2 id="annotation-by-annotation-plan-10-goa-annotations">Annotation-by-annotation plan (10 GOA annotations)</h2>
+<ol>
+<li><code>GO:0004619 phosphoglycerate mutase activity</code> (IBA, GO_REF:0000033) — MARK_AS_OVER_ANNOTATED /<br />
+   over-propagated: phylogenetic (IBA) transfer of the family activity to a paralog that was<br />
+   experimentally shown to lack detectable mutase activity (Heinisch 1998). Add propagation_review.</li>
+<li><code>GO:0005829 cytosol</code> (IBA, GO_REF:0000033) — ACCEPT/KEEP_AS_NON_CORE: consistent with the<br />
+   experimental HDA cytoplasm localization; a reasonable location even if the activity is absent.</li>
+<li><code>GO:0061621 canonical glycolysis</code> (IBA, GO_REF:0000033) — MARK_AS_OVER_ANNOTATED: GPM3 is not<br />
+   a functional glycolytic enzyme (no activity; deletion has no metabolite/growth effect).</li>
+<li><code>GO:0003824 catalytic activity</code> (IEA, GO_REF:0000002, InterPro) — MARK_AS_OVER_ANNOTATED /<br />
+   generic root-ish MF; no catalytic activity demonstrated. (Very general; IEA from InterPro.)</li>
+<li><code>GO:0004619 phosphoglycerate mutase activity</code> (IEA, GO_REF:0000120, EC/Rhea) — same as #1,<br />
+   over-annotation from EC mapping; MARK_AS_OVER_ANNOTATED.</li>
+<li><code>GO:0006096 glycolytic process</code> (IEA, GO_REF:0000120) — MARK_AS_OVER_ANNOTATED, as #3.</li>
+<li><code>GO:0016868 intramolecular phosphotransferase activity</code> (IEA, GO_REF:0000002, InterPro) —<br />
+   MARK_AS_OVER_ANNOTATED; the specific catalytic activity is not demonstrated. (Note: this term<br />
+   may be obsoleted/merged in current GO; do not rewrite the GOA id.)</li>
+<li><code>GO:0005737 cytoplasm</code> (HDA, PMID:14562095) — ACCEPT: direct experimental localization.</li>
+<li><code>GO:0003674 molecular_function</code> (ND, GO_REF:0000015) — ACCEPT as the honest MF root (SGD's own<br />
+   "no data" call reflects the true state: no positively demonstrated activity).</li>
+<li><code>GO:0008150 biological_process</code> (ND, GO_REF:0000015) — ACCEPT as honest BP root.</li>
+</ol>
+<p>Rationale for using MARK_AS_OVER_ANNOTATED (not REMOVE) on the mutase/glycolysis IBA/IEA rows:<br />
+these are electronic/phylogenetic inferences (not experimental annotations), and per the GO<br />
+guidelines over-propagated IEA/IBA are legitimately down-graded on biological grounds. There is<br />
+direct experimental evidence (Heinisch 1998) that the transferred activity is absent, which is<br />
+exactly the situation MARK_AS_OVER_ANNOTATED / propagation_review is for. I am NOT removing any<br />
+experimental annotation.</p>
+<h2 id="update-after-falcon-deep-research-2026-07-05">Update after falcon deep research (2026-07-05)</h2>
+<p>The falcon (Edison) deep-research report landed late (<code>GPM3-deep-research-falcon.md</code>, 21<br />
+citations, genuine). It is consistent with the Heinisch primary data and adds useful context<br />
+(citations are by citekey/DOI, not PMID, so I have NOT used them as <code>supported_by</code> quotes):</p>
+<ul>
+<li><strong>Family layout confirmed:</strong> three paralogs GPM1 (YKL152C, the major functional enzyme),<br />
+  GPM2 (YDL021W), GPM3 (YOL056W). GPM1 is a homotetramer (~28 kDa subunits); deletion of GPM1<br />
+  blocks growth on glucose.</li>
+<li><strong>Interpretive nuance / tension worth flagging:</strong> the falcon report (leaning on Papini et al.<br />
+  2010, <em>Biotechnol J</em> 5:1016-1027, doi:10.1002/biot.201000199, and Costenoble et al. 2011 SRM<br />
+  proteomics) argues GPM3's physiological insignificance is "primarily due to insufficient<br />
+  endogenous expression rather than complete loss of catalytic competence," inferring "residual<br />
+  catalytic capacity" from the <em>partial complementation</em> of gpm1Δ when GPM3 is overexpressed<br />
+  from the PFK2 promoter. This is an INFERENCE. It stands in tension with the Heinisch (1998)<br />
+  primary result that the same PFK2-driven overexpression complemented "without restoring<br />
+  detectable enzymatic activity." I therefore keep the honest position: GPM3 has NO directly<br />
+  measured mutase activity (Heinisch), while partial complementation on non-fermentable carbon<br />
+  after prolonged incubation leaves open the possibility of weak/residual activity that was below<br />
+  the assay's detection limit. My review states both facts and does not over-claim activity.</li>
+<li><strong>Costenoble et al. 2011</strong> (targeted SRM proteomics) reportedly detected Gpm3 protein across<br />
+  metabolic states — consistent with the UniProt ~3730 molecules/cell figure; corroborates that<br />
+  GPM3 is a genuinely expressed protein.</li>
+<li><strong>Localization:</strong> falcon agrees GPM3 is cytoplasmic (Huh et al. 2003) with no evidence for the<br />
+  cell-wall/moonlighting localization documented for GPM1 (and for <em>C. albicans</em> Gpm1<br />
+  plasminogen/complement binding). GPM3-specific moonlighting: none known.</li>
+<li><strong>Evolution:</strong> GPM2/GPM3 arose by duplication; notably Conant &amp; Wolfe (2007) <em>excluded</em> the<br />
+  GPM2/GPM3 pair from their set of WGD-retained, dosage-amplified glycolytic duplicates —<br />
+  consistent with GPM3 being a divergent, near-non-functional paralog rather than a<br />
+  flux-boosting duplicate.</li>
+</ul>
+<p>Net effect on the review: no change to actions. The over-annotation calls on the mutase/glycolysis<br />
+terms remain correct (GPM3 is not a physiologically functional mutase and its deletion is silent),<br />
+and the honest knowledge gap (whether it retains ANY residual activity, and why the third homolog<br />
+is kept) is if anything reinforced by the expression-vs-activity tension between Heinisch and the<br />
+Papini-based interpretation.</p>
+<h2 id="references-to-cite">References to cite</h2>
+<ul>
+<li>PMID:9544241 — Heinisch et al. 1998, characterization of GPM2/GPM3 (HIGH relevance; the key paper). Abstract-only in cache but the abstract itself contains all the load-bearing findings.</li>
+<li>PMID:14562095 — Huh et al. 2003, global localization (supports cytoplasm; MEDIUM).</li>
+<li>PMID:14562106 — Ghaemmaghami et al. 2003, global expression (supports the ~3730 molecules/cell abundance; MEDIUM).</li>
+<li>file:yeast/GPM3/GPM3-uniprot.txt — domain/active-site features and expression/localization summary.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q12326
+gene_symbol: GPM3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  GPM3 (systematic name YOL056W) is one of three phosphoglycerate-mutase-family
+  paralogs in Saccharomyces cerevisiae, alongside the sole functional glycolytic
+  mutase GPM1 and the second homolog GPM2. It is a cytoplasmic protein of the
+  histidine-phosphatase superfamily (cofactor/2,3-bisphosphoglycerate-dependent
+  phosphoglycerate mutase, dPGM, subfamily) and retains the family&#39;s catalytic
+  histidine residues. Despite this, GPM3 has no detectable phosphoglycerate mutase
+  activity even when strongly overexpressed, and its deletion (alone or together
+  with GPM2) causes no growth defect on diverse carbon sources and no change in key
+  glycolytic-intermediate levels. It arose by gene duplication and is regarded as a
+  probable non-functional homolog; it is expressed as a low-abundance protein
+  (thousands of molecules per cell) whose molecular activity and biological role
+  remain undetermined.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO
+      terms
+    findings: []
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+  - id: PMID:9544241
+    title: Investigation of two yeast genes encoding putative isoenzymes of phosphoglycerate
+      mutase.
+    findings:
+      - statement: &gt;-
+          GPM1 is the only functional phosphoglycerate mutase in yeast; GPM2 and GPM3
+          were detected as homologous sequences during genome sequencing.
+        supporting_text: &gt;-
+          Our previous data indicated that GPM1 encodes the only functional
+          phosphoglycerate mutase in yeast. However, in the course of the yeast genome
+          sequencing project, two homologous sequences, designated GPM2 and GPM3, were
+          detected.
+      - statement: &gt;-
+          The catalytic residues of the mutase active site are conserved in GPM3.
+        supporting_text: &gt;-
+          Key residues in the deduced amino acid sequence, shown to be involved in
+          catalysis for Gpm1 (i.e. His8, Arg59, His181) are conserved in both enzymes.
+      - statement: &gt;-
+          Forced high-level expression of GPM3 partially complemented gpm1 defects but
+          did not restore any detectable enzymatic activity.
+        supporting_text: &gt;-
+          Higher level expression under the control of the yeast PFK2 promoter partially
+          complemented the gpm1 defects, without restoring detectable enzymatic activity.
+      - statement: &gt;-
+          Deletion of GPM2 and/or GPM3 produced no growth lesions and no change in key
+          metabolite levels; both are probable non-functional homologs arising by
+          duplication.
+        supporting_text: &gt;-
+          deletion of either GPM2 or GPM3, or the two deletions in concert, did not
+          produce any obvious lesions for growth on a variety of different carbon
+          sources, nor did they change the levels of key intermediary metabolites.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Definitive characterization of GPM2 and GPM3. PubMed-verified; abstract-only in
+        cache but the abstract contains the load-bearing experimental findings (no
+        detectable mutase activity even on forced expression; phenotypically silent
+        deletions; probable non-functional homologs). Directly grounds the
+        over-annotation calls on the transferred mutase/glycolysis terms.
+  - id: PMID:14562095
+    title: Global analysis of protein localization in budding yeast.
+    findings:
+      - statement: Genome-wide GFP study assigning GPM3 to the cytoplasm.
+        supporting_text: Global analysis of protein localization in budding yeast.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Source of the experimental (HDA) cytoplasm localization for GPM3 in GOA.
+        Abstract-only in cache; the per-protein call resides in the study&#39;s database,
+        recorded by SGD.
+  - id: PMID:14562106
+    title: Global analysis of protein expression in yeast.
+    findings:
+      - statement: &gt;-
+          Genome-wide expression study; source of the ~3730 molecules/cell abundance
+          value for GPM3 recorded in UniProt.
+        supporting_text: Global analysis of protein expression in yeast.
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Basis for the UniProt statement that GPM3 is present at ~3730 molecules/cell in
+        log-phase SD medium (ECO:0000269|PubMed:14562106); establishes that GPM3 is a
+        genuinely expressed, stable protein despite lacking demonstrated activity.
+existing_annotations:
+  - term:
+      id: GO:0004619
+      label: phosphoglycerate mutase activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Phylogenetic (IBA) transfer of the family&#39;s phosphoglycerate mutase activity to
+        GPM3. GPM3 was experimentally assayed and shown to lack detectable mutase
+        activity even when strongly overexpressed (Heinisch et al. 1998), so this is an
+        over-propagation of the ancestral family activity onto a probable non-functional
+        paralog. GPM1 is the sole functional yeast phosphoglycerate mutase.
+        Marked as over-annotated rather than removed because the evidence is contradictory
+        rather than merely thin: UniProt itself hedges (&#34;Could be non-functional&#34;), the
+        dPGM catalytic histidines are conserved in sequence, and weak, expression-limited
+        residual activity below the original assay&#39;s detection cannot be fully excluded
+        (forced overexpression did partially complement gpm1). The term should not,
+        however, be retained as a functional annotation for this paralog.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            Higher level expression under the control of the yeast PFK2 promoter partially
+            complemented the gpm1 defects, without restoring detectable enzymatic activity.
+      propagation_review:
+        root_cause: PROPAGATION_BAD
+        failure_modes:
+          - WRONG_ORTHOLOG_OR_PARALOG
+          - FUNCTIONAL_DIVERGENCE
+        source_entities:
+          - source_id: PANTHER:PTN002630707
+            source_label: PGAM ancestral node (PTHR11931)
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Ancestral PGAM activity is real for the family and for GPM1, but GPM3 has
+              direct experimental evidence of no detectable mutase activity; catalytic
+              histidines are present in sequence, so this is functional divergence rather
+              than an obvious active-site lesion.
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Phylogenetic assignment of cytosolic localization. This is consistent with the
+        independent experimental (HDA) cytoplasm localization of GPM3 and with the
+        cytoplasmic nature of the family, so the location is reasonable. Kept as
+        non-core because GPM3 has no demonstrated activity for which the location would
+        represent a core function; the &#34;is_active_in&#34; qualifier overstates a
+        demonstrated activity at this site. This IBA cytosol call is independently
+        corroborated by the experimental (HDA) cytoplasm localization of GPM3
+        (GO:0005737, PMID:14562095), which is why the location itself is accepted even
+        though the accompanying activity is not.
+      action: KEEP_AS_NON_CORE
+      supported_by:
+        - reference_id: PMID:14562095
+          supporting_text: Global analysis of protein localization in budding yeast.
+  - term:
+      id: GO:0061621
+      label: canonical glycolysis
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Phylogenetic transfer of a glycolytic role. GPM3 is not a functional glycolytic
+        enzyme: it has no detectable mutase activity, and deletion of GPM3 (with or
+        without GPM2) does not perturb growth on diverse carbon sources or the levels of
+        key glycolytic intermediates (Heinisch et al. 1998). This is an over-annotation
+        of the family process onto a non-functional paralog.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            deletion of either GPM2 or GPM3, or the two deletions in concert, did not
+            produce any obvious lesions for growth on a variety of different carbon
+            sources, nor did they change the levels of key intermediary metabolites.
+      propagation_review:
+        root_cause: PROPAGATION_BAD
+        failure_modes:
+          - WRONG_ORTHOLOG_OR_PARALOG
+          - FUNCTIONAL_DIVERGENCE
+        source_entities:
+          - source_id: PANTHER:PTN002630707
+            source_label: PGAM ancestral node (PTHR11931)
+            source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+            comment: &gt;-
+              Canonical glycolysis is correct for GPM1 but propagates to a paralog whose
+              deletion is metabolically silent and which lacks the enabling enzymatic
+              activity.
+  - term:
+      id: GO:0003824
+      label: catalytic activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Generic catalytic-activity term applied electronically from InterPro membership.
+        No catalytic activity of any kind has been demonstrated for GPM3; the assayed
+        mutase activity was undetectable. This is uninformative and, given the negative
+        functional evidence, an over-annotation from family membership.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            Higher level expression under the control of the yeast PFK2 promoter partially
+            complemented the gpm1 defects, without restoring detectable enzymatic activity.
+  - term:
+      id: GO:0004619
+      label: phosphoglycerate mutase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Electronic assignment of phosphoglycerate mutase activity from the UniProt
+        EC/Rhea mapping (EC 5.4.2.11) attached to the BPG-dependent PGAM subfamily. As
+        with the IBA copy of this term, this is a family-level inference contradicted by
+        the direct experimental finding of no detectable mutase activity for GPM3; the
+        same UniProt entry states the protein &#34;Could be non-functional&#34;. Marked as
+        over-annotated rather than removed for the same reason as the IBA copy: the
+        catalytic histidines are conserved and expression-limited residual activity cannot
+        be fully excluded, so the call is deliberately conservative.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            Higher level expression under the control of the yeast PFK2 promoter partially
+            complemented the gpm1 defects, without restoring detectable enzymatic activity.
+  - term:
+      id: GO:0006096
+      label: glycolytic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Electronic transfer of the glycolytic-process role from family/pathway mapping.
+        Over-annotation for the same reasons as the canonical-glycolysis IBA term: GPM3
+        deletion is metabolically and phenotypically silent and the enzyme lacks
+        detectable activity.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            deletion of either GPM2 or GPM3, or the two deletions in concert, did not
+            produce any obvious lesions for growth on a variety of different carbon
+            sources, nor did they change the levels of key intermediary metabolites.
+  - term:
+      id: GO:0016868
+      label: intramolecular phosphotransferase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The specific mechanistic MF term for the dPGM reaction (intramolecular
+        phosphotransfer), applied electronically from InterPro. No such activity has been
+        demonstrated for GPM3; it is an over-annotation of the family mechanism onto a
+        non-functional paralog.
+      action: MARK_AS_OVER_ANNOTATED
+      supported_by:
+        - reference_id: PMID:9544241
+          supporting_text: &gt;-
+            Higher level expression under the control of the yeast PFK2 promoter partially
+            complemented the gpm1 defects, without restoring detectable enzymatic activity.
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: HDA
+    original_reference_id: PMID:14562095
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Experimental (high-throughput direct assay) localization of GPM3 to the cytoplasm
+        from the genome-wide GFP-fusion study. This is a well-supported, correct location
+        annotation and the only positively demonstrated attribute of GPM3 besides its
+        expression. Retained; it is a location rather than a core molecular/biological
+        function.
+      action: ACCEPT
+      supported_by:
+        - reference_id: PMID:14562095
+          supporting_text: Global analysis of protein localization in budding yeast.
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Root molecular_function with the ND (no biological data) evidence code, assigned
+        by SGD. This honestly reflects the true state of knowledge: no molecular activity
+        has been positively demonstrated for GPM3, and the assayed mutase activity was
+        undetectable. Retained as an accurate no-data placeholder.
+      action: ACCEPT
+  - term:
+      id: GO:0008150
+      label: biological_process
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Root biological_process with the ND evidence code. Consistent with the absence of
+        any demonstrated in-vivo role: GPM3 deletion is phenotypically silent under the
+        conditions tested. Retained as an accurate no-data placeholder.
+      action: ACCEPT
+core_functions:
+  - description: &gt;-
+      No molecular function can be positively assigned to GPM3. It is a member of the
+      phosphoglycerate mutase / histidine-phosphatase superfamily that retains the dPGM
+      catalytic histidine residues, but the family phosphoglycerate mutase activity was
+      experimentally undetectable even on forced overexpression, and no alternative
+      activity, substrate, or biological role has been demonstrated. It is a stably
+      expressed cytoplasmic protein of unknown function, most consistent with a probable
+      non-functional homolog produced by gene duplication.
+    supported_by:
+      - reference_id: PMID:9544241
+        supporting_text: &gt;-
+          Higher level expression under the control of the yeast PFK2 promoter partially
+          complemented the gpm1 defects, without restoring detectable enzymatic activity.
+      - reference_id: PMID:9544241
+        supporting_text: &gt;-
+          We conclude that both genes evolved from duplication events and that they
+          probably constitute non-functional homologues in yeast.
+knowledge_gaps:
+  - gap_statement: &gt;-
+      It is unknown whether GPM3 has any catalytic or other molecular activity, what (if
+      any) its in-vivo biological role is, and why S. cerevisiae retains a stably
+      expressed third phosphoglycerate-mutase homolog that is dispensable and lacks
+      detectable mutase activity.
+    boundary: &gt;-
+      GPM3 is firmly established as a phosphoglycerate-mutase-family protein (histidine-
+      phosphatase superfamily, BPG-dependent PGAM subfamily) that retains the dPGM
+      catalytic histidine residues, is expressed as a low-abundance protein (~3730
+      molecules/cell) and localizes to the cytoplasm. It has been directly assayed for
+      phosphoglycerate mutase activity and none was detectable even under forced (PFK2-
+      promoter) overexpression, and deletion of GPM3 alone or together with GPM2 causes
+      no growth defect on diverse carbon sources and no change in key glycolytic-
+      intermediate levels. GPM1 is the sole functional yeast phosphoglycerate mutase.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: WHOLLY_DARK
+    status: OPEN
+    significance: &gt;-
+      GPM3 is a clean example of a conserved-looking paralog whose active-site residues
+      are intact yet which has no directly measured ancestral activity. It is unresolved
+      whether the protein is truly catalytically dead or retains weak residual activity
+      that is masked physiologically by very low native expression: the same PFK2-driven
+      overexpression that partially complements a gpm1 deletion on non-fermentable carbon
+      also failed to restore detectable enzymatic activity in the original assay.
+      Determining whether GPM3 has been pseudogenized at the protein level, retains weak
+      residual activity limited by expression, acquired a new (non-mutase) activity, or is
+      retained for a condition-specific role would clarify the fate of duplicated
+      metabolic-enzyme genes and prevent electronic propagation of functional
+      glycolytic-mutase annotations onto physiologically non-functional homologs.
+    resolution: &gt;-
+      Broad enzymatic screening of purified recombinant GPM3 (including 2,3-BPG-primed
+      mutase and phosphatase assays) to test for any residual or alternative activity;
+      condition/stress-specific phenotyping of gpm3 and gpm1 gpm3 / gpm2 gpm3 mutants;
+      affinity/proximity proteomics to identify partners; structural characterization to
+      test whether the family fold and active site are competent despite the conserved
+      residues, given the ~30-residue disordered insertion unique to GPM3.
+    provenance:
+      - reference_id: PMID:9544241
+        supporting_text: &gt;-
+          Higher level expression under the control of the yeast PFK2 promoter partially
+          complemented the gpm1 defects, without restoring detectable enzymatic activity.
+        reference_section_type: ABSTRACT
+      - reference_id: PMID:9544241
+        supporting_text: &gt;-
+          We conclude that both genes evolved from duplication events and that they
+          probably constitute non-functional homologues in yeast.
+        reference_section_type: ABSTRACT
+suggested_questions:
+  - question: &gt;-
+      Does GPM3 have any residual or alternative catalytic activity (e.g. phosphatase or
+      a non-glycolytic phosphotransfer) despite lacking detectable phosphoglycerate
+      mutase activity?
+  - question: &gt;-
+      Is GPM3 conditionally functional or important under a stress or nutrient state not
+      tested in the original characterization?
+  - question: &gt;-
+      Given that the dPGM catalytic histidines are conserved in sequence, is the folded
+      GPM3 active site competent, and does the GPM3-specific disordered insertion
+      (residues ~168-198) disrupt folding or substrate binding?
+suggested_experiments:
+  - description: &gt;-
+      Express and purify recombinant GPM3 and assay it across a panel of phosphoglycerate
+      mutase (with and without 2,3-bisphosphoglycerate priming) and histidine-phosphatase
+      substrate reactions to test for any residual or alternative activity.
+    hypothesis: &gt;-
+      GPM3 has no residual mutase activity but may retain a weak alternative
+      phosphotransfer/phosphatase activity typical of the histidine-phosphatase
+      superfamily.
+    experiment_type: enzymatic assay
+  - description: &gt;-
+      Perform condition/stress phenotyping (e.g. carbon-source shifts, oxidative,
+      osmotic, and stationary-phase stresses) of gpm3, gpm2 gpm3, and gpm1(ts) gpm3
+      strains to detect any conditional requirement for GPM3.
+    hypothesis: GPM3 is required only under a specific, previously untested condition.
+    experiment_type: genetic phenotyping
+  - description: &gt;-
+      Determine the GPM3 interactome by affinity purification / proximity labeling to
+      test whether it acts as a partner or scaffold rather than an enzyme.
+    hypothesis: GPM3 has a non-catalytic role mediated by protein partners.
+    experiment_type: interaction proteomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

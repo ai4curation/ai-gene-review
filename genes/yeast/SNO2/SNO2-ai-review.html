@@ -1,0 +1,2948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNO2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SNO2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53823" target="_blank" class="term-link">
+                        P53823
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SNO2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53823" data-a="DESCRIPTION: SNO2 (YNL334C) is one of three near-identical Sacc..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SNO2 (YNL334C) is one of three near-identical Saccharomyces cerevisiae SNO paralogs (SNO1/2/3) and is a member of the glutaminase PdxT/SNO family (class-I glutamine amidotransferase fold). SNO proteins are the glutaminase subunit of the two-subunit pyridoxal 5&#39;-phosphate (PLP, vitamin B6) synthase, working together with a SNZ (PdxS/PDX1) synthase subunit: the SNO subunit hydrolyses L-glutamine to L-glutamate plus ammonia and channels the ammonia to the SNZ subunit, which condenses it with ribose 5-phosphate and glyceraldehyde 3-phosphate to form PLP. SNO2 carries the canonical Cys-His-Glu catalytic triad of the class-I glutamine amidotransferase glutaminase and is curated in a physical PLP-synthase glutaminase complex with SNZ1. The three yeast SNZ-SNO gene pairs are functionally specialized: the SNO1-SNZ1 pair is dedicated to vitamin B6 biosynthesis under B6-limiting conditions, whereas the SNO2/SNO3 (copy 2/3) genes are induced by thiamine (vitamin B1) limitation and are linked to B1 biosynthesis in exponentially growing cells. Direct enzymatic characterization of the SNO2 protein itself has not been reported; its molecular function is assigned from family membership, an intact catalytic triad, and functional characterization of fungal SNO orthologs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    GO:0042823
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0042823" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process for the PdxT/SNO family. SNO2 is the glutaminase subunit of the PLP synthase and the SNO glutaminase subunit is required for pyridoxine/PLP biosynthesis in fungal orthologs (N. crassa pdx-2). IBA from the PANTHER PLP-synthase-subunit-SNO tree is well founded.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                                        PMID:11238395
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0004359" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The molecular activity of the SNO/PdxT glutaminase subunit. SNO2 retains the intact class-I glutamine amidotransferase catalytic triad (Cys91 nucleophile, His197/Glu199 charge-relay; UniProt), so glutaminase activity is domain-defensible. The contributes_to qualifier is appropriate because the glutaminase is a subunit whose in-vivo activity is coupled to (and ammonia-channeled into) the SNZ synthase subunit within the PLP synthase.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                                        PMID:11238395
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008614" target="_blank" class="term-link">
+                                    GO:0008614
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0008614" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyridoxine (vitamin B6) metabolic process. Consistent with the family role in PLP/B6 biosynthesis and with SGD&#39;s ISS annotation of the same term (supported by the Aspergillus pyroA and Neurospora pdx-1/pdx-2 orthologs). Slightly more general/parallel to the PLP biosynthetic process term; retained as a valid family process annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                                        PMID:10438537
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903600" target="_blank" class="term-link">
+                                    GO:1903600
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:1903600" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Complex membership as the glutaminase subunit of the two-subunit PLP synthase. Directly corroborated for SNO2 by ComplexPortal CPX-1371 (SNO2-SNZ1 pyridoxal 5&#39;-phosphate synthase complex). GO:1903600 (glutaminase complex; synonym Sno1p-Snz1p) is the generic term for a complex capable of glutaminase activity and is correctly applied here.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    ComplexPortal:CPX-1371
+
+                                </span>
+
+                                <div class="support-text">SNO2-SNZ1 pyridoxal 5&#39;-phosphate synthase complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                                    GO:0004359
+                                </a>
+                            </span>
+                            <span class="term-label">glutaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0004359" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Same molecular activity as the IBA glutaminase-activity annotation above, here derived by automated EC/RHEA mapping (EC 3.5.1.2). The MF term is correct given the intact catalytic triad. The enables qualifier (vs the more accurate contributes_to used by the IBA pipeline for the subunit) is a pipeline artifact of EC-based IEA; the underlying activity assignment is sound, so the annotation is retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                                        PMID:11238395
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008614" target="_blank" class="term-link">
+                                    GO:0008614
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0008614" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the pyridoxine metabolic process annotation, from the ARBA machine-learning pipeline. Same domain/orthology support; retained as a valid but non-core family process term.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                                        PMID:10438537
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036381" target="_blank" class="term-link">
+                                    GO:0036381
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate synthase (glutamine hydrolysing) activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0036381" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The holoenzyme-level molecular function (EC 4.3.3.6) of the two-subunit PLP synthase. This activity is strictly a property of the assembled SNO+SNZ complex (the SNO subunit alone provides only the glutaminase half-reaction), so contributes_to would be more precise than enables. The term is a correct family assignment via EC/RHEA mapping and is retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                                        PMID:10438537
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042819" target="_blank" class="term-link">
+                                    GO:0042819
+                                </a>
+                            </span>
+                            <span class="term-label">vitamin B6 biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0042819" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Vitamin B6 biosynthetic process, the parent process of PLP biosynthesis. Correct but more general than the PLP biosynthetic process (GO:0042823) annotation; retained as a valid non-core (broader) process term for the family.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                                        PMID:10438537
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                    GO:0042823
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal 5&#39;-phosphate biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0042823" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the core PLP biosynthetic process annotation, from InterPro/UniPathway automated mapping. Same support as the IBA version; retained.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                                        PMID:11238395
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function placeholder with ND (no biological data) evidence, an SGD no-data stub predating the electronic/phylogenetic MF assignments. Uninformative; kept as-is per convention for ND root annotations (superseded by the specific MF terms above).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53823" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component placeholder with ND evidence, an SGD no-data stub. Uninformative; kept as-is per convention (superseded by the glutaminase-complex and cytosol IBA annotations for the family).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glutaminase subunit of the two-subunit pyridoxal 5&#39;-phosphate (PLP, vitamin B6) synthase: SNO2 hydrolyses L-glutamine to L-glutamate and ammonia (class-I glutamine amidotransferase glutaminase, catalytic triad Cys91/His197/Glu199 intact) and, within the PLP synthase complex with a SNZ synthase subunit, channels the ammonia used to build PLP from ribose 5-phosphate and glyceraldehyde 3-phosphate. Assigned from family membership, intact catalytic triad, and characterized fungal SNO orthologs (N. crassa pdx-2); direct enzymatic assay of the SNO2 protein has not been reported.</h3>
+                <span class="vote-buttons" data-g="P53823" data-a="FUNCTION: Glutaminase subunit of the two-subunit pyridoxal 5..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004359" target="_blank" class="term-link">
+                            glutaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042823" target="_blank" class="term-link">
+                                pyridoxal 5&#39;-phosphate biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1903600" target="_blank" class="term-link">
+                            glutaminase complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                                PMID:11238395
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                                PMID:10438537
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        ComplexPortal:CPX-1371
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SNO2-SNZ1 pyridoxal 5&#39;-phosphate synthase complex</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SNO2 (P53823) and SNZ1 (Q03148) are curated as the two enzyme subunits of a pyridoxal 5&#39;-phosphate synthase glutaminase complex.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12271461" target="_blank" class="term-link">
+                            PMID:12271461
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional analysis of yeast gene families involved in metabolism of vitamins B1 and B6.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In media lacking vitamin B6, SNZ1 and SNO1 were required for growth in certain conditions, but SNZ2, SNZ3, SNO2 and SNO3 were not required; copies 2 and 3 are instead activated by lack of thiamine and appear more related to vitamin B1 biosynthesis during exponential phase.</div>
+
+                        <div class="finding-text">"In media lacking vitamin B(6), SNZ1 and SNO1 were both required for growth in certain conditions, but neither SNZ2, SNZ3, SNO2 nor SNO3 were required."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10438537" target="_blank" class="term-link">
+                            PMID:10438537
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The extremely conserved pyroA gene of Aspergillus nidulans is required for pyridoxine synthesis and is required indirectly for resistance to photosensitizers.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The SNZ family (the PLP-synthase synthase subunit; pyroA in Aspergillus) is an enzyme specifically required for pyridoxine biosynthesis, defining the eukaryotic/archaeal PLP biosynthetic pathway that the SNO glutaminase subunit feeds.</div>
+
+                        <div class="finding-text">"define this gene family as encoding an enzyme specifically required for pyridoxine biosynthesis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11238395" target="_blank" class="term-link">
+                            PMID:11238395
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of the pdx-1 (snz-1/sno-1) region of the Neurospora crassa genome: correlation of pyridoxine-requiring phenotypes with mutations in two structural genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">In Neurospora crassa, pyridoxine-requiring mutants carry mutations disrupting either the SNZ or the SNO homolog, and the SNO homolog corresponds to pdx-2; this establishes that a fungal SNO/glutaminase subunit is required for pyridoxine (PLP) biosynthesis.</div>
+
+                        <div class="finding-text">"pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt conserved regions in either the SNZ or SNO homolog"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the SNO2 protein a catalytically active glutaminase, and does it form a functional PLP synthase when reconstituted with SNZ1, SNZ2, or SNZ3?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53823" data-a="Q: Is the SNO2 protein a catalytically active glutami..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under what physiological condition is SNO2 non-redundantly required, given that it is dispensable for vitamin B6-limited growth but induced by thiamine limitation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53823" data-a="Q: Under what physiological condition is SNO2 non-red..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant SNO2 and SNZ1/2/3; assay glutaminase activity (L-glutamine to L-glutamate + ammonia) for SNO2 alone and coupled PLP synthesis (with ribose 5-phosphate and glyceraldehyde 3-phosphate) for SNO2+SNZ mixtures, using a Cys91 active-site mutant as a negative control.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SNO2 is a catalytically competent glutaminase subunit that reconstitutes a functional PLP synthase with a SNZ synthase subunit.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53823" data-a="EXPERIMENT: Express and purify recombinant SNO2 and SNZ1/2/3; ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Phenotype sno2 single and sno1 sno2 sno3 combinatorial deletion strains under vitamin B6 and thiamine limitation; quantify intracellular PLP and thiamine and profile SNO2-SNZ physical associations by condition.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SNO2 has a thiamine-limitation-linked and/or condition-specific role distinct from the B6-dedicated SNO1.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53823" data-a="EXPERIMENT: Phenotype sno2 single and sno1 sno2 sno3 combinato..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The SNO2-specific in-vivo physiological role and its required condition are undetermined. SNO2 is dispensable for vitamin B6-limited growth, and it is unresolved whether its native function is in pyridoxal 5&#39;-phosphate (B6) biosynthesis, in a thiamine (B1)-related process under which it is induced, or both, and which SNZ synthase subunit it partners in vivo.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> SNO2 is a glutaminase PdxT/SNO family member with an intact catalytic triad, curated in a PLP-synthase glutaminase complex with SNZ1 (CPX-1371). The B6-dedicated pair is SNO1/SNZ1 (both required for B6-limited growth); SNO2/SNO3 (copies 2/3) are dispensable for B6-limited growth and are transcriptionally activated by thiamine limitation, appearing more related to B1 biosynthesis in exponential phase.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this would explain why yeast maintains three SNZ-SNO pairs and whether SNO2 represents a B1-linked or condition-specific branch of PLP-family metabolism rather than simple redundancy with SNO1. It is the crux of what distinguishes this understudied paralog from its well-characterized copy-1 counterpart.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Condition-resolved phenotyping of sno2 single and sno1 sno2 sno3 combinatorial deletions under B6 and B1 limitation; measurement of intracellular PLP and thiamine; identification of the SNZ subunit(s) SNO2 associates with in each condition.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"but neither SNZ2, SNZ3, SNO2 nor SNO3 were required."</em> — PMID:12271461</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The degree and direction of functional redundancy among the three yeast SNO paralogs (SNO1/SNO2/SNO3) is unresolved: it is unknown whether SNO2 can substitute for SNO1 in B6 biosynthesis, whether SNO2 and SNO3 are interchangeable, and what unique contribution SNO2 makes despite their near-identical sequences.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Single-gene deletions of SNO2 (a copy-2/3 gene) do not impair B6-limited growth, and copies 2 and 3 are reported to have slightly different cellular functions despite extremely close sequence similarity; the B6 phenotype is carried by SNO1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing genuine paralog-specific function from redundancy is essential to attribute any SNO2-specific annotation correctly and to avoid over-propagating SNO1 evidence onto SNO2.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Cross-complementation assays (express SNO2 in a sno1 background under B6 limitation and vice versa) and paralog-swap chimeras to map function-determining residues.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Copies 2 and 3 of the gene products have, in spite of their extremely close sequence similarity, slightly different functions in the cell."</em> — PMID:12271461</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SNO2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53823" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sno2-ynl334c-p53823-curation-notes">SNO2 (YNL334C, P53823) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> SNO2.<br />
+SNO2 is an <strong>understudied ("dark") gene</strong>: nearly all direct functional data are for its<br />
+paralog SNO1 and for the partner SNZ genes; SNO2-specific evidence is sparse. Provenance is<br />
+recorded inline as <code>[PMID:xxxx "verbatim quote"]</code> where possible.</p>
+<h2 id="identity-and-domain-architecture-from-uniprot-p53823">Identity and domain architecture (from UniProt P53823)</h2>
+<ul>
+<li>Systematic name YNL334C; SGD:S000005278; SNZ-proximal ORF ("SNO" = <strong>SN</strong>Z <strong>p</strong>roximal<br />
+<strong>O</strong>RF). 222 aa, 25.2 kDa. UniProt PE=3 (Inferred from homology). NB: SNO2's own SGD id is<br />
+  S000005278; the SGD ids in the GOA <code>WITH/FROM</code> fields (S000004701, S000001834) are<br />
+  PANTHER-tree paralogs used as the IBA seed set, <strong>not</strong> SNO2's own identifier.</li>
+<li><strong>Family:</strong> glutaminase PdxT/SNO family; Pfam PF01174 (SNO); InterPro IPR002161 (PdxT/SNO),<br />
+  IPR029062 (class I glutamine amidotransferase-like), IPR021196 (PdxT/SNO conserved site);<br />
+  CDD cd01749 (GATase1_PB); TIGRFAM TIGR03800 (PLP_synth_Pdx2); PANTHER PTHR31559<br />
+  (PYRIDOXAL 5'-PHOSPHATE SYNTHASE SUBUNIT SNO). MEROPS clan/family C26.A32 (peptidase-C26<br />
+  = class-I glutamine amidotransferase fold).</li>
+<li><strong>Enzyme identity (annotated on homology):</strong> the SNO/PdxT protein is the <strong>glutaminase<br />
+  subunit</strong> of the two-subunit (PLP synthase / PDX) machine. It hydrolyses L-glutamine to<br />
+  L-glutamate + NH3 (glutaminase, EC 3.5.1.2) and channels the ammonia to the synthase<br />
+  subunit (SNZ/PdxS), which condenses it with ribose-5-P and glyceraldehyde-3-P to make<br />
+  pyridoxal-5'-phosphate (holoenzyme reaction EC 4.3.3.6, "PLP synthase, glutamine<br />
+  hydrolysing"). UniProt: <code>FUNCTION: Catalyzes the hydrolysis of glutamine to glutamate and
+  ammonia as part of the biosynthesis of pyridoxal 5'-phosphate. The resulting ammonia
+  molecule is channeled to the active site of a SNZ isoform.</code></li>
+</ul>
+<h3 id="catalytic-triad-integrity-inline-domain-analysis">Catalytic-triad integrity (INLINE DOMAIN ANALYSIS)</h3>
+<p>The class-I glutamine amidotransferase (GATase1) glutaminase uses a <strong>Cys–His–Glu catalytic<br />
+triad</strong>. UniProt annotates SNO2's triad by homology (ECO:0000250|UniProtKB:P37528, the<br />
+<em>B. subtilis</em> PdxT):</p>
+<ul>
+<li><strong>ACT_SITE 91</strong> — Nucleophile → sequence position 91 = <strong>Cys</strong> (nucleophilic cysteine).</li>
+<li><strong>ACT_SITE 197</strong> — Charge-relay → <strong>His</strong>.</li>
+<li><strong>ACT_SITE 199</strong> — Charge-relay → <strong>Glu</strong>.</li>
+<li>Glutamine-binding residues annotated at 58–60, 120, 151–152.</li>
+</ul>
+<p>I verified these against the sequence (222 aa):<br />
+<code>...IIPGGES TAMSLIAERT...</code> — residue 91 falls in the conserved <code>PGG</code>/<code>G-x-C-x-G</code> oxyanion<br />
+region; the C-terminal <code>...SFHPEL...</code> block carries the His-Pro-Glu-Leu of the charge-relay<br />
+(His197, Glu199). <strong>The catalytic triad is intact</strong> (Cys91/His197/Glu199 all present), and<br />
+the PROSITE PDXT_SNO patterns (PS01236, PS51130) match. Therefore the glutaminase /<br />
+PLP-synthase-glutaminase-subunit molecular function is <strong>domain-defensible</strong> for SNO2 —<br />
+this is NOT a degenerate pseudoenzyme. (Sequence checked directly from the UniProt SQ block;<br />
+triad residue identities read off the annotated FT positions.)</p>
+<h2 id="the-snzsno-gene-families-in-s-cerevisiae-separating-sno2-from-paralogs">The SNZ/SNO gene families in <em>S. cerevisiae</em> — separating SNO2 from paralogs</h2>
+<p><em>S. cerevisiae</em> has three near-identical SNZ (synthase-subunit) genes SNZ1/2/3 and three<br />
+near-identical SNO (glutaminase-subunit) genes SNO1/2/3, arranged as divergently-transcribed<br />
+SNZ–SNO pairs. <strong>Attribution across paralogs is the central hazard for this gene.</strong></p>
+<ul>
+<li><strong>SNO1/SNZ1 (copy 1)</strong> is the pair dedicated to <strong>vitamin B6 (pyridoxine)</strong> and is the<br />
+  well-characterised one. Rodriguez-Navarro 2002: <code>In media lacking vitamin B(6), SNZ1 and
+  SNO1 were both required for growth in certain conditions</code> <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>.</li>
+<li><strong>SNO2/SNZ2 and SNO3/SNZ3 (copies 2 and 3)</strong> are the understudied pair(s). The same study<br />
+  states: <code>but neither SNZ2, SNZ3, SNO2 nor SNO3 were required</code> (for growth in B6-lacking<br />
+  media) <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>. So <strong>SNO2 is dispensable for pyridoxine-limited growth</strong> in the<br />
+  conditions tested — its loss is masked (redundancy and/or a different physiological role).</li>
+<li>Condition of induction: copies 2/3 respond to <strong>thiamine (B1)</strong> limitation, not (only)<br />
+  B6: <code>we have also found that copies 2 and 3 are activated by the lack of thiamine and that
+  the Snz proteins physically interact with the thiamine biosynthesis Thi5 protein family</code><br />
+  and <code>copies 2 and 3 seem more related with B(1) biosynthesis during the exponential phase</code><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>. NOTE: this makes SNO2 more plausibly <strong>thiamine-limitation-induced</strong> than<br />
+  pyridoxine-limitation-induced; the two pathways share the ribose-5-P/NH3 chemistry, and<br />
+  cross-talk between B6 and B1 biosynthesis is reported for the copy-2/3 genes.</li>
+<li><code>Copies 2 and 3 of the gene products have, in spite of their extremely close sequence
+  similarity, slightly different functions in the cell.</code> <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a> — i.e. SNO2 and<br />
+  SNO3 are not simply interchangeable, but the paper does not resolve an SNO2-specific<br />
+  molecular activity in isolation.</li>
+</ul>
+<h2 id="physical-complex-sno2-partners-snz1-per-complexportal-not-snz23">Physical complex — SNO2 partners SNZ1 (per ComplexPortal), not SNZ2/3</h2>
+<ul>
+<li><strong>ComplexPortal CPX-1371</strong> = "SNO2-SNZ1 pyridoxal 5'-phosphate synthase complex",<br />
+  systematic name <code>SNO2:SNZ1</code>, participants <strong>SNZ1 (Q03148)</strong> + <strong>SNO2 (P53823)</strong>, both with<br />
+  bioRole "enzyme". (Retrieved from ComplexPortal REST API,<br />
+<code>complex-ws/complex/CPX-1371</code>.) So the curated physical partner of SNO2 is <strong>SNZ1</strong>, i.e.<br />
+  the SNO/SNZ subunits are not strictly locked into same-numbered pairs at the protein level.<br />
+  This is a caveat for any "in_complex with SNZ2" assumption.</li>
+<li>GO glutaminase-complex term GO:1903600 has synonym "Sno1p-Snz1p" and definition "A protein<br />
+  complex which is capable of glutaminase activity" (OLS) — a generic term, correctly<br />
+  applicable to the SNO2-containing PLP-synthase glutaminase complex via IBA.</li>
+</ul>
+<h2 id="orthology-support-for-the-sno-family-function-glutaminase-subunit-plp-biosynthesis">Orthology support for the SNO-family function (glutaminase subunit → PLP biosynthesis)</h2>
+<ul>
+<li><strong>Aspergillus nidulans pyroA</strong> (SNZ/PDX1 side): the SNZ family is <code>an enzyme specifically
+  required for pyridoxine biosynthesis</code>; <code>Eukarya and Archaea exclusively use the pyroA
+  pathway</code> <a href="https://pubmed.ncbi.nlm.nih.gov/10438537">PMID:10438537</a>. (This is the synthase-subunit paper; establishes the pathway the<br />
+  SNO glutaminase subunit feeds into.)</li>
+<li><strong>Neurospora crassa pdx-1/pdx-2</strong>: <code>pyridoxine-requiring mutants of N. crassa were found to
+  possess mutations that disrupt conserved regions in either the SNZ or SNO homolog</code> and <code>It
+  now appears appropriate to reserve the pdx-1 designation for the N. crassa SNZ homolog and
+  pdx-2 for the SNO homolog</code> <a href="https://pubmed.ncbi.nlm.nih.gov/11238395">PMID:11238395</a>. This is the strongest orthology evidence that a<br />
+  fungal <strong>SNO/glutaminase subunit</strong> is functionally required for <strong>pyridoxine (PLP)<br />
+  biosynthesis</strong> — supporting the ISS/IBA MF+BP annotations on SNO2 by descent.</li>
+<li>SGD records SNO2's <code>pyridoxine metabolic process</code> (GO:0008614) annotation as <strong>ISS</strong> with<br />
+  references PMID:10438537 and PMID:11238395 (i.e. by similarity to these characterised fungal<br />
+  orthologs) (SGD go_details for S000005278).</li>
+</ul>
+<h2 id="known-vs-not-known-for-sno2-specifically">KNOWN vs NOT-known for SNO2 specifically</h2>
+<p>KNOWN (well-supported):<br />
+- Belongs to the PdxT/SNO glutaminase (class-I GATase) family; intact Cys91/His197/Glu199<br />
+  catalytic triad (UniProt; sequence-verified).<br />
+- By family/orthology, functions as the glutaminase subunit of the PLP (vitamin B6) synthase<br />
+  complex; the SNO glutaminase subunit is required for pyridoxine biosynthesis in fungal<br />
+  orthologs (N. crassa pdx-2) <a href="https://pubmed.ncbi.nlm.nih.gov/11238395">PMID:11238395</a>.<br />
+- Physically forms a PLP-synthase glutaminase complex with SNZ1 (ComplexPortal CPX-1371).<br />
+- SNO2/SNZ2/SNZ3/SNO3 (the copy-2/3 genes) are transcriptionally activated by thiamine (B1)<br />
+  limitation and are linked to B1 biosynthesis in exponential phase <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>.</p>
+<p>NOT known / uncertain (→ knowledge_gaps):<br />
+- <strong>No direct in-vitro demonstration</strong> of SNO2 (P53823) glutaminase or PLP-synthase activity;<br />
+  the MF annotations are all IEA/IBA/ISS by homology (UniProt PE=3). Enzymatic activity of the<br />
+  reconstituted <strong>SNO2/SNZ complex has not been shown catalytically</strong> in the way it has for<br />
+  bacterial/plant PdxS·PdxT.<br />
+- <strong>SNO2 is dispensable</strong> for pyridoxine-limited growth <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>; a distinct<br />
+  SNO2-specific <em>in vivo</em> physiological role/condition is not established. Redundancy with<br />
+  SNO1 (and SNO3) is unresolved.<br />
+- The physiological substrate context (B6 vs B1 biosynthesis) for SNO2 is ambiguous — induced<br />
+  by B1 limitation, yet family MF is PLP (B6) synthesis <a href="https://pubmed.ncbi.nlm.nih.gov/12271461">PMID:12271461</a>.<br />
+- Whether SNO2 preferentially partners SNZ1 vs SNZ2/SNZ3 in vivo is not settled (ComplexPortal<br />
+  curates SNO2:SNZ1).</p>
+<h2 id="annotation-by-annotation-plan-11-goa-rows">Annotation-by-annotation plan (11 GOA rows)</h2>
+<ol>
+<li>GO:0042823 PLP biosynthetic process — IBA — ACCEPT (core BP; family+ortholog supported).</li>
+<li>GO:0004359 glutaminase activity — IBA — contributes_to — ACCEPT (subunit MF, triad intact).</li>
+<li>GO:0008614 pyridoxine metabolic process — IBA — ACCEPT/KEEP (B6 process; SGD ISS-backed).</li>
+<li>GO:1903600 glutaminase complex — IBA — part_of — ACCEPT (CPX-1371 confirms complex).</li>
+<li>GO:0004359 glutaminase activity — IEA(EC) — enables — MODIFY→contributes_to framing /<br />
+   ACCEPT MF (same activity as #2; enables from EC mapping; keep, note contributes_to is the<br />
+   more accurate qualifier for a subunit but the MF term itself is correct).</li>
+<li>GO:0008614 pyridoxine metabolic process — IEA(ARBA) — ACCEPT (dup of #3, different pipeline).</li>
+<li>GO:0036381 PLP synthase (glutamine hydrolysing) activity — IEA(EC 4.3.3.6) — ACCEPT<br />
+   (holoenzyme MF; strictly a property of the SNO+SNZ complex, so contributes_to is more apt,<br />
+   but term is correct for the family).</li>
+<li>GO:0042819 vitamin B6 biosynthetic process — IEA(InterPro) — ACCEPT/KEEP (parent of the<br />
+   PLP process; correct but more general than #1).</li>
+<li>GO:0042823 PLP biosynthetic process — IEA — ACCEPT (dup of #1, InterPro/UniPathway).</li>
+<li>GO:0003674 molecular_function — ND — accept-as-is (root; ND placeholder, keep as NON_CORE).</li>
+<li>GO:0005575 cellular_component — ND — accept-as-is (root; ND placeholder).</li>
+</ol>
+<p>No REMOVE actions: every annotation is domain/orthology-defensible; SNO2 has no experimental<br />
+annotations to overrule, and no annotation is biologically contradicted.</p>
+<h2 id="deep-research-provenance-tooling-status">Deep-research provenance / tooling status</h2>
+<p>The automated deep-research harness did not yield a provider report for SNO2. <code>falcon</code> timed out<br />
+at 600s (twice; retried once per protocol), and the <code>perplexity-lite</code> fallback returned HTTP 401<br />
+(insufficient_quota). Per project guidance, this review is therefore grounded directly in<br />
+primary/authoritative sources rather than an LLM deep-research summary:</p>
+<ul>
+<li>UniProt P53823 (domain architecture, catalytic-triad annotation, family assignment, curated<br />
+  FUNCTION; sequence-level triad verification done inline above).</li>
+<li>GOA TSV (the 11 existing annotations reviewed).</li>
+<li>ComplexPortal CPX-1371 (SNO2:SNZ1 complex; REST API).</li>
+<li>SGD go_details for S000005278 (the ISS annotation and its supporting references).</li>
+<li>Three cached, PubMed-verified primary publications: PMID:12271461 (yeast SNZ/SNO functional<br />
+  analysis — the one paper directly assaying SNO2), PMID:10438537 (Aspergillus pyroA / SNZ<br />
+  side), PMID:11238395 (Neurospora pdx-1/pdx-2 / SNO side).</li>
+</ul>
+<p>Every <code>supporting_text</code> in the review is a verbatim substring of a cached publication and was<br />
+machine-verified by <code>just validate-references</code> (all checks passed). No content was fabricated.<br />
+If a genuine late falcon report lands, it will be committed as <code>SNO2-deep-research-falcon.md</code><br />
+without altering the evidence-grounded conclusions above.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53823
+gene_symbol: SNO2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  SNO2 (YNL334C) is one of three near-identical Saccharomyces cerevisiae SNO paralogs
+  (SNO1/2/3) and is a member of the glutaminase PdxT/SNO family (class-I glutamine
+  amidotransferase fold). SNO proteins are the glutaminase subunit of the two-subunit
+  pyridoxal 5&#39;-phosphate (PLP, vitamin B6) synthase, working together with a SNZ (PdxS/PDX1)
+  synthase subunit: the SNO subunit hydrolyses L-glutamine to L-glutamate plus ammonia and
+  channels the ammonia to the SNZ subunit, which condenses it with ribose 5-phosphate and
+  glyceraldehyde 3-phosphate to form PLP. SNO2 carries the canonical Cys-His-Glu catalytic
+  triad of the class-I glutamine amidotransferase glutaminase and is curated in a physical
+  PLP-synthase glutaminase complex with SNZ1. The three yeast SNZ-SNO gene pairs are
+  functionally specialized: the SNO1-SNZ1 pair is dedicated to vitamin B6 biosynthesis under
+  B6-limiting conditions, whereas the SNO2/SNO3 (copy 2/3) genes are induced by thiamine
+  (vitamin B1) limitation and are linked to B1 biosynthesis in exponentially growing cells.
+  Direct enzymatic characterization of the SNO2 protein itself has not been reported; its
+  molecular function is assigned from family membership, an intact catalytic triad, and
+  functional characterization of fungal SNO orthologs.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: ComplexPortal:CPX-1371
+  title: SNO2-SNZ1 pyridoxal 5&#39;-phosphate synthase complex
+  findings:
+  - statement: &gt;-
+      SNO2 (P53823) and SNZ1 (Q03148) are curated as the two enzyme subunits of a
+      pyridoxal 5&#39;-phosphate synthase glutaminase complex.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Retrieved from the ComplexPortal REST API (complex-ws/complex/CPX-1371):
+      systematic name SNO2:SNZ1, participants SNZ1 (Q03148) and SNO2 (P53823), both
+      bioRole enzyme. Directly corroborates SNO2&#39;s physical membership in the PLP-synthase
+      glutaminase complex.
+- id: PMID:12271461
+  title: Functional analysis of yeast gene families involved in metabolism of vitamins B1 and B6.
+  findings:
+  - statement: &gt;-
+      In media lacking vitamin B6, SNZ1 and SNO1 were required for growth in certain conditions,
+      but SNZ2, SNZ3, SNO2 and SNO3 were not required; copies 2 and 3 are instead activated by
+      lack of thiamine and appear more related to vitamin B1 biosynthesis during exponential phase.
+    supporting_text: &gt;-
+      In media lacking vitamin B(6), SNZ1 and SNO1 were both required for growth in certain
+      conditions, but neither SNZ2, SNZ3, SNO2 nor SNO3 were required.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Yeast 2002;19:1261-76). The only study directly assaying SNO2 in yeast;
+      establishes that SNO2 (a copy-2/3 gene) is dispensable for B6-limited growth and is
+      thiamine-limitation-induced, distinguishing it from the B6-dedicated SNO1/SNZ1 pair.
+      Abstract-only in cache (full_text_available: false).
+- id: PMID:10438537
+  title: &gt;-
+    The extremely conserved pyroA gene of Aspergillus nidulans is required for pyridoxine
+    synthesis and is required indirectly for resistance to photosensitizers.
+  findings:
+  - statement: &gt;-
+      The SNZ family (the PLP-synthase synthase subunit; pyroA in Aspergillus) is an enzyme
+      specifically required for pyridoxine biosynthesis, defining the eukaryotic/archaeal PLP
+      biosynthetic pathway that the SNO glutaminase subunit feeds.
+    supporting_text: &gt;-
+      define this gene family as encoding an enzyme specifically required for pyridoxine
+      biosynthesis
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (J Biol Chem 1999). Characterizes the SNZ/synthase-subunit ortholog
+      (pyroA), establishing the pyridoxine-biosynthesis pathway that SNO (glutaminase subunit)
+      partners in. Used by SGD as an ISS support for SNO2&#39;s pyridoxine metabolic process
+      annotation. About the SNZ side, so only indirectly about SNO2 itself.
+- id: PMID:11238395
+  title: &gt;-
+    Analysis of the pdx-1 (snz-1/sno-1) region of the Neurospora crassa genome: correlation
+    of pyridoxine-requiring phenotypes with mutations in two structural genes.
+  findings:
+  - statement: &gt;-
+      In Neurospora crassa, pyridoxine-requiring mutants carry mutations disrupting either the
+      SNZ or the SNO homolog, and the SNO homolog corresponds to pdx-2; this establishes that a
+      fungal SNO/glutaminase subunit is required for pyridoxine (PLP) biosynthesis.
+    supporting_text: &gt;-
+      pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+      conserved regions in either the SNZ or SNO homolog
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Genetics 2001). Strongest orthology evidence that a fungal SNO
+      glutaminase subunit (pdx-2) is functionally required for pyridoxine biosynthesis. Used by
+      SGD as ISS support for SNO2&#39;s pyridoxine metabolic process annotation. Neurospora, not
+      yeast SNO2 directly.
+existing_annotations:
+- term:
+    id: GO:0042823
+    label: pyridoxal 5&#39;-phosphate biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process for the PdxT/SNO family. SNO2 is the glutaminase subunit of the
+      PLP synthase and the SNO glutaminase subunit is required for pyridoxine/PLP biosynthesis
+      in fungal orthologs (N. crassa pdx-2). IBA from the PANTHER PLP-synthase-subunit-SNO tree
+      is well founded.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11238395
+      supporting_text: &gt;-
+        pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+        conserved regions in either the SNZ or SNO homolog
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: contributes_to
+  review:
+    summary: &gt;-
+      The molecular activity of the SNO/PdxT glutaminase subunit. SNO2 retains the intact
+      class-I glutamine amidotransferase catalytic triad (Cys91 nucleophile, His197/Glu199
+      charge-relay; UniProt), so glutaminase activity is domain-defensible. The contributes_to
+      qualifier is appropriate because the glutaminase is a subunit whose in-vivo activity is
+      coupled to (and ammonia-channeled into) the SNZ synthase subunit within the PLP synthase.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11238395
+      supporting_text: &gt;-
+        pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+        conserved regions in either the SNZ or SNO homolog
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008614
+    label: pyridoxine metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Pyridoxine (vitamin B6) metabolic process. Consistent with the family role in PLP/B6
+      biosynthesis and with SGD&#39;s ISS annotation of the same term (supported by the Aspergillus
+      pyroA and Neurospora pdx-1/pdx-2 orthologs). Slightly more general/parallel to the PLP
+      biosynthetic process term; retained as a valid family process annotation.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10438537
+      supporting_text: &gt;-
+        define this gene family as encoding an enzyme specifically required for pyridoxine
+        biosynthesis
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:1903600
+    label: glutaminase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Complex membership as the glutaminase subunit of the two-subunit PLP synthase. Directly
+      corroborated for SNO2 by ComplexPortal CPX-1371 (SNO2-SNZ1 pyridoxal 5&#39;-phosphate
+      synthase complex). GO:1903600 (glutaminase complex; synonym Sno1p-Snz1p) is the generic
+      term for a complex capable of glutaminase activity and is correctly applied here.
+    action: ACCEPT
+    supported_by:
+    - reference_id: ComplexPortal:CPX-1371
+      supporting_text: &gt;-
+        SNO2-SNZ1 pyridoxal 5&#39;-phosphate synthase complex
+- term:
+    id: GO:0004359
+    label: glutaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Same molecular activity as the IBA glutaminase-activity annotation above, here derived by
+      automated EC/RHEA mapping (EC 3.5.1.2). The MF term is correct given the intact catalytic
+      triad. The enables qualifier (vs the more accurate contributes_to used by the IBA pipeline
+      for the subunit) is a pipeline artifact of EC-based IEA; the underlying activity assignment
+      is sound, so the annotation is retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11238395
+      supporting_text: &gt;-
+        pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+        conserved regions in either the SNZ or SNO homolog
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008614
+    label: pyridoxine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Duplicate of the pyridoxine metabolic process annotation, from the ARBA machine-learning
+      pipeline. Same domain/orthology support; retained as a valid but non-core family process
+      term.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10438537
+      supporting_text: &gt;-
+        define this gene family as encoding an enzyme specifically required for pyridoxine
+        biosynthesis
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0036381
+    label: pyridoxal 5&#39;-phosphate synthase (glutamine hydrolysing) activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The holoenzyme-level molecular function (EC 4.3.3.6) of the two-subunit PLP synthase.
+      This activity is strictly a property of the assembled SNO+SNZ complex (the SNO subunit
+      alone provides only the glutaminase half-reaction), so contributes_to would be more precise
+      than enables. The term is a correct family assignment via EC/RHEA mapping and is retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:10438537
+      supporting_text: &gt;-
+        define this gene family as encoding an enzyme specifically required for pyridoxine
+        biosynthesis
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0042819
+    label: vitamin B6 biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Vitamin B6 biosynthetic process, the parent process of PLP biosynthesis. Correct but more
+      general than the PLP biosynthetic process (GO:0042823) annotation; retained as a valid
+      non-core (broader) process term for the family.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:10438537
+      supporting_text: &gt;-
+        define this gene family as encoding an enzyme specifically required for pyridoxine
+        biosynthesis
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0042823
+    label: pyridoxal 5&#39;-phosphate biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Duplicate of the core PLP biosynthetic process annotation, from InterPro/UniPathway
+      automated mapping. Same support as the IBA version; retained.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:11238395
+      supporting_text: &gt;-
+        pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+        conserved regions in either the SNZ or SNO homolog
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function placeholder with ND (no biological data) evidence, an SGD
+      no-data stub predating the electronic/phylogenetic MF assignments. Uninformative; kept
+      as-is per convention for ND root annotations (superseded by the specific MF terms above).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component placeholder with ND evidence, an SGD no-data stub. Uninformative;
+      kept as-is per convention (superseded by the glutaminase-complex and cytosol IBA
+      annotations for the family).
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Glutaminase subunit of the two-subunit pyridoxal 5&#39;-phosphate (PLP, vitamin B6) synthase:
+    SNO2 hydrolyses L-glutamine to L-glutamate and ammonia (class-I glutamine amidotransferase
+    glutaminase, catalytic triad Cys91/His197/Glu199 intact) and, within the PLP synthase
+    complex with a SNZ synthase subunit, channels the ammonia used to build PLP from ribose
+    5-phosphate and glyceraldehyde 3-phosphate. Assigned from family membership, intact
+    catalytic triad, and characterized fungal SNO orthologs (N. crassa pdx-2); direct enzymatic
+    assay of the SNO2 protein has not been reported.
+  molecular_function:
+    id: GO:0004359
+    label: glutaminase activity
+  contributes_to_molecular_function:
+    id: GO:0036381
+    label: pyridoxal 5&#39;-phosphate synthase (glutamine hydrolysing) activity
+  directly_involved_in:
+  - id: GO:0042823
+    label: pyridoxal 5&#39;-phosphate biosynthetic process
+  in_complex:
+    id: GO:1903600
+    label: glutaminase complex
+  supported_by:
+  - reference_id: PMID:11238395
+    supporting_text: &gt;-
+      pyridoxine-requiring mutants of N. crassa were found to possess mutations that disrupt
+      conserved regions in either the SNZ or SNO homolog
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:10438537
+    supporting_text: &gt;-
+      define this gene family as encoding an enzyme specifically required for pyridoxine
+      biosynthesis
+    reference_section_type: ABSTRACT
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The glutaminase and PLP-synthase activities of the SNO2 protein have never been directly
+      demonstrated: it is unknown whether purified SNO2, alone or reconstituted with a SNZ
+      subunit, is catalytically active, and its kinetic parameters are undetermined. All SNO2
+      molecular-function annotations are inferred by homology (UniProt PE=3, IBA/IEA/ISS).
+    boundary: &gt;-
+      SNO2 belongs to the glutaminase PdxT/SNO family, retains the intact class-I glutamine
+      amidotransferase catalytic triad (Cys91 nucleophile, His197/Glu199 charge-relay), and is
+      curated in a physical complex with SNZ1 (ComplexPortal CPX-1371). The orthologous fungal
+      SNO subunit (N. crassa pdx-2) is genetically required for pyridoxine biosynthesis.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      SNO2 is one of three near-identical yeast SNO paralogs whose individual biochemical
+      contributions have not been separated; direct assays would establish whether SNO2 is a
+      catalytically competent glutaminase and whether it forms a functional PLP synthase with
+      SNZ subunits.
+    resolution: &gt;-
+      Purify recombinant SNO2 and reconstitute with SNZ1/SNZ2/SNZ3; assay glutaminase activity
+      (glutamine to glutamate + ammonia) and coupled PLP synthesis, with a Cys91 active-site
+      mutant control.
+    provenance:
+    - reference_id: PMID:12271461
+      supporting_text: &gt;-
+        In media lacking vitamin B(6), SNZ1 and SNO1 were both required for growth in certain
+        conditions, but neither SNZ2, SNZ3, SNO2 nor SNO3 were required.
+      reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: &gt;-
+    The SNO2-specific in-vivo physiological role and its required condition are undetermined.
+    SNO2 is dispensable for vitamin B6-limited growth, and it is unresolved whether its native
+    function is in pyridoxal 5&#39;-phosphate (B6) biosynthesis, in a thiamine (B1)-related process
+    under which it is induced, or both, and which SNZ synthase subunit it partners in vivo.
+  boundary: &gt;-
+    SNO2 is a glutaminase PdxT/SNO family member with an intact catalytic triad, curated in a
+    PLP-synthase glutaminase complex with SNZ1 (CPX-1371). The B6-dedicated pair is SNO1/SNZ1
+    (both required for B6-limited growth); SNO2/SNO3 (copies 2/3) are dispensable for B6-limited
+    growth and are transcriptionally activated by thiamine limitation, appearing more related to
+    B1 biosynthesis in exponential phase.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving this would explain why yeast maintains three SNZ-SNO pairs and whether SNO2
+    represents a B1-linked or condition-specific branch of PLP-family metabolism rather than
+    simple redundancy with SNO1. It is the crux of what distinguishes this understudied paralog
+    from its well-characterized copy-1 counterpart.
+  resolution: &gt;-
+    Condition-resolved phenotyping of sno2 single and sno1 sno2 sno3 combinatorial deletions
+    under B6 and B1 limitation; measurement of intracellular PLP and thiamine; identification of
+    the SNZ subunit(s) SNO2 associates with in each condition.
+  provenance:
+  - reference_id: PMID:12271461
+    supporting_text: &gt;-
+      but neither SNZ2, SNZ3, SNO2 nor SNO3 were required.
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The degree and direction of functional redundancy among the three yeast SNO paralogs
+    (SNO1/SNO2/SNO3) is unresolved: it is unknown whether SNO2 can substitute for SNO1 in B6
+    biosynthesis, whether SNO2 and SNO3 are interchangeable, and what unique contribution SNO2
+    makes despite their near-identical sequences.
+  boundary: &gt;-
+    Single-gene deletions of SNO2 (a copy-2/3 gene) do not impair B6-limited growth, and copies
+    2 and 3 are reported to have slightly different cellular functions despite extremely close
+    sequence similarity; the B6 phenotype is carried by SNO1.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Distinguishing genuine paralog-specific function from redundancy is essential to attribute
+    any SNO2-specific annotation correctly and to avoid over-propagating SNO1 evidence onto SNO2.
+  resolution: &gt;-
+    Cross-complementation assays (express SNO2 in a sno1 background under B6 limitation and vice
+    versa) and paralog-swap chimeras to map function-determining residues.
+  provenance:
+  - reference_id: PMID:12271461
+    supporting_text: &gt;-
+      Copies 2 and 3 of the gene products have, in spite of their extremely close sequence
+      similarity, slightly different functions in the cell.
+    reference_section_type: ABSTRACT
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is the SNO2 protein a catalytically active glutaminase, and does it form a functional PLP
+    synthase when reconstituted with SNZ1, SNZ2, or SNZ3?
+- question: &gt;-
+    Under what physiological condition is SNO2 non-redundantly required, given that it is
+    dispensable for vitamin B6-limited growth but induced by thiamine limitation?
+suggested_experiments:
+- hypothesis: &gt;-
+    SNO2 is a catalytically competent glutaminase subunit that reconstitutes a functional PLP
+    synthase with a SNZ synthase subunit.
+  description: &gt;-
+    Express and purify recombinant SNO2 and SNZ1/2/3; assay glutaminase activity (L-glutamine to
+    L-glutamate + ammonia) for SNO2 alone and coupled PLP synthesis (with ribose 5-phosphate and
+    glyceraldehyde 3-phosphate) for SNO2+SNZ mixtures, using a Cys91 active-site mutant as a
+    negative control.
+- hypothesis: &gt;-
+    SNO2 has a thiamine-limitation-linked and/or condition-specific role distinct from the
+    B6-dedicated SNO1.
+  description: &gt;-
+    Phenotype sno2 single and sno1 sno2 sno3 combinatorial deletion strains under vitamin B6 and
+    thiamine limitation; quantify intracellular PLP and thiamine and profile SNO2-SNZ physical
+    associations by condition.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

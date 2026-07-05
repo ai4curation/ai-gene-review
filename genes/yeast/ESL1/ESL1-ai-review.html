@@ -1,0 +1,3359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESL1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ESL1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P40456" target="_blank" class="term-link">
+                        P40456
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ESL1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P40456" data-a="DESCRIPTION: ESL1 (YIL151C) is a 1118-residue budding-yeast pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ESL1 (YIL151C) is a 1118-residue budding-yeast protein of the Est1/SMG (Est-one-homology) family, built from a central 14-3-3-like Est-one-homology (EOH) domain and a C-terminal PIN (PilT N-terminus) domain whose four acidic catalytic residues are conserved. It is the structural ortholog, together with its close paralog ESL2 (YKR096W, &gt;70% identical), of the metazoan telomerase/NMD proteins hEST1A/B (SMG5/6). Despite this ancestry, budding-yeast ESL1 does not function in nonsense-mediated mRNA decay or in telomere maintenance: esl1 mutants have normal telomere length, senescence, subtelomeric silencing and NMD-substrate levels. Instead, ESL1 acts redundantly with ESL2 in environment-sensing adaptive gene expression, contributing to the correct nutrient- and pH-responsive expression of hexose, carbohydrate and one-carbon (glycine-regulon) metabolic genes; loss of both proteins deregulates ~50 transcripts in the direction opposite to the appropriate metabolic response and confers synthetic sickness with components of the Rim101 pH-sensing pathway (Rim8, Dfg16) and with the TRAMP poly(A) polymerase Trf4. ESL1/ESL2 also contribute to mitochondrial-genome stability and modulate genotoxin sensitivity, in some cases dependent on the PIN catalytic residues. The direct molecular activity of ESL1 (whether it is a bona fide endoribonuclease in vivo, and its RNA/protein substrates and partners) remains undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000184" target="_blank" class="term-link">
+                                    GO:0000184
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear-transcribed mRNA catabolic process, nonsense-mediated decay</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0000184" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation from the metazoan hEST1A/B (SMG5/6) clade. This function was directly tested in the yeast protein and found ABSENT: esl1, esl2 and esl1 esl2 mutants do not accumulate NMD substrates (nonsense ade2-1 or unspliced pre-CYH2), unlike the upf1 control.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental data in the target species (S. cerevisiae) directly refute NMD involvement for Esl1, overriding the IBA inference from metazoan orthologs. This is not paralog confusion but a species-specific loss of the ancestral function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000002614</span>
+
+                                    &middot; EBS1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">EBS1 is the yeast SMG7 ortholog with NMD links; its presence in the IBA with/from set does not make ESL1 an NMD factor. Esl1 was experimentally tested and is NMD-negative.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">based on these two independent assays, ESL1 and ESL2 do not seem to have NMD-related functions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005697" target="_blank" class="term-link">
+                                    GO:0005697
+                                </a>
+                            </span>
+                            <span class="term-label">telomerase holoenzyme complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0005697" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA propagation from the EST1/telomerase clade. Directly tested and refuted: esl1, esl2 and esl1 esl2 mutants have wild-type telomere length and normal senescence/ALT kinetics, so Esl1 is not part of a functional telomerase holoenzyme in yeast.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Species-specific experimental evidence refutes any telomerase/telomere-maintenance role for Esl1, overriding the phylogenetic inference.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004223</span>
+
+                                    &middot; EST1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">The ancestral EST1/telomerase function does not transfer to Esl1, which lacks any telomere-maintenance role in yeast.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Esl1 and Esl2 are not required for telomerase-dependent or alternative telomere maintenance mechanisms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042162" target="_blank" class="term-link">
+                                    GO:0042162
+                                </a>
+                            </span>
+                            <span class="term-label">telomeric repeat DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0042162" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA molecular-function propagation from the EST1/telomerase clade. No telomere-related activity is detectable for Esl1 in yeast (normal telomere length/structure, no TERRA change), and no telomeric-DNA-binding activity has been demonstrated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The parent biological role (telomere maintenance) is experimentally excluded for Esl1, and there is no independent evidence that Esl1 binds telomeric DNA; the IBA is an over-propagation.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004223</span>
+
+                                    &middot; EST1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Telomeric-DNA-binding activity was not demonstrated for Esl1; the telomere role it is derived from is experimentally excluded.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Esl1 and Esl2 are not required for telomerase-dependent or alternative telomere maintenance mechanisms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070034" target="_blank" class="term-link">
+                                    GO:0070034
+                                </a>
+                            </span>
+                            <span class="term-label">telomerase RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0070034" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA molecular-function propagation from the EST1/telomerase clade. Esl1 has no demonstrated telomerase-RNA-binding activity and no telomere-maintenance role in yeast.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated from metazoan/EST1 orthologs; the associated telomere function is experimentally excluded for Esl1 and no telomerase-RNA-binding activity is shown.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004223</span>
+
+                                    &middot; EST1
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Telomerase-RNA-binding activity was not demonstrated for Esl1; the telomere role it is derived from is experimentally excluded.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Esl1 and Esl2 are not required for telomerase-dependent or alternative telomere maintenance mechanisms</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder (ND) recording that no molecular function was curated by SGD. The direct molecular activity of Esl1 is indeed genuinely undetermined (see knowledge_gaps): the PIN catalytic residues are conserved but no in vivo/in vitro endoribonuclease activity has been demonstrated, and the characterized gene-expression phenotype is largely nuclease-independent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND placeholder that correctly reflects a real MF-dark gap; retain until a specific molecular activity is established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder (ND). The subcellular localization of the Esl1 protein has not been experimentally reported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND placeholder reflecting an uncurated (CC-dark) localization; retain pending experimental localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level placeholder (ND) predating the Lai et al. 2013 characterization. A specific biological process (environment-sensing adaptive gene expression) is now supported and is captured in core_functions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND placeholder is now superseded by experimental evidence for a role in adaptive gene expression; propose replacing the root with the specific process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031669" target="_blank" class="term-link">
+                                    cellular response to nutrient levels
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Esl1 and Esl2 contribute to the regulation of adaptive gene expression responses of environmental sensing pathways</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                    GO:0010468
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23893744
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Yeast hEST1A/B (SMG5/6)-like proteins contribute to environm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0010468" data-r="PMID:23893744" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. esl1 esl2 mutants deregulate ~50 transcripts, so Esl1 (with Esl2) is involved in regulation of gene expression during environmental adaptation. Added to align core_functions with existing_annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core-function process term supported by the mutant transcriptome phenotype but not previously present in existing_annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">absence of Esl1 and Esl2 led to more than two-fold deregulation of ∼50 transcripts, most of which were expressed inversely to the appropriate metabolic response to environmental nutrient supply</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031669" target="_blank" class="term-link">
+                                    GO:0031669
+                                </a>
+                            </span>
+                            <span class="term-label">cellular response to nutrient levels</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23893744
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Yeast hEST1A/B (SMG5/6)-like proteins contribute to environm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P40456" data-a="GO:0031669" data-r="PMID:23893744" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation. esl1 esl2 mutants fail to express hexose and one-carbon metabolism genes appropriately for the nutrient environment, indicating a role in the cellular response to nutrient levels. Added to align core_functions with existing_annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core-function process term supported by the nutrient-adaptive gene-expression phenotype but not previously present in existing_annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                        PMID:23893744
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">esl1Δ esl2Δ double mutants may have a defect in adapting the expression of hexose and one-carbon metabolism genes to environmentally appropriate requirements</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Redundantly with its paralog Esl2, Esl1 contributes to environment-sensing adaptive gene expression, so that hexose/carbohydrate and one-carbon (glycine-regulon) metabolic genes are expressed appropriately for the prevailing nutrient (and pH) environment. Loss of both proteins deregulates ~50 transcripts in the direction opposite to the correct metabolic response and causes synthetic sickness with the Rim101 pH-sensing components Rim8 and Dfg16. The direct molecular activity underlying this role is not established (see knowledge_gaps); most of the transcriptome phenotype is nuclease-independent.</h3>
+                <span class="vote-buttons" data-g="P40456" data-a="FUNCTION: Redundantly with its paralog Esl2, Esl1 contribute..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010468" target="_blank" class="term-link">
+                                regulation of gene expression
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031669" target="_blank" class="term-link">
+                                cellular response to nutrient levels
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                PMID:23893744
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Esl1 and Esl2 contribute to the regulation of adaptive gene expression responses of environmental sensing pathways</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                                PMID:23893744
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">esl1Δ esl2Δ double mutants may have a defect in adapting the expression of hexose and one-carbon metabolism genes to environmentally appropriate requirements</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" target="_blank" class="term-link">
+                            PMID:23893744
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Yeast hEST1A/B (SMG5/6)-like proteins contribute to environment-sensing adaptive gene expression responses.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Esl1 (Yil151c) and its paralog Esl2 (Ykr096w) are structural orthologs of metazoan hEST1A/B (SMG5/6), sharing a 14-3-3-like Est-one-homology domain and a C-terminal PIN endonuclease domain with the four conserved catalytic acidic residues.</div>
+
+                        <div class="finding-text">"this similarity encompassed the region corresponding to the 14-3-3–like Est-one-homology domain (45–51% similarity; Figure 1, A and B) and the C-terminal PIN endonuclease domain (49–53% similarity; Figure 1, A and C) with complete conservation of four critical D/E residues required for nuclease activity of the PIN-domain proteins"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Unlike their metazoan orthologs, Esl1 and Esl2 are not involved in NMD or telomere maintenance pathways.</div>
+
+                        <div class="finding-text">"unlike their metazoan orthologs, Esl1 and Esl2 were not involved in nonsense-mediated mRNA decay or telomere maintenance pathways"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of Esl1 and Esl2 deregulates ~50 transcripts, most expressed inversely to the appropriate metabolic response to environmental nutrient supply.</div>
+
+                        <div class="finding-text">"absence of Esl1 and Esl2 led to more than two-fold deregulation of ∼50 transcripts, most of which were expressed inversely to the appropriate metabolic response to environmental nutrient supply"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">esl1 esl2 double mutants are synthetic sick with rim8 and dfg16, components of the Rim101 pH-response environmental-sensing pathway.</div>
+
+                        <div class="finding-text">"esl1Δ esl2Δ double mutants were synthetic sick with null mutations for Rim8 and Dfg16, which form the environmental-sensing complex of the Rim101 pH response gene expression pathway"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562106" target="_blank" class="term-link">
+                            PMID:14562106
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein expression in yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Esl1 protein is expressed at a low level (~504 molecules/cell) in log-phase SD medium.</div>
+
+                        <div class="finding-text">"Present with 504 molecules/cell in log phase SD medium."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18407956" target="_blank" class="term-link">
+                            PMID:18407956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A multidimensional chromatography technology for in-depth phosphoproteome analysis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Esl1 is phosphorylated at Ser-170 and Ser-190 (large-scale phosphoproteomics).</div>
+
+                        <div class="finding-text">"PHOSPHORYLATION [LARGE SCALE ANALYSIS] AT SER-170 AND SER-190"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Esl1 a catalytically active endoribonuclease in vivo, and if so, what RNAs does it cleave during nutrient/pH adaptation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40456" data-a="Q: Is Esl1 a catalytically active endoribonuclease in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the 14-3-3-like Est-one-homology domain of Esl1 mediate a regulatory protein-protein interaction analogous to the SMG5/6–UPF1 interaction in metazoa?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40456" data-a="Q: Does the 14-3-3-like Est-one-homology domain of Es..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the subcellular localization of Esl1, and does it change with nutrient or pH conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P40456" data-a="Q: What is the subcellular localization of Esl1, and ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform RIP-seq/CLIP-seq on tagged Esl1 under high- and low-glucose and alkaline conditions, and compare mRNA half-lives in wild-type, esl1 esl2, and nuclease-dead alleles.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Esl1 regulates a specific set of nutrient/pH-responsive mRNAs via its PIN domain.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40456" data-a="EXPERIMENT: Perform RIP-seq/CLIP-seq on tagged Esl1 under high..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Epistasis and interaction analysis of Esl1 with Rim101-pathway components (Rim8, Dfg16, Rim13, Rim20) under alkaline and low-glucose stress, with transcriptome readout.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Esl1 acts in a pathway parallel to Rim101 in environmental adaptation.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P40456" data-a="EXPERIMENT: Epistasis and interaction analysis of Esl1 with Ri..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular activity of Esl1 is undetermined. It is unknown whether Esl1 is a catalytically active endoribonuclease in vivo, and if so what its RNA substrates are; the conserved PIN catalytic residues are intact but no biochemical nuclease assay of Esl1 has been reported, and the characterized adaptive gene-expression phenotype is largely independent of PIN catalytic integrity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Esl1 has a central 14-3-3-like Est-one-homology (EOH) domain and a C-terminal PIN domain with four conserved acidic catalytic residues (nuclease-dead esl1 allele = D952N + E982Q), and is a structural ortholog of metazoan hEST1A/B (SMG5/6), which are PIN-domain endoribonucleases. Esl1/Esl2 do NOT act in NMD or telomere maintenance in yeast. A genome-stability phenotype (bleomycin resistance) IS phenocopied by nuclease-dead alleles, implicating the PIN residues in that specific phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Esl1 is one of only seven S. cerevisiae PIN-domain proteins; establishing whether it is a functional endoribonuclease and identifying its substrate would resolve how the Est1/SMG fold was repurposed for nutrient-adaptive gene regulation after loss of the ancestral NMD/telomere functions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro endoribonuclease assays with purified Esl1 and its PIN domain; CLIP/RIP-style identification of bound RNAs; comparison of wild-type vs nuclease-dead alleles for each phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Esl1 and Esl2 may regulate the expression of the altered transcripts in a largely nuclease-independent manner"</em> — PMID:23893744</li>
+
+                <li><em>"all other PIN domain-containing proteins characterized to date exert ribonuclease activity in vitro and/or in vivo"</em> — PMID:23893744</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>PIN-domain-dependent adaptive mRNA regulatory activity</strong> — Esl1/Esl2 have a defined biological role (environment-sensing adaptive gene expression) but no GO molecular-function term captures their activity; they are currently annotatable only at the process level, leaving the gene MF-dark.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular partners and substrates of Esl1 are unknown, including any protein-protein interaction mediated by its 14-3-3-like EOH domain (the domain that in metazoan SMG5/6 engages the NMD factor UPF1) and any direct link to the Rim101 pH-sensing machinery.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Esl1 was found in a two-hybrid screen with Mdt1/Pin4, and esl1 esl2 mutants are synthetic sick with rim8, dfg16 and trf4, but no direct physical target of either the EOH or PIN domain of Esl1 has been demonstrated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying an Esl1 interaction partner would reveal the mechanism connecting the Est1/SMG fold to nutrient/pH-adaptive gene expression and clarify whether the EOH domain retains a regulatory protein-interaction function analogous to its metazoan counterparts.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity-purification/mass-spectrometry and proximity-labeling of tagged Esl1; targeted tests of physical interaction with Rim101-pathway and TRAMP components.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"provide a basis for future investigations into the detailed mechanisms by which they exert this function"</em> — PMID:23893744</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The ESL1-specific (non-redundant) contribution and in vivo biological role are not resolved, because almost all phenotypes are stronger in esl1 esl2 double mutants and the transcriptome signature was measured only in the double mutant.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> esl1 single mutants show telomere/NMD-negative results and specific synthetic-sick interactions (with FUS3, DAL81, SNX4, and synthetic-lethal with TRF4), and the pair is redundant for the adaptive gene-expression, mitochondrial-stability and genotoxin phenotypes; but no ESL1-only phenotype defines its unique function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing the individual roles of ESL1 and ESL2 is needed to know whether ESL1 has a dedicated regulon or is fully redundant with its paralog.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Condition- and stress-resolved transcriptomics and phenotyping of esl1 single mutants (including nuclease-dead), with direct comparison to esl2 and the double mutant.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the effect was more pronounced when ESL1 and ESL2 were simultaneously deleted, suggesting functional redundancy between the two proteins"</em> — PMID:23893744</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ESL1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40456" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: ESL1 (YIL151C) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T02:29:17.665266</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ESL1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-esl1-yil151c-in-saccharomyces-cerevisiae">Comprehensive Research Report: ESL1 (YIL151C) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="important-prefatory-note-on-gene-characterization">Important Prefatory Note on Gene Characterization</h2>
+<p>ESL1 (YIL151C) is a <strong>poorly characterized</strong> gene in <em>Saccharomyces cerevisiae</em>. The gene symbol "ESL1" stands for "EST/SMG-like protein 1" (UniProt P40456), and its formal naming appears to derive primarily from a single publication (Lai et al., 2013; PMID:23893744), which could not be fully accessed during this literature search. Major reviews of the nonsense-mediated mRNA decay (NMD) pathway and the EST/SMG protein family in yeast do not discuss ESL1 by name, instead focusing on the better-characterized family members Est1 and Ebs1 (lloyd2018theevolutionand pages 4-6). Therefore, much of this report describes ESL1's function through inference from its domain architecture, its family relationships, and the well-characterized biology of its paralogs.</p>
+<p><strong>Note on gene symbol ambiguity:</strong> In mammalian systems, "ESL1" typically refers to E-selectin ligand 1 (GLG1/golgi glycoprotein 1), a completely different protein. This report concerns exclusively the yeast protein encoded by YIL151C in <em>Saccharomyces cerevisiae</em> strain S288c.</p>
+<hr />
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<ul>
+<li><strong>Gene Name:</strong> ESL1 (EST/SMG-like protein 1)</li>
+<li><strong>Systematic Name:</strong> YIL151C</li>
+<li><strong>UniProt Accession:</strong> P40456</li>
+<li><strong>Organism:</strong> <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c)</li>
+<li><strong>Key Domains:</strong></li>
+<li><strong>Est1/Ebs1-like domain</strong> (IPR045153)</li>
+<li><strong>PIN domain</strong> (IPR002716; PF13638/PIN_4)</li>
+<li><strong>TPR-like helical domain superfamily</strong> (IPR011990)</li>
+</ul>
+<hr />
+<h2 id="2-protein-family-context-the-estsmg-protein-family-in-yeast">2. Protein Family Context: The EST/SMG Protein Family in Yeast</h2>
+<h3 id="21-family-members">2.1 Family Members</h3>
+<p>ESL1 belongs to the EST/SMG protein family, which in <em>S. cerevisiae</em> includes at least three members: <strong>Est1</strong>, <strong>Ebs1</strong>, and <strong>Esl1</strong>. This family is related to the metazoan SMG5/SMG6/SMG7 proteins, which function at the intersection of nonsense-mediated mRNA decay and telomere biology (sealey2011thetprcontainingdomain pages 1-2, lloyd2018theevolutionand pages 4-6).</p>
+<p>The following table summarizes the three family members:</p>
+<table>
+<thead>
+<tr>
+<th>Gene name</th>
+<th>Systematic name</th>
+<th>Key domains</th>
+<th>Primary function</th>
+<th>Role in telomere maintenance</th>
+<th>Role in NMD</th>
+<th>Human homolog</th>
+<th>Level of characterization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>EST1</strong></td>
+<td><strong>EST1</strong></td>
+<td>N-terminal TPR-like domain; lacks PIN domain in budding yeast EST/SMG-family context (lloyd2018theevolutionand pages 4-6, sealey2011thetprcontainingdomain pages 1-2)</td>
+<td>Telomerase-associated regulatory subunit required for telomerase recruitment and telomere length homeostasis; binds TLC1 and helps recruit Est2/telomerase via Cdc13 during S phase (sealey2011thetprcontainingdomain pages 1-2, hug2006telomerelengthhomeostasis pages 6-7)</td>
+<td><strong>Essential positive regulator</strong>; loss causes progressive telomere shortening and senescence; associates with telomeres preferentially in S phase (sealey2011thetprcontainingdomain pages 1-2, hug2006telomerelengthhomeostasis pages 6-7)</td>
+<td>No established direct NMD role in budding yeast; review states EST1 is implicated in telomere regulation rather than NMD (lloyd2018theevolutionand pages 4-6)</td>
+<td>Homologous to human EST1 proteins/SMG-family branch, especially hEST1A/B/C at the family level; human homologs have telomere and/or NMD roles (sealey2011thetprcontainingdomain pages 1-2)</td>
+<td><strong>Well characterized</strong> in yeast telomere biology (sealey2011thetprcontainingdomain pages 1-2)</td>
+</tr>
+<tr>
+<td><strong>EBS1</strong></td>
+<td><strong>EBS1</strong></td>
+<td>SMG7-like architecture; lacks PIN domain in baker’s yeast (lloyd2018theevolutionand pages 4-6)</td>
+<td>Auxiliary factor linked to nonsense-mediated mRNA decay; structurally similar to SMG7 (staszewski2023upf1—frommrnadegradation pages 5-6, sealey2011thetprcontainingdomain pages 13-14)</td>
+<td>No strong primary telomere role established in the retrieved evidence; telomere connection, if any, is indirect via broader EST/SMG family relationships (sealey2011thetprcontainingdomain pages 13-14)</td>
+<td><strong>Mild NMD role</strong>; knockout gives a mild NMD phenotype in baker’s yeast (lloyd2018theevolutionand pages 4-6, staszewski2023upf1—frommrnadegradation pages 5-6)</td>
+<td>Putative ortholog/functionally closest yeast counterpart of <strong>SMG7 / hEST1C</strong> (sealey2011thetprcontainingdomain pages 4-6, sealey2011thetprcontainingdomain pages 13-14)</td>
+<td><strong>Moderately characterized</strong>; recognized in NMD reviews, but mechanistic role remains less clear than core UPF factors (lloyd2018theevolutionand pages 6-7, lloyd2018theevolutionand pages 4-6, staszewski2023upf1—frommrnadegradation pages 5-6)</td>
+</tr>
+<tr>
+<td><strong>ESL1</strong></td>
+<td><strong>YIL151C / ESL1</strong></td>
+<td>Est1/Ebs1-like family assignment; predicted/annotated PIN domain plus TPR-like helical domain from UniProt context; direct primary-literature confirmation was limited in retrieved sources</td>
+<td>Specific function remains uncertain from accessible literature; likely an EST/SMG-family protein inferred from sequence/domain architecture and naming, but direct experimental definition was not recoverable here</td>
+<td>No direct telomere-maintenance role established in accessible evidence; any telomere connection is currently inferential through family relationship to EST1/SMG proteins</td>
+<td>No direct NMD role established in accessible evidence; possible relationship is inferential through EST/SMG-family membership and presence of a PIN domain associated with RNA cleavage in other systems (matelska2017comprehensiveclassificationof pages 1-2, glavan2006structuresofthe pages 1-2, gontijo2009mutationsingenes pages 12-13)</td>
+<td>Likely related at the family level to <strong>SMG5/SMG6-like</strong> proteins rather than canonical yeast EST1/EBS1, but this remains tentative from available evidence</td>
+<td><strong>Poorly characterized / literature-limited</strong>; key naming/assignment paper was not accessible in the retrieved corpus, and major reviews retrieved did not discuss ESL1 directly (lloyd2018theevolutionand pages 4-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares the three proposed Saccharomyces cerevisiae EST/SMG family members—Est1, Ebs1, and Esl1/YIL151C—across domains, functions, telomere and NMD roles, homologs, and evidence depth. It is useful for distinguishing the well-established functions of Est1 and Ebs1 from the currently limited direct evidence for Esl1.</em></p>
+<h3 id="22-relationship-to-human-smg-proteins">2.2 Relationship to Human SMG Proteins</h3>
+<p>In humans, the Est1 protein family comprises three members: hEST1A/SMG6, hEST1B/SMG5, and hEST1C/SMG7, which function in both NMD and telomere maintenance (sealey2011thetprcontainingdomain pages 1-2). Human EST1A and EST1B contain C-terminal PIN domains, with SMG6 (hEST1A) possessing active endonuclease activity and SMG5 (hEST1B) having an impaired catalytic site (glavan2006structuresofthe pages 2-4, glavan2006structuresofthe pages 1-2). All three human proteins form complexes with SMG1, UPF1, PP2A, and other NMD components (sealey2011thetprcontainingdomain pages 1-2). In yeast, the two previously well-characterized family members—Est1 (primarily telomere maintenance) and Ebs1 (mild NMD function)—both lack PIN domains (lloyd2018theevolutionand pages 4-6). ESL1 is notable as the only yeast family member annotated as possessing a PIN domain, making it structurally distinct from its yeast paralogs.</p>
+<hr />
+<h2 id="3-domain-architecture-and-inferred-function">3. Domain Architecture and Inferred Function</h2>
+<h3 id="31-pin-domain">3.1 PIN Domain</h3>
+<p>The PIN (PilT N-terminus) domain is a widespread nuclease domain found across all domains of life. PIN domains feature a Rossmanoid fold with a central five-stranded parallel β-sheet flanked by α-helices, and their active sites contain well-conserved acidic amino acid residues (Asp/Glu) that coordinate divalent metal ions (typically Mg²⁺ or Mn²⁺) for catalysis (matelska2017comprehensiveclassificationof pages 1-2, glavan2006structuresofthe pages 1-2, matelska2017comprehensiveclassificationof pages 18-19). In the context of NMD, the PIN domain of SMG6 functions as an endonuclease that cleaves mRNAs containing premature termination codons (PTCs) near the stop codon (glavan2006structuresofthe pages 5-6, glavan2006structuresofthe pages 1-2, glavan2006structuresofthe pages 2-4). The catalytic residues of the human SMG6 PIN domain have been identified as D1251, E1282, D1353, and D1392 (kurscheidt2026compositesmg5smg6pin pages 7-9, kurscheidt2026compositesmg5smg6pin pages 5-7, glavan2006structuresofthe pages 2-4).</p>
+<p>Critically, recent work has shown that the SMG5 PIN domain—though catalytically inactive on its own—forms a composite heterodimeric interface (cPIN) with the SMG6 PIN domain, completing the SMG6 active site and substrate binding site to achieve full endonuclease activity (kurscheidt2026compositesmg5smg6pin pages 2-4, kurscheidt2026compositesmg5smg6pin pages 1-2, kurscheidt2026compositesmg5smg6pin pages 7-9). This demonstrates that catalytically "dead" PIN domains can still play essential roles through protein-protein interaction.</p>
+<p>The presence of a PIN domain in ESL1 (annotated as PIN_4, PF13638) distinguishes it from its yeast paralogs Est1 and Ebs1, which lack PIN domains (lloyd2018theevolutionand pages 4-6). Whether the ESL1 PIN domain retains catalytic activity or functions as an inactive scaffold (analogous to SMG5) remains to be experimentally determined. If catalytically active, ESL1 could potentially function as an RNA endonuclease involved in mRNA quality control or decay processes.</p>
+<h3 id="32-tpr-like-helical-domain">3.2 TPR-like Helical Domain</h3>
+<p>The TPR (tetratricopeptide repeat)-like helical domain superfamily is associated with protein-protein interactions (sealey2011thetprcontainingdomain pages 1-2). In the Est1 family, the TPR domain is the most conserved region and mediates critical interactions: in <em>S. cerevisiae</em> Est1, the TPR domain is essential for telomerase-mediated telomere length maintenance and appears to regulate telomere length homeostasis in a manner separable from telomere recruitment (sealey2011thetprcontainingdomain pages 1-2, sealey2011thetprcontainingdomain pages 2-4, sealey2011thetprcontainingdomain pages 4-6). In human EST1A (SMG6), a domain encompassing the TPR is sufficient for interaction with the telomerase catalytic subunit hTERT (sealey2011thetprcontainingdomain pages 2-4). The presence of a TPR-like domain in ESL1 suggests it may similarly mediate protein-protein interactions, potentially with telomerase components, NMD factors, or other RNA-binding proteins.</p>
+<h3 id="33-est1ebs1-like-domain">3.3 Est1/Ebs1-like Domain</h3>
+<p>The Est1/Ebs1-like domain (IPR045153) classification confirms ESL1's membership in the broader EST/SMG protein family and suggests structural and possibly functional similarities to both Est1 and Ebs1.</p>
+<hr />
+<h2 id="4-biological-pathways-telomere-maintenance-and-nonsense-mediated-mrna-decay">4. Biological Pathways: Telomere Maintenance and Nonsense-Mediated mRNA Decay</h2>
+<h3 id="41-telomere-maintenance-in-yeast">4.1 Telomere Maintenance in Yeast</h3>
+<p>The EST genes (EST1, EST2/TERT, EST3, and TLC1) are essential for telomerase function in <em>S. cerevisiae</em>; loss of any one gene results in progressive telomere shortening and cellular senescence (sealey2011thetprcontainingdomain pages 1-2). Est1 plays a critical role as an intermediary between the telomeric DNA-binding protein Cdc13 and the telomerase RNA TLC1, recruiting the telomerase core complex (Est2-Tlc1) to telomeres during S phase (sealey2011thetprcontainingdomain pages 1-2). ChIP experiments demonstrate that Est1 preferentially associates with telomeres during S phase (hug2006telomerelengthhomeostasis pages 6-7, sealey2011thetprcontainingdomain pages 1-2).</p>
+<p>Whether ESL1 participates directly in telomere maintenance is unknown from the accessible literature. Its family membership and domain architecture suggest potential involvement in telomere-related processes, but no experimental evidence of telomere association or function has been reported for ESL1 in the sources reviewed.</p>
+<h3 id="42-nonsense-mediated-mrna-decay">4.2 Nonsense-Mediated mRNA Decay</h3>
+<p>NMD is an evolutionarily conserved mRNA quality control pathway that degrades transcripts containing premature termination codons (lloyd2018theevolutionand pages 6-7, lloyd2018theevolutionand pages 4-6). In <em>S. cerevisiae</em>, NMD relies on the core UPF factors (UPF1, UPF2, UPF3) (lloyd2018theevolutionand pages 6-7). Baker's yeast represents an "ancient SMG1-independent NMD pathway" (Type 3), having lost the SMG1 kinase that phosphorylates UPF1 in metazoan NMD pathways (lloyd2018theevolutionand pages 6-7, lloyd2018theevolutionand pages 4-6, staszewski2023upf1—frommrnadegradation pages 5-6). The yeast UPF1 is depleted of S/TQ dipeptides that normally serve as SMG1 phosphorylation sites (lloyd2018theevolutionand pages 4-6, staszewski2023upf1—frommrnadegradation pages 5-6).</p>
+<p>Ebs1, the yeast SMG7 homolog, shows a mild NMD phenotype when knocked out (lloyd2018theevolutionand pages 4-6), while Est1 has no known role in NMD (lloyd2018theevolutionand pages 4-6). The role of SMG5-7 family members in yeast NMD remains unclear given the absence of SMG1 and classical UPF1 phosphorylation (lloyd2018theevolutionand pages 4-6, staszewski2023upf1—frommrnadegradation pages 5-6). Only the Ebs1 protein, structurally similar to SMG7, has been reported to play a role in yeast NMD among the SMG5-7 family members (staszewski2023upf1—frommrnadegradation pages 5-6).</p>
+<p>Given that ESL1 possesses a PIN domain—the domain responsible for endonucleolytic cleavage in metazoan NMD (glavan2006structuresofthe pages 5-6, glavan2006structuresofthe pages 1-2)—it is reasonable to hypothesize that ESL1 may participate in RNA degradation processes in yeast, potentially in NMD or related mRNA quality control pathways. However, direct experimental evidence for such a role is not available from the literature accessed.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>No specific localization data for ESL1 was found in the literature reviewed. By analogy with its family members: Est1 localizes to telomeres during S phase via association with Cdc13 and TLC1 (hug2006telomerelengthhomeostasis pages 6-7, sealey2011thetprcontainingdomain pages 1-2), and NMD in yeast is a cytoplasmic, translation-dependent process. If ESL1 functions in NMD, it would be expected to localize to the cytoplasm; if it functions in telomere biology, nuclear/telomeric localization during S phase would be anticipated.</p>
+<hr />
+<h2 id="6-summary-and-conclusions">6. Summary and Conclusions</h2>
+<p>ESL1 (YIL151C) is a <strong>poorly characterized member of the EST/SMG protein family</strong> in <em>Saccharomyces cerevisiae</em>. Its designation as "EST/SMG-like protein 1" and its domain architecture—featuring a PIN domain (ribonuclease), a TPR-like helical domain (protein-protein interaction), and an Est1/Ebs1-like domain—place it within the same protein family as the well-characterized telomerase subunit Est1 and the NMD factor Ebs1. Notably, ESL1 is the only yeast member of this family annotated as containing a PIN domain, which in metazoan homologs (particularly SMG6) functions as an RNA endonuclease that cleaves NMD substrates near premature termination codons (glavan2006structuresofthe pages 5-6, glavan2006structuresofthe pages 1-2, glavan2006structuresofthe pages 2-4). Recent structural work has shown that even catalytically inactive PIN domains (as in SMG5) play essential roles by forming composite heterodimeric interfaces with active PIN domains (kurscheidt2026compositesmg5smg6pin pages 2-4, kurscheidt2026compositesmg5smg6pin pages 1-2, kurscheidt2026compositesmg5smg6pin pages 7-9).</p>
+<p>The precise biological function of ESL1 remains to be fully elucidated experimentally. Based on its domain architecture and family relationships, ESL1 may function in:<br />
+1. <strong>RNA endonuclease activity</strong> through its PIN domain, potentially in mRNA quality control or NMD-related pathways<br />
+2. <strong>Protein-protein interactions</strong> via its TPR-like domain, possibly with telomerase components or NMD factors<br />
+3. <strong>Environment-sensing or stress-responsive gene expression</strong>, as suggested by the title of the key naming publication (Lai et al., 2013)</p>
+<p>The limited characterization of ESL1 represents a gap in our understanding of the EST/SMG protein family in budding yeast and of the molecular mechanisms underlying NMD and telomere maintenance in this model organism. Further experimental studies—including knockout phenotyping, protein interaction mapping, localization studies, and biochemical characterization of its PIN domain—would be valuable for defining ESL1's precise biological role.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lloyd2018theevolutionand pages 4-6): James P. B. Lloyd. The evolution and diversity of the nonsense-mediated mrna decay pathway. F1000Research, 7:1299, Aug 2018. URL: https://doi.org/10.12688/f1000research.15872.2, doi:10.12688/f1000research.15872.2. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sealey2011thetprcontainingdomain pages 1-2): David CF Sealey, Aleksandar D Kostic, Catherine LeBel, Fiona Pryde, and Lea Harrington. The tpr-containing domain within est1 homologs exhibits species-specific roles in telomerase interaction and telomere length homeostasis. BMC Molecular Biology, 12:45-45, Oct 2011. URL: https://doi.org/10.1186/1471-2199-12-45, doi:10.1186/1471-2199-12-45. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hug2006telomerelengthhomeostasis pages 6-7): Nele Hug and Joachim Lingner. Telomere length homeostasis. Chromosoma, 115:413-425, Jun 2006. URL: https://doi.org/10.1007/s00412-006-0067-3, doi:10.1007/s00412-006-0067-3. This article has 399 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(staszewski2023upf1—frommrnadegradation pages 5-6): Jacek Staszewski, Natalia Lazarewicz, Julia Konczak, Iwona Migdal, and Ewa Maciaszczyk-Dziubinska. Upf1—from mrna degradation to human disorders. Cells, 12:419, Jan 2023. URL: https://doi.org/10.3390/cells12030419, doi:10.3390/cells12030419. This article has 28 citations.</p>
+</li>
+<li>
+<p>(sealey2011thetprcontainingdomain pages 13-14): David CF Sealey, Aleksandar D Kostic, Catherine LeBel, Fiona Pryde, and Lea Harrington. The tpr-containing domain within est1 homologs exhibits species-specific roles in telomerase interaction and telomere length homeostasis. BMC Molecular Biology, 12:45-45, Oct 2011. URL: https://doi.org/10.1186/1471-2199-12-45, doi:10.1186/1471-2199-12-45. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sealey2011thetprcontainingdomain pages 4-6): David CF Sealey, Aleksandar D Kostic, Catherine LeBel, Fiona Pryde, and Lea Harrington. The tpr-containing domain within est1 homologs exhibits species-specific roles in telomerase interaction and telomere length homeostasis. BMC Molecular Biology, 12:45-45, Oct 2011. URL: https://doi.org/10.1186/1471-2199-12-45, doi:10.1186/1471-2199-12-45. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lloyd2018theevolutionand pages 6-7): James P. B. Lloyd. The evolution and diversity of the nonsense-mediated mrna decay pathway. F1000Research, 7:1299, Aug 2018. URL: https://doi.org/10.12688/f1000research.15872.2, doi:10.12688/f1000research.15872.2. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(matelska2017comprehensiveclassificationof pages 1-2): Dorota Matelska, Kamil Steczkiewicz, and Krzysztof Ginalski. Comprehensive classification of the pin domain-like superfamily. Nucleic Acids Research, 45:6995-7020, May 2017. URL: https://doi.org/10.1093/nar/gkx494, doi:10.1093/nar/gkx494. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glavan2006structuresofthe pages 1-2): Filip Glavan, Isabelle Behm-Ansmant, Elisa Izaurralde, and Elena Conti. Structures of the pin domains of smg6 and smg5 reveal a nuclease within the mrna surveillance complex. The EMBO Journal, 25:5117-5125, Nov 2006. URL: https://doi.org/10.1038/sj.emboj.7601377, doi:10.1038/sj.emboj.7601377. This article has 242 citations.</p>
+</li>
+<li>
+<p>(gontijo2009mutationsingenes pages 12-13): Alisson M Gontijo, Sylvie Aubert, Ingele Roelens, and Bernard Lakowski. Mutations in genes involved in nonsense mediated decay ameliorate the phenotype of sel-12 mutants with amber stop mutations in caenorhabditis elegans. BMC Genetics, 10:14-14, Mar 2009. URL: https://doi.org/10.1186/1471-2156-10-14, doi:10.1186/1471-2156-10-14. This article has 4 citations.</p>
+</li>
+<li>
+<p>(glavan2006structuresofthe pages 2-4): Filip Glavan, Isabelle Behm-Ansmant, Elisa Izaurralde, and Elena Conti. Structures of the pin domains of smg6 and smg5 reveal a nuclease within the mrna surveillance complex. The EMBO Journal, 25:5117-5125, Nov 2006. URL: https://doi.org/10.1038/sj.emboj.7601377, doi:10.1038/sj.emboj.7601377. This article has 242 citations.</p>
+</li>
+<li>
+<p>(matelska2017comprehensiveclassificationof pages 18-19): Dorota Matelska, Kamil Steczkiewicz, and Krzysztof Ginalski. Comprehensive classification of the pin domain-like superfamily. Nucleic Acids Research, 45:6995-7020, May 2017. URL: https://doi.org/10.1093/nar/gkx494, doi:10.1093/nar/gkx494. This article has 122 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(glavan2006structuresofthe pages 5-6): Filip Glavan, Isabelle Behm-Ansmant, Elisa Izaurralde, and Elena Conti. Structures of the pin domains of smg6 and smg5 reveal a nuclease within the mrna surveillance complex. The EMBO Journal, 25:5117-5125, Nov 2006. URL: https://doi.org/10.1038/sj.emboj.7601377, doi:10.1038/sj.emboj.7601377. This article has 242 citations.</p>
+</li>
+<li>
+<p>(kurscheidt2026compositesmg5smg6pin pages 7-9): Katharina Kurscheidt, Sophie Theunissen, Natalia Pasquali, Kerstin Becker, Volker Boehm, Elena Conti, and Niels H. Gehring. Composite smg5-smg6 pin domain formation is essential for nmd. Nature Communications, Feb 2026. URL: https://doi.org/10.1038/s41467-026-69819-w, doi:10.1038/s41467-026-69819-w. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kurscheidt2026compositesmg5smg6pin pages 5-7): Katharina Kurscheidt, Sophie Theunissen, Natalia Pasquali, Kerstin Becker, Volker Boehm, Elena Conti, and Niels H. Gehring. Composite smg5-smg6 pin domain formation is essential for nmd. Nature Communications, Feb 2026. URL: https://doi.org/10.1038/s41467-026-69819-w, doi:10.1038/s41467-026-69819-w. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kurscheidt2026compositesmg5smg6pin pages 2-4): Katharina Kurscheidt, Sophie Theunissen, Natalia Pasquali, Kerstin Becker, Volker Boehm, Elena Conti, and Niels H. Gehring. Composite smg5-smg6 pin domain formation is essential for nmd. Nature Communications, Feb 2026. URL: https://doi.org/10.1038/s41467-026-69819-w, doi:10.1038/s41467-026-69819-w. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kurscheidt2026compositesmg5smg6pin pages 1-2): Katharina Kurscheidt, Sophie Theunissen, Natalia Pasquali, Kerstin Becker, Volker Boehm, Elena Conti, and Niels H. Gehring. Composite smg5-smg6 pin domain formation is essential for nmd. Nature Communications, Feb 2026. URL: https://doi.org/10.1038/s41467-026-69819-w, doi:10.1038/s41467-026-69819-w. This article has 6 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sealey2011thetprcontainingdomain pages 2-4): David CF Sealey, Aleksandar D Kostic, Catherine LeBel, Fiona Pryde, and Lea Harrington. The tpr-containing domain within est1 homologs exhibits species-specific roles in telomerase interaction and telomere length homeostasis. BMC Molecular Biology, 12:45-45, Oct 2011. URL: https://doi.org/10.1186/1471-2199-12-45, doi:10.1186/1471-2199-12-45. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ESL1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lloyd2018theevolutionand pages 4-6</li>
+<li>sealey2011thetprcontainingdomain pages 1-2</li>
+<li>sealey2011thetprcontainingdomain pages 13-14</li>
+<li>sealey2011thetprcontainingdomain pages 2-4</li>
+<li>lloyd2018theevolutionand pages 6-7</li>
+<li>hug2006telomerelengthhomeostasis pages 6-7</li>
+<li>sealey2011thetprcontainingdomain pages 4-6</li>
+<li>matelska2017comprehensiveclassificationof pages 1-2</li>
+<li>glavan2006structuresofthe pages 1-2</li>
+<li>gontijo2009mutationsingenes pages 12-13</li>
+<li>glavan2006structuresofthe pages 2-4</li>
+<li>matelska2017comprehensiveclassificationof pages 18-19</li>
+<li>glavan2006structuresofthe pages 5-6</li>
+<li>https://doi.org/10.12688/f1000research.15872.2,</li>
+<li>https://doi.org/10.1186/1471-2199-12-45,</li>
+<li>https://doi.org/10.1007/s00412-006-0067-3,</li>
+<li>https://doi.org/10.3390/cells12030419,</li>
+<li>https://doi.org/10.1093/nar/gkx494,</li>
+<li>https://doi.org/10.1038/sj.emboj.7601377,</li>
+<li>https://doi.org/10.1186/1471-2156-10-14,</li>
+<li>https://doi.org/10.1038/s41467-026-69819-w,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ESL1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P40456" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="esl1-yil151c-p40456-curation-notes">ESL1 (YIL151C, P40456) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> ESL1.<br />
+All assertions carry inline provenance. Where a claim is about the paralog ESL2 or the<br />
+ESL1/ESL2 pair jointly, that is stated explicitly.</p>
+<h2 id="identity-and-domain-architecture-from-uniprot-p40456-primary-literature">Identity and domain architecture (from UniProt P40456 + primary literature)</h2>
+<ul>
+<li>Standard name <strong>ESL1</strong> = "EST/SMG-like protein 1"; systematic name <strong>YIL151C</strong>; SGD:S000001413.<br />
+  1118 aa, 128.7 kDa. UniProt evidence level 1 (protein level). [UniProt P40456]</li>
+<li>Named by Lai et al. 2013, which is the ONLY dedicated functional study of this gene.<br />
+  ESL = "EST/SMG-like". The paralog is <strong>ESL2 = YKR096W</strong> (&gt;70% similarity to ESL1 along<br />
+  the entire polypeptide). <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" title="the previously uncharacterized yeast open   reading frames Yil151c and Ykr096w, share &gt;70% similarity with each other along their   entire polypeptide sequence">PMID:23893744</a></li>
+</ul>
+<h3 id="domains">Domains</h3>
+<ul>
+<li><strong>PIN (PilT N-terminus) endonuclease domain</strong>, C-terminal. UniProt annotates a PINc<br />
+  domain at residues <strong>947–1087</strong> (ECO:0000255, sequence-analysis). InterPro IPR002716<br />
+  (PIN_dom); Pfam PF13638 (PIN_4); SMART SM00670 (PINc). [UniProt P40456]</li>
+<li><strong>14-3-3-like "Est-one-homology" (EOH) domain</strong>, central. Not given explicit FT<br />
+  coordinates in UniProt, but described by the primary paper. <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" title="these two   proteins also share extensive similarity ... with human hEST1A/B and Drosophila and   Caenohabditis elegans SMG5/6 proteins ... encompassed the region corresponding to the   14-3-3–like Est-one-homology domain (45–51% similarity ...) and the C-terminal PIN   endonuclease domain (49–53% similarity ...)">PMID:23893744</a></li>
+<li>The four acidic catalytic residues of the PIN domain are <strong>conserved</strong> in Esl1/Esl2.<br />
+  The ESL1 "nuclease-dead" allele used in the paper carries <strong>D952N and E982Q</strong> (two<br />
+  substitutions); the ESL2 nuclease-dead allele carries a single D1123N substitution.<br />
+  [PMID:23893744 "complete conservation of four critical D/E residues required for<br />
+  nuclease activity of the PIN-domain proteins"; "The esl1-nd mutant carries two amino<br />
+  acid substitutions (D952N and E982Q) while the esl2-nd mutant carries a single amino<br />
+  acid substitution (D1123N)"]</li>
+<li>InterPro family assignment: <strong>IPR045153 Est1/Ebs1-like</strong>; PANTHER PTHR15696 (SMG-7 /<br />
+  telomerase-binding protein EST1A family). [UniProt P40456 DR lines]</li>
+<li>N-terminal ~1–119 region is disordered (MobiDB-lite); phosphoserines at S170 and S190<br />
+  from large-scale phosphoproteomics. [UniProt P40456 FT lines; ECO:0007744|PubMed:18407956]</li>
+</ul>
+<h3 id="important-the-task-briefs-gramvast-lipid-transfer-domain-description-is-wrong">IMPORTANT: the task brief's "GRAM/VASt lipid-transfer domain" description is WRONG</h3>
+<p>The UniProt record and the primary literature both establish ESL1 as a <strong>PIN-domain +<br />
+14-3-3-like (EOH) protein of the Est1/SMG family</strong> — there is no GRAM domain, no VASt<br />
+domain, and no evidence for lipid binding or lipid transfer. I proceeded on the basis of<br />
+the actual UniProt/primary-literature evidence, not the brief's mischaracterization.</p>
+<h2 id="what-is-known-about-esl1-experimental-from-lai-et-al-2013-pmid23893744">What is KNOWN about ESL1 (experimental, from Lai et al. 2013, PMID:23893744)</h2>
+<p>All functional data come from a single paper studying esl1Δ, esl2Δ single mutants and<br />
+esl1Δ esl2Δ double mutants (and nuclease-dead alleles). Most phenotypes are reported for<br />
+the <em>pair</em> and are stronger in the double mutant, indicating <strong>functional redundancy</strong><br />
+between ESL1 and ESL2. ESL1-specific single-mutant results are called out below.</p>
+<ol>
+<li>
+<p><strong>NOT NMD; NOT telomere maintenance.</strong> Despite structural orthology to metazoan<br />
+   hEST1A/B (SMG5/6), esl1Δ, esl2Δ and esl1Δ esl2Δ mutants have wild-type telomere<br />
+   length, normal senescence/ALT kinetics (with est2Δ), normal subtelomeric silencing<br />
+   (5-FOA), no TERRA accumulation, and no accumulation of NMD substrates (ade2-1;<br />
+   unspliced pre-CYH2). [PMID:23893744 "Esl1 and Esl2 were not involved in<br />
+   nonsense-mediated mRNA decay or telomere maintenance pathways"; "ESL1 and ESL2 do not<br />
+   seem to have NMD-related functions"; "Esl1 and Esl2 are not required for<br />
+   telomerase-dependent or alternative telomere maintenance mechanisms"]<br />
+   → This directly REFUTES the IBA-propagated NMD (GO:0000184), telomerase holoenzyme<br />
+     complex (GO:0005697), telomeric DNA binding (GO:0042162), and telomerase RNA binding<br />
+     (GO:0070034) annotations for this yeast gene.</p>
+</li>
+<li>
+<p><strong>Environment-sensing adaptive gene expression.</strong> esl1Δ esl2Δ deregulate ~50–53<br />
+   transcripts (≥2-fold) — hexose transporters (HXT3/6/7), hexokinase HXK1, MAL genes,<br />
+   JEN1, glycogen genes (GPH1, PGM2), and one-carbon/glycine-regulon genes (GCV1/2/3,<br />
+   SHM2, ADE17) — in the direction <em>opposite</em> to the environmentally appropriate<br />
+   response. [PMID:23893744 "absence of Esl1 and Esl2 led to more than two-fold<br />
+   deregulation of ∼50 transcripts, most of which were expressed inversely to the<br />
+   appropriate metabolic response to environmental nutrient supply"; "esl1Δ esl2Δ double<br />
+   mutants may have a defect in adapting the expression of hexose and one-carbon<br />
+   metabolism genes to environmentally appropriate requirements"]</p>
+</li>
+<li>
+<p><strong>Genetic interaction with the Rim101 pH-sensing pathway.</strong> esl1Δ esl2Δ is synthetic<br />
+   sick with rim8Δ and dfg16Δ (the arrestin-like adaptor and GPCR of the Rim101 pathway),<br />
+   and ESL2 interacts with RIM9/RIM13/RIM20 in an independent screen — supporting a role<br />
+   parallel to Rim101 in environmental adaptation. <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" title="esl1Δ esl2Δ double    mutants were synthetic sick with null mutations for Rim8 and Dfg16, which form the    environmental-sensing complex of the Rim101 pH response gene expression pathway">PMID:23893744</a></p>
+</li>
+<li>
+<p><strong>Genome-stability / stress phenotypes (pair; some nuclease-dependent).</strong> esl1Δ esl2Δ<br />
+   show elevated mitochondrial-genome instability (petite formation) and altered<br />
+   sensitivity to genotoxins (better on bleomycin/HU, worse on adriamycin). Bleomycin<br />
+   resistance is phenocopied by nuclease-dead alleles, implicating the PIN catalytic<br />
+   residues in <em>this</em> phenotype. [PMID:23893744 "ESL1 and ESL2 contribute to maintenance<br />
+   of mitochondrial genome stability"; "the nuclease-dead mutants phenocopied the<br />
+   bleomycin sensitivity of the esl1Δ or esl2Δ mutants"]</p>
+</li>
+<li>
+<p><strong>Synthetic interaction with trf4Δ</strong> (TRAMP-complex poly(A) polymerase); esl1Δ esl2Δ<br />
+   deregulate neighboring CUTs/SUTs — but this CUT/SUT change is <strong>nuclease-independent</strong><br />
+   and not directly coupled to the coding-gene changes. [PMID:23893744 "loss of Esl1 and<br />
+   of Esl2 lead to impaired genetic fitness with trf4Δ, rim8Δ, and dfg16Δ"; "these<br />
+   changes in transcript levels were again independent of Esl1 and Esl2 nuclease domain<br />
+   integrity"]</p>
+</li>
+</ol>
+<h3 id="esl1-specific-vs-pair">ESL1-specific vs pair</h3>
+<ul>
+<li>Single-mutant SGA hits attributed to <strong>esl1Δ alone</strong>: synthetic sick with FUS3, DAL81,<br />
+  SNX4, and synthetic lethal with TRF4. [PMID:23893744 Table 2]</li>
+<li>Telomere/NMD assays and drug-sensitivity trends were tested on esl1Δ single mutants and<br />
+  were negative/weaker than the double mutant. The transcriptome (microarray) and most<br />
+  synthetic-sick tetrad validations were done on the <strong>double</strong> mutant, so the ~50-gene<br />
+  expression signature is a <em>joint</em> ESL1+ESL2 phenotype, not proven ESL1-alone.</li>
+</ul>
+<h2 id="what-is-not-known-knowledge-gaps">What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>Direct molecular activity of ESL1 is undetermined.</strong> The PIN domain has intact<br />
+  catalytic residues, but no biochemical assay of Esl1 (or Esl2) endoribonuclease<br />
+  activity has been reported; the key transcriptome phenotype is <em>largely<br />
+  nuclease-independent</em>. So RNA-endonuclease activity is domain-<em>suggestive</em> but unproven<br />
+  for ESL1. [PMID:23893744 "all other PIN domain-containing proteins characterized to<br />
+  date exert ribonuclease activity in vitro and/or in vivo"; "Esl1 and Esl2 may regulate<br />
+  the expression of the altered transcripts in a largely nuclease-independent manner"]</li>
+<li><strong>Direct RNA/DNA/protein substrates and partners of ESL1 are unknown.</strong> The only<br />
+  reported physical interaction motivating the study is a two-hybrid hit with Mdt1/Pin4<br />
+  (Uetz et al. 2000, via the paper); no direct target of the EOH or PIN domain is<br />
+  established. <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" title="a large-scale two-hybrid screen (Uetz et al. 2000) had   found it to interact with two uncharacterized ... open reading frames">PMID:23893744</a></li>
+<li><strong>Mechanism linking ESL1 to nutrient/pH-adaptive gene expression is unknown</strong> —<br />
+  whether it acts on mRNA stability, transcription, or the Rim101 axis, and whether the<br />
+  EOH 14-3-3-like domain mediates a regulatory protein-protein interaction (as in<br />
+  metazoan SMG5/6→UPF1) is undetermined. <a href="https://pubmed.ncbi.nlm.nih.gov/23893744" title="provide a basis for future   investigations into the detailed mechanisms by which they exert this function">PMID:23893744</a></li>
+<li><strong>Redundancy vs ESL2 and ESL1-specific role.</strong> Almost all phenotypes are stronger in<br />
+  esl1Δ esl2Δ; the individual, non-redundant contribution of ESL1 is not resolved.</li>
+<li><strong>Subcellular localization of Esl1 protein not experimentally reported</strong> (no CC data in<br />
+  UniProt beyond ND; metazoan orthologs are nucleocytoplasmic but this was not tested for<br />
+  Esl1).</li>
+</ul>
+<h2 id="existing-goa-annotations-assessment-summary">Existing GOA annotations — assessment summary</h2>
+<table>
+<thead>
+<tr>
+<th>GO term</th>
+<th>aspect</th>
+<th>evidence</th>
+<th>verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0000184 NMD</td>
+<td>BP</td>
+<td>IBA</td>
+<td>REMOVE — directly refuted for this yeast gene (PMID:23893744)</td>
+</tr>
+<tr>
+<td>GO:0005697 telomerase holoenzyme complex</td>
+<td>CC</td>
+<td>IBA</td>
+<td>REMOVE — refuted (no telomere role)</td>
+</tr>
+<tr>
+<td>GO:0042162 telomeric repeat DNA binding</td>
+<td>MF</td>
+<td>IBA</td>
+<td>REMOVE — refuted (no telomere role)</td>
+</tr>
+<tr>
+<td>GO:0070034 telomerase RNA binding</td>
+<td>MF</td>
+<td>IBA</td>
+<td>REMOVE — refuted (no telomere role)</td>
+</tr>
+<tr>
+<td>GO:0003674 molecular_function (root)</td>
+<td>MF</td>
+<td>ND</td>
+<td>KEEP_AS_NON_CORE (ND placeholder)</td>
+</tr>
+<tr>
+<td>GO:0005575 cellular_component (root)</td>
+<td>CC</td>
+<td>ND</td>
+<td>KEEP_AS_NON_CORE (ND placeholder)</td>
+</tr>
+<tr>
+<td>GO:0008150 biological_process (root)</td>
+<td>BP</td>
+<td>ND</td>
+<td>KEEP_AS_NON_CORE (ND placeholder)</td>
+</tr>
+</tbody>
+</table>
+<p>The four IBA annotations are phylogenetic propagations from the metazoan SMG5/6 / EST1A<br />
+clade. Lai et al. 2013 experimentally tested exactly these two functions (NMD and<br />
+telomere maintenance) in the yeast proteins and found them absent. This is a textbook<br />
+case where experimental data in the target species overrides an IBA propagation. Note the<br />
+NMD IBA even lists SGD:S000002614 (EBS1) among the with/from set — EBS1, not ESL1, is the<br />
+yeast SMG7 ortholog with NMD links; ESL1's inclusion in the tree does not reflect yeast<br />
+NMD function.</p>
+<h2 id="deep-research-falcon">Deep research (falcon)</h2>
+<p><code>ESL1-deep-research-falcon.md</code> was generated (Edison, 21 citations, ~29 min). It is<br />
+<strong>literature-limited</strong>: falcon could NOT access the key functional paper (Lai et al. 2013)<br />
+and therefore relies on domain/family inference (PIN + TPR-like/EOH, Est1/Ebs1-like<br />
+family) and on the paralogs Est1/Ebs1. It correctly flags ESL1 as poorly characterized and<br />
+notes the mammalian ESL1 = E-selectin ligand 1 (GLG1) name clash (irrelevant to yeast<br />
+YIL151C). It does not contradict this review; because it lacked the primary paper, its<br />
+inferential telomere/NMD framing is superseded by the direct experimental exclusion of<br />
+those functions in Lai et al. 2013, which I read in full. No falcon-only claims were<br />
+imported into the review.</p>
+<h2 id="references-consulted">References consulted</h2>
+<ul>
+<li>PMID:23893744 — Lai et al. 2013, G3. Primary functional study (full text cached). HIGH.</li>
+<li>UniProt P40456 (ESL1_YEAST) — domain architecture, family, PTMs.</li>
+<li>ESL1-goa.tsv — GOA annotation set.</li>
+<li>ESL1-deep-research-falcon.md — provider deep research (literature-limited; see above).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P40456
+gene_symbol: ESL1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  ESL1 (YIL151C) is a 1118-residue budding-yeast protein of the Est1/SMG (Est-one-homology)
+  family, built from a central 14-3-3-like Est-one-homology (EOH) domain and a C-terminal PIN
+  (PilT N-terminus) domain whose four acidic catalytic residues are conserved. It is the
+  structural ortholog, together with its close paralog ESL2 (YKR096W, &gt;70% identical), of the
+  metazoan telomerase/NMD proteins hEST1A/B (SMG5/6). Despite this ancestry, budding-yeast
+  ESL1 does not function in nonsense-mediated mRNA decay or in telomere maintenance:
+  esl1 mutants have normal telomere length, senescence, subtelomeric silencing and NMD-substrate
+  levels. Instead, ESL1 acts redundantly with ESL2 in environment-sensing adaptive gene
+  expression, contributing to the correct nutrient- and pH-responsive expression of hexose,
+  carbohydrate and one-carbon (glycine-regulon) metabolic genes; loss of both proteins
+  deregulates ~50 transcripts in the direction opposite to the appropriate metabolic response
+  and confers synthetic sickness with components of the Rim101 pH-sensing pathway (Rim8, Dfg16)
+  and with the TRAMP poly(A) polymerase Trf4. ESL1/ESL2 also contribute to mitochondrial-genome
+  stability and modulate genotoxin sensitivity, in some cases dependent on the PIN catalytic
+  residues. The direct molecular activity of ESL1 (whether it is a bona fide endoribonuclease
+  in vivo, and its RNA/protein substrates and partners) remains undetermined.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:23893744
+  title: Yeast hEST1A/B (SMG5/6)-like proteins contribute to environment-sensing adaptive
+    gene expression responses.
+  findings:
+  - statement: &gt;-
+      Esl1 (Yil151c) and its paralog Esl2 (Ykr096w) are structural orthologs of metazoan
+      hEST1A/B (SMG5/6), sharing a 14-3-3-like Est-one-homology domain and a C-terminal PIN
+      endonuclease domain with the four conserved catalytic acidic residues.
+    supporting_text: &gt;-
+      this similarity encompassed the region corresponding to the 14-3-3–like Est-one-homology
+      domain (45–51% similarity; Figure 1, A and B) and the C-terminal PIN endonuclease domain
+      (49–53% similarity; Figure 1, A and C) with complete conservation of four critical D/E
+      residues required for nuclease activity of the PIN-domain proteins
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Unlike their metazoan orthologs, Esl1 and Esl2 are not involved in NMD or telomere
+      maintenance pathways.
+    supporting_text: &gt;-
+      unlike their metazoan
+      orthologs, Esl1 and Esl2 were not involved in nonsense-mediated mRNA decay or
+      telomere maintenance pathways
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      Loss of Esl1 and Esl2 deregulates ~50 transcripts, most expressed inversely to the
+      appropriate metabolic response to environmental nutrient supply.
+    supporting_text: &gt;-
+      absence of Esl1 and Esl2 led to more than two-fold
+      deregulation of ∼50 transcripts, most of which were expressed inversely to the
+      appropriate metabolic response to environmental nutrient supply
+    reference_section_type: ABSTRACT
+  - statement: &gt;-
+      esl1 esl2 double mutants are synthetic sick with rim8 and dfg16, components of the
+      Rim101 pH-response environmental-sensing pathway.
+    supporting_text: &gt;-
+      esl1Δ esl2Δ double
+      mutants were synthetic sick with null mutations for Rim8 and Dfg16, which form the
+      environmental-sensing complex of the Rim101 pH response gene expression pathway
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text verified. Sole dedicated functional study of ESL1/ESL2. Directly tests
+      and excludes NMD and telomere functions in the yeast proteins and establishes the
+      environment-sensing adaptive gene-expression role. All supporting_text quotes are
+      verbatim substrings of the cached full text.
+- id: PMID:14562106
+  title: Global analysis of protein expression in yeast.
+  findings:
+  - statement: Esl1 protein is expressed at a low level (~504 molecules/cell) in log-phase SD medium.
+    supporting_text: Present with 504 molecules/cell in log phase SD medium.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale expression study; establishes low endogenous abundance of Esl1. Quote is
+      from the UniProt MISCELLANEOUS line derived from this study.
+- id: PMID:18407956
+  title: A multidimensional chromatography technology for in-depth phosphoproteome analysis.
+  findings:
+  - statement: Esl1 is phosphorylated at Ser-170 and Ser-190 (large-scale phosphoproteomics).
+    supporting_text: PHOSPHORYLATION [LARGE SCALE ANALYSIS] AT SER-170 AND SER-190
+    reference_section_type: OTHER
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale phosphoproteome study; documents S170/S190 phosphosites recorded in UniProt.
+      Functional significance for ESL1 not established.
+existing_annotations:
+- term:
+    id: GO:0000184
+    label: nuclear-transcribed mRNA catabolic process, nonsense-mediated decay
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation from the metazoan hEST1A/B (SMG5/6) clade. This function
+      was directly tested in the yeast protein and found ABSENT: esl1, esl2 and esl1 esl2
+      mutants do not accumulate NMD substrates (nonsense ade2-1 or unspliced pre-CYH2), unlike
+      the upf1 control.
+    action: REMOVE
+    reason: &gt;-
+      Experimental data in the target species (S. cerevisiae) directly refute NMD involvement
+      for Esl1, overriding the IBA inference from metazoan orthologs. This is not paralog
+      confusion but a species-specific loss of the ancestral function.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        based on these two independent assays, ESL1 and
+        ESL2 do not seem to have NMD-related functions
+      reference_section_type: RESULTS
+    additional_reference_ids:
+    - PMID:23893744
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000002614
+        source_label: EBS1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          EBS1 is the yeast SMG7 ortholog with NMD links; its presence in the IBA with/from set
+          does not make ESL1 an NMD factor. Esl1 was experimentally tested and is NMD-negative.
+- term:
+    id: GO:0005697
+    label: telomerase holoenzyme complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IBA propagation from the EST1/telomerase clade. Directly tested and refuted: esl1, esl2
+      and esl1 esl2 mutants have wild-type telomere length and normal senescence/ALT kinetics,
+      so Esl1 is not part of a functional telomerase holoenzyme in yeast.
+    action: REMOVE
+    reason: &gt;-
+      Species-specific experimental evidence refutes any telomerase/telomere-maintenance role
+      for Esl1, overriding the phylogenetic inference.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        Esl1 and Esl2 are
+        not required for telomerase-dependent or alternative telomere maintenance mechanisms
+      reference_section_type: RESULTS
+    additional_reference_ids:
+    - PMID:23893744
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: SGD:S000004223
+        source_label: EST1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          The ancestral EST1/telomerase function does not transfer to Esl1, which lacks any
+          telomere-maintenance role in yeast.
+- term:
+    id: GO:0042162
+    label: telomeric repeat DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IBA molecular-function propagation from the EST1/telomerase clade. No telomere-related
+      activity is detectable for Esl1 in yeast (normal telomere length/structure, no TERRA
+      change), and no telomeric-DNA-binding activity has been demonstrated.
+    action: REMOVE
+    reason: &gt;-
+      The parent biological role (telomere maintenance) is experimentally excluded for Esl1,
+      and there is no independent evidence that Esl1 binds telomeric DNA; the IBA is an
+      over-propagation.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        Esl1 and Esl2 are
+        not required for telomerase-dependent or alternative telomere maintenance mechanisms
+      reference_section_type: RESULTS
+    additional_reference_ids:
+    - PMID:23893744
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000004223
+        source_label: EST1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Telomeric-DNA-binding activity was not demonstrated for Esl1; the telomere role it
+          is derived from is experimentally excluded.
+- term:
+    id: GO:0070034
+    label: telomerase RNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IBA molecular-function propagation from the EST1/telomerase clade. Esl1 has no
+      demonstrated telomerase-RNA-binding activity and no telomere-maintenance role in yeast.
+    action: REMOVE
+    reason: &gt;-
+      Over-propagated from metazoan/EST1 orthologs; the associated telomere function is
+      experimentally excluded for Esl1 and no telomerase-RNA-binding activity is shown.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        Esl1 and Esl2 are
+        not required for telomerase-dependent or alternative telomere maintenance mechanisms
+      reference_section_type: RESULTS
+    additional_reference_ids:
+    - PMID:23893744
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: SGD:S000004223
+        source_label: EST1
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Telomerase-RNA-binding activity was not demonstrated for Esl1; the telomere role it
+          is derived from is experimentally excluded.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level placeholder (ND) recording that no molecular function was curated by SGD. The
+      direct molecular activity of Esl1 is indeed genuinely undetermined (see knowledge_gaps):
+      the PIN catalytic residues are conserved but no in vivo/in vitro endoribonuclease
+      activity has been demonstrated, and the characterized gene-expression phenotype is
+      largely nuclease-independent.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ND placeholder that correctly reflects a real MF-dark gap; retain until a specific
+      molecular activity is established.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root-level placeholder (ND). The subcellular localization of the Esl1 protein has not
+      been experimentally reported.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      ND placeholder reflecting an uncurated (CC-dark) localization; retain pending
+      experimental localization.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root-level placeholder (ND) predating the Lai et al. 2013 characterization. A specific
+      biological process (environment-sensing adaptive gene expression) is now supported and
+      is captured in core_functions.
+    action: MODIFY
+    reason: &gt;-
+      The ND placeholder is now superseded by experimental evidence for a role in adaptive
+      gene expression; propose replacing the root with the specific process.
+    proposed_replacement_terms:
+    - id: GO:0031669
+      label: cellular response to nutrient levels
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        Esl1
+        and Esl2 contribute to the regulation of adaptive gene expression responses of
+        environmental sensing pathways
+      reference_section_type: ABSTRACT
+    additional_reference_ids:
+    - PMID:23893744
+- term:
+    id: GO:0010468
+    label: regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:23893744
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new annotation. esl1 esl2 mutants deregulate ~50 transcripts, so Esl1 (with
+      Esl2) is involved in regulation of gene expression during environmental adaptation.
+      Added to align core_functions with existing_annotations.
+    action: NEW
+    reason: &gt;-
+      Core-function process term supported by the mutant transcriptome phenotype but not
+      previously present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        absence of Esl1 and Esl2 led to more than two-fold
+        deregulation of ∼50 transcripts, most of which were expressed inversely to the
+        appropriate metabolic response to environmental nutrient supply
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0031669
+    label: cellular response to nutrient levels
+  evidence_type: IMP
+  original_reference_id: PMID:23893744
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new annotation. esl1 esl2 mutants fail to express hexose and one-carbon
+      metabolism genes appropriately for the nutrient environment, indicating a role in the
+      cellular response to nutrient levels. Added to align core_functions with
+      existing_annotations.
+    action: NEW
+    reason: &gt;-
+      Core-function process term supported by the nutrient-adaptive gene-expression phenotype
+      but not previously present in existing_annotations.
+    supported_by:
+    - reference_id: PMID:23893744
+      supporting_text: &gt;-
+        esl1Δ esl2Δ double mutants may have a defect in adapting the
+        expression of hexose and one-carbon metabolism genes to environmentally appropriate
+        requirements
+      reference_section_type: RESULTS
+core_functions:
+- description: &gt;-
+    Redundantly with its paralog Esl2, Esl1 contributes to environment-sensing adaptive gene
+    expression, so that hexose/carbohydrate and one-carbon (glycine-regulon) metabolic genes
+    are expressed appropriately for the prevailing nutrient (and pH) environment. Loss of both
+    proteins deregulates ~50 transcripts in the direction opposite to the correct metabolic
+    response and causes synthetic sickness with the Rim101 pH-sensing components Rim8 and
+    Dfg16. The direct molecular activity underlying this role is not established (see
+    knowledge_gaps); most of the transcriptome phenotype is nuclease-independent.
+  supported_by:
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      Esl1
+      and Esl2 contribute to the regulation of adaptive gene expression responses of
+      environmental sensing pathways
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      esl1Δ esl2Δ double mutants may have a defect in adapting the
+      expression of hexose and one-carbon metabolism genes to environmentally appropriate
+      requirements
+    reference_section_type: RESULTS
+  directly_involved_in:
+  - id: GO:0010468
+    label: regulation of gene expression
+  - id: GO:0031669
+    label: cellular response to nutrient levels
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular activity of Esl1 is undetermined. It is unknown whether Esl1 is a
+    catalytically active endoribonuclease in vivo, and if so what its RNA substrates are; the
+    conserved PIN catalytic residues are intact but no biochemical nuclease assay of Esl1 has
+    been reported, and the characterized adaptive gene-expression phenotype is largely
+    independent of PIN catalytic integrity.
+  boundary: &gt;-
+    Esl1 has a central 14-3-3-like Est-one-homology (EOH) domain and a C-terminal PIN domain
+    with four conserved acidic catalytic residues (nuclease-dead esl1 allele = D952N + E982Q),
+    and is a structural ortholog of metazoan hEST1A/B (SMG5/6), which are PIN-domain
+    endoribonucleases. Esl1/Esl2 do NOT act in NMD or telomere maintenance in yeast. A
+    genome-stability phenotype (bleomycin resistance) IS phenocopied by nuclease-dead alleles,
+    implicating the PIN residues in that specific phenotype.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Esl1 is one of only seven S. cerevisiae PIN-domain proteins; establishing whether it is a
+    functional endoribonuclease and identifying its substrate would resolve how the Est1/SMG
+    fold was repurposed for nutrient-adaptive gene regulation after loss of the ancestral
+    NMD/telomere functions.
+  resolution: &gt;-
+    In vitro endoribonuclease assays with purified Esl1 and its PIN domain; CLIP/RIP-style
+    identification of bound RNAs; comparison of wild-type vs nuclease-dead alleles for each
+    phenotype.
+  provenance:
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      Esl1 and Esl2 may regulate the expression of the altered
+      transcripts in a largely nuclease-independent manner
+    reference_section_type: RESULTS
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      all other PIN domain-containing proteins characterized to date exert ribonuclease
+      activity in vitro and/or in vivo
+    reference_section_type: RESULTS
+  proposed_terms:
+  - proposed_name: PIN-domain-dependent adaptive mRNA regulatory activity
+    proposed_definition: &gt;-
+      A molecular function of an Est1/SMG-family PIN-domain protein that modulates the
+      abundance of specific mRNAs during adaptation to environmental nutrient or pH conditions,
+      potentially but not necessarily through endoribonucleolytic cleavage.
+    justification: &gt;-
+      Esl1/Esl2 have a defined biological role (environment-sensing adaptive gene expression)
+      but no GO molecular-function term captures their activity; they are currently annotatable
+      only at the process level, leaving the gene MF-dark.
+    proposed_parent:
+      id: GO:0003674
+      label: molecular_function
+- gap_statement: &gt;-
+    The molecular partners and substrates of Esl1 are unknown, including any protein-protein
+    interaction mediated by its 14-3-3-like EOH domain (the domain that in metazoan SMG5/6
+    engages the NMD factor UPF1) and any direct link to the Rim101 pH-sensing machinery.
+  boundary: &gt;-
+    Esl1 was found in a two-hybrid screen with Mdt1/Pin4, and esl1 esl2 mutants are synthetic
+    sick with rim8, dfg16 and trf4, but no direct physical target of either the EOH or PIN
+    domain of Esl1 has been demonstrated.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying an Esl1 interaction partner would reveal the mechanism connecting the Est1/SMG
+    fold to nutrient/pH-adaptive gene expression and clarify whether the EOH domain retains a
+    regulatory protein-interaction function analogous to its metazoan counterparts.
+  resolution: &gt;-
+    Affinity-purification/mass-spectrometry and proximity-labeling of tagged Esl1; targeted
+    tests of physical interaction with Rim101-pathway and TRAMP components.
+  provenance:
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      provide
+      a basis for future investigations into the detailed mechanisms by which they exert this
+      function
+    reference_section_type: DISCUSSION
+- gap_statement: &gt;-
+    The ESL1-specific (non-redundant) contribution and in vivo biological role are not
+    resolved, because almost all phenotypes are stronger in esl1 esl2 double mutants and the
+    transcriptome signature was measured only in the double mutant.
+  boundary: &gt;-
+    esl1 single mutants show telomere/NMD-negative results and specific synthetic-sick
+    interactions (with FUS3, DAL81, SNX4, and synthetic-lethal with TRF4), and the pair is
+    redundant for the adaptive gene-expression, mitochondrial-stability and genotoxin
+    phenotypes; but no ESL1-only phenotype defines its unique function.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Distinguishing the individual roles of ESL1 and ESL2 is needed to know whether ESL1 has a
+    dedicated regulon or is fully redundant with its paralog.
+  resolution: &gt;-
+    Condition- and stress-resolved transcriptomics and phenotyping of esl1 single mutants
+    (including nuclease-dead), with direct comparison to esl2 and the double mutant.
+  provenance:
+  - reference_id: PMID:23893744
+    supporting_text: &gt;-
+      the effect
+      was more pronounced when ESL1 and ESL2 were simultaneously deleted, suggesting
+      functional redundancy between the two proteins
+    reference_section_type: RESULTS
+suggested_questions:
+- question: &gt;-
+    Is Esl1 a catalytically active endoribonuclease in vivo, and if so, what RNAs does it
+    cleave during nutrient/pH adaptation?
+- question: &gt;-
+    Does the 14-3-3-like Est-one-homology domain of Esl1 mediate a regulatory protein-protein
+    interaction analogous to the SMG5/6–UPF1 interaction in metazoa?
+- question: &gt;-
+    What is the subcellular localization of Esl1, and does it change with nutrient or pH
+    conditions?
+suggested_experiments:
+- hypothesis: &gt;-
+    Esl1 regulates a specific set of nutrient/pH-responsive mRNAs via its PIN domain.
+  description: &gt;-
+    Perform RIP-seq/CLIP-seq on tagged Esl1 under high- and low-glucose and alkaline
+    conditions, and compare mRNA half-lives in wild-type, esl1 esl2, and nuclease-dead alleles.
+- hypothesis: &gt;-
+    Esl1 acts in a pathway parallel to Rim101 in environmental adaptation.
+  description: &gt;-
+    Epistasis and interaction analysis of Esl1 with Rim101-pathway components (Rim8, Dfg16,
+    Rim13, Rim20) under alkaline and low-glucose stress, with transcriptome readout.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
