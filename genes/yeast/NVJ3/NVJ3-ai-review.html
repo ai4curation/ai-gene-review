@@ -1,0 +1,2826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NVJ3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NVJ3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q03983" target="_blank" class="term-link">
+                        Q03983
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">YDR179W-A</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NVJ3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q03983" data-a="DESCRIPTION: NVJ3 (YDR179W-A) is a soluble Saccharomyces cerevi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NVJ3 (YDR179W-A) is a soluble Saccharomyces cerevisiae protein that resides at the nucleus-vacuole junction (NVJ), the membrane contact site where the nuclear endoplasmic reticulum apposes the vacuole. It is a paralog of the ER-anchored tether Mdm1 (the yeast member of the SNX13/14/19/25 sorting-nexin family) and shares with Mdm1 a single recognizable domain, the Phox-associated (PXA) domain; unlike Mdm1 it lacks a transmembrane anchor and a phosphoinositide-binding PX domain. Nvj3 is recruited to ER-vacuole contacts by direct association with Mdm1 and, in cells lacking Mdm1, redistributes to the cytoplasm; its contact-site localization does not require the canonical NVJ tether Nvj1. Functionally, Nvj3 acts together with Mdm1 in neutral-lipid (triacylglycerol) metabolism and lipid-droplet dynamics at ER-vacuole contacts, particularly during nutritional stress: loss of NVJ3 (with MDM1) increases triacylglycerol and lipid-droplet content in a manner dependent on the fatty acyl-CoA synthetase Faa1. Its own biochemical (molecular) activity has not been established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29146766
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lipid droplet biogenesis is spatially coordinated at ER-vacu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03983" data-a="GO:0006629" data-r="PMID:29146766" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Supported by loss-of-function evidence: deletion of NVJ3 (together with MDM1) increases triacylglycerol and lipid-droplet content, an effect suppressed by deletion of the fatty acyl-CoA synthetase Faa1. Nvj3 therefore participates in NVJ-associated neutral-lipid metabolism. The term is general but correctly reflects the demonstrated biological process, and the acts_upstream_of_or_within qualifier is appropriate for a modulatory role established genetically. Retained as a core biological process; the specific molecular step remains a gap.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link">
+                                        PMID:29146766
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold increase in TAG</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link">
+                                        PMID:29146766
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we see in the mdm1 Δ nvj3 Δ double knockout</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071561" target="_blank" class="term-link">
+                                    GO:0071561
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus-vacuole junction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26283797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mdm1/Snx13 is a novel ER-endolysosomal interorganelle tether...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03983" data-a="GO:0071561" data-r="PMID:26283797" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well supported by direct imaging: GFP-tagged Nvj3 localizes to the nucleus-vacuole junction and colocalizes with Mdm1 there. This is a core, experimentally established localization of the protein.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                        PMID:26283797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098853" target="_blank" class="term-link">
+                                    GO:0098853
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum-vacuole membrane contact site</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26283797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mdm1/Snx13 is a novel ER-endolysosomal interorganelle tether...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q03983" data-a="GO:0098853" data-r="PMID:26283797" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Well supported and more precise than the NVJ term for the underlying structure. Nvj3 localizes to the ER-vacuole membrane contact site, retaining this localization even in nvj1-deletion cells, where it is enriched at the tips of ER tubules contacting the vacuole. Core localization annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                        PMID:26283797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">both Mdm1 and Nvj3 retained ER–vacuole MCS localizations in nvj1Δ yeast but were no longer restricted to NVJ patches</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                        PMID:26283797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nvj3 was clearly enriched at the tips of ER tubules making contact with the vacuole, confirming ER–vacuole tethering does not require Nvj1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032266" target="_blank" class="term-link">
+                                    GO:0032266
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylinositol-3-phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26283797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mdm1/Snx13 is a novel ER-endolysosomal interorganelle tether...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q03983" data-a="GO:0032266" data-r="PMID:26283797" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is an ISS annotation transferred from the paralog Mdm1 (with/from SGD:S000004572). The sequence basis for the transfer is weak: in Mdm1 the high-affinity PI3P-binding activity is a property of its C-terminal PX domain, whereas the source paper states that the PXA domain is the ONLY domain shared between Mdm1 and Nvj3. Nvj3 has no PX domain (InterPro/Pfam for Q03983 returns only the PXA domain, PF02194) and is predicted to be soluble with no transmembrane anchor (max Kyte-Doolittle hydropathy ~1.1, below a TM threshold). There is no direct biochemical evidence that Nvj3 itself binds PI3P, and the domain that would confer that activity is absent, so this is likely an over-annotation by similarity. A specific molecular function for Nvj3 remains undetermined (see knowledge_gaps).
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                        PMID:26283797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the PXA domain is the only domain shared between Mdm1 and Nvj3</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                        PMID:26283797
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its C-terminal PX domain, which binds PI3P with high affinity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Resident protein of the nucleus-vacuole junction / ER-vacuole membrane contact site. Nvj3 is a soluble paralog of the ER-anchored tether Mdm1 and is recruited to ER-vacuole contacts through direct association with Mdm1 (it becomes cytoplasmic in mdm1-deletion cells); its contact-site localization is independent of the canonical NVJ tether Nvj1. No autonomous molecular activity has been demonstrated, so no molecular_function term is asserted here (see knowledge_gaps).</h3>
+                <span class="vote-buttons" data-g="Q03983" data-a="FUNCTION: Resident protein of the nucleus-vacuole junction /..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071561" target="_blank" class="term-link">
+                                nucleus-vacuole junction
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098853" target="_blank" class="term-link">
+                                endoplasmic reticulum-vacuole membrane contact site
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                PMID:26283797
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                                PMID:26283797
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Nvj3-GFP redistributed into the cytoplasm in mdm1Δ cells, suggesting Nvj3 interacts directly with Mdm1 at NVJs</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Participates, together with its paralog Mdm1, in neutral-lipid (triacylglycerol) metabolism and lipid-droplet dynamics at ER-vacuole contact sites, a role that is pronounced under nutritional stress. Genetic loss of NVJ3 (with MDM1) raises triacylglycerol and lipid-droplet content in a manner suppressible by deletion of the fatty acyl-CoA synthetase Faa1, placing Nvj3 in lipid-droplet production downstream of fatty acyl-CoA activation. The molecular step Nvj3 performs in this process is not established.</h3>
+                <span class="vote-buttons" data-g="Q03983" data-a="FUNCTION: Participates, together with its paralog Mdm1, in n..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                lipid metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098853" target="_blank" class="term-link">
+                                endoplasmic reticulum-vacuole membrane contact site
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link">
+                                PMID:29146766
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold increase in TAG</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link">
+                                PMID:29146766
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we see in the mdm1 Δ nvj3 Δ double knockout</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" target="_blank" class="term-link">
+                            PMID:26283797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mdm1/Snx13 is a novel ER-endolysosomal interorganelle tethering protein.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Nvj3 (Ydr179w-a) is a novel paralog of Mdm1 that localizes to the nucleus-vacuole junction / ER-vacuole membrane contact site, independently of the canonical tether Nvj1.</div>
+
+                        <div class="finding-text">"both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Nvj3 is predicted to be soluble and requires Mdm1 for its NVJ localization, redistributing to the cytoplasm in mdm1-deletion cells.</div>
+
+                        <div class="finding-text">"Nvj3-GFP redistributed into the cytoplasm in mdm1Δ cells, suggesting Nvj3 interacts directly with Mdm1 at NVJs"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PXA domain is the only domain shared between Mdm1 and Nvj3; the PI3P-binding activity of Mdm1 resides in its separate PX domain.</div>
+
+                        <div class="finding-text">"the PXA domain is the only domain shared between Mdm1 and Nvj3"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29146766" target="_blank" class="term-link">
+                            PMID:29146766
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lipid droplet biogenesis is spatially coordinated at ER-vacuole contacts under nutritional stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of MDM1, NVJ3, or both causes lipid-droplet accumulation and a ~2-fold increase in triacylglycerol, implicating Nvj3 in NVJ-associated neutral-lipid metabolism.</div>
+
+                        <div class="finding-text">"deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold increase in TAG"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The triacylglycerol increase in the mdm1 nvj3 double mutant is suppressed by deletion of the fatty acyl-CoA synthetase Faa1, linking Mdm1/Nvj3 to lipid droplet production downstream of fatty acyl-CoA activation.</div>
+
+                        <div class="finding-text">"Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we see in the mdm1 Δ nvj3 Δ double knockout"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/41542480" target="_blank" class="term-link">
+                            PMID:41542480
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nvj3 regulates Dga1-mediated triacylglycerol synthesis and lipid droplet formation at ER contact sites.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Nvj3 bind or transfer a specific lipid through its PXA domain, or does it act solely as an Mdm1-recruited scaffold at ER-vacuole contacts?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: W. Mike Henne</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q03983" data-a="Q: Does Nvj3 bind or transfer a specific lipid throug..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanistic step by which Nvj3 couples Dga1-dependent triacylglycerol synthesis to efficient lipid-droplet packaging?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: W. Mike Henne</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q03983" data-a="Q: What is the mechanistic step by which Nvj3 couples..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant Nvj3 (and its isolated PXA domain) and perform protein-lipid overlay, liposome flotation/co-sedimentation, and lipid-transfer assays against a panel of phospholipids, phosphoinositides, DAG, and sterols to identify any direct lipid ligand or transfer activity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The Nvj3 PXA domain binds a specific lipid that contributes to its function at ER-vacuole contacts.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro lipid-binding/transfer biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q03983" data-a="EXPERIMENT: Express and purify recombinant Nvj3 (and its isola..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Combine quantitative lipidomics of nvj3Δ and PXA-domain point/deletion mutants with live-cell imaging of DAG and lipid-droplet biogenesis during diauxic shift or glucose depletion to map Nvj3&#39;s step in TAG synthesis and lipid-droplet packaging.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Nvj3 organizes DAG/TAG conversion at ER-vacuole contacts and its PXA domain is required for this role.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics + lipidomics + live-cell imaging</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q03983" data-a="EXPERIMENT: Combine quantitative lipidomics of nvj3Δ and PXA-d..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular/biochemical activity of Nvj3 is undetermined: it is unknown whether Nvj3 binds or transfers a specific lipid, senses a lipid, or acts purely as a scaffold/adaptor recruited by Mdm1. Its only recognizable domain is the PXA (Phox-associated) domain, whose biochemical function is itself uncharacterized.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Nvj3&#39;s localization (NVJ / ER-vacuole contact site) and its genetic contribution to triacylglycerol/lipid-droplet homeostasis are experimentally established, and it is known to depend on Mdm1 for recruitment; but no in vitro activity, ligand, or catalytic step has been assigned to the protein or its PXA domain. (Fatty-acid binding has been shown for the PXA domains of the paralog Mdm1 and of human SNX14, but not for Nvj3 itself.)</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Nvj3 is the only yeast protein besides Mdm1 to carry a PXA domain; defining its activity would clarify the function of the conserved PXA domain and the mechanism by which ER-vacuole contacts regulate neutral-lipid metabolism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical characterization of recombinant Nvj3 and its PXA domain (lipid-binding / lipid-transfer assays, ligand identification) and structure determination, combined with separation-of-function alleles tested for lipid-droplet phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"All Mdm1 homologues encode an uncharacterized PXA domain"</em> — PMID:26283797</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether Nvj3 itself possesses membrane-tethering activity, or is only a passenger recruited to Mdm1-formed ER-vacuole contacts, is unresolved.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Mdm1 is an ER-anchored transmembrane protein that tethers the ER to the vacuole via its PI3P-binding PX domain; Nvj3 is predicted soluble, lacks a PX domain, and requires Mdm1 for contact-site localization. Independent tethering by Nvj3 alone has not been demonstrated.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing tether from passenger determines whether Nvj3 should be annotated with a contact-site tether activity or an accessory/adaptor role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test ER-vacuole contact formation and reconstituted tethering with Nvj3 in the absence of Mdm1 (e.g. synthetic tethering assays, in vitro membrane binding).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Because Nvj3 is predicted to be soluble, we hypothesized that it required Mdm1 for its NVJ localization"</em> — PMID:26283797</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The specific molecular step by which Nvj3 influences triacylglycerol synthesis and lipid-droplet packaging is unknown, as is the physiological consequence of its loss beyond a mild neutral-lipid imbalance.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">NARROWING</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> nvj3Δ (with mdm1Δ) increases TAG and lipid droplets in an Faa1-dependent manner, and a 2026 preprint links Nvj3 to Dga1-dependent TAG synthesis and DAG localization; but no peer-reviewed mechanism, direct partner in TAG synthesis, or robust growth phenotype has been reported (no hits in 10 CRISPR screens per BioGRID-ORCS).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the step would connect ER-vacuole contact-site biology to the enzymology of lipid-droplet biogenesis and to the conserved SNX13/14-family lipid roles in mammals.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Peer-reviewed, mechanistic dissection of the Nvj3-Dga1/DAG relationship (e.g. the findings reported in the preprint PMID:41542480), with lipidomics and separation-of-function alleles.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold increase in TAG"</em> — PMID:29146766</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NVJ3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q03983" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">26 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:05:54.687139</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="NVJ3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="NVJ3-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-on-nvj3-ydr179w-a-in-saccharomyces-cerevisiae">Comprehensive Research Report on NVJ3 (YDR179W-A) in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="1-gene-identity-verification">1. Gene Identity Verification</h3>
+<p>NVJ3 (systematic name YDR179W-A; UniProt Q03983) encodes a protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c) that was originally annotated as an uncharacterized open reading frame. It has since been identified as a component of the nucleus-vacuole junction (NVJ) and designated NVJ3 based on its localization and functional context (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24). The protein contains a Phox-associated (PXA) domain (IPR003114 / PF02194), which is consistent with its classification as a paralog of the sorting nexin-related protein Mdm1 (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24). The gene identity is confirmed across multiple independent studies.</p>
+<h3 id="2-protein-description-and-domain-architecture">2. Protein Description and Domain Architecture</h3>
+<p>Nvj3 is a <strong>soluble protein</strong> and a paralog of the ER membrane protein Mdm1 (vladimir2019investigatingsphingolipidmetabolism pages 21-24). Unlike Mdm1, which possesses a full multi-domain architecture consisting of an N-terminal transmembrane domain (for ER anchoring), a PXA domain, an RGS (regulator of G-protein signaling) domain, a PX (Phox homology) domain (for vacuolar PI3P binding), and a C-terminal nexin/PXC domain (bohnert2020tetheringfattethers pages 2-3, bandyopadhyay2024lysosomalmembranecontact pages 3-4, bandyopadhyay2024lysosomalmembranecontact pages 4-6), Nvj3 retains primarily the PXA domain but lacks the integral membrane domains and the PX domain that anchor Mdm1 in the ER membrane and target it to the vacuole, respectively (vladimir2019investigatingsphingolipidmetabolism pages 21-24).</p>
+<p>The PXA domain is a critical functional element shared among sorting nexin-RGS family members (Mdm1 in yeast; SNX13, SNX14, SNX19, and SNX25 in mammals) (amatya2021snxpxargspxcsubfamilyof pages 5-7, bandyopadhyay2024lysosomalmembranecontact pages 3-4). Structural studies on the mammalian orthologs reveal that the PXA domain, together with the PXC domain, forms a tightly intertwined tunnel-like structure approximately 80 Å in length with a hydrophobic interior lined by residues from both domains (bandyopadhyay2024lysosomalmembranecontact pages 3-4, bandyopadhyay2024lysosomalmembranecontact pages 4-6). In Mdm1, the PXA domain binds free fatty acids <em>in vitro</em> and is sufficient on its own to drive lipid droplet (LD) targeting and biogenesis (vladimir2019investigatingsphingolipidmetabolism pages 21-24, bohnert2020tetheringfattethers pages 2-3). The mammalian ortholog Snx14 similarly requires its PXA domain for fatty acid binding and proper saturated fatty acid metabolism; deletion of the PXA domain abrogates Snx14's ability to rescue cell viability following palmitate exposure (datta2020snx14proximitylabeling pages 10-11). Given that Nvj3 possesses a PXA domain, it is inferred to have the capacity for lipid or fatty acid binding at the NVJ, though direct biochemical characterization of Nvj3's PXA domain has not been reported.</p>
+<p>The following table summarizes the key properties of NVJ3:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>NVJ3 summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>NVJ3</strong> (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+</tr>
+<tr>
+<td>Systematic name</td>
+<td><strong>YDR179W-A</strong>; corresponds to the UniProt target protein for <em>S. cerevisiae</em> S288c described in the research context (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td><strong>Q03983</strong></td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c), budding yeast (kohler2020closingthegap pages 3-5, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+<tr>
+<td>Protein type</td>
+<td><strong>Soluble protein</strong>; described as a soluble paralog of the ER membrane protein Mdm1 (vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+</tr>
+<tr>
+<td>Key domain</td>
+<td><strong>PXA / Phox-associated domain</strong>; by family inference, PXA domains in Mdm1/SNX14-family proteins are lipid-associated and linked to fatty-acid handling (bohnert2020tetheringfattethers pages 2-3, datta2020snx14proximitylabeling pages 10-11, bandyopadhyay2024lysosomalmembranecontact pages 3-4, bandyopadhyay2024lysosomalmembranecontact pages 4-6)</td>
+</tr>
+<tr>
+<td>Paralog</td>
+<td><strong>Mdm1</strong> (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Nucleus-vacuole junction (NVJ)</strong>, an ER-vacuole/nuclear envelope-vacuole membrane contact site (karnebeck2019newinsightsinto pages 36-40, santanasosa2023ayeastmitotic pages 9-11, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+<tr>
+<td>Localization dependency</td>
+<td><strong>Mdm1-dependent, Nvj1-independent</strong>: Nvj3 localizes to NVJs independently of Nvj1, but in <strong>mdm1Δ</strong> cells it redistributes from the NVJ to the cytoplasm (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+</tr>
+<tr>
+<td>Primary function</td>
+<td><strong>Accessory NVJ protein / tether-associated factor</strong> implicated in <strong>lipid droplet biogenesis</strong> and lipid metabolic organization at a subset of NVJs, rather than being the core structural tether itself (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5)</td>
+</tr>
+<tr>
+<td>NOT involved in</td>
+<td><strong>Piecemeal microautophagy of the nucleus (PMN)</strong>; Nvj3-containing NVJs are described as distinct from PMN-active Nvj1-Vac8 junctions (santanasosa2023ayeastmitotic pages 9-11)</td>
+</tr>
+<tr>
+<td>Broader pathway context</td>
+<td>Part of a larger NVJ protein network that can include <strong>Nvj1, Vac8, Nvj2, Mdm1, Osh1, Tsc13, Lam5, Lam6, and Vps13</strong> and contributes to lipid/sterol/FA organization at ER-vacuole contacts (kohler2020closingthegap pages 3-5, karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+<tr>
+<td>Phenotype/context from broader NVJ loss</td>
+<td>In a <strong>nvj1Δ nvj2Δ nvj3Δ mdm1Δ</strong> mutant, ER-vacuole contacts are lost by EM, while cells still grow comparably to wild type under the tested conditions; altered ceramide-related lipid flux was also reported (vladimir2019investigatingsphingolipidmetabolism pages 75-81)</td>
+</tr>
+<tr>
+<td>Related mammalian orthologs of Mdm1</td>
+<td>The Mdm1/SNX-RGS family is represented in mammals by <strong>SNX13, SNX14, SNX19, and SNX25</strong>; these are relevant evolutionary comparators for inferring PXA-family function, not direct demonstrated orthologs of yeast Nvj3 (bandyopadhyay2024lysosomalmembranecontact pages 3-4, amatya2021snxpxargspxcsubfamilyof pages 5-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, localization, inferred molecular role, and pathway context of yeast NVJ3/YDR179W-A. It is useful as a compact reference because the direct literature on NVJ3 is limited and much of its function is inferred from its Mdm1 relationship and PXA-domain family biology.</em></p>
+<h3 id="3-subcellular-localization">3. Subcellular Localization</h3>
+<p>Nvj3 localizes to the <strong>nucleus-vacuole junction (NVJ)</strong>, the membrane contact site formed between the nuclear envelope (outer nuclear membrane/perinuclear ER) and the vacuolar membrane in budding yeast (karnebeck2019newinsightsinto pages 36-40, santanasosa2023ayeastmitotic pages 9-11, vladimir2019investigatingsphingolipidmetabolism pages 21-24). This localization was initially reported by Henne et al. (2015) and has been confirmed in multiple subsequent studies.</p>
+<p>Critically, Nvj3's localization to the NVJ is <strong>Mdm1-dependent but Nvj1-independent</strong> (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24). In wild-type cells, Nvj3 is found concentrated at NVJ contact sites. However, in <em>mdm1Δ</em> cells, Nvj3 redistributes from the NVJ to the cytoplasm, indicating that Mdm1 serves as the anchor or recruitment factor that retains Nvj3 at the ER-vacuole interface (karnebeck2019newinsightsinto pages 36-40). By contrast, deletion of NVJ1 does not affect Nvj3 localization, demonstrating that the Mdm1-Nvj3 module operates independently of the canonical Nvj1-Vac8 NVJ tethering system (vladimir2019investigatingsphingolipidmetabolism pages 21-24).</p>
+<h3 id="4-function-lipid-droplet-biogenesis-at-nvj-contact-sites">4. Function: Lipid Droplet Biogenesis at NVJ Contact Sites</h3>
+<p>A central finding is that Nvj3, together with Mdm1 and Nvj2, is associated with a <strong>subset of NVJ contact sites that are specifically dedicated to lipid droplet (LD) biogenesis in response to nutrient stress</strong> (santanasosa2023ayeastmitotic pages 9-11). These LD biogenesis-associated NVJs are functionally and spatially <strong>distinct from the NVJs involved in piecemeal microautophagy of the nucleus (PMN)</strong>, which are established through the canonical Nvj1-Vac8 interaction (santanasosa2023ayeastmitotic pages 9-11).</p>
+<p>Mdm1 functions as the primary tri-organellar molecular tether at these sites, connecting the ER, the vacuole, and lipid droplets (choudhary2021auniquejunctional pages 7-9). It is anchored to the ER through its N-terminal integral membrane domain, targets the vacuolar membrane via its PX domain binding to phosphatidylinositol 3-phosphate (PI3P), and associates with lipid droplets through its PXA domain (vladimir2019investigatingsphingolipidmetabolism pages 21-24, choudhary2021auniquejunctional pages 7-9). Mdm1 recruits the fatty acyl-CoA synthetase Faa1, linking it to the conversion of free fatty acids into storage-competent neutral lipids and thereby promoting LD formation (vladimir2019investigatingsphingolipidmetabolism pages 21-24). As a soluble Mdm1 paralog that is recruited to the NVJ by Mdm1, Nvj3 likely functions as an <strong>accessory factor</strong> in this lipid metabolic hub, potentially contributing to fatty acid handling or lipid organization through its PXA domain (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5).</p>
+<h3 id="5-relationship-to-piecemeal-microautophagy-of-the-nucleus-pmn">5. Relationship to Piecemeal Microautophagy of the Nucleus (PMN)</h3>
+<p>Despite its localization at the NVJ — the site where PMN occurs — Nvj3 is <strong>not involved in piecemeal microautophagy of the nucleus</strong>. The NVJ contact sites at which Nvj3, Mdm1, and Nvj2 are found do not participate in the PMN autophagy pathway (santanasosa2023ayeastmitotic pages 9-11). PMN instead depends on the Nvj1-Vac8 interaction, with additional contributions from Osh1 (essential for proper PMN bleb formation) and Tsc13 (whose absence reduces PMN bleb size) (kohler2020closingthegap pages 9-11, karnebeck2019newinsightsinto pages 36-40). This functional segregation underscores that the NVJ is not a monolithic structure but rather comprises functionally distinct subdomains.</p>
+<h3 id="6-loss-of-function-phenotype">6. Loss-of-Function Phenotype</h3>
+<p>The quadruple deletion mutant <em>nvj1Δ nvj2Δ nvj3Δ mdm1Δ</em> (ΔNVJ) was found to grow normally under standard conditions, comparable to wild-type cells (vladimir2019investigatingsphingolipidmetabolism pages 75-81). However, electron microscopy confirmed that this ΔNVJ mutant completely lacks ER-vacuole contacts (vladimir2019investigatingsphingolipidmetabolism pages 75-81). Analysis of sphingolipid metabolism in the quadruple mutant revealed reduced levels of PHC-B ceramide species and lower mean amounts of C17-ceramides and C17-IPCs at certain time points, suggesting that the collective loss of NVJ proteins affects ceramide metabolism and lipid flux between the ER and vacuole (vladimir2019investigatingsphingolipidmetabolism pages 75-81). In a separate study examining α-synuclein toxicity in yeast, Nvj3 was described as "a protein of unknown function" that is a paralog of Mdm1 and localizes to the NVJ depending on Mdm1 (vecchio2023multipletethersof pages 3-4).</p>
+<h3 id="7-nvj-protein-network-context">7. NVJ Protein Network Context</h3>
+<p>Nvj3 operates within a larger network of NVJ-resident proteins that collectively coordinate lipid metabolism, sterol transport, and interorganellar communication at the nuclear envelope-vacuole interface. The following table summarizes the major NVJ proteins and their functional roles:</p>
+<table>
+<thead>
+<tr>
+<th>Protein name</th>
+<th>Membrane association</th>
+<th>Primary function at NVJ</th>
+<th>Role in PMN</th>
+<th>Role in LD biogenesis</th>
+<th>Key domains/features</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nvj1</td>
+<td>Integral membrane protein of the outer nuclear membrane / perinuclear ER</td>
+<td>Core NVJ tether with Vac8; organizes canonical nucleus-vacuole junctions and recruits PMN-related factors (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5, kohler2020closingthegap pages 9-11)</td>
+<td>Direct, essential structural component of PMN sites (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 9-11)</td>
+<td>Not the main LD-biogenesis factor; distinct from Mdm1/Nvj2/Nvj3 LD-producing NVJs (santanasosa2023ayeastmitotic pages 9-11)</td>
+<td>Transmembrane tether; binds Vac8; interacts with Osh1 and Tsc13 functionally at NVJs (kohler2020closingthegap pages 3-5, kohler2020closingthegap pages 9-11)</td>
+</tr>
+<tr>
+<td>Vac8</td>
+<td>Vacuolar membrane-associated, highly palmitoylated protein</td>
+<td>Core vacuolar-side NVJ tether with Nvj1; scaffold for vacuole contact organization (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5, kohler2020closingthegap pages 9-11)</td>
+<td>Direct, essential structural component of PMN sites; conformational state linked to PMN/Cvt functions (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 9-11)</td>
+<td>Not the principal LD-biogenesis determinant, though present at NVJ-related contact systems (diep2024thevacuolelipid pages 2-3, kohler2020closingthegap pages 9-11)</td>
+<td>Armadillo-repeat scaffold; palmitoylated vacuolar surface protein (kohler2020closingthegap pages 3-5, kohler2020closingthegap pages 9-11)</td>
+</tr>
+<tr>
+<td>Nvj2</td>
+<td>Accessory NVJ protein; membrane-associated SMP protein at NE-vacuole contacts</td>
+<td>Accessory/regulatory NVJ factor that adapts contact abundance and function; part of a subset of NVJs linked to lipid handling (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>Not defined as a core PMN factor; PMN mainly depends on Nvj1-Vac8 (santanasosa2023ayeastmitotic pages 9-11, kohler2020closingthegap pages 3-5)</td>
+<td>Yes, associated with LD-biogenesis NVJs together with Mdm1 and Nvj3 (santanasosa2023ayeastmitotic pages 9-11)</td>
+<td>SMP lipid-transfer domain (vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+<tr>
+<td>Nvj3</td>
+<td>Soluble protein; Mdm1-dependent peripheral resident at NVJ</td>
+<td>Accessory NVJ factor and soluble paralog of Mdm1; likely supports lipid/fatty-acid handling at a subset of NVJs (karnebeck2019newinsightsinto pages 36-40, vladimir2019investigatingsphingolipidmetabolism pages 21-24)</td>
+<td>No clear evidence for direct PMN role; Nvj3-positive NVJs are described as distinct from PMN junctions (santanasosa2023ayeastmitotic pages 9-11)</td>
+<td>Yes, associated with LD-biogenesis NVJs under nutrient stress (santanasosa2023ayeastmitotic pages 9-11)</td>
+<td>PXA domain; lacks the ER-anchoring/TM and PX architecture described for Mdm1, consistent with being soluble (vladimir2019investigatingsphingolipidmetabolism pages 21-24, bohnert2020tetheringfattethers pages 2-3, bandyopadhyay2024lysosomalmembranecontact pages 3-4)</td>
+</tr>
+<tr>
+<td>Mdm1</td>
+<td>ER/nuclear ER integral membrane protein with vacuole-binding PX domain</td>
+<td>Interorganelle tether at NVJ and ER-vacuole contacts; recruits lipid-metabolic machinery and organizes FA/ceramide handling (vladimir2019investigatingsphingolipidmetabolism pages 21-24, choudhary2021auniquejunctional pages 7-9)</td>
+<td>Not the canonical PMN tether; Mdm1-positive NVJs can be distinct from PMN-active junctions (santanasosa2023ayeastmitotic pages 9-11)</td>
+<td>Major positive regulator of LD biogenesis; tri-organellar tether linking ER, vacuole, and LDs (vladimir2019investigatingsphingolipidmetabolism pages 21-24, choudhary2021auniquejunctional pages 7-9)</td>
+<td>N-terminal membrane anchor, PXA domain, RGS domain, PX domain binding PI3P, C-terminal nexin/PXC region (choudhary2021auniquejunctional pages 7-9, bohnert2020tetheringfattethers pages 2-3, bandyopadhyay2024lysosomalmembranecontact pages 3-4, bandyopadhyay2024lysosomalmembranecontact pages 4-6)</td>
+</tr>
+<tr>
+<td>Osh1</td>
+<td>Peripheral lipid-transfer protein recruited to NVJ/PMN blebs</td>
+<td>Sterol/oxysterol transport factor at NVJ; links Nvj1 to lipid trafficking (vladimir2019investigatingsphingolipidmetabolism pages 21-24, kohler2020closingthegap pages 3-5, kohler2020closingthegap pages 9-11)</td>
+<td>Yes; essential for proper PMN vesicle/bleb formation (kohler2020closingthegap pages 9-11, karnebeck2019newinsightsinto pages 36-40)</td>
+<td>No specific direct LD-biogenesis role established here (vladimir2019investigatingsphingolipidmetabolism pages 21-24, kohler2020closingthegap pages 9-11)</td>
+<td>Oxysterol-binding protein family member (OSBP-related protein) (vladimir2019investigatingsphingolipidmetabolism pages 21-24, karnebeck2019newinsightsinto pages 36-40)</td>
+</tr>
+<tr>
+<td>Tsc13</td>
+<td>Integral ER membrane enzyme enriched at NVJ</td>
+<td>Very-long-chain fatty acid elongation enzyme contributing to NVJ lipid environment and membrane properties (vladimir2019investigatingsphingolipidmetabolism pages 21-24, kohler2020closingthegap pages 3-5, karnebeck2019newinsightsinto pages 36-40)</td>
+<td>Supports PMN efficiency; loss reduces PMN bleb size rather than abolishing PMN (karnebeck2019newinsightsinto pages 36-40)</td>
+<td>Indirect/supportive via FA elongation and local lipid metabolism, not established as a dedicated LD tether (vladimir2019investigatingsphingolipidmetabolism pages 21-24, karnebeck2019newinsightsinto pages 36-40)</td>
+<td>Enoyl-CoA reductase of VLCFA synthesis pathway (vladimir2019investigatingsphingolipidmetabolism pages 21-24, karnebeck2019newinsightsinto pages 36-40)</td>
+</tr>
+<tr>
+<td>Lam5/Lam6</td>
+<td>Lipid-transfer/contact-site proteins associated with NVJ and other MCSs</td>
+<td>Accessory sterol-transfer/contact expansion factors at NVJ; Lam6 especially linked to MCS expansion (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>No direct PMN-specific role established in gathered evidence (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>Potential indirect role through sterol organization and contact remodeling; no direct dedicated LD-biogenesis function shown here (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>StART-like sterol-transfer proteins / contact-site regulators (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+<tr>
+<td>Vps13</td>
+<td>Large peripheral lipid transporter recruited to NVJ</td>
+<td>Bulk lipid transporter at NVJ and other contact sites; contributes to lipid exchange and contact-site function (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>No direct PMN-core role established in gathered evidence (karnebeck2019newinsightsinto pages 36-40)</td>
+<td>Possible indirect role through lipid supply/transport at NVJ, but not identified here as the principal LD-biogenesis factor (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+<td>Large Vps13-family bridge-like lipid transport protein (karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares major nucleus-vacuole junction proteins in budding yeast, emphasizing which proteins form the core PMN tether versus those associated with lipid-droplet biogenesis and lipid handling. It is useful for placing NVJ3 in the broader NVJ functional network.</em></p>
+<p>Key interacting partners and co-residents at the NVJ include: Nvj1 and Vac8 (core tethers), Osh1 (oxysterol-binding protein for sterol transport), Tsc13 (enoyl-CoA reductase for very-long-chain fatty acid biosynthesis), Nvj2 (SMP domain lipid transfer protein), Lam5 and Lam6 (sterol transport proteins), and Vps13 (bulk lipid transporter) (kohler2020closingthegap pages 3-5, karnebeck2019newinsightsinto pages 36-40, vrijsen2022interorganellarcommunicationin pages 7-8). NVJ contacts are known to expand upon nutrient stress, and this expansion is associated with increased lipid droplet formation at adjacent ER subdomains (choudhary2021auniquejunctional pages 7-9, kohler2020closingthegap pages 3-5).</p>
+<h3 id="8-evolutionary-context">8. Evolutionary Context</h3>
+<p>Mdm1, the functional partner of Nvj3, belongs to the SNX-PXA-RGS-PXC subfamily of sorting nexins (amatya2021snxpxargspxcsubfamilyof pages 5-7, bandyopadhyay2024lysosomalmembranecontact pages 3-4). The mammalian orthologs of Mdm1 include SNX13 (involved in endolysosomal cholesterol export), SNX14 (linked to SCAR20 cerebellar ataxia disease when mutated), SNX19, and SNX25 (amatya2021snxpxargspxcsubfamilyof pages 5-7, datta2020snx14proximitylabeling pages 10-11, bandyopadhyay2024lysosomalmembranecontact pages 3-4). The <em>Drosophila</em> homolog Snazarus similarly regulates lipid droplet populations at plasma membrane-droplet contacts in adipocytes (bohnert2020tetheringfattethers pages 2-3). Nvj3 appears to be a yeast-specific soluble derivative of this sorting nexin family, retaining the PXA domain but having lost the membrane-anchoring and vacuole-targeting domains present in Mdm1. No direct mammalian ortholog of Nvj3 has been identified.</p>
+<h3 id="9-summary">9. Summary</h3>
+<p>NVJ3 (YDR179W-A) encodes a soluble, PXA domain-containing protein that functions as an accessory component of the nucleus-vacuole junction in <em>S. cerevisiae</em>. It is a paralog of the ER membrane tether Mdm1 and depends on Mdm1 for its localization to the NVJ, but is independent of the canonical NVJ tether Nvj1. Nvj3 resides at a subset of NVJ contact sites that are dedicated to lipid droplet biogenesis under nutrient stress, rather than at those involved in piecemeal microautophagy of the nucleus. Through its PXA domain — which in the related Mdm1 and SNX14 proteins has been shown to bind free fatty acids and promote lipid droplet formation — Nvj3 is inferred to participate in fatty acid handling or lipid organization at the ER-vacuole interface. Collectively, the NVJ proteins including Nvj3 maintain ER-vacuole contacts that are essential for ceramide metabolism and lipid homeostasis. The precise biochemical function of Nvj3 remains incompletely characterized, and much of its functional annotation is inferred from its domain architecture, localization, and relationship to the better-studied Mdm1.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(karnebeck2019newinsightsinto pages 36-40): Stefanie Karnebeck. New insights into nucleophagy in s. cerevisiae. Unknown journal, 2019. URL: https://doi.org/10.53846/goediss-7339, doi:10.53846/goediss-7339.</p>
+</li>
+<li>
+<p>(vladimir2019investigatingsphingolipidmetabolism pages 21-24): Vladimir Girik. Investigating sphingolipid metabolism in budding yeast using stable isotope-labeled and caged vacuole-specific probes. ArXiv, 2019. URL: https://doi.org/10.13097/archive-ouverte/unige:125912, doi:10.13097/archive-ouverte/unige:125912. This article has 0 citations.</p>
+</li>
+<li>
+<p>(bohnert2020tetheringfattethers pages 2-3): Maria Bohnert. Tethering fat: tethers in lipid droplet contact sites. Contact, 3:251525642090814, Mar 2020. URL: https://doi.org/10.1177/2515256420908142, doi:10.1177/2515256420908142. This article has 27 citations.</p>
+</li>
+<li>
+<p>(bandyopadhyay2024lysosomalmembranecontact pages 3-4): Sumit Bandyopadhyay, Daniel Adebayo, Eseiwi Obaseki, and Hanaa Hariri. Lysosomal membrane contact sites: integrative hubs for cellular communication and homeostasis. Current topics in membranes, 93:85-116, Jul 2024. URL: https://doi.org/10.1016/bs.ctm.2024.07.001, doi:10.1016/bs.ctm.2024.07.001. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bandyopadhyay2024lysosomalmembranecontact pages 4-6): Sumit Bandyopadhyay, Daniel Adebayo, Eseiwi Obaseki, and Hanaa Hariri. Lysosomal membrane contact sites: integrative hubs for cellular communication and homeostasis. Current topics in membranes, 93:85-116, Jul 2024. URL: https://doi.org/10.1016/bs.ctm.2024.07.001, doi:10.1016/bs.ctm.2024.07.001. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(amatya2021snxpxargspxcsubfamilyof pages 5-7): Bibhas Amatya, Hewang Lee, Laureano D. Asico, Prasad Konkalmatt, Ines Armando, Robin A. Felder, and Pedro A. Jose. Snx-pxa-rgs-pxc subfamily of snxs in the regulation of receptor-mediated signaling and membrane trafficking. International Journal of Molecular Sciences, 22:2319, Feb 2021. URL: https://doi.org/10.3390/ijms22052319, doi:10.3390/ijms22052319. This article has 25 citations.</p>
+</li>
+<li>
+<p>(datta2020snx14proximitylabeling pages 10-11): Sanchari Datta, Jade Bowerman, Hanaa Hariri, Rupali Ugrankar, Kaitlyn M. Eckert, Chase Corley, Gonçalo Vale, Jeffrey G. McDonald, and W. Mike Henne. Snx14 proximity labeling reveals a role in saturated fatty acid metabolism and er homeostasis defective in scar20 disease. Dec 2020. URL: https://doi.org/10.1073/pnas.2011124117, doi:10.1073/pnas.2011124117. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kohler2020closingthegap pages 3-5): Verena Kohler, Andreas Aufschnaiter, and Sabrina Büttner. Closing the gap: membrane contact sites in the regulation of autophagy. Cells, 9:1184, May 2020. URL: https://doi.org/10.3390/cells9051184, doi:10.3390/cells9051184. This article has 49 citations.</p>
+</li>
+<li>
+<p>(vrijsen2022interorganellarcommunicationin pages 7-8): Stephanie Vrijsen, Céline Vrancx, Mara Del Vecchio, Johannes V. Swinnen, Patrizia Agostinis, Joris Winderickx, Peter Vangheluwe, and Wim Annaert. Inter-organellar communication in parkinson's and alzheimer's disease: looking beyond endoplasmic reticulum-mitochondria contact sites. Frontiers in Neuroscience, Jun 2022. URL: https://doi.org/10.3389/fnins.2022.900338, doi:10.3389/fnins.2022.900338. This article has 48 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(santanasosa2023ayeastmitotic pages 9-11): Silvia Santana-Sosa, Emiliano Matos-Perdomo, Jessel Ayra-Plasencia, and Félix Machín. A yeast mitotic tale for the nucleus and the vacuoles to embrace. International Journal of Molecular Sciences, 24:9829, Jun 2023. URL: https://doi.org/10.3390/ijms24129829, doi:10.3390/ijms24129829. This article has 5 citations.</p>
+</li>
+<li>
+<p>(vladimir2019investigatingsphingolipidmetabolism pages 75-81): Vladimir Girik. Investigating sphingolipid metabolism in budding yeast using stable isotope-labeled and caged vacuole-specific probes. ArXiv, 2019. URL: https://doi.org/10.13097/archive-ouverte/unige:125912, doi:10.13097/archive-ouverte/unige:125912. This article has 0 citations.</p>
+</li>
+<li>
+<p>(choudhary2021auniquejunctional pages 7-9): Vineet Choudhary and Roger Schneiter. A unique junctional interface at contact sites between the endoplasmic reticulum and lipid droplets. Frontiers in Cell and Developmental Biology, Apr 2021. URL: https://doi.org/10.3389/fcell.2021.650186, doi:10.3389/fcell.2021.650186. This article has 45 citations.</p>
+</li>
+<li>
+<p>(kohler2020closingthegap pages 9-11): Verena Kohler, Andreas Aufschnaiter, and Sabrina Büttner. Closing the gap: membrane contact sites in the regulation of autophagy. Cells, 9:1184, May 2020. URL: https://doi.org/10.3390/cells9051184, doi:10.3390/cells9051184. This article has 49 citations.</p>
+</li>
+<li>
+<p>(vecchio2023multipletethersof pages 3-4): Mara Del Vecchio, Lucia Amado, Alexandra P. Cogan, Els Meert, Joelle Rosseels, Vanessa Franssens, Sander K. Govers, Joris Winderickx, and Ayelén González Montoro. Multiple tethers of organelle contact sites are involved in α-synuclein toxicity in yeast. Molecular Biology of the Cell, Jul 2023. URL: https://doi.org/10.1091/mbc.e23-01-0029, doi:10.1091/mbc.e23-01-0029. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(diep2024thevacuolelipid pages 2-3): Duy Trong Vien Diep and Maria Bohnert. The vacuole lipid droplet contact site vclip. Contact, Jan 2024. URL: https://doi.org/10.1177/25152564241308722, doi:10.1177/25152564241308722. This article has 3 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="NVJ3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="NVJ3-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>vladimir2019investigatingsphingolipidmetabolism pages 21-24</li>
+<li>santanasosa2023ayeastmitotic pages 9-11</li>
+<li>vladimir2019investigatingsphingolipidmetabolism pages 75-81</li>
+<li>karnebeck2019newinsightsinto pages 36-40</li>
+<li>choudhary2021auniquejunctional pages 7-9</li>
+<li>vecchio2023multipletethersof pages 3-4</li>
+<li>vrijsen2022interorganellarcommunicationin pages 7-8</li>
+<li>bohnert2020tetheringfattethers pages 2-3</li>
+<li>bandyopadhyay2024lysosomalmembranecontact pages 3-4</li>
+<li>bandyopadhyay2024lysosomalmembranecontact pages 4-6</li>
+<li>amatya2021snxpxargspxcsubfamilyof pages 5-7</li>
+<li>kohler2020closingthegap pages 3-5</li>
+<li>kohler2020closingthegap pages 9-11</li>
+<li>diep2024thevacuolelipid pages 2-3</li>
+<li>https://doi.org/10.53846/goediss-7339,</li>
+<li>https://doi.org/10.13097/archive-ouverte/unige:125912,</li>
+<li>https://doi.org/10.1177/2515256420908142,</li>
+<li>https://doi.org/10.1016/bs.ctm.2024.07.001,</li>
+<li>https://doi.org/10.3390/ijms22052319,</li>
+<li>https://doi.org/10.1073/pnas.2011124117,</li>
+<li>https://doi.org/10.3390/cells9051184,</li>
+<li>https://doi.org/10.3389/fnins.2022.900338,</li>
+<li>https://doi.org/10.3390/ijms24129829,</li>
+<li>https://doi.org/10.3389/fcell.2021.650186,</li>
+<li>https://doi.org/10.1091/mbc.e23-01-0029,</li>
+<li>https://doi.org/10.1177/25152564241308722,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NVJ3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q03983" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nvj3-ydr179w-a-q03983-curation-notes">NVJ3 (YDR179W-A / Q03983) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> NVJ3<br />
+("Nucleus-Vacuole Junction 3"). Understudied / dark gene. Provenance is recorded inline as<br />
+<code>[PMID:xxxx "verbatim quote"]</code>.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>SGD standard name <strong>NVJ3</strong>; systematic name <strong>YDR179W-A</strong>; UniProt <strong>Q03983</strong> (YD179_YEAST),<br />
+  463 aa. Confirmed via SGD locus API: <code>systematic: YDR179W-A | standard: NVJ3</code>, and via UniProt<br />
+  cross-references (<code>SGD; S000002587; YDR179W-A</code>).</li>
+<li>SGD one-line description: "Protein involved in lipid metabolism; localizes to endoplasmic<br />
+  reticulum-vacuole membrane contact sites at the nucleus-vacuole junction in an Mdm1p-dependent<br />
+  manner; contains a lipid-binding PXA domain."</li>
+<li><code>just fetch-gene yeast NVJ3</code> failed because UniProt does not carry <code>NVJ3</code> as a gene name<br />
+  (gene name = ORF <code>YDR179W-A</code>); fetched with <code>--uniprot-id Q03983</code>.</li>
+</ul>
+<h2 id="domain-architecture-bioinformatics-done-inline">Domain architecture / bioinformatics (done inline)</h2>
+<ul>
+<li>InterPro/Pfam for Q03983 returns ONLY the <strong>PXA domain</strong> (Pfam PF02194 / IPR003114<br />
+  "Phox-associated domain"). No PX (PF00787) domain, no annotated transmembrane region.<br />
+  (Queried InterPro API <code>entry/all/protein/uniprot/Q03983</code>.)</li>
+<li>UniProt feature table lists only <code>CHAIN 1..463</code> — no TRANSMEM, no SIGNAL. Consistent with a<br />
+  soluble, peripherally-recruited protein rather than an integral membrane protein.</li>
+<li>Inline Kyte–Doolittle hydropathy scan (window 19) of the full sequence: max mean hydropathy<br />
+  = <strong>1.14</strong> (pos ~422), below the ~1.6 threshold typically indicative of a candidate TM helix.<br />
+  Supports the "predicted soluble" characterization (no strong TM segment).</li>
+<li>This matters for the annotations: <strong>the only domain Nvj3 shares with its paralog Mdm1 is the<br />
+  PXA domain.</strong> The PI3P-binding activity that anchors Mdm1 to the vacuole is a property of<br />
+  Mdm1's separate <strong>PX</strong> domain, which Nvj3 does NOT possess.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="In yeast, the PXA domain is the only domain shared between Mdm1 and Nvj3 and is unique to these proteins">PMID:26283797</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="its C-terminal PX domain, which binds PI3P with high affinity">PMID:26283797</a></li>
+</ul>
+<h2 id="what-is-known">What is KNOWN</h2>
+<h3 id="localization-well-supported-experimental">Localization (well supported, experimental)</h3>
+<ul>
+<li>Nvj3 was discovered as a novel paralog of Mdm1 and named in PMID:26283797.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="We also characterize a novel Mdm1 paralogue Ydr179w-a, which we name Nvj3, and show that both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner.">PMID:26283797</a></li>
+<li>GFP-tagged Nvj3 localizes to the nucleus–vacuole junction (NVJ) / ER–vacuole membrane contact<br />
+  site (basis of GO:0071561 IDA and GO:0098853 IDA).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="To determine its localization, we GFP tagged the YDR179W-A locus and observed that Ydr179w-a–GFP also localized to NVJs">PMID:26283797</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="A tBFP2-tagged Ydr179w-a colocalized with Mdm1-GFP, confirming its NVJ localization, and thus we name it Nvj3">PMID:26283797</a></li>
+<li>NVJ / ER–vacuole localization is <strong>independent of the canonical tether Nvj1</strong>.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="Remarkably, both Mdm1 and Nvj3 retained ER–vacuole MCS localizations in nvj1Δ yeast but were no longer restricted to NVJ patches.">PMID:26283797</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="In some cells, Nvj3 was clearly enriched at the tips of ER tubules making contact with the vacuole, confirming ER–vacuole tethering does not require Nvj1">PMID:26283797</a></li>
+</ul>
+<h3 id="recruitment-by-mdm1-well-supported">Recruitment by Mdm1 (well supported)</h3>
+<ul>
+<li>Nvj3 is predicted soluble and requires Mdm1 for NVJ localization; in mdm1Δ it goes cytosolic.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="Because Nvj3 is predicted to be soluble, we hypothesized that it required Mdm1 for its NVJ localization.">PMID:26283797</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="Consistent with this, Nvj3-GFP redistributed into the cytoplasm in mdm1Δ cells, suggesting Nvj3 interacts directly with Mdm1 at NVJs">PMID:26283797</a></li>
+<li>Mdm1 co-purifies with Nvj3.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29146766" title="we show that Mdm1 co‐purifies with Faa1 and Fas1/2 in addition to Mdm1 paralog Nvj3">PMID:29146766</a></li>
+<li>SGD interaction data: physical partners include MDM1 (paralog/recruiter) and SEC61 (ER<br />
+  translocon); other partners are high-throughput (NAM7, MPT5, DHH1, CCR4, PUP1, HSC82).</li>
+</ul>
+<h3 id="lipid-neutral-lipid-metabolism-biological-process-experimental-imp">Lipid / neutral-lipid metabolism (biological process; experimental IMP)</h3>
+<ul>
+<li>Deleting MDM1, NVJ3, or both causes lipid-droplet accumulation and ~2-fold TAG increase;<br />
+  suppressed by Faa1 loss (basis of GO:0006629 IMP, PMID:29146766).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29146766" title="deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold increase in TAG, implying a functional role for Mdm1 and Nvj3 in NVJ‐associated LD dynamics">PMID:29146766</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29146766" title="Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we see in the mdm1 Δ nvj3 Δ double knockout">PMID:29146766</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29146766" title="our results are consistent with a role for Mdm1/Nvj3 in LD production following fatty acyl‐CoA activation">PMID:29146766</a></li>
+<li>Nvj3 is NOT required for piecemeal microautophagy of the nucleus (PMN).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="Nvj1-mCherry–positive PMN vesicles formed even in the absence of Mdm1 and Nvj3, suggesting they are not required for yeast PMN">PMID:26283797</a></li>
+</ul>
+<h3 id="newer-preprint-not-peer-reviewed-treat-cautiously">Newer (preprint, NOT peer-reviewed — treat cautiously)</h3>
+<ul>
+<li>PMID:41542480 (bioRxiv 2026): "Nvj3 regulates Dga1-mediated triacylglycerol synthesis and lipid<br />
+  droplet formation at ER contact sites." Abstract: Nvj3 induced by glucose depletion; recruited<br />
+  to LD-associated ER domains; required to couple Dga1-dependent TAG synthesis to LD formation;<br />
+  nvj3Δ → TAG accumulates but is inefficiently packaged into LDs, with altered phospholipid<br />
+  remodeling and DAG mislocalization. This corroborates the lipid role and adds a DAG/Dga1 axis,<br />
+  but assigns no direct biochemical (molecular-function) activity to Nvj3. Preprint → do not use<br />
+  as sole basis for a positive core molecular-function claim; used only to frame knowledge gaps.</li>
+</ul>
+<h2 id="what-is-not-known-the-primary-deliverable-knowledge-gaps">What is NOT known (the primary deliverable — knowledge gaps)</h2>
+<ol>
+<li><strong>Molecular function is undetermined (MF-dark).</strong> No direct biochemical activity has been<br />
+   demonstrated for Nvj3. It carries only a PXA domain (function of the PXA domain itself is<br />
+   uncharacterized: <a href="https://pubmed.ncbi.nlm.nih.gov/26283797" title="All Mdm1 homologues encode an uncharacterized PXA domain.">PMID:26283797</a>).<br />
+   Whether Nvj3 transfers lipids, binds/senses a specific lipid, or acts purely as a<br />
+   scaffold/adaptor recruited by Mdm1 is unknown.</li>
+<li><strong>The PI3P-binding (GO:0032266) annotation is ISS, transferred from Mdm1</strong> (with/from<br />
+   SGD:S000004572 = MDM1). But the PI3P-binding activity in Mdm1 resides in its <strong>PX</strong> domain,<br />
+   which Nvj3 lacks; Nvj3 shares only the PXA domain. So the sequence basis for transferring<br />
+   PI3P binding to Nvj3 is weak. This is flagged as a likely over-annotation / MODIFY-to-gap.</li>
+<li><strong>Is Nvj3 itself a tether, or a passenger?</strong> Nvj3 is recruited to ER–vacuole MCSs by Mdm1<br />
+   and is predicted soluble; independent tethering activity of Nvj3 alone has not been shown.</li>
+<li><strong>Loss-of-function phenotype is subtle.</strong> Single nvj3Δ has mild neutral-lipid phenotypes;<br />
+   there is no reported growth phenotype and 0 hits in 10 CRISPR screens (UniProt DR BioGRID-ORCS),<br />
+   consistent with redundancy with Mdm1 and a modulatory role.</li>
+</ol>
+<h2 id="annotation-by-annotation-plan">Annotation-by-annotation plan</h2>
+<table>
+<thead>
+<tr>
+<th>GO term</th>
+<th>Evidence</th>
+<th>Ref</th>
+<th>Action</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0071561 nucleus-vacuole junction (CC)</td>
+<td>IDA</td>
+<td>PMID:26283797</td>
+<td>ACCEPT</td>
+<td>GFP colocalization at NVJ; core localization</td>
+</tr>
+<tr>
+<td>GO:0098853 ER-vacuole membrane contact site (CC)</td>
+<td>IDA</td>
+<td>PMID:26283797</td>
+<td>ACCEPT</td>
+<td>direct imaging; ER-vacuole MCS</td>
+</tr>
+<tr>
+<td>GO:0006629 lipid metabolic process (BP)</td>
+<td>IMP</td>
+<td>PMID:29146766</td>
+<td>ACCEPT (core, but consider specificity)</td>
+<td>nvj3Δ neutral-lipid/TAG phenotype</td>
+</tr>
+<tr>
+<td>GO:0032266 PI3P binding (MF)</td>
+<td>ISS</td>
+<td>PMID:26283797 (from MDM1)</td>
+<td>MARK_AS_OVER_ANNOTATED</td>
+<td>activity is Mdm1-PX-domain-specific; Nvj3 lacks PX; only PXA is shared</td>
+</tr>
+</tbody>
+</table>
+<h2 id="core_functions-plan">core_functions plan</h2>
+<ul>
+<li>CC/localization: NVJ / ER-vacuole MCS resident, Mdm1-recruited (supported).</li>
+<li>BP: participates in neutral-lipid (TAG/LD) metabolism at ER-vacuole contacts (IMP-supported).</li>
+<li>MF: NO confident positive MF term (dark). Do not assert PI3P binding or lipid transfer.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<ul>
+<li>falcon deep-research launched via <code>just deep-research-falcon yeast NVJ3 --fallback perplexity-lite</code>.</li>
+<li>Independently grounded review in UniProt + GOA + cached primary literature (PMID:26283797,<br />
+  PMID:29146766) + PubMed metadata for the 2026 preprint (PMID:41542480). No fabrication.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q03983
+gene_symbol: NVJ3
+product_type: PROTEIN
+aliases:
+- YDR179W-A
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  NVJ3 (YDR179W-A) is a soluble Saccharomyces cerevisiae protein that resides at the
+  nucleus-vacuole junction (NVJ), the membrane contact site where the nuclear
+  endoplasmic reticulum apposes the vacuole. It is a paralog of the ER-anchored tether
+  Mdm1 (the yeast member of the SNX13/14/19/25 sorting-nexin family) and shares with
+  Mdm1 a single recognizable domain, the Phox-associated (PXA) domain; unlike Mdm1 it
+  lacks a transmembrane anchor and a phosphoinositide-binding PX domain. Nvj3 is
+  recruited to ER-vacuole contacts by direct association with Mdm1 and, in cells
+  lacking Mdm1, redistributes to the cytoplasm; its contact-site localization does not
+  require the canonical NVJ tether Nvj1. Functionally, Nvj3 acts together with Mdm1 in
+  neutral-lipid (triacylglycerol) metabolism and lipid-droplet dynamics at ER-vacuole
+  contacts, particularly during nutritional stress: loss of NVJ3 (with MDM1) increases
+  triacylglycerol and lipid-droplet content in a manner dependent on the fatty
+  acyl-CoA synthetase Faa1. Its own biochemical (molecular) activity has not been
+  established.
+references:
+- id: PMID:26283797
+  title: &#34;Mdm1/Snx13 is a novel ER-endolysosomal interorganelle tethering protein.&#34;
+  findings:
+  - statement: &gt;-
+      Nvj3 (Ydr179w-a) is a novel paralog of Mdm1 that localizes to the
+      nucleus-vacuole junction / ER-vacuole membrane contact site, independently of
+      the canonical tether Nvj1.
+    supporting_text: &gt;-
+      both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner
+  - statement: &gt;-
+      Nvj3 is predicted to be soluble and requires Mdm1 for its NVJ localization,
+      redistributing to the cytoplasm in mdm1-deletion cells.
+    supporting_text: &gt;-
+      Nvj3-GFP redistributed into the cytoplasm in mdm1Δ cells, suggesting Nvj3
+      interacts directly with Mdm1 at NVJs
+  - statement: &gt;-
+      The PXA domain is the only domain shared between Mdm1 and Nvj3; the PI3P-binding
+      activity of Mdm1 resides in its separate PX domain.
+    supporting_text: &gt;-
+      the PXA domain is the only domain shared between Mdm1 and Nvj3
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (J Cell Biol 2015) that discovered and named Nvj3
+      (Ydr179w-a). It is the source for the NVJ (GO:0071561) and ER-vacuole MCS
+      (GO:0098853) IDA localizations and the ISS PI3P-binding transfer from Mdm1.
+      Full text available and used for verbatim supporting quotes.
+- id: PMID:29146766
+  title: &#34;Lipid droplet biogenesis is spatially coordinated at ER-vacuole contacts under nutritional stress.&#34;
+  findings:
+  - statement: &gt;-
+      Deletion of MDM1, NVJ3, or both causes lipid-droplet accumulation and a ~2-fold
+      increase in triacylglycerol, implicating Nvj3 in NVJ-associated neutral-lipid
+      metabolism.
+    supporting_text: &gt;-
+      deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold
+      increase in TAG
+  - statement: &gt;-
+      The triacylglycerol increase in the mdm1 nvj3 double mutant is suppressed by
+      deletion of the fatty acyl-CoA synthetase Faa1, linking Mdm1/Nvj3 to lipid
+      droplet production downstream of fatty acyl-CoA activation.
+    supporting_text: &gt;-
+      Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we
+      see in the mdm1 Δ nvj3 Δ double knockout
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified primary paper (EMBO Rep 2018). Source for the GO:0006629 lipid
+      metabolic process IMP annotation: nvj3Δ (with mdm1Δ) increases TAG/LDs, Faa1-
+      dependent. Full text available; quotes verified verbatim.
+- id: PMID:41542480
+  title: &#34;Nvj3 regulates Dga1-mediated triacylglycerol synthesis and lipid droplet formation at ER contact sites.&#34;
+  reference_review:
+    relevance: MEDIUM
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      bioRxiv preprint (2026), NOT peer-reviewed; full text not cached. Metadata and
+      abstract verified via PubMed (PMID:41542480). Used only to frame knowledge gaps
+      around the DAG/Dga1 axis of lipid-droplet biogenesis; NOT used as the basis for
+      any positive core-function claim. No verbatim full-text quote is available.
+existing_annotations:
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:29146766
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: &gt;-
+      Supported by loss-of-function evidence: deletion of NVJ3 (together with MDM1)
+      increases triacylglycerol and lipid-droplet content, an effect suppressed by
+      deletion of the fatty acyl-CoA synthetase Faa1. Nvj3 therefore participates in
+      NVJ-associated neutral-lipid metabolism. The term is general but correctly
+      reflects the demonstrated biological process, and the acts_upstream_of_or_within
+      qualifier is appropriate for a modulatory role established genetically. Retained
+      as a core biological process; the specific molecular step remains a gap.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:29146766
+      supporting_text: &gt;-
+        deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold
+        increase in TAG
+    - reference_id: PMID:29146766
+      supporting_text: &gt;-
+        Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we
+        see in the mdm1 Δ nvj3 Δ double knockout
+- term:
+    id: GO:0071561
+    label: nucleus-vacuole junction
+  evidence_type: IDA
+  original_reference_id: PMID:26283797
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Well supported by direct imaging: GFP-tagged Nvj3 localizes to the
+      nucleus-vacuole junction and colocalizes with Mdm1 there. This is a core,
+      experimentally established localization of the protein.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26283797
+      supporting_text: &gt;-
+        both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner
+- term:
+    id: GO:0098853
+    label: endoplasmic reticulum-vacuole membrane contact site
+  evidence_type: IDA
+  original_reference_id: PMID:26283797
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Well supported and more precise than the NVJ term for the underlying structure.
+      Nvj3 localizes to the ER-vacuole membrane contact site, retaining this
+      localization even in nvj1-deletion cells, where it is enriched at the tips of ER
+      tubules contacting the vacuole. Core localization annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26283797
+      supporting_text: &gt;-
+        both Mdm1 and Nvj3 retained ER–vacuole MCS localizations in nvj1Δ yeast but
+        were no longer restricted to NVJ patches
+    - reference_id: PMID:26283797
+      supporting_text: &gt;-
+        Nvj3 was clearly enriched at the tips of ER tubules making contact with the
+        vacuole, confirming ER–vacuole tethering does not require Nvj1
+- term:
+    id: GO:0032266
+    label: phosphatidylinositol-3-phosphate binding
+  evidence_type: ISS
+  original_reference_id: PMID:26283797
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is an ISS annotation transferred from the paralog Mdm1 (with/from
+      SGD:S000004572). The sequence basis for the transfer is weak: in Mdm1 the
+      high-affinity PI3P-binding activity is a property of its C-terminal PX domain,
+      whereas the source paper states that the PXA domain is the ONLY domain shared
+      between Mdm1 and Nvj3. Nvj3 has no PX domain (InterPro/Pfam for Q03983 returns
+      only the PXA domain, PF02194) and is predicted to be soluble with no
+      transmembrane anchor (max Kyte-Doolittle hydropathy ~1.1, below a TM threshold).
+      There is no direct biochemical evidence that Nvj3 itself binds PI3P, and the
+      domain that would confer that activity is absent, so this is likely an
+      over-annotation by similarity. A specific molecular function for Nvj3 remains
+      undetermined (see knowledge_gaps).
+    action: MARK_AS_OVER_ANNOTATED
+    supported_by:
+    - reference_id: PMID:26283797
+      supporting_text: &gt;-
+        the PXA domain is the only domain shared between Mdm1 and Nvj3
+    - reference_id: PMID:26283797
+      supporting_text: &gt;-
+        its C-terminal PX domain, which binds PI3P with high affinity
+core_functions:
+- description: &gt;-
+    Resident protein of the nucleus-vacuole junction / ER-vacuole membrane contact
+    site. Nvj3 is a soluble paralog of the ER-anchored tether Mdm1 and is recruited to
+    ER-vacuole contacts through direct association with Mdm1 (it becomes cytoplasmic in
+    mdm1-deletion cells); its contact-site localization is independent of the canonical
+    NVJ tether Nvj1. No autonomous molecular activity has been demonstrated, so no
+    molecular_function term is asserted here (see knowledge_gaps).
+  locations:
+  - id: GO:0071561
+    label: nucleus-vacuole junction
+  - id: GO:0098853
+    label: endoplasmic reticulum-vacuole membrane contact site
+  supported_by:
+  - reference_id: PMID:26283797
+    supporting_text: &gt;-
+      both it and Mdm1 localize specifically to NVJs in an Nvj1-independent manner
+  - reference_id: PMID:26283797
+    supporting_text: &gt;-
+      Nvj3-GFP redistributed into the cytoplasm in mdm1Δ cells, suggesting Nvj3
+      interacts directly with Mdm1 at NVJs
+- description: &gt;-
+    Participates, together with its paralog Mdm1, in neutral-lipid (triacylglycerol)
+    metabolism and lipid-droplet dynamics at ER-vacuole contact sites, a role that is
+    pronounced under nutritional stress. Genetic loss of NVJ3 (with MDM1) raises
+    triacylglycerol and lipid-droplet content in a manner suppressible by deletion of
+    the fatty acyl-CoA synthetase Faa1, placing Nvj3 in lipid-droplet production
+    downstream of fatty acyl-CoA activation. The molecular step Nvj3 performs in this
+    process is not established.
+  directly_involved_in:
+  - id: GO:0006629
+    label: lipid metabolic process
+  locations:
+  - id: GO:0098853
+    label: endoplasmic reticulum-vacuole membrane contact site
+  supported_by:
+  - reference_id: PMID:29146766
+    supporting_text: &gt;-
+      deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold
+      increase in TAG
+  - reference_id: PMID:29146766
+    supporting_text: &gt;-
+      Deletion of Faa1 in addition to Mdm1 and Nvj3 suppresses the increase in TAG we
+      see in the mdm1 Δ nvj3 Δ double knockout
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular/biochemical activity of Nvj3 is undetermined: it is unknown
+    whether Nvj3 binds or transfers a specific lipid, senses a lipid, or acts purely as
+    a scaffold/adaptor recruited by Mdm1. Its only recognizable domain is the PXA
+    (Phox-associated) domain, whose biochemical function is itself uncharacterized.
+  boundary: &gt;-
+    Nvj3&#39;s localization (NVJ / ER-vacuole contact site) and its genetic contribution to
+    triacylglycerol/lipid-droplet homeostasis are experimentally established, and it is
+    known to depend on Mdm1 for recruitment; but no in vitro activity, ligand, or
+    catalytic step has been assigned to the protein or its PXA domain. (Fatty-acid
+    binding has been shown for the PXA domains of the paralog Mdm1 and of human SNX14,
+    but not for Nvj3 itself.)
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Nvj3 is the only yeast protein besides Mdm1 to carry a PXA domain; defining its
+    activity would clarify the function of the conserved PXA domain and the mechanism by
+    which ER-vacuole contacts regulate neutral-lipid metabolism.
+  resolution: &gt;-
+    Biochemical characterization of recombinant Nvj3 and its PXA domain (lipid-binding /
+    lipid-transfer assays, ligand identification) and structure determination, combined
+    with separation-of-function alleles tested for lipid-droplet phenotypes.
+  provenance:
+  - reference_id: PMID:26283797
+    supporting_text: &gt;-
+      All Mdm1 homologues encode an uncharacterized PXA domain
+- gap_statement: &gt;-
+    Whether Nvj3 itself possesses membrane-tethering activity, or is only a passenger
+    recruited to Mdm1-formed ER-vacuole contacts, is unresolved.
+  boundary: &gt;-
+    Mdm1 is an ER-anchored transmembrane protein that tethers the ER to the vacuole via
+    its PI3P-binding PX domain; Nvj3 is predicted soluble, lacks a PX domain, and
+    requires Mdm1 for contact-site localization. Independent tethering by Nvj3 alone has
+    not been demonstrated.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Distinguishing tether from passenger determines whether Nvj3 should be annotated
+    with a contact-site tether activity or an accessory/adaptor role.
+  resolution: &gt;-
+    Test ER-vacuole contact formation and reconstituted tethering with Nvj3 in the
+    absence of Mdm1 (e.g. synthetic tethering assays, in vitro membrane binding).
+  provenance:
+  - reference_id: PMID:26283797
+    supporting_text: &gt;-
+      Because Nvj3 is predicted to be soluble, we hypothesized that it required Mdm1 for
+      its NVJ localization
+- gap_statement: &gt;-
+    The specific molecular step by which Nvj3 influences triacylglycerol synthesis and
+    lipid-droplet packaging is unknown, as is the physiological consequence of its loss
+    beyond a mild neutral-lipid imbalance.
+  boundary: &gt;-
+    nvj3Δ (with mdm1Δ) increases TAG and lipid droplets in an Faa1-dependent manner, and
+    a 2026 preprint links Nvj3 to Dga1-dependent TAG synthesis and DAG localization; but
+    no peer-reviewed mechanism, direct partner in TAG synthesis, or robust growth
+    phenotype has been reported (no hits in 10 CRISPR screens per BioGRID-ORCS).
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: NARROWING
+  significance: &gt;-
+    Resolving the step would connect ER-vacuole contact-site biology to the enzymology
+    of lipid-droplet biogenesis and to the conserved SNX13/14-family lipid roles in
+    mammals.
+  resolution: &gt;-
+    Peer-reviewed, mechanistic dissection of the Nvj3-Dga1/DAG relationship (e.g. the
+    findings reported in the preprint PMID:41542480), with lipidomics and
+    separation-of-function alleles.
+  provenance:
+  - reference_id: PMID:29146766
+    supporting_text: &gt;-
+      deleting MDM1, NVJ3, or both causes accumulation of LDs in yeast, and a ~2‐fold
+      increase in TAG
+suggested_questions:
+- question: &gt;-
+    Does Nvj3 bind or transfer a specific lipid through its PXA domain, or does it act
+    solely as an Mdm1-recruited scaffold at ER-vacuole contacts?
+  experts:
+  - W. Mike Henne
+- question: &gt;-
+    What is the mechanistic step by which Nvj3 couples Dga1-dependent triacylglycerol
+    synthesis to efficient lipid-droplet packaging?
+  experts:
+  - W. Mike Henne
+suggested_experiments:
+- hypothesis: &gt;-
+    The Nvj3 PXA domain binds a specific lipid that contributes to its function at
+    ER-vacuole contacts.
+  description: &gt;-
+    Express and purify recombinant Nvj3 (and its isolated PXA domain) and perform
+    protein-lipid overlay, liposome flotation/co-sedimentation, and lipid-transfer
+    assays against a panel of phospholipids, phosphoinositides, DAG, and sterols to
+    identify any direct lipid ligand or transfer activity.
+  experiment_type: in vitro lipid-binding/transfer biochemistry
+- hypothesis: &gt;-
+    Nvj3 organizes DAG/TAG conversion at ER-vacuole contacts and its PXA domain is
+    required for this role.
+  description: &gt;-
+    Combine quantitative lipidomics of nvj3Δ and PXA-domain point/deletion mutants with
+    live-cell imaging of DAG and lipid-droplet biogenesis during diauxic shift or
+    glucose depletion to map Nvj3&#39;s step in TAG synthesis and lipid-droplet packaging.
+  experiment_type: genetics + lipidomics + live-cell imaging
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

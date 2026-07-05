@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAM10 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>VAM10</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q08474" target="_blank" class="term-link">
+                        Q08474
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "VAM10";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q08474" data-a="DESCRIPTION: VAM10 (YOR068C) encodes a small (114 aa) periphera..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>VAM10 (YOR068C) encodes a small (114 aa) peripheral vacuolar-membrane protein of Saccharomyces cerevisiae required for homotypic (non-autophagic) vacuole fusion. Its gene is nested within the VPS5 locus on the opposite DNA strand. Vam10p acts early in the vacuole fusion cascade at a priming step that is independent of the canonical Sec18p (NSF)/Sec17p (alpha-SNAP) SNARE-disassembly machinery, and this Vam10p-dependent priming is a prerequisite for the subsequent Ypt7p (Rab GTPase)- dependent tethering of vacuoles. Deletion causes vacuole fragmentation, and recombinant Vam10p stimulates fusion of purified vacuoles in vitro while anti-Vam10p antibody blocks it. The protein has no recognizable catalytic or binding domain and no strong orthology outside fungi, and its molecular activity and direct binding partners remain undefined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005774" target="_blank" class="term-link">
+                                    GO:0005774
+                                </a>
+                            </span>
+                            <span class="term-label">vacuolar membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08474" data-a="GO:0005774" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic Subcellular Location mapping placing Vam10p at the vacuolar membrane. Consistent with the experimentally-informed IC call to the fungal-type vacuole membrane and with the protein&#39;s role at the vacuole surface during fusion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location and supported by an independent, more specific IC annotation (GO:0000329) from the primary functional study. Kept as a valid but non-core supporting cellular-component annotation; the fungal-type vacuole membrane term is preferred for representing the site of action.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                    GO:0000329
+                                </a>
+                            </span>
+                            <span class="term-label">fungal-type vacuole membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12748377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Vam10p defines a Sec18p-independent step of priming that all...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08474" data-a="GO:0000329" data-r="PMID:12748377" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator-inferred (IC) localization to the fungal-type vacuole membrane, based on the vacuole-fusion function reported by Kato &amp; Wickner (2003). Species-appropriate and the informative cellular-component annotation for this protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The functional study demonstrates Vam10p acts on purified vacuoles and restores tethering to vacuoles from a vam10-delta strain, and UniProt independently curates a vacuole-membrane (peripheral) location; the fungal-type vacuole membrane is the correct organelle-specific term for a Saccharomyces protein. Supports the core-function location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link">
+                                        PMID:12748377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Pure Vam10p restores normal, Ypt7p-dependent tethering to vacuoles from a vam10Delta strain.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08474" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function annotation with the ND (No biological Data available) evidence code, marking that no specific molecular activity has been experimentally or computationally assigned to Vam10p.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an honest placeholder that correctly reflects the genuine molecular-function gap for this protein: Vam10p has no recognizable catalytic or binding domain, no informative orthology, and no biochemically defined activity. It should NOT be replaced with a specific molecular-function term; the missing activity is recorded under knowledge_gaps instead. Not a core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042144" target="_blank" class="term-link">
+                                    GO:0042144
+                                </a>
+                            </span>
+                            <span class="term-label">vacuole fusion, non-autophagic</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12748377
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Vam10p defines a Sec18p-independent step of priming that all...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q08474" data-a="GO:0042144" data-r="PMID:12748377" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Involvement in homotypic (non-autophagic) vacuole fusion, from the deletion phenotype (vacuole fragmentation) and in-vitro reconstitution (recombinant Vam10p stimulates fusion of purified vacuoles; anti-Vam10p antibody blocks it). This is the core, well-supported biological role of the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by loss-of-function (in-vivo fragmentation; antibody inhibition of in-vitro fusion) and gain-of-function (recombinant-protein stimulation) evidence in the same study. Represents the core biological process of VAM10.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link">
+                                        PMID:12748377
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by antibody to Vam10p.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Required for homotypic (non-autophagic) vacuole fusion, acting at an early, Sec18p-independent priming step at the fungal-type vacuole membrane that is a prerequisite for Ypt7p-dependent tethering. The specific molecular activity by which Vam10p licenses tethering is undefined, so the molecular_function is left at the root (see knowledge_gaps); the well-supported claim is the biological-process role and the site of action.</h3>
+                <span class="vote-buttons" data-g="Q08474" data-a="FUNCTION: Required for homotypic (non-autophagic) vacuole fu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042144" target="_blank" class="term-link">
+                                vacuole fusion, non-autophagic
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000329" target="_blank" class="term-link">
+                                fungal-type vacuole membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link">
+                                PMID:12748377
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by antibody to Vam10p.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link">
+                                PMID:12748377
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Vam10p acts early in the priming stage of fusion, independent of Sec18p.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12748377" target="_blank" class="term-link">
+                            PMID:12748377
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Vam10p defines a Sec18p-independent step of priming that allows yeast vacuole tethering.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">VAM10 deletion causes vacuole fragmentation in vivo, and recombinant Vam10p stimulates in-vitro fusion of purified vacuoles while anti-Vam10p antibody blocks it, establishing Vam10p as a positive factor required for homotypic vacuole fusion.</div>
+
+                        <div class="finding-text">"VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by antibody to Vam10p."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Vam10p acts at an early, Sec18p-independent priming step and is required to restore Ypt7p-dependent tethering, placing it upstream of Rab-dependent tethering.</div>
+
+                        <div class="finding-text">"Vam10p acts early in the priming stage of fusion, independent of Sec18p."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the molecular activity of Vam10p during the Sec18p-independent priming step that licenses Ypt7p-dependent tethering?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: William Wickner</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q08474" data-a="Q: What is the molecular activity of Vam10p during th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Vam10p act directly on the Rab GTPase Ypt7p, on the HOPS complex, on vacuolar SNAREs, or on the vacuolar lipid bilayer?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Michiko Kato, William Wickner</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q08474" data-a="Q: Does Vam10p act directly on the Rab GTPase Ypt7p, ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify or crosslink epitope-tagged Vam10p from isolated vacuoles and identify co-purifying proteins by mass spectrometry; test candidate interactions (Ypt7p, HOPS subunits, vacuolar SNAREs) by directed pulldowns, and assay lipid binding of purified recombinant Vam10p.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Vam10p binds a specific vacuolar component (Ypt7p, a HOPS subunit, a SNARE, or a lipid) to promote the pre-tethering priming step.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction proteomics / biochemical binding assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q08474" data-a="EXPERIMENT: Affinity-purify or crosslink epitope-tagged Vam10p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use the in-vitro homotypic vacuole fusion assay with order-of-addition and stage-specific inhibitors to place the Vam10p requirement precisely relative to Sec18p-mediated priming and Ypt7p/HOPS-mediated tethering, and characterize what Vam10p acts on during the reaction.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The Vam10p-dependent priming reaction produces a defined change on the vacuole membrane required before Ypt7p-dependent tethering.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in-vitro reconstituted membrane fusion</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q08474" data-a="EXPERIMENT: Use the in-vitro homotypic vacuole fusion assay wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The mechanism of the Sec18p-independent priming step defined by Vam10p is unknown: what change in the vacuolar membrane or its protein/lipid composition Vam10p produces to license subsequent Ypt7p-dependent tethering has not been determined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Canonical priming (Sec18p/NSF- and Sec17p/alpha-SNAP-driven SNARE-complex disassembly) is well characterized. Vam10p provides a functional marker for a separate, early, Sec18p-independent priming activity, but the reaction it catalyzes or promotes is not defined.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A second priming activity distinct from NSF/alpha-SNAP would refine the textbook priming-tethering-docking-fusion model of homotypic membrane fusion.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In-vitro dissection of the Vam10p-dependent priming reaction (order-of-addition, substrate/product analysis) to define what Vam10p acts on and what it produces.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Vam10p provides a functional marker for this Sec18p-independent priming step."</em> — PMID:12748377</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether Vam10p has orthologs with a conserved function beyond Saccharomyces (in other fungi or in higher eukaryotes) is uncharacterized, so it is unknown whether the Sec18p-independent priming role is a general feature of membrane fusion or a yeast-specific adaptation.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Vam10p is a small protein with no recognizable domain and only weak/singleton orthology signals in HOGENOM/InParanoid/OrthoDB; no functionally validated ortholog has been reported.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishing conservation would indicate whether the priming activity is a widely used mechanism worth mapping onto human membrane-fusion pathways.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phylogenetic profiling and functional complementation tests of candidate fungal homologs; structural comparison of the predicted fold against known fusion factors.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(VAM10-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q08474" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T14:33:29.241033</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="VAM10-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-vam10-yor068c-vacuolar-morphogenesis-protein-10-in-saccharomyces-cerevisiae">Research Report: VAM10 (YOR068C) — Vacuolar Morphogenesis Protein 10 in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h3>
+<p>VAM10 (UniProt: Q08474) is encoded by the open reading frame YOR068C (also known as YOR29-19) on chromosome XV of <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). The gene encodes a protein designated Vacuolar Morphogenesis Protein 10 (Vam10p). Notably, the VAM10 gene is genomically embedded in proximity to VPS5 (YOR069W), which encodes a sorting nexin component of the Retromer complex (chen2025molecularbasisfor pages 2-3, chen2025molecularbasisfor pages 1-2). Vam10p is a relatively small protein without well-characterized structural domains in standard protein databases, and it does not belong to a recognized protein family. Despite this, the protein plays a functionally important role in the vacuole fusion pathway.</p>
+<h3 id="2-discovery-and-identification">2. Discovery and Identification</h3>
+<p>Vam10 was identified in a genome-wide screen for vacuolar morphology mutants conducted by Seeley, Kato, Wickner, and Eitzen (2002). In this screen, 4,828 nonessential yeast gene deletions were scored for vacuole morphology using the fluorescent vital dye FM4-64 (seeley2002genomicanalysisof pages 1-2). The original VAM (vacuolar morphology) genes had been identified earlier by Wada et al. (1992), and six of the nine original VAM genes encode subunits of the HOPS tethering complex (Vam1p = Vps11p, Vam2p = Vps41p, Vam5p = Vps33p, Vam6p = Vps39p, Vam8p = Vps18p, Vam9p = Vps16p), with Vam3p and Vam7p encoding vacuolar SNAREs and Vam4p encoding the Rab GTPase Ypt7p (seeley2002genomicanalysisof pages 1-2). However, the initial vam screen was not saturated, and the genomic approach by Seeley et al. identified 137 candidate VAM genes, including VAM10 (YOR068C), which displayed a prominent class B vacuole fragmentation phenotype in 90% of cells upon deletion (seeley2002genomicanalysisof pages 9-11).</p>
+<h3 id="3-primary-function-role-in-vacuole-fusion-priming">3. Primary Function: Role in Vacuole Fusion Priming</h3>
+<h4 id="31-vam10-defines-a-sec18p-independent-priming-step">3.1 Vam10 Defines a Sec18p-Independent Priming Step</h4>
+<p>The primary functional characterization of Vam10p was reported by Kato and Wickner (2003, <em>Proceedings of the National Academy of Sciences</em>, 100:6398–6403), who demonstrated that Vam10p defines a Sec18p-independent step of priming that allows yeast vacuole tethering (ostrowicz2009dynamicsandarchitecture pages 140-143). This is a critical finding, because it establishes that Vam10p operates in a priming pathway that is mechanistically distinct from the well-characterized Sec18p/NSF-dependent cis-SNARE disassembly reaction.</p>
+<p>In the established model of homotypic vacuole fusion, the reaction proceeds through ordered stages: (1) <strong>priming</strong>, in which vacuoles are prepared for their first productive contact; (2) <strong>tethering</strong>, the reversible bridging of vacuoles mediated by the HOPS complex and the Rab GTPase Ypt7p; (3) <strong>docking</strong>, involving trans-SNARE complex formation between opposing membranes; and (4) <strong>fusion/bilayer mixing</strong> (ostrowicz2008yeastvacuolefusion pages 3-5, seeley2002genomicanalysisof pages 1-2). The canonical priming reaction is initiated by ATP hydrolysis by the AAA-ATPase Sec18p (the yeast NSF homolog), which disassembles cis-SNARE complexes with the help of its co-factor Sec17p (yeast α-SNAP), leading to the release of Sec17p from vacuoles, dissociation of the soluble SNARE Vam7p, and activation of SNAREs for subsequent trans-pairing (ostrowicz2008yeastvacuolefusion pages 3-5, seeley2002genomicanalysisof pages 1-2).</p>
+<p>Vam10p function has been connected to the priming stage of vacuole fusion alongside other priming-associated processes such as Vac8 palmitoylation (ostrowicz2008yeastvacuolefusion pages 5-5). Importantly, Vam10p acts in a parallel or complementary pathway to Sec18p-dependent SNARE disassembly, indicating that priming involves multiple, coordinated preparatory events beyond SNARE recycling alone (ostrowicz2009dynamicsandarchitecture pages 140-143).</p>
+<h4 id="32-distinction-from-hops-complex">3.2 Distinction from HOPS Complex</h4>
+<p>It is critical to note that <strong>Vam10p is NOT a subunit of the HOPS tethering complex</strong>. The HOPS complex is a well-defined hexameric complex consisting of four class C core subunits (Vps11p, Vps16p, Vps18p, Vps33p) and two HOPS-specific subunits (Vps39p/Vam6p and Vps41p/Vam2p) (ostrowicz2008yeastvacuolefusion pages 6-7). Vam10p is instead classified among "additional proteins involved in fusion," a category that also includes calmodulin, protein phosphatase 1, Bem1, and others (ostrowicz2008yeastvacuolefusion pages 6-7, ostrowicz2008yeastvacuolefusion pages 7-8). Deletion or antibody inhibition of these additional factors strongly affects vacuole fusion, indicating an intimate connection to the fusion cascade, but their precise molecular mechanisms have not been as thoroughly dissected as those of the core HOPS-SNARE-Rab machinery (ostrowicz2008yeastvacuolefusion pages 7-8).</p>
+<p>Recent cryo-EM structural studies of the HOPS complex have resolved its architecture as a highly extended, rigid structure (~430 Å × 130 Å) resembling a "baseball pitcher," with core subunits Vps11p and Vps18p forming the central body through antiparallel α-solenoid interactions and the HOPS-specific subunits Vps39p and Vps41p anchored at the periphery for Rab GTPase (Ypt7p) binding (diao2024molecularstructuresand pages 4-6). Vam10p is absent from this structural complex, confirming its role as an accessory factor rather than a core tethering complex component.</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>Vam10p functions at the yeast vacuole, the fungal equivalent of the mammalian lysosome. The vacuole is a large, dynamic organelle that serves as the major degradative compartment and ion/metabolite storage organelle in yeast cells (ostrowicz2008yeastvacuolefusion pages 1-3). Wild-type yeast cells typically possess one to three large vacuoles, and defects in vacuole fusion result in class B (multiple small vacuoles) or class C (highly fragmented vacuoles) phenotypes (seeley2002genomicanalysisof pages 1-2). The <em>vam10Δ</em> deletion strain displays a class B phenotype with 90% of cells showing multiple small vacuoles, consistent with a defect in homotypic vacuole fusion rather than complete pathway disruption (seeley2002genomicanalysisof pages 9-11).</p>
+<p>Vam10p is associated with the vacuolar membrane, where it participates in the priming stage that prepares vacuoles for the tethering event mediated by HOPS and Ypt7p. Its function is required to allow vacuole tethering to proceed efficiently (ostrowicz2009dynamicsandarchitecture pages 140-143).</p>
+<h3 id="5-biochemical-and-signaling-pathways">5. Biochemical and Signaling Pathways</h3>
+<h4 id="51-integration-into-the-vacuole-fusion-cascade">5.1 Integration into the Vacuole Fusion Cascade</h4>
+<p>The vacuole fusion reaction represents one of the best-characterized membrane fusion events in eukaryotic cell biology, providing a model system for understanding the general principles of endomembrane dynamics (ostrowicz2008yeastvacuolefusion pages 1-3, ostrowicz2008yeastvacuolefusion pages 3-5). The cascade involves:</p>
+<ul>
+<li><strong>Sec18p/Sec17p-dependent priming</strong>: Disassembly of cis-SNARE complexes, release of Sec17p, Vam7p, and the HOPS complex from membranes (ostrowicz2008yeastvacuolefusion pages 3-5, ostrowicz2008yeastvacuolefusion pages 5-5).</li>
+<li><strong>Sec18p-independent priming (Vam10p pathway)</strong>: A parallel priming step defined by Vam10p function, which is necessary for downstream tethering to occur (ostrowicz2009dynamicsandarchitecture pages 140-143).</li>
+<li><strong>Tethering</strong>: Mediated by the HOPS complex binding to Ypt7p-GTP on both vacuolar membranes (ostrowicz2008yeastvacuolefusion pages 5-5, ostrowicz2008yeastvacuolefusion pages 6-7).</li>
+<li><strong>Docking</strong>: Trans-SNARE complex formation involving the Q-SNAREs Vam3p, Vam7p, Vti1p and the R-SNARE Nyv1p (ostrowicz2008yeastvacuolefusion pages 5-6, ostrowicz2008yeastvacuolefusion pages 5-5).</li>
+<li><strong>Fusion</strong>: Ca²⁺ release, calmodulin signaling, protein phosphatase 1 action, and lipid bilayer mixing (seeley2002genomicanalysisof pages 1-2, ostrowicz2008yeastvacuolefusion pages 7-8).</li>
+</ul>
+<p>Vam10p acts upstream of HOPS-mediated tethering but in a pathway that does not depend on the Sec18p ATPase activity. This positions it as a factor that may regulate the readiness of the vacuolar membrane or associated proteins for the initial bridging contact.</p>
+<h4 id="52-relationship-to-other-priming-factors">5.2 Relationship to Other Priming Factors</h4>
+<p>Additional reactions classified as priming events include Vac8p palmitoylation (which couples the armadillo repeat protein Vac8p to the membrane for its role in docking and fusion) and ergosterol-dependent processes (ostrowicz2008yeastvacuolefusion pages 5-5, seeley2002genomicanalysisof pages 1-2). The Vam10p-dependent step is distinct from ergosterol-mediated priming, which was shown to be required for Sec18p-mediated Sec17p release (seeley2002genomicanalysisof pages 7-9). This further supports the model of multiple parallel priming pathways that collectively prepare vacuoles for productive fusion.</p>
+<h3 id="6-genomic-context-and-phenotypic-evidence">6. Genomic Context and Phenotypic Evidence</h3>
+<p>The VAM10/YOR068C locus is notable for its genomic proximity to VPS5/YOR069W (seeley2002genomicanalysisof pages 9-11, chen2025molecularbasisfor pages 2-3). The Seeley et al. (2002) study specifically noted that "Three genes (YLR320w, YNL281w, and YOR068c) are adjacent to genes that are also required for normal vacuole morphology. Further analysis will be required to determine whether these deletions act by altering the expression level of an adjacent gene" (seeley2002genomicanalysisof pages 9-11). VPS5 encodes a sorting nexin subunit of the Retromer complex involved in endosome-to-Golgi retrieval, and a recent structural study noted that "a copy of Vam10 (the VAM10 gene is embedded" in the VPS5 genomic region (chen2025molecularbasisfor pages 2-3). This raises the question of whether the vam10Δ phenotype could partly reflect perturbation of VPS5, although the functional characterization by Kato and Wickner (2003) provided direct biochemical evidence for Vam10p function in the in vitro vacuole fusion assay.</p>
+<p>The <em>vam10Δ</em> strain does not show a moderate or strong VPS (vacuolar protein sorting) phenotype for CPY secretion, suggesting that Vam10p is specifically involved in homotypic vacuole fusion rather than biosynthetic trafficking to the vacuole (seeley2002genomicanalysisof pages 7-9, seeley2002genomicanalysisof pages 9-11). This is consistent with the distinction between VAM genes (involved in fusion and morphology) and VPS genes (involved in protein sorting), which have substantial but incomplete overlap (seeley2002genomicanalysisof pages 7-9).</p>
+<h3 id="7-summary-table-of-vacuole-fusion-machinery">7. Summary Table of Vacuole Fusion Machinery</h3>
+<p>The following table summarizes the relationship of Vam10p to the core vacuole fusion machinery:</p>
+<table>
+<thead>
+<tr>
+<th>Component / Gene</th>
+<th>Alias(es)</th>
+<th>Machinery class</th>
+<th>Primary role in vacuole fusion</th>
+<th>Vacuole morphology class when deleted / mutant</th>
+<th>Key note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vps11</strong></td>
+<td><strong>Vam1</strong></td>
+<td>HOPS core subunit</td>
+<td>Part of the 6-subunit HOPS tethering complex required for docking/tethering and downstream fusion events</td>
+<td>Class C / 100% C in genomic screen (seeley2002genomicanalysisof pages 2-3, seeley2002genomicanalysisof pages 1-2)</td>
+<td>Canonical HOPS subunit, not specific to priming alone (seeley2002genomicanalysisof pages 2-3, seeley2002genomicanalysisof pages 1-2, ostrowicz2008yeastvacuolefusion pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>Vps16</strong></td>
+<td><strong>Vam9</strong></td>
+<td>HOPS core subunit</td>
+<td>HOPS subunit; participates with Vps33 in the SNARE-interacting arm of HOPS</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Core HOPS component (seeley2002genomicanalysisof pages 2-3, diao2024molecularstructuresand pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>Vps18</strong></td>
+<td><strong>Vam8</strong></td>
+<td>HOPS core subunit</td>
+<td>HOPS scaffold/core component required for tethering/fusion</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Core HOPS component (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 6-7, diao2024molecularstructuresand pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>Vps33</strong></td>
+<td><strong>Vam5</strong></td>
+<td>HOPS core subunit</td>
+<td>Sec1/Munc18-family HOPS subunit that helps coordinate SNARE assembly/function</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Core HOPS component (seeley2002genomicanalysisof pages 2-3, ostrowicz2009dynamicsandarchitecture pages 48-51, diao2024molecularstructuresand pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>Vps39</strong></td>
+<td><strong>Vam6</strong></td>
+<td>HOPS-specific subunit</td>
+<td>HOPS-specific Rab-interacting subunit; also described as Ypt7 GEF in classic yeast literature</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3, seeley2002genomicanalysisof pages 1-2)</td>
+<td>HOPS-specific; distinct from VAM10 (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 6-7, ostrowicz2009dynamicsandarchitecture pages 48-51)</td>
+</tr>
+<tr>
+<td><strong>Vps41</strong></td>
+<td><strong>Vam2</strong></td>
+<td>HOPS-specific subunit</td>
+<td>HOPS-specific Rab-binding/tethering subunit required at vacuole contact sites</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3, seeley2002genomicanalysisof pages 1-2)</td>
+<td>HOPS-specific; recent structural work refines its role in tether geometry (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 6-7, diao2024molecularstructuresand pages 4-6)</td>
+</tr>
+<tr>
+<td><strong>Ypt7</strong></td>
+<td><strong>Vam4</strong></td>
+<td>Rab GTPase</td>
+<td>Vacuolar Rab required for tethering/docking and HOPS-dependent fusion</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Rab partner of HOPS; required on both membranes for efficient tethering/fusion (seeley2002genomicanalysisof pages 2-3, seeley2002genomicanalysisof pages 1-2, ostrowicz2008yeastvacuolefusion pages 5-5)</td>
+</tr>
+<tr>
+<td><strong>Vam3</strong></td>
+<td><strong>Pth1</strong></td>
+<td>Vacuolar Q-SNARE</td>
+<td>Vacuolar syntaxin-family SNARE essential for trans-SNARE pairing and fusion</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Core vacuolar SNARE; interacts functionally with HOPS (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 5-5)</td>
+</tr>
+<tr>
+<td><strong>Vam7</strong></td>
+<td><strong>Vps43</strong></td>
+<td>Vacuolar Q-SNARE</td>
+<td>Soluble SNAP-25-like Q-SNARE; released during priming and re-recruited for docking/fusion</td>
+<td>Class C / 100% C (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Key priming/docking SNARE regulated by Sec17/Sec18 and Ypt7/HOPS (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 3-5, ostrowicz2008yeastvacuolefusion pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>Vti1</strong></td>
+<td>—</td>
+<td>Vacuolar Q-SNARE</td>
+<td>Q-SNARE component of the vacuolar trans-SNARE complex</td>
+<td>Essential / not represented in nonessential deletion screen (seeley2002genomicanalysisof pages 3-5, ostrowicz2008yeastvacuolefusion pages 5-5)</td>
+<td>Required for fusion but absent from the genome-wide nonessential deletion dataset because essential (seeley2002genomicanalysisof pages 3-5, ostrowicz2008yeastvacuolefusion pages 5-5)</td>
+</tr>
+<tr>
+<td><strong>Nyv1</strong></td>
+<td>—</td>
+<td>Vacuolar R-SNARE</td>
+<td>R-SNARE of the canonical vacuolar trans-SNARE complex</td>
+<td>Deletion has near-normal vacuole morphology in vivo, though vacuoles fuse poorly in vitro (seeley2002genomicanalysisof pages 3-5)</td>
+<td>Important caveat: morphology screen underestimates its direct fusion role (seeley2002genomicanalysisof pages 3-5, ostrowicz2008yeastvacuolefusion pages 5-6)</td>
+</tr>
+<tr>
+<td><strong>Vam10</strong></td>
+<td><strong>YOR068C</strong></td>
+<td><strong>Additional fusion factor (NOT HOPS)</strong></td>
+<td><strong>Defines a Sec18p-independent priming step that allows vacuole tethering</strong></td>
+<td><strong>Class B / 90% B</strong> (ostrowicz2009dynamicsandarchitecture pages 140-143, ostrowicz2008yeastvacuolefusion pages 6-7, seeley2002genomicanalysisof pages 9-11)</td>
+<td><strong>Critical distinction: VAM10 is not one of the 6 HOPS subunits; it is a separate accessory fusion factor acting in priming upstream of tethering</strong> (ostrowicz2009dynamicsandarchitecture pages 140-143, ostrowicz2008yeastvacuolefusion pages 6-7)</td>
+</tr>
+<tr>
+<td><strong>Vac8</strong></td>
+<td>—</td>
+<td>Additional fusion factor</td>
+<td>Docking/fusion factor linked to vacuole inheritance and membrane dynamics; required for efficient vacuole fusion</td>
+<td>Mixed, reported as 60% B and 15% E in screen (seeley2002genomicanalysisof pages 2-3)</td>
+<td>Additional factor outside HOPS; palmitoylation-coupled functions are important (seeley2002genomicanalysisof pages 2-3, ostrowicz2008yeastvacuolefusion pages 7-8)</td>
+</tr>
+<tr>
+<td><strong>Calmodulin</strong></td>
+<td><strong>Cmd1</strong></td>
+<td>Additional fusion factor</td>
+<td>Ca2+/calmodulin-dependent regulator acting late in docking/fusion</td>
+<td>Essential / not represented in nonessential deletion screen (seeley2002genomicanalysisof pages 3-5, ostrowicz2008yeastvacuolefusion pages 7-8)</td>
+<td>Biochemically required although not scored in the deletion library (seeley2002genomicanalysisof pages 3-5, ostrowicz2008yeastvacuolefusion pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the major yeast vacuole fusion machinery components relevant to VAM10 annotation, including HOPS, Rab, SNAREs, and additional fusion factors. It highlights that VAM10/YOR068C is distinct from HOPS and is instead an accessory factor acting in a Sec18-independent priming step.</em></p>
+<h3 id="8-current-status-and-limitations">8. Current Status and Limitations</h3>
+<p>VAM10 remains a relatively understudied gene. The primary functional characterization paper (Kato &amp; Wickner, 2003) established its role in Sec18-independent priming, but the precise molecular mechanism by which Vam10p promotes vacuole tethering remains unknown. It is not known whether Vam10p acts as an enzyme, a structural scaffold, or a regulatory factor. No crystal or cryo-EM structure of Vam10p has been reported, and its protein interaction partners have not been comprehensively mapped. The genomic proximity to VPS5 introduces a caveat regarding potential effects on neighboring gene expression, though the in vitro biochemical data support a direct role for Vam10p in the fusion reaction.</p>
+<p>In the context of the broader vacuole fusion field, recent years have seen substantial advances in structural understanding of the HOPS and CORVET tethering complexes (diao2024molecularstructuresand pages 4-6) and in reconstitution of the minimal fusion machinery. However, VAM10 itself has not been a focus of these recent studies, and its mechanism represents an open question in the field of endomembrane fusion.</p>
+<h3 id="references-key-citations-used">References (Key citations used)</h3>
+<ul>
+<li>Seeley, E.S., Kato, M., Margolis, N., Wickner, W., &amp; Eitzen, G. (2002). Genomic analysis of homotypic vacuole fusion. <em>Molecular Biology of the Cell</em>, 13(3), 782–794.</li>
+<li>Kato, M. &amp; Wickner, W. (2003). Vam10p defines a Sec18p-independent step of priming that allows yeast vacuole tethering. <em>PNAS</em>, 100(11), 6398–6403.</li>
+<li>Ostrowicz, C.W., Meiringer, C.T.A., &amp; Ungermann, C. (2008). Yeast vacuole fusion: A model system for eukaryotic endomembrane dynamics. <em>Autophagy</em>, 4(1), 5–19.</li>
+<li>Diao, J., Yip, C.K., &amp; Zhong, Q. (2024). Molecular structures and function of the autophagosome-lysosome fusion machinery. <em>Autophagy Reports</em>, 3(1).</li>
+<li>Chen, K.-E. et al. (2025). Molecular basis for the assembly of the Vps5-Vps17 SNX-BAR proteins with Retromer. <em>Nature Communications</em>, 16, 3568.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(chen2025molecularbasisfor pages 2-3): Kai-En Chen, Vikas A. Tillu, Navin Gopaldass, Sudeshna Roy Chowdhury, Natalya Leneva, Oleksiy Kovtun, Juanfang Ruan, Qian Guo, Nicholas Ariotti, Andreas Mayer, and Brett M. Collins. Molecular basis for the assembly of the vps5-vps17 snx-bar proteins with retromer. Nature Communications, Dec 2025. URL: https://doi.org/10.1038/s41467-025-58846-8, doi:10.1038/s41467-025-58846-8. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2025molecularbasisfor pages 1-2): Kai-En Chen, Vikas A. Tillu, Navin Gopaldass, Sudeshna Roy Chowdhury, Natalya Leneva, Oleksiy Kovtun, Juanfang Ruan, Qian Guo, Nicholas Ariotti, Andreas Mayer, and Brett M. Collins. Molecular basis for the assembly of the vps5-vps17 snx-bar proteins with retromer. Nature Communications, Dec 2025. URL: https://doi.org/10.1038/s41467-025-58846-8, doi:10.1038/s41467-025-58846-8. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seeley2002genomicanalysisof pages 1-2): E. Scott Seeley, Masashi Kato, Nathan Margolis, William Wickner, and Gary Eitzen. Genomic analysis of homotypic vacuole fusion. Molecular biology of the cell, 13 3:782-94, Mar 2002. URL: https://doi.org/10.1091/mbc.01-10-0512, doi:10.1091/mbc.01-10-0512. This article has 209 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seeley2002genomicanalysisof pages 9-11): E. Scott Seeley, Masashi Kato, Nathan Margolis, William Wickner, and Gary Eitzen. Genomic analysis of homotypic vacuole fusion. Molecular biology of the cell, 13 3:782-94, Mar 2002. URL: https://doi.org/10.1091/mbc.01-10-0512, doi:10.1091/mbc.01-10-0512. This article has 209 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2009dynamicsandarchitecture pages 140-143): Clemens Werner Ostrowicz. Dynamics and architecture of the hops tethering complex in yeast vacuole fusion. Text, Jan 2009. URL: https://doi.org/10.11588/heidok.00009655, doi:10.11588/heidok.00009655. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 3-5): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 5-5): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 6-7): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 7-8): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(diao2024molecularstructuresand pages 4-6): Jiajie Diao, Calvin K. Yip, and Qing Zhong. Molecular structures and function of the autophagosome-lysosome fusion machinery. Autophagy Reports, Feb 2024. URL: https://doi.org/10.1080/27694127.2024.2305594, doi:10.1080/27694127.2024.2305594. This article has 22 citations.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 1-3): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2008yeastvacuolefusion pages 5-6): Clemens W. Ostrowicz, Christoph T. A. Meiringer, and Christian Ungermann. Yeast vacuole fusion: a model system for eukaryotic endomembrane dynamics. Autophagy, 4:19-5, Jan 2008. URL: https://doi.org/10.4161/auto.5054, doi:10.4161/auto.5054. This article has 127 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seeley2002genomicanalysisof pages 7-9): E. Scott Seeley, Masashi Kato, Nathan Margolis, William Wickner, and Gary Eitzen. Genomic analysis of homotypic vacuole fusion. Molecular biology of the cell, 13 3:782-94, Mar 2002. URL: https://doi.org/10.1091/mbc.01-10-0512, doi:10.1091/mbc.01-10-0512. This article has 209 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seeley2002genomicanalysisof pages 2-3): E. Scott Seeley, Masashi Kato, Nathan Margolis, William Wickner, and Gary Eitzen. Genomic analysis of homotypic vacuole fusion. Molecular biology of the cell, 13 3:782-94, Mar 2002. URL: https://doi.org/10.1091/mbc.01-10-0512, doi:10.1091/mbc.01-10-0512. This article has 209 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ostrowicz2009dynamicsandarchitecture pages 48-51): Clemens Werner Ostrowicz. Dynamics and architecture of the hops tethering complex in yeast vacuole fusion. Text, Jan 2009. URL: https://doi.org/10.11588/heidok.00009655, doi:10.11588/heidok.00009655. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(seeley2002genomicanalysisof pages 3-5): E. Scott Seeley, Masashi Kato, Nathan Margolis, William Wickner, and Gary Eitzen. Genomic analysis of homotypic vacuole fusion. Molecular biology of the cell, 13 3:782-94, Mar 2002. URL: https://doi.org/10.1091/mbc.01-10-0512, doi:10.1091/mbc.01-10-0512. This article has 209 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="VAM10-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>seeley2002genomicanalysisof pages 1-2</li>
+<li>seeley2002genomicanalysisof pages 9-11</li>
+<li>ostrowicz2009dynamicsandarchitecture pages 140-143</li>
+<li>ostrowicz2008yeastvacuolefusion pages 5-5</li>
+<li>ostrowicz2008yeastvacuolefusion pages 6-7</li>
+<li>ostrowicz2008yeastvacuolefusion pages 7-8</li>
+<li>diao2024molecularstructuresand pages 4-6</li>
+<li>ostrowicz2008yeastvacuolefusion pages 1-3</li>
+<li>seeley2002genomicanalysisof pages 7-9</li>
+<li>chen2025molecularbasisfor pages 2-3</li>
+<li>seeley2002genomicanalysisof pages 2-3</li>
+<li>seeley2002genomicanalysisof pages 3-5</li>
+<li>chen2025molecularbasisfor pages 1-2</li>
+<li>ostrowicz2008yeastvacuolefusion pages 3-5</li>
+<li>ostrowicz2008yeastvacuolefusion pages 5-6</li>
+<li>ostrowicz2009dynamicsandarchitecture pages 48-51</li>
+<li>https://doi.org/10.1038/s41467-025-58846-8,</li>
+<li>https://doi.org/10.1091/mbc.01-10-0512,</li>
+<li>https://doi.org/10.11588/heidok.00009655,</li>
+<li>https://doi.org/10.4161/auto.5054,</li>
+<li>https://doi.org/10.1080/27694127.2024.2305594,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(VAM10-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q08474" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="vam10-yor068c-curation-notes">VAM10 (YOR068C) — curation notes</h1>
+<p>Organism: <em>Saccharomyces cerevisiae</em> S288C (yeast)<br />
+UniProt: Q08474 (VAM10_YEAST); SGD: S000005594; systematic name YOR068C<br />
+Protein: 114 aa, ~11.8 kDa; PE=4 (Predicted). Standard name VAM10 = "VAcuole Morphology 10" / "altered vacuole morphology".</p>
+<h2 id="journal">Journal</h2>
+<h3 id="2026-07-05-setup">2026-07-05 — setup</h3>
+<ul>
+<li><code>just fetch-gene yeast VAM10</code> succeeded on bare symbol; resolved to Q08474. Files: uniprot.txt, goa.tsv, ai-review.yaml stub (4 annotations).</li>
+<li><code>just fetch-gene-pmids</code> — only one PMID cited across GOA: PMID:12748377 (Kato &amp; Wickner 2003). Cached, but <strong>abstract-only</strong> (<code>full_text_available: false</code>, PMC access restricted).</li>
+<li>Deep research (falcon) launched in background.</li>
+</ul>
+<h2 id="domain-sequence-analysis-inline-from-uniprot-record">Domain / sequence analysis (inline, from UniProt record)</h2>
+<p>Sequence (114 aa):</p>
+<div class="codehilite"><pre><span></span><code>MLFEVFGEVL ASYIVSSKTK GELAFPVNNA PPDSLVAINC VVLFLRSAIG SCSGAKELIR
+SSALELSCSS SCGLPATDKP GSFHSGALSK SILSANEAVV SKSSLSFLSS FVDI
+</code></pre></div>
+
+<ul>
+<li><strong>No annotated domain / motif / signal.</strong> UniProt lists a single CHAIN feature (1..114) and no PFAM/InterPro/PROSITE hits; the record has no <code>DR Pfam</code>/<code>DR InterPro</code> lines. PANTHER family: none found by the fetch pipeline ("No PANTHER family found in UniProt data").</li>
+<li><strong>No transmembrane segment declared.</strong> UniProt annotates SUBCELLULAR LOCATION as "Vacuole membrane {ECO:0000305}; Peripheral membrane protein {ECO:0000305}" — i.e. inferred (ECO:0000305), membrane-associated but <strong>peripheral</strong>, not integral. Keyword <code>Membrane</code> is present but there is no <code>TRANSMEM</code> feature.</li>
+<li><strong>Composition:</strong> N-terminal ~1–20 is hydrophobic/amphipathic (MLFEVFGEVLASYIVSSKTK); the C-terminal two-thirds is Ser-rich (many S/A/L). No Cys cluster of note (a few scattered C). No coiled-coil is annotated. This is consistent with a small, largely disordered/low-complexity peripheral membrane protein with no catalytic fold — i.e. <strong>no basis to assign an enzymatic molecular function from sequence</strong>.</li>
+<li><strong>Orthology:</strong> UniProt cross-refs HOGENOM CLU_2122470_0_0_1 (singleton-like cluster), InParanoid Q08474, OrthoDB 10325102at2759. VAM10 is poorly conserved and effectively <em>Saccharomyces</em>-restricted / fungal-lineage-narrow; no metazoan ortholog is established. This limits transfer of molecular-function inference from orthologs.</li>
+<li><strong>Genomic note (from the primary paper):</strong> YOR068C/VAM10 lies <strong>within the VPS5 gene on the opposite DNA strand</strong> [PMID:12748377 abstract, "YOR068c, termed VAM10 (altered vacuole morphology), lies within the VPS5 gene on the opposite DNA strand."]. This nested arrangement is why the gene was historically overlooked and is a caution against confusing VAM10 with VPS5 phenotypes.</li>
+</ul>
+<p><strong>Domain-analysis conclusion:</strong> VAM10 is a small (114 aa) peripheral vacuolar-membrane protein with <strong>no recognizable catalytic or binding domain</strong> and no strong orthology signal. Its molecular activity therefore cannot be inferred from structure and must rest on the single functional study.</p>
+<h2 id="literature-synthesis">Literature synthesis</h2>
+<p>Only one functional paper exists (VAM10 is genuinely understudied).</p>
+<h3 id="pmid12748377-kato-m-wickner-w-vam10p-defines-a-sec18p-independent-step-of-priming-that-allows-yeast-vacuole-tethering-pnas-2003-abstract-only-in-cache">PMID:12748377 — Kato M, Wickner W. "Vam10p defines a Sec18p-independent step of priming that allows yeast vacuole tethering." PNAS 2003. (abstract-only in cache)</h3>
+<p>Verbatim abstract statements (from cached <code>publications/PMID_12748377.md</code>):<br />
+- "YOR068c, termed VAM10 (altered vacuole morphology), lies within the VPS5 gene on the opposite DNA strand."<br />
+- "VAM10 deletion causes vacuole fragmentation in vivo." → in-vivo loss-of-function phenotype (basis of IMP GO:0042144).<br />
+- "The in vitro fusion of purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by antibody to Vam10p." → Vam10p is a positive-acting factor for homotypic vacuole fusion in a defined in-vitro assay.<br />
+- "Vam10p acts early in the priming stage of fusion, independent of Sec18p." → places Vam10p in the priming (pre-docking) stage, but distinct from the canonical Sec18p (NSF)/Sec17p (α-SNAP) SNARE-disassembly priming.<br />
+- "After priming, recombinant Vam10p will not stimulate fusion and anti-Vam10p antibodies will not inhibit; Vam10p provides a functional marker for this Sec18p-independent priming step."<br />
+- "Pure Vam10p restores normal, Ypt7p-dependent tethering to vacuoles from a vam10Delta strain." → Vam10p is required to establish Ypt7p (Rab GTPase)-dependent tethering; vacuoles lacking it are tethering-deficient.</p>
+<p><strong>Interpretation.</strong> The homotypic vacuole fusion cascade in yeast proceeds priming → tethering → docking (trans-SNARE pairing) → fusion. Canonical priming is Sec18p(NSF)/Sec17p(α-SNAP)-driven SNARE-complex disassembly. Kato &amp; Wickner define a <strong>second, Sec18p-independent priming activity</strong> provided by Vam10p that is a prerequisite for the subsequent Ypt7p-dependent tethering step (tethering is executed by the HOPS complex with the Rab Ypt7p). Vam10p is thus a positive regulator/facilitator that acts upstream of, and enables, HOPS/Ypt7p-mediated tethering.</p>
+<h3 id="known-vs-not-known">KNOWN vs NOT-known</h3>
+<p>KNOWN (evidence-supported):<br />
+- <strong>BP:</strong> required for homotypic (non-autophagic) vacuole fusion; deletion fragments vacuoles in vivo (IMP, PMID:12748377). This is the core biological role.<br />
+- <strong>BP/mechanistic placement:</strong> acts at an early, Sec18p-<strong>independent</strong> priming step that is a prerequisite for Ypt7p-dependent tethering (in-vitro reconstitution, PMID:12748377).<br />
+- <strong>CC:</strong> vacuolar (fungal-type vacuole) membrane; peripheral membrane protein (IC from SGD, PMID:12748377; UniProt SubCell IEA). Consistent with acting on the vacuole surface during fusion.</p>
+<p>NOT-known (genuine gaps — primary deliverable):<br />
+- <strong>Molecular function is dark.</strong> No biochemical activity is defined. It is unknown whether Vam10p is an enzyme, a lipid/membrane binder, a protein adaptor/tether, or a regulator of another priming factor. There is no MF beyond the ND root in GOA, and sequence gives no fold-level clue.<br />
+- <strong>Direct binding partner(s) unknown.</strong> Vam10p enables Ypt7p-dependent tethering but it is not established whether it binds Ypt7p, the HOPS complex, a SNARE, a lipid, or acts indirectly. The molecular target of the "Sec18p-independent priming" is undefined.<br />
+- <strong>Mechanism of the Sec18p-independent priming step is unknown.</strong> What conformational/compositional change on the vacuole membrane Vam10p produces to license tethering is undetermined.<br />
+- <strong>Structure unknown</strong> (PE=4 predicted; AlphaFoldDB model exists but no experimental structure, and the protein is largely low-complexity).<br />
+- <strong>Conservation/orthology of function</strong> across fungi and beyond is uncharacterized.</p>
+<h2 id="annotation-by-annotation-plan">Annotation-by-annotation plan</h2>
+<ol>
+<li><code>GO:0005774 vacuolar membrane</code> / located_in / IEA / GO_REF:0000044 (UniProt SubCell) — ACCEPT (non-core supporting CC; consistent with IC vacuole-membrane call). Same location as the more specific SGD term below.</li>
+<li><code>GO:0000329 fungal-type vacuole membrane</code> / located_in / IC / PMID:12748377 — ACCEPT. Species-appropriate (fungal-type vacuole) refinement of the CC; IC from the functional study. This is the informative CC and can back the core-function location.</li>
+<li><code>GO:0003674 molecular_function</code> (root) / enables / ND / GO_REF:0000015 — this is the explicit "no known MF" placeholder. Keep but not core; represents the real MF_DARK gap. Action: ACCEPT (honest ND root; do NOT invent an MF).</li>
+<li><code>GO:0042144 vacuole fusion, non-autophagic</code> / involved_in / IMP / PMID:12748377 — ACCEPT as the CORE biological process (deletion → vacuole fragmentation; recombinant protein stimulates in-vitro fusion). Well supported.</li>
+</ol>
+<p>Avoid <code>protein binding</code> (not present here anyway). Do not assign a specific tether/priming MF term — none fits the undefined activity; record it as a knowledge gap instead.</p>
+<p>Core function: single BP-centered core (vacuole fusion / early Sec18p-independent priming enabling Ypt7p-dependent tethering) at the fungal-type vacuole membrane, with molecular_function left at the root (MF_DARK) and the mechanism captured under knowledge_gaps.</p>
+<h3 id="2026-07-05-falcon-deep-research-completed-corroboration">2026-07-05 — falcon deep research completed (corroboration)</h3>
+<p>Falcon (Edison Scientific) deep research completed after ~27 min (<code>VAM10-deep-research-falcon.md</code>, 21 citations). It corroborates the review and adds context (citations in falcon's <code>keyname pages N-N</code> style, which the reference validator skips, so NONE are quoted into the YAML; all YAML supporting_text remains verbatim from the cached PMID:12748377 abstract):<br />
+- VAM10/YOR068C identified in the Seeley et al. (2002) genome-wide FM4-64 vacuole-morphology screen; vam10Δ shows a class B fragmentation phenotype in ~90% of cells (Seeley, Kato, Wickner, Eitzen 2002).<br />
+- <strong>VAM10 is NOT a HOPS subunit.</strong> The six original VAM genes that are HOPS subunits are VAM1/VPS11, VAM2/VPS41, VAM5/VPS33, VAM6/VPS39, VAM8/VPS18, VAM9/VPS16; VAM3/VAM7 are SNAREs; VAM4 = the Rab Ypt7p. Vam10p is instead an "additional fusion factor" acting in a Sec18p-independent priming step upstream of HOPS/Ypt7p-mediated tethering. (This is why the review frames VAM10 as acting upstream of, and enabling, HOPS/Ypt7p tethering — not as a HOPS component.)<br />
+- Molecular mechanism still unknown: enzyme vs scaffold vs regulator undetermined; no crystal/cryo-EM structure; interaction partners not comprehensively mapped — matches the MF_DARK and partner knowledge gaps recorded.<br />
+- vam10Δ does not show a strong VPS/CPY-secretion sorting phenotype, consistent with a role specific to homotypic vacuole fusion rather than biosynthetic trafficking; the VPS5-proximity caveat is noted but in-vitro biochemistry supports a direct Vam10p role.</p>
+<p>No annotation actions changed as a result; falcon strengthens the ACCEPT calls and the honesty of the knowledge-gaps section.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q08474
+gene_symbol: VAM10
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  VAM10 (YOR068C) encodes a small (114 aa) peripheral vacuolar-membrane protein of
+  Saccharomyces cerevisiae required for homotypic (non-autophagic) vacuole fusion.
+  Its gene is nested within the VPS5 locus on the opposite DNA strand. Vam10p acts
+  early in the vacuole fusion cascade at a priming step that is independent of the
+  canonical Sec18p (NSF)/Sec17p (alpha-SNAP) SNARE-disassembly machinery, and this
+  Vam10p-dependent priming is a prerequisite for the subsequent Ypt7p (Rab GTPase)-
+  dependent tethering of vacuoles. Deletion causes vacuole fragmentation, and
+  recombinant Vam10p stimulates fusion of purified vacuoles in vitro while anti-Vam10p
+  antibody blocks it. The protein has no recognizable catalytic or binding domain and
+  no strong orthology outside fungi, and its molecular activity and direct binding
+  partners remain undefined.
+existing_annotations:
+- term:
+    id: GO:0005774
+    label: vacuolar membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic Subcellular Location mapping placing Vam10p at the vacuolar membrane.
+      Consistent with the experimentally-informed IC call to the fungal-type vacuole
+      membrane and with the protein&#39;s role at the vacuole surface during fusion.
+    action: ACCEPT
+    reason: &gt;-
+      Correct location and supported by an independent, more specific IC annotation
+      (GO:0000329) from the primary functional study. Kept as a valid but non-core
+      supporting cellular-component annotation; the fungal-type vacuole membrane term
+      is preferred for representing the site of action.
+- term:
+    id: GO:0000329
+    label: fungal-type vacuole membrane
+  evidence_type: IC
+  original_reference_id: PMID:12748377
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator-inferred (IC) localization to the fungal-type vacuole membrane, based on
+      the vacuole-fusion function reported by Kato &amp; Wickner (2003). Species-appropriate
+      and the informative cellular-component annotation for this protein.
+    action: ACCEPT
+    reason: &gt;-
+      The functional study demonstrates Vam10p acts on purified vacuoles and restores
+      tethering to vacuoles from a vam10-delta strain, and UniProt independently curates
+      a vacuole-membrane (peripheral) location; the fungal-type vacuole membrane is the
+      correct organelle-specific term for a Saccharomyces protein. Supports the
+      core-function location.
+    supported_by:
+    - reference_id: PMID:12748377
+      supporting_text: &gt;-
+        Pure Vam10p restores normal, Ypt7p-dependent tethering to vacuoles from a
+        vam10Delta strain.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function annotation with the ND (No biological Data available)
+      evidence code, marking that no specific molecular activity has been experimentally
+      or computationally assigned to Vam10p.
+    action: ACCEPT
+    reason: &gt;-
+      This is an honest placeholder that correctly reflects the genuine molecular-function
+      gap for this protein: Vam10p has no recognizable catalytic or binding domain, no
+      informative orthology, and no biochemically defined activity. It should NOT be
+      replaced with a specific molecular-function term; the missing activity is recorded
+      under knowledge_gaps instead. Not a core function.
+- term:
+    id: GO:0042144
+    label: vacuole fusion, non-autophagic
+  evidence_type: IMP
+  original_reference_id: PMID:12748377
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Involvement in homotypic (non-autophagic) vacuole fusion, from the deletion
+      phenotype (vacuole fragmentation) and in-vitro reconstitution (recombinant Vam10p
+      stimulates fusion of purified vacuoles; anti-Vam10p antibody blocks it). This is
+      the core, well-supported biological role of the gene.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by loss-of-function (in-vivo fragmentation; antibody inhibition
+      of in-vitro fusion) and gain-of-function (recombinant-protein stimulation) evidence
+      in the same study. Represents the core biological process of VAM10.
+    supported_by:
+    - reference_id: PMID:12748377
+      supporting_text: &gt;-
+        VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of
+        purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by
+        antibody to Vam10p.
+core_functions:
+- description: &gt;-
+    Required for homotypic (non-autophagic) vacuole fusion, acting at an early,
+    Sec18p-independent priming step at the fungal-type vacuole membrane that is a
+    prerequisite for Ypt7p-dependent tethering. The specific molecular activity by
+    which Vam10p licenses tethering is undefined, so the molecular_function is left at
+    the root (see knowledge_gaps); the well-supported claim is the biological-process
+    role and the site of action.
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+  directly_involved_in:
+  - id: GO:0042144
+    label: vacuole fusion, non-autophagic
+  locations:
+  - id: GO:0000329
+    label: fungal-type vacuole membrane
+  supported_by:
+  - reference_id: PMID:12748377
+    supporting_text: &gt;-
+      VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of
+      purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by
+      antibody to Vam10p.
+  - reference_id: PMID:12748377
+    supporting_text: &gt;-
+      Vam10p acts early in the priming stage of fusion, independent of Sec18p.
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular activity of Vam10p is undetermined. It is not known whether Vam10p
+      is an enzyme, a lipid- or membrane-binding protein, a protein adaptor/tether, or a
+      regulator that modifies another priming factor; no biochemical activity has been
+      assigned and the only molecular_function annotation is the ND root.
+    boundary: &gt;-
+      It is firmly established that recombinant Vam10p stimulates homotypic vacuole
+      fusion in vitro, that anti-Vam10p antibody blocks fusion, and that Vam10p acts at
+      an early, Sec18p-independent priming step required for Ypt7p-dependent tethering.
+      What is missing is any measurement of a catalytic or binding activity.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Vam10p defines a distinct, Sec18p-independent priming activity in membrane fusion;
+      identifying its molecular activity would explain how the vacuole is licensed for
+      Ypt7p/HOPS-dependent tethering and could reveal a conserved pre-tethering step.
+    resolution: &gt;-
+      Biochemically characterize purified recombinant Vam10p: test for lipid/membrane
+      binding, for any enzymatic activity, and for whether it acts on SNAREs, on the
+      Rab Ypt7p, or on the vacuole lipid bilayer during the priming reaction.
+    provenance:
+    - reference_id: PMID:12748377
+      supporting_text: &gt;-
+        Vam10p acts early in the priming stage of fusion, independent of Sec18p.
+  - gap_statement: &gt;-
+      The direct molecular partner(s) of Vam10p are unknown. It is unresolved whether
+      Vam10p acts on the Rab GTPase Ypt7p, on the HOPS tethering complex, on a vacuolar
+      SNARE, or on a membrane lipid to enable the Ypt7p-dependent tethering it is
+      required for.
+    boundary: &gt;-
+      Vam10p is required to restore normal Ypt7p-dependent tethering to vacuoles from a
+      vam10-delta strain, placing it upstream of Rab-dependent tethering; but the
+      physical target through which it acts has not been identified.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      Identifying the direct partner would connect the Sec18p-independent priming step
+      to the canonical Rab/HOPS tethering machinery and place Vam10p precisely in the
+      fusion cascade.
+    resolution: &gt;-
+      Affinity purification / crosslinking of Vam10p from vacuolar membranes, and
+      directed binding assays against Ypt7p, HOPS subunits, and vacuolar SNAREs.
+    provenance:
+    - reference_id: PMID:12748377
+      supporting_text: &gt;-
+        Pure Vam10p restores normal, Ypt7p-dependent tethering to vacuoles from a
+        vam10Delta strain.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The mechanism of the Sec18p-independent priming step defined by Vam10p is unknown:
+    what change in the vacuolar membrane or its protein/lipid composition Vam10p produces
+    to license subsequent Ypt7p-dependent tethering has not been determined.
+  boundary: &gt;-
+    Canonical priming (Sec18p/NSF- and Sec17p/alpha-SNAP-driven SNARE-complex disassembly)
+    is well characterized. Vam10p provides a functional marker for a separate, early,
+    Sec18p-independent priming activity, but the reaction it catalyzes or promotes is not
+    defined.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    A second priming activity distinct from NSF/alpha-SNAP would refine the textbook
+    priming-tethering-docking-fusion model of homotypic membrane fusion.
+  resolution: &gt;-
+    In-vitro dissection of the Vam10p-dependent priming reaction (order-of-addition,
+    substrate/product analysis) to define what Vam10p acts on and what it produces.
+  provenance:
+  - reference_id: PMID:12748377
+    supporting_text: &gt;-
+      Vam10p provides a functional marker for this Sec18p-independent priming step.
+- gap_statement: &gt;-
+    Whether Vam10p has orthologs with a conserved function beyond Saccharomyces (in other
+    fungi or in higher eukaryotes) is uncharacterized, so it is unknown whether the
+    Sec18p-independent priming role is a general feature of membrane fusion or a
+    yeast-specific adaptation.
+  boundary: &gt;-
+    Vam10p is a small protein with no recognizable domain and only weak/singleton
+    orthology signals in HOGENOM/InParanoid/OrthoDB; no functionally validated ortholog
+    has been reported.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Establishing conservation would indicate whether the priming activity is a widely
+    used mechanism worth mapping onto human membrane-fusion pathways.
+  resolution: &gt;-
+    Phylogenetic profiling and functional complementation tests of candidate fungal
+    homologs; structural comparison of the predicted fold against known fusion factors.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:12748377
+  title: Vam10p defines a Sec18p-independent step of priming that allows yeast vacuole
+    tethering.
+  findings:
+  - statement: &gt;-
+      VAM10 deletion causes vacuole fragmentation in vivo, and recombinant Vam10p
+      stimulates in-vitro fusion of purified vacuoles while anti-Vam10p antibody blocks
+      it, establishing Vam10p as a positive factor required for homotypic vacuole fusion.
+    supporting_text: &gt;-
+      VAM10 deletion causes vacuole fragmentation in vivo. The in vitro fusion of
+      purified yeast vacuoles is stimulated by recombinant Vam10p and blocked by
+      antibody to Vam10p.
+  - statement: &gt;-
+      Vam10p acts at an early, Sec18p-independent priming step and is required to restore
+      Ypt7p-dependent tethering, placing it upstream of Rab-dependent tethering.
+    supporting_text: &gt;-
+      Vam10p acts early in the priming stage of fusion, independent of Sec18p.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/UniProt-verified as the sole functional study of VAM10 (YOR068C); title and
+      supporting quotes match the cached abstract. Cache is abstract-only
+      (full_text_available: false); annotations reviewed here are consistent with what
+      the abstract states. Establishes the vacuole-fusion role and the Sec18p-independent
+      priming / Ypt7p-dependent tethering placement.
+suggested_questions:
+- question: &gt;-
+    What is the molecular activity of Vam10p during the Sec18p-independent priming step
+    that licenses Ypt7p-dependent tethering?
+  experts:
+  - William Wickner
+- question: &gt;-
+    Does Vam10p act directly on the Rab GTPase Ypt7p, on the HOPS complex, on vacuolar
+    SNAREs, or on the vacuolar lipid bilayer?
+  experts:
+  - Michiko Kato
+  - William Wickner
+suggested_experiments:
+- hypothesis: &gt;-
+    Vam10p binds a specific vacuolar component (Ypt7p, a HOPS subunit, a SNARE, or a
+    lipid) to promote the pre-tethering priming step.
+  description: &gt;-
+    Affinity-purify or crosslink epitope-tagged Vam10p from isolated vacuoles and identify
+    co-purifying proteins by mass spectrometry; test candidate interactions (Ypt7p, HOPS
+    subunits, vacuolar SNAREs) by directed pulldowns, and assay lipid binding of purified
+    recombinant Vam10p.
+  experiment_type: interaction proteomics / biochemical binding assays
+- hypothesis: &gt;-
+    The Vam10p-dependent priming reaction produces a defined change on the vacuole
+    membrane required before Ypt7p-dependent tethering.
+  description: &gt;-
+    Use the in-vitro homotypic vacuole fusion assay with order-of-addition and
+    stage-specific inhibitors to place the Vam10p requirement precisely relative to
+    Sec18p-mediated priming and Ypt7p/HOPS-mediated tethering, and characterize what
+    Vam10p acts on during the reaction.
+  experiment_type: in-vitro reconstituted membrane fusion
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

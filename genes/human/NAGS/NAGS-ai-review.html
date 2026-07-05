@@ -1,0 +1,3651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAGS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NAGS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8N159" target="_blank" class="term-link">
+                        Q8N159
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NAGS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8N159" data-a="DESCRIPTION: N-acetylglutamate synthase (NAGS; EC 2.3.1.1) is a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>N-acetylglutamate synthase (NAGS; EC 2.3.1.1) is a nuclear-encoded, mitochondrial-matrix enzyme that catalyzes the formation of N-acetyl-L-glutamate (NAG) from L-glutamate and acetyl-CoA. In mammals, NAG is the obligate allosteric activator of carbamoyl phosphate synthetase 1 (CPS1), the first and rate-limiting enzyme of the urea cycle; NAGS therefore functions as the regulatory gate of hepatic ureagenesis and ammonia detoxification. Although NAG is not consumed stoichiometrically in the urea cycle, the cycle cannot proceed without it. The enzyme is a homotetramer whose subunits comprise an N-terminal amino-acid-kinase (AAK) domain that binds the allosteric activator L-arginine (which enhances mammalian NAGS activity) and a C-terminal GCN5-related N-acetyltransferase (NAT) domain that is catalytically competent on its own. NAGS is expressed mainly in liver, kidney and small intestine and is imported into the mitochondrion via a cleaved N-terminal transit peptide. Biallelic loss-of-function variants cause N-acetylglutamate synthase deficiency, an autosomal recessive urea cycle disorder presenting with hyperammonemia (without orotic aciduria) that, uniquely among urea cycle disorders, is specifically treatable with the NAG analogue carglumic acid.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0006526" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to arginine biosynthesis. NAGS catalyzes the acetylation of L-glutamate to N-acetyl-L-glutamate, the committed first step of the acetylated ornithine route to L-arginine (UniProt PATHWAY UPA00068: &#34;N(2)-acetyl-L-ornithine from L-glutamate: step 1/4&#34;). This is the conserved ancestral function of the family across bacteria, plants and fungi. In mammals the NAG product is primarily used to activate CPS1 in the urea cycle rather than to make net arginine, but the enzymatic role at the head of the acetylornithine pathway is real and correctly captured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported family-conserved involvement in the acetylglutamate branch that leads to arginine biosynthesis; consistent with UniProt PATHWAY annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                                        PMID:23894642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In microorganisms and plants, NAG is further converted to NAG phosphate by NAG kinase (NAGK, EC 2.7.2.8) to continue the L-arginine biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing NAGS activity in the mitochondrial matrix. Human NAGS was purified from human liver mitochondria and carries a cleaved N-terminal mitochondrial transit peptide; the enzyme acts in the matrix where its substrates and CPS1 reside.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core subcellular location, supported experimentally by purification from human liver mitochondria and by the presence of a mitochondrial targeting sequence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link">
+                                        PMID:7126172
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">was isolated from human liver mitochondria by precipitation with (NH4)2SO4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation of the core catalytic activity (EC 2.3.1.1): acetylation of L-glutamate by acetyl-CoA to yield N-acetyl-L-glutamate and CoA (RHEA:24292). This is the defining molecular function of NAGS and is directly supported by human enzymology and structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the primary, experimentally established molecular function of the gene product.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link">
+                                        PMID:12459178
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-acetylglutamate synthase (NAGS, E.C. 2.3.1.1) is a mitochondrial enzyme catalyzing the formation of N-acetylglutamate (NAG)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006536" target="_blank" class="term-link">
+                                    GO:0006536
+                                </a>
+                            </span>
+                            <span class="term-label">glutamate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0006536" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to glutamate metabolism. NAGS consumes L-glutamate as a substrate, so the annotation is not incorrect, but &#34;glutamate metabolic process&#34; is a broad parent term that does not convey the specific biological role of NAGS (making the CPS1 activator NAG / feeding the acetylornithine pathway).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but generic; L-glutamate is the substrate, yet the specific processes (arginine biosynthesis / urea cycle regulation) are more informative and are captured by other annotations. Retain as a peripheral, non-core process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                                        PMID:23894642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the conversion of AcCoA and L-glutamate to CoA and N-acetyl-L-glutamate (NAG)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) annotation of the core catalytic activity from combined automated methods (ARBA, RHEA:24292, InterPro, ortholog transfer). Consistent with the experimentally established EC 2.3.1.1 activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific molecular-function assignment; agrees with experimental annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) annotation from the UniProt Swiss-Prot subcellular-location mapping (SL-0170, mitochondrion matrix). Matches the experimentally supported matrix localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location, corroborated by purification of the enzyme from liver mitochondria and by the IBA/TAS matrix annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                    GO:0006526
+                                </a>
+                            </span>
+                            <span class="term-label">L-arginine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0006526" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) annotation to arginine biosynthesis from InterPro/UniPathway (UPA00068). Same rationale as the IBA arginine-biosynthesis annotation: NAGS performs the committed acetylglutamate-forming step of the acetylornithine pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved pathway role and with the IBA annotation of the same term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0016747" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) InterPro2GO annotation derived from the generic GNAT/N-acetyltransferase domain signature (IPR000182). This is a broad parent term (&#34;acyltransferase activity, transferring groups other than amino-acyl groups&#34;) that only states NAGS is an acyltransferase. The specific, experimentally established activity of this enzyme, GO:0004042 (L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor), is already annotated, so the generic parent is an over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic acyltransferase term should be refined to the known specific activity GO:0004042. NAGS is not a general acyltransferase acting on multiple acceptors; its physiological (and only demonstrated) acetyl-acceptor is L-glutamate. Replace with the specific EC 2.3.1.1 term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                                        PMID:23894642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The NAT domain has a typical GCN5-related NAT fold and a site that catalyzes NAG synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090461" target="_blank" class="term-link">
+                                    GO:0090461
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular glutamate homeostasis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21757002
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The nuclear receptor FXR regulates hepatic transport and met...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0090461" data-r="PMID:21757002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (BHF-UCL) from a study showing that the nuclear receptor FXR regulates hepatic glutamine/glutamate metabolism and directly induces NAGS expression via an FXRE in the NAGS promoter. In this context NAGS contributes to handling of the intracellular glutamate pool by consuming glutamate to form NAG. The cached publication is abstract-only (full_text_available: false); the experimental annotation reflects the curator&#39;s reading of the full text and should not be removed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NAGS uses glutamate as a substrate and its expression is coupled to hepatic glutamate/glutamine metabolism, so a role in intracellular glutamate homeostasis is defensible but peripheral. It is not the core evolved function (production of the CPS1 activator NAG), so retain as non-core rather than remove; defer to the experimental curator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link">
+                                        PMID:21757002
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glutamine is taken up by periportal hepatocytes and is the major source of ammonia for urea synthesis and glutamate for N-acetylglutamate (NAG) synthesis, which is catalyzed by the N-acetylglutamate synthase (NAGS).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000050" target="_blank" class="term-link">
+                                    GO:0000050
+                                </a>
+                            </span>
+                            <span class="term-label">urea cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21757002
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The nuclear receptor FXR regulates hepatic transport and met...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0000050" data-r="PMID:21757002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (BHF-UCL) to the urea cycle. NAGS produces N-acetyl-L-glutamate, the obligate allosteric activator of CPS1, the first enzyme of the urea cycle; loss of NAGS causes hyperammonemia because CPS1 is inactive without NAG. NAGS is thus the regulatory gate of ureagenesis. The cached reference is abstract-only, but the urea-cycle role of NAGS is independently and strongly established by multiple sources.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological role. Although NAG is not stoichiometrically consumed in the cycle, NAGS is indispensable for urea cycle function; the annotation correctly captures this involvement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link">
+                                        PMID:21757002
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">major source of ammonia for urea synthesis and glutamate for N-acetylglutamate (NAG) synthesis, which is catalyzed by the N-acetylglutamate synthase (NAGS)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link">
+                                        PMID:12459178
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Patients with NAGS deficiency develop hyperammonemia because CPSI is inactive without NAG.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21757002
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The nuclear receptor FXR regulates hepatic transport and met...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="PMID:21757002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation of the core catalytic activity (EC 2.3.1.1). Redundant with the multiple experimental IDA/EXP and IBA/IEA annotations of the same term; correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct assignment of the specific molecular function; duplicate of the experimentally supported activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9955697
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005759" data-r="Reactome:R-HSA-9955697" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) placing NAGS in the mitochondrial matrix, consistent with all other localization evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location; agrees with the IBA/IEA/TAS matrix annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12459178
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of the human N-acetylglutamate syntha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="PMID:12459178" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation. Recombinant human NAGS (conserved domain) complemented an NAGS-deficient E. coli strain and displayed arginine-responsive NAGS catalytic activity, directly demonstrating the EC 2.3.1.1 activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the core catalytic activity in the human enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link">
+                                        PMID:12459178
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the recombinant protein has arginine-responsive NAGS catalytic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) annotation from a quantitative high-confidence human mitochondrial proteome study, identifying NAGS as a mitochondrial protein. Consistent with the more precise matrix localization; &#34;mitochondrion&#34; is a correct but less specific parent term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization supported by proteomics; the specific compartment (matrix) is captured by other annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23894642
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of the N-acetyltransferase domain of human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="PMID:23894642" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the crystal structure and enzymology of the human NAGS N-acetyltransferase (NAT) domain in complex with N-acetyl-L-glutamate. The study directly measured NAGS catalytic activity (with substrate-dependence, mutagenesis of active-site residues) confirming EC 2.3.1.1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental (structural + kinetic) demonstration of the core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                                        PMID:23894642
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">NAGS deficiency results in elevated levels of plasma ammonia which is neurotoxic. We report herein the first crystal structure of human NAGS, that of the catalytic N-acetyltransferase (hNAT) domain with N-acetyl-L-glutamate bound at 2.1 Å resolution.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                                    GO:0004042
+                                </a>
+                            </span>
+                            <span class="term-label">L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7126172
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and properties of acetyl-CoA:L-glutamate N-acet...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0004042" data-r="PMID:7126172" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from the classic purification and kinetic characterization of acetyl-CoA:L-glutamate N-acetyltransferase (EC 2.3.1.1) from human liver, establishing the substrate/product kinetics of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the core catalytic activity in native human enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link">
+                                        PMID:7126172
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Acetyl-CoA:L-glutamate N-acetyltransferase (amino acid acetyltransferase, EC 2.3.1.1) was isolated from human liver mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7126172
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification and properties of acetyl-CoA:L-glutamate N-acet...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005739" data-r="PMID:7126172" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation of mitochondrial localization, based on purification of the enzyme from human liver mitochondria. Correct; the finer matrix localization is captured by other annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct experimentally supported localization; consistent with the matrix annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link">
+                                        PMID:7126172
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">was isolated from human liver mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70542
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N159" data-a="GO:0005759" data-r="Reactome:R-HSA-70542" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) for the reaction &#34;glutamate + acetyl CoA =&gt; N-acetyl glutamate + CoA&#34; localizing NAGS to the mitochondrial matrix. Consistent with all other localization evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location; duplicate of the matrix annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAGS catalyzes the acetylation of L-glutamate by acetyl-CoA to produce N-acetyl-L-glutamate (NAG) and CoA (EC 2.3.1.1) in the mitochondrial matrix. NAG is the obligate allosteric activator of carbamoyl phosphate synthetase 1 (CPS1), so NAGS provides the essential regulatory input that gates the urea cycle and hepatic ammonia detoxification.</h3>
+                <span class="vote-buttons" data-g="Q8N159" data-a="FUNCTION: NAGS catalyzes the acetylation of L-glutamate by a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004042" target="_blank" class="term-link">
+                            L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000050" target="_blank" class="term-link">
+                                urea cycle
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006526" target="_blank" class="term-link">
+                                L-arginine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link">
+                                PMID:12459178
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">N-acetylglutamate synthase (NAGS, E.C. 2.3.1.1) is a mitochondrial enzyme catalyzing the formation of N-acetylglutamate (NAG), an essential allosteric activator of carbamylphosphate synthase I (CPSI), the first enzyme of the urea cycle.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                                PMID:23894642
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">NAGS deficiency results in elevated levels of plasma ammonia which is neurotoxic.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12459178" target="_blank" class="term-link">
+                            PMID:12459178
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of the human N-acetylglutamate synthase gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21757002" target="_blank" class="term-link">
+                            PMID:21757002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The nuclear receptor FXR regulates hepatic transport and metabolism of glutamine and glutamate.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" target="_blank" class="term-link">
+                            PMID:23894642
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of the N-acetyltransferase domain of human N-acetyl-L-glutamate synthase in complex with N-acetyl-L-glutamate provides insights into its catalytic and regulatory mechanisms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7126172" target="_blank" class="term-link">
+                            PMID:7126172
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and properties of acetyl-CoA:L-glutamate N-acetyltransferase from human liver.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70542
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glutamate + acetyl CoA =&gt; N-acetyl glutamate + CoA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9955697
+
+                    </span>
+                </div>
+
+                <div class="reference-title">NAGS variants don&#39;t synthesize N-acetylglutamate</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAGS-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N159" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: Human NAGS (N-Acetylglutamate Synthase)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">45 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:56:06.093810</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="NAGS-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-human-nags-n-acetylglutamate-synthase">Comprehensive Research Report: Human NAGS (N-Acetylglutamate Synthase)</h1>
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>The gene symbol <strong>NAGS</strong> unambiguously corresponds to human <strong>N-acetylglutamate synthase, mitochondrial</strong> (UniProt: Q8N159; EC 2.3.1.1; Ensembl: ENSG00000161653). The protein belongs to the acetyltransferase family and contains the expected amino acid kinase-like (AAK) and GNAT acetyltransferase (NAT) domains, consistent with the UniProt annotation. The literature is concordant with this identity.</p>
+<p>The following table summarizes key properties of human NAGS:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Human NAGS summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol</td>
+<td><strong>NAGS</strong> (N-acetylglutamate synthase) (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, caldovic2010nacetylglutamatesynthasestructure pages 1-2)</td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td><strong>Q8N159</strong></td>
+</tr>
+<tr>
+<td>EC number</td>
+<td><strong>EC 2.3.1.1</strong> (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, caldovic2024dataminingapproachesfor pages 2-4)</td>
+</tr>
+<tr>
+<td>Enzyme classification</td>
+<td><strong>Acetyltransferase</strong>; specifically an N-acetylglutamate synthase in the acetyltransferase family (shi2015thenacetylglutamatesynthase pages 1-3, caldovic2010nacetylglutamatesynthasestructure pages 1-2)</td>
+</tr>
+<tr>
+<td>Reaction catalyzed</td>
+<td><strong>L-glutamate + acetyl-CoA → N-acetylglutamate (NAG) + CoA</strong> (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, caldovic2010nacetylglutamatesynthasestructure pages 4-5, shi2015thenacetylglutamatesynthase pages 1-3)</td>
+</tr>
+<tr>
+<td>Substrates</td>
+<td><strong>L-glutamate</strong> and <strong>acetyl-CoA</strong>; human enzyme shows high specificity for these substrates (shi2015thenacetylglutamatesynthase pages 3-6, shi2015thenacetylglutamatesynthase pages 1-3)</td>
+</tr>
+<tr>
+<td>Product</td>
+<td><strong>N-acetylglutamate (NAG)</strong>, the essential allosteric activator of CPS1 (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, caldovic2003nacetylglutamateandits pages 7-8)</td>
+</tr>
+<tr>
+<td>Allosteric activator</td>
+<td><strong>L-arginine</strong>; activates mammalian NAGS about <strong>2–5-fold</strong>, with <strong>Ka ~30–50 µM</strong> (caldovic2003nacetylglutamateandits pages 7-8, shi2015thenacetylglutamatesynthase pages 3-6)</td>
+</tr>
+<tr>
+<td>Km for glutamate</td>
+<td>Reported range <strong>~1–8.1 mM</strong> depending on preparation/assay system (shi2015thenacetylglutamatesynthase pages 3-6)</td>
+</tr>
+<tr>
+<td>Km for acetyl-CoA</td>
+<td>Reported range <strong>~0.7–4.4 mM</strong> depending on preparation/assay system (shi2015thenacetylglutamatesynthase pages 3-6)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Mitochondrial matrix</strong> (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, shi2015thenacetylglutamatesynthase pages 3-6)</td>
+</tr>
+<tr>
+<td>Tissue expression</td>
+<td>Highest in <strong>liver</strong> and <strong>small intestine</strong>; lower expression reported in <strong>kidney, testis, spleen</strong> (morizono2004mammaliannacetylglutamatesynthase. pages 1-2)</td>
+</tr>
+<tr>
+<td>Protein length</td>
+<td><strong>534 aa preprotein</strong> with N-terminal mitochondrial targeting sequence (morizono2004mammaliannacetylglutamatesynthase. pages 1-2)</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>N-terminal <strong>AAK (amino acid kinase-like) domain</strong> plus C-terminal <strong>NAT/GNAT acetyltransferase domain</strong>; also contains an N-terminal variable segment (shi2015thenacetylglutamatesynthase pages 6-8, shi2015thenacetylglutamatesynthase pages 11-15, caldovic2010nacetylglutamatesynthasestructure pages 1-2)</td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>Reported as <strong>trimeric</strong> in some studies, with evidence for arginine-dependent oligomerization behavior; vertebrate-like NAGS family members also discussed in relation to <strong>tetrameric</strong> organization/models (shi2015thenacetylglutamatesynthase pages 3-6, shi2015thenacetylglutamatesynthase pages 1-3)</td>
+</tr>
+<tr>
+<td>Disease association</td>
+<td><strong>NAGS deficiency (NAGSD)</strong> causing <strong>hyperammonemia</strong> / urea cycle dysfunction; strong disease-target association in Open Targets (morizono2004mammaliannacetylglutamatesynthase. pages 4-5, mew2011nacetylglutamatesynthasedeficiency pages 1-2, OpenTargets Search: -NAGS)</td>
+</tr>
+<tr>
+<td>Drug / functional replacement therapy</td>
+<td><strong>N-carbamylglutamate (carglumic acid / carbamylglutamate)</strong>, a stable NAG analog that activates CPS1 and can normalize ammonia in NAGSD (caldovic2010nacetylglutamatesynthasestructure pages 5-7, singh2024theefficacyof pages 1-2, mew2011nacetylglutamatesynthasedeficiency pages 5-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes core biochemical, cellular, and clinical properties of human NAGS, including its catalytic reaction, regulation, localization, and disease relevance. It is useful as a compact reference for the functional annotation of UniProt Q8N159.</em></p>
+<h2 id="1-enzymatic-function-and-catalytic-reaction">1. Enzymatic Function and Catalytic Reaction</h2>
+<p>Human N-acetylglutamate synthase (NAGS; EC 2.3.1.1) catalyzes the formation of N-acetylglutamate (NAG) from two substrates, L-glutamate and acetyl-coenzyme A (acetyl-CoA), releasing free CoA as a by-product (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, shi2015thenacetylglutamatesynthase pages 1-3). This acetylation reaction is the committed step in the production of NAG in mammalian hepatocytes. The catalytic mechanism involves a direct nucleophilic attack by the α-amino nitrogen of L-glutamate on the acetyl group of acetyl-CoA, rather than proceeding through a ping-pong mechanism (caldovic2010nacetylglutamatesynthasestructure pages 4-5).</p>
+<h3 id="substrate-specificity-and-kinetic-parameters">Substrate Specificity and Kinetic Parameters</h3>
+<p>Human NAGS exhibits high substrate specificity. Studies on human liver NAGS reported apparent Km values of 4.4 mM for acetyl-CoA and 8.1 mM for L-glutamate, whereas studies using recombinant rat NAGS yielded lower Km values of 0.7 mM for acetyl-CoA and 1 mM for L-glutamate, which are considered more representative of the purified enzyme (shi2015thenacetylglutamatesynthase pages 3-6). The enzyme displays very low activity with alternative amino acid substrates: only 5.0% activity with glutamine and 2.9% with glycine relative to glutamate. Similarly, acetyl-CoA is highly specific as the acyl donor, with only 4.3% activity toward propionyl-CoA and no measurable activity with other acyl-CoA derivatives (shi2015thenacetylglutamatesynthase pages 3-6).</p>
+<h2 id="2-domain-structure-and-protein-architecture">2. Domain Structure and Protein Architecture</h2>
+<p>Human NAGS is synthesized as a 534-amino acid preprotein (morizono2004mammaliannacetylglutamatesynthase. pages 1-2). The protein contains three structurally distinct regions:</p>
+<ul>
+<li><strong>Mitochondrial targeting signal (MTS):</strong> Residues 1–49 at the N-terminus, which direct the protein to the mitochondrial matrix and are cleaved upon import (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, morizono2004mammaliannacetylglutamatesynthase. pages 2-4).</li>
+<li><strong>Variable domain:</strong> A ~40–50 amino acid segment rich in charged residues and prolines that lacks defined secondary structure. This domain is unique to mammalian NAGS and may facilitate protein–protein interactions with other mitochondrial partners (shi2015thenacetylglutamatesynthase pages 6-8, shi2015thenacetylglutamatesynthase pages 15-17).</li>
+<li><strong>Conserved segment:</strong> Contains two independently folded functional domains connected by a short 1–3 amino acid linker:</li>
+<li>An N-terminal <strong>amino acid kinase-like (AAK) domain</strong> (approximately residues 137–373), featuring an eight-stranded β-sheet core flanked by α-helices. This domain binds L-arginine and provides the structural framework for allosteric regulation (shi2015thenacetylglutamatesynthase pages 6-8, shi2015thenacetylglutamatesynthase pages 11-15, caldovic2010nacetylglutamatesynthasestructure pages 1-2).</li>
+<li>A C-terminal <strong>N-acetyltransferase (NAT/GNAT) domain</strong> (approximately residues 377–472), adopting a seven-stranded β-sheet αβα sandwich fold characteristic of GCN5-related acetyltransferases. This domain harbors the catalytic site where both acetyl-CoA and L-glutamate bind (shi2015thenacetylglutamatesynthase pages 6-8, shi2015thenacetylglutamatesynthase pages 1-3, shi2015thenacetylglutamatesynthase pages 11-15).</li>
+</ul>
+<p>While only the NAT domain has significant NAGS catalytic activity, the AAK domain is essential for enhancing enzymatic activity and mediating arginine-dependent allosteric regulation (shi2015thenacetylglutamatesynthase pages 11-15, shi2015thenacetylglutamatesynthase pages 15-17). Vertebrate-like NAGS proteins have a tetrameric quaternary structure, distinguishing them from classical bacterial NAGS enzymes, which form hexamers (shi2015thenacetylglutamatesynthase pages 1-3). Mammalian NAGS exists as a trimer whose oligomerization state depends on L-arginine concentration (shi2015thenacetylglutamatesynthase pages 3-6).</p>
+<h2 id="3-subcellular-localization-and-tissue-expression">3. Subcellular Localization and Tissue Expression</h2>
+<p>Human NAGS is targeted to the <strong>mitochondrial matrix</strong> where it carries out its catalytic function (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, shi2015thenacetylglutamatesynthase pages 3-6). The N-terminal mitochondrial targeting signal is cleaved upon import into the mitochondria. Two possible signal peptide cleavage sites have been predicted after amino acid positions 31 and 49, generating long and short mature forms (morizono2004mammaliannacetylglutamatesynthase. pages 1-2).</p>
+<h3 id="post-translational-processing-and-multiple-forms">Post-translational Processing and Multiple Forms</h3>
+<p>Studies on mouse NAGS have revealed a bipartite mitochondrial import mechanism similar to ornithine transcarbamylase. Two cleavage events occur after mitochondrial import: (1) cleavage of the canonical mitochondrial leader peptide after amino acid 50, and (2) a second cleavage at the end of the variable domain after amino acid 91 (morizono2004mammaliannacetylglutamatesynthase. pages 4-5). This processing generates two mature forms:</p>
+<ul>
+<li><strong>NAGS-M (mature NAGS):</strong> Retains the variable domain after MTS removal.</li>
+<li><strong>NAGS-C (conserved domain NAGS):</strong> Lacks both the MTS and the variable segment.</li>
+</ul>
+<p>Both forms are catalytically active with similar substrate affinities; however, NAGS-C exhibits approximately two-fold higher maximal velocity compared to NAGS-M (caldovic2010nacetylglutamatesynthasestructure pages 1-2).</p>
+<h3 id="tissue-distribution">Tissue Distribution</h3>
+<p>NAGS is primarily expressed in <strong>liver</strong> and <strong>small intestine</strong>, the tissues where carbamoyl phosphate synthetase 1 (CPS1) is exclusively expressed (morizono2004mammaliannacetylglutamatesynthase. pages 1-2). Lower expression levels are also detectable in kidney, testis, and spleen, suggesting potential additional roles beyond the urea cycle (morizono2004mammaliannacetylglutamatesynthase. pages 1-2). Notably, one study reported that NAGS immunoreactivity was not detected in kidney or spleen tissue, indicating that the primary physiological expression is hepatic and intestinal (shi2015thenacetylglutamatesynthase pages 3-6).</p>
+<h2 id="4-role-in-the-urea-cycle-and-biochemical-pathway">4. Role in the Urea Cycle and Biochemical Pathway</h2>
+<p>The primary physiological role of human NAGS is to produce N-acetylglutamate (NAG), which serves as an <strong>essential and obligatory allosteric activator</strong> of carbamoyl phosphate synthetase 1 (CPS1), the first and rate-limiting enzyme of the urea cycle (morizono2004mammaliannacetylglutamatesynthase. pages 1-2, caldovic2003nacetylglutamateandits pages 7-8, haskins2016effectofarginine pages 1-2). Without NAG, CPS1 is catalytically inactive, and the entire urea cycle—which converts toxic ammonia into non-toxic urea—is effectively shut down.</p>
+<h3 id="regulatory-function-in-ureagenesis">Regulatory Function in Ureagenesis</h3>
+<p>NAG concentrations in liver mitochondria are similar to the activation constant (Ka) of CPS1 for NAG, positioning NAG as a key flux regulator of the urea cycle (caldovic2003nacetylglutamateandits pages 7-8, caldovic2003nacetylglutamateandits pages 6-7). The regulation operates through a <strong>double positive feedback loop</strong>: L-arginine (the end-product of the urea cycle) allosterically activates NAGS to produce NAG, which in turn activates CPS1 (caldovic2010nacetylglutamatesynthasestructure pages 2-4, haskins2008inversionofallosteric pages 9-10). This arrangement creates a rapid and robust ammonia detoxification system that protects the central nervous system from hyperammonemia (caldovic2010nacetylglutamatesynthasestructure pages 2-4).</p>
+<p>Increased dietary protein and ammonia intake are associated with elevated NAGS activity and hepatic NAG content, allowing modulation of urea cycle flux at relatively constant ammonium concentrations (caldovic2003nacetylglutamateandits pages 7-8).</p>
+<h2 id="5-allosteric-regulation-by-l-arginine">5. Allosteric Regulation by L-Arginine</h2>
+<p>L-arginine is the primary allosteric activator of mammalian NAGS, increasing enzymatic activity 2–5-fold at saturating substrate concentrations, with an activation constant (Ka) of 30–50 µM (caldovic2003nacetylglutamateandits pages 7-8, shi2015thenacetylglutamatesynthase pages 3-6). This Ka corresponds well to physiological liver arginine concentrations, ensuring physiological relevance of the activation mechanism. The activation is highly specific to L-arginine; among structural analogues, only L-argininic acid produces similar activation, and both bind to the same site (shi2015thenacetylglutamatesynthase pages 3-6). Arginine increases enzyme velocity without significantly affecting substrate affinity (caldovic2003nacetylglutamateandits pages 6-7, shi2015thenacetylglutamatesynthase pages 3-6).</p>
+<p>The arginine-binding site is located at the C-terminus of the AAK domain near the AAK-NAT domain interface and is defined by a conserved motif (E-(L/I)-(F/M)-(T/S)-X-X-G-X-G-T) (shi2015thenacetylglutamatesynthase pages 8-11). In mammalian NAGS, arginine binding induces a conformational change causing the NAT domain to undergo marked reorientation relative to the AAK domain, enabling their productive interaction (caldovic2010nacetylglutamatesynthasestructure pages 2-4). Arginine binding also affects NAGS oligomerization state: in mouse NAGS, the partition coefficient increases in the presence of L-arginine, suggesting a smaller hydrodynamic radius due to a conformational or oligomerization change (haskins2016effectofarginine pages 1-2).</p>
+<p>The physiological importance of arginine activation was demonstrated in vivo using NAGS knockout mice treated with AAV vectors encoding either wild-type NAGS or the arginine-insensitive E354A mutant. Mice expressing E354A mutant NAGS were viable but maintained chronically elevated plasma ammonia despite equivalent protein expression levels, demonstrating that arginine activation is essential for normal ureagenesis (sonaimuthu2021genedeliverycorrects pages 1-2, sonaimuthu2021genedeliverycorrects pages 8-11).</p>
+<h2 id="6-evolutionary-perspective">6. Evolutionary Perspective</h2>
+<p>NAGS has undergone a remarkable evolutionary transformation in its allosteric regulation. In microorganisms and plants, NAGS catalyzes the first committed step of arginine biosynthesis and is <strong>inhibited</strong> by arginine as part of end-product feedback regulation (haskins2008inversionofallosteric pages 8-9, caldovic2010nacetylglutamatesynthasestructure pages 1-2). During the evolution of vertebrates from aquatic to terrestrial habitats, the allosteric effect of arginine on NAGS inverted from inhibition to activation (haskins2008inversionofallosteric pages 8-9, haskins2008inversionofallosteric pages 9-10).</p>
+<p>This transition was gradual across vertebrate phylogeny: bacterial NAGS shows complete inhibition by arginine, fish NAGS (zebrafish, pufferfish) shows partial inhibition, and amphibian and mammalian NAGS shows full activation (haskins2008inversionofallosteric pages 9-10, haskins2008inversionofallosteric pages 1-2). The four invariant amino acids responsible for arginine binding are conserved from bacteria to mammals, indicating that the same binding site produces different conformational outcomes depending on species-specific structural context (haskins2008inversionofallosteric pages 8-9, haskins2008inversionofallosteric pages 4-5). This allosteric inversion coincided with the transition from CPS III (in fish) to CPS I (in tetrapods) and is considered a molecular marker for tetrapod evolution (haskins2008inversionofallosteric pages 8-9, haskins2008inversionofallosteric pages 9-10).</p>
+<p>Phylogenetically, mammalian NAGS evolved from a bifunctional N-acetylglutamate synthase-kinase (NAGS-K) ancestor, retaining the acetyltransferase activity while losing the kinase activity that is no longer needed in animals (qu2007anovelbifunctional pages 11-12, shi2015thenacetylglutamatesynthase pages 11-15). The mammalian NAGS gene was not identified until 2002 due to very low sequence similarity (~20–30%) with classical bacterial NAGS (shi2015thenacetylglutamatesynthase pages 1-3, caldovic2010nacetylglutamatesynthasestructure pages 2-4).</p>
+<h2 id="7-clinical-significance-nags-deficiency">7. Clinical Significance: NAGS Deficiency</h2>
+<h3 id="disease-overview">Disease Overview</h3>
+<p>NAGS deficiency (NAGSD; OMIM #237310) is an autosomal recessive urea cycle disorder and the <strong>rarest</strong> of all urea cycle defects, with an estimated incidence of less than 1 in 2,000,000 live births (singh2024theefficacyof pages 1-2). As of 2024, only approximately 105 cases from 79 families have been reported worldwide (caldovic2024dataminingapproachesfor pages 2-4). The condition is uniquely treatable among urea cycle disorders because a pharmacological substitute for NAG is available (mew2011nacetylglutamatesynthasedeficiency pages 5-6). OpenTargets analysis confirms strong disease-target associations for NAGS with hyperammonemia due to NAGS deficiency (association score 0.84) and hereditary disease (score 0.87) (OpenTargets Search: -NAGS).</p>
+<h3 id="clinical-presentation">Clinical Presentation</h3>
+<p>NAGS deficiency presents with hyperammonemia that can range from severe neonatal onset to mild late-onset forms. Neonatal presentations typically include poor feeding, vomiting, lethargy, hypertonia or hypotonia, seizures, and tachypnea (kenneson2020presentationandmanagement pages 6-7, singh2024theefficacyof pages 1-2). Late-onset cases may present with cyclic vomiting, behavioral changes, headaches, ataxia, and decreased consciousness, sometimes not diagnosed until adulthood (kenneson2020presentationandmanagement pages 6-7, logt2016hyperammonemiadueto pages 2-4). Biochemically, affected individuals show elevated plasma ammonia and glutamine, with low-to-normal citrulline and normal urinary orotic acid, a profile indistinguishable from CPS1 deficiency (mew2011nacetylglutamatesynthasedeficiency pages 1-2, caldovic2010nacetylglutamatesynthasestructure pages 5-7).</p>
+<h3 id="genotype-phenotype-correlations">Genotype-Phenotype Correlations</h3>
+<p>Missense mutations in the C-terminal NAT domain typically cause severe neonatal-onset disease with less than 5% residual enzyme activity, often involving frameshift or nonsense mutations (kenneson2020presentationandmanagement pages 6-7, caldovic2010nacetylglutamatesynthasestructure pages 5-7). Mutations in the AAK domain tend to cause later-onset phenotypes and may affect arginine regulation rather than catalysis directly (kenneson2020presentationandmanagement pages 6-7). Residual NAGS activity as low as 5% can result in milder, late-onset disease (caldovic2024dataminingapproachesfor pages 4-6).</p>
+<h3 id="treatment">Treatment</h3>
+<p>NAGS deficiency is uniquely treatable with <strong>N-carbamylglutamate (NCG; carglumic acid, Carbaglu®)</strong>, a stable structural analog of NAG that directly activates CPS1 and is resistant to enzymatic degradation by acylase (caldovic2010nacetylglutamatesynthasestructure pages 5-7, mew2011nacetylglutamatesynthasedeficiency pages 5-6). NCG normalizes plasma ammonia levels within 8 hours during acute hyperammonemic crises and is effective as long-term maintenance therapy at doses of 15–200 mg/kg/day (caldovic2010nacetylglutamatesynthasestructure pages 5-7, mew2011nacetylglutamatesynthasedeficiency pages 5-6). All patients studied have responded well to carbamylglutamate therapy, with normalization of plasma ammonia, citrulline, and urine orotic acid (singh2024theefficacyof pages 1-2). A 3-day NCG trial at 2.2 g/m²/day can serve both diagnostic and therapeutic purposes (caldovic2010nacetylglutamatesynthasestructure pages 5-7).</p>
+<h2 id="8-recent-developments-2024">8. Recent Developments (2024)</h2>
+<h3 id="recombinant-human-nags-for-variant-assessment">Recombinant Human NAGS for Variant Assessment</h3>
+<p>Gougeard et al. (2024) developed a stabilized chimeric form of human NAGS (the conserved domain fused with maltose binding protein, MBP-cHuNAGS) for assessing the pathogenicity of missense variants found in NAGSD patients. They characterized 23 nonsynonymous single-base changes and found that for all but one variant (A279T), disease causation was explained by the enzymatic alterations identified, including loss of arginine activation, increased Km for glutamate, active site inactivation, decreased thermal stability, and protein misfolding (gougeard2024useofpure pages 14-16). Importantly, 17 of the 23 variants showed increased tendency to misfold, suggesting that NAGSD may fundamentally function as a <strong>protein misfolding disease</strong>. The study also revealed that wild-type human NAGS loses 25% of activity at fever temperature (40°C), suggesting thermal instability as a clinically relevant disease mechanism. The authors suggest that pharmacochaperones could represent a novel therapeutic strategy (gougeard2024useofpure pages 14-16).</p>
+<h3 id="transcriptional-regulation-and-prevalence-studies">Transcriptional Regulation and Prevalence Studies</h3>
+<p>Caldovic et al. (2024) used datamining approaches to investigate the low prevalence of NAGSD and identify novel regulatory elements in the NAGS gene and other urea cycle genes. They discovered a <strong>novel regulatory element in the first intron</strong> of the NAGS gene through ENCODE database analysis and identified eight deleterious sequence variants in NAGS splicing regions and cis-acting regulatory elements (caldovic2024dataminingapproachesfor pages 2-4, caldovic2024dataminingapproachesfor pages 1-2). Their analysis suggests that the rarity of NAGSD may be due to several factors: (1) the NAGS protein fold tolerates amino acid substitutions unusually well, with NAGS monomers from different organisms sharing only ~20% sequence identity while maintaining similar three-dimensional structures; (2) the NAGS catalytic domain has a small genomic footprint (comprising only 29.5% of the protein); and (3) alternative metabolic sources of NAG or NCG may exist in the body (caldovic2024dataminingapproachesfor pages 4-6).</p>
+<h3 id="nutritional-management">Nutritional Management</h3>
+<p>Singh et al. (2024) reported on the efficacy of carbamylglutamate in seven NAGS deficiency cases, demonstrating that protein restriction is generally not necessary when patients are maintained on adequate carbamylglutamate therapy, though disruption of access to the drug can have severe consequences including hyperammonemic episodes with poor long-term outcomes (singh2024theefficacyof pages 1-2).</p>
+<h3 id="gene-therapy">Gene Therapy</h3>
+<p>Sonaimuthu et al. (2021) demonstrated successful AAV2/8-based gene therapy for NAGS deficiency in knockout mice. Doses of 10¹⁰ and 10¹¹ viral particles completely rescued Nags−/− mice from hyperammonemia, with NAGS protein expression matching or exceeding wild-type levels (sonaimuthu2021genedeliverycorrects pages 5-6, sonaimuthu2021genedeliverycorrects pages 6-8). The study also demonstrated that arginine-insensitive NAGS (E354A mutant) failed to fully correct hyperammonemia despite equivalent protein expression, confirming the physiological essentiality of arginine-mediated NAGS activation (sonaimuthu2021genedeliverycorrects pages 1-2, sonaimuthu2021genedeliverycorrects pages 8-11).</p>
+<h2 id="9-summary">9. Summary</h2>
+<p>Human NAGS (Q8N159) is a mitochondrial matrix acetyltransferase that catalyzes the synthesis of N-acetylglutamate from L-glutamate and acetyl-CoA. Its primary biological role is to produce NAG, the obligatory allosteric activator of CPS1, the first and rate-limiting enzyme of the urea cycle. NAGS is allosterically activated by L-arginine, creating a double positive feedback loop that enables rapid and robust ammonia detoxification. The enzyme is predominantly expressed in liver and small intestine, consistent with its role in hepatic ureagenesis. NAGS deficiency is the rarest urea cycle disorder but is uniquely treatable with the NAG analog N-carbamylglutamate (carglumic acid). Recent research (2024) has revealed that many NAGSD-causing mutations lead to protein misfolding, opening potential therapeutic avenues with pharmacochaperones, while novel cis-regulatory elements in the NAGS gene continue to be discovered through genomic datamining approaches.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(morizono2004mammaliannacetylglutamatesynthase. pages 1-2): Hiroki Morizono, Ljubica Caldovic, Dashuang Shi, and Mendel Tuchman. Mammalian n-acetylglutamate synthase. Molecular genetics and metabolism, 81 Suppl 1:S4-11, Apr 2004. URL: https://doi.org/10.1016/j.ymgme.2003.10.017, doi:10.1016/j.ymgme.2003.10.017. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caldovic2010nacetylglutamatesynthasestructure pages 1-2): Ljubica Caldovic, Nicholas Ah Mew, Dashuang Shi, Hiroki Morizono, Marc Yudkoff, and Mendel Tuchman. N-acetylglutamate synthase: structure, function and defects. Molecular genetics and metabolism, 100 Suppl 1:S13-9, Jan 2010. URL: https://doi.org/10.1016/j.ymgme.2010.02.018, doi:10.1016/j.ymgme.2010.02.018. This article has 95 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caldovic2024dataminingapproachesfor pages 2-4): Ljubica Caldovic, Julie J. Ahn, Jacklyn Andricovic, Veronica M. Balick, Mallory Brayer, Pamela A. Chansky, Tyson Dawson, Alex C. Edwards, Sara E. Felsen, Karim Ismat, Sveta V. Jagannathan, Brendan T. Mann, Jacob A. Medina, Toshio Morizono, Michio Morizono, Shatha Salameh, Neerja Vashist, Emily C. Williams, Zhe Zhou, and Hiroki Morizono. Datamining approaches for examining the low prevalence of n‐acetylglutamate synthase deficiency and understanding transcriptional regulation of urea cycle genes. Journal of Inherited Metabolic Disease, 47:1175-1193, Nov 2024. URL: https://doi.org/10.1002/jimd.12687, doi:10.1002/jimd.12687. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 1-3): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(caldovic2010nacetylglutamatesynthasestructure pages 4-5): Ljubica Caldovic, Nicholas Ah Mew, Dashuang Shi, Hiroki Morizono, Marc Yudkoff, and Mendel Tuchman. N-acetylglutamate synthase: structure, function and defects. Molecular genetics and metabolism, 100 Suppl 1:S13-9, Jan 2010. URL: https://doi.org/10.1016/j.ymgme.2010.02.018, doi:10.1016/j.ymgme.2010.02.018. This article has 95 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 3-6): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(caldovic2003nacetylglutamateandits pages 7-8): Ljubica CALDOVIC and Mendel TUCHMAN. N-acetylglutamate and its changing role through evolution. The Biochemical journal, 372 Pt 2:279-90, Jun 2003. URL: https://doi.org/10.1042/bj20030002, doi:10.1042/bj20030002. This article has 194 citations.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 6-8): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 11-15): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(morizono2004mammaliannacetylglutamatesynthase. pages 4-5): Hiroki Morizono, Ljubica Caldovic, Dashuang Shi, and Mendel Tuchman. Mammalian n-acetylglutamate synthase. Molecular genetics and metabolism, 81 Suppl 1:S4-11, Apr 2004. URL: https://doi.org/10.1016/j.ymgme.2003.10.017, doi:10.1016/j.ymgme.2003.10.017. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mew2011nacetylglutamatesynthasedeficiency pages 1-2): Nicholas Ah Mew and Nicholas Ah Mew. N-acetylglutamate synthase deficiency: an insight into the genetics, epidemiology, pathophysiology, and treatment. The Application of Clinical Genetics, pages 127, Aug 2011. URL: https://doi.org/10.2147/tacg.s12702, doi:10.2147/tacg.s12702. This article has 53 citations.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -NAGS): Open Targets Query (-NAGS, 9 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(caldovic2010nacetylglutamatesynthasestructure pages 5-7): Ljubica Caldovic, Nicholas Ah Mew, Dashuang Shi, Hiroki Morizono, Marc Yudkoff, and Mendel Tuchman. N-acetylglutamate synthase: structure, function and defects. Molecular genetics and metabolism, 100 Suppl 1:S13-9, Jan 2010. URL: https://doi.org/10.1016/j.ymgme.2010.02.018, doi:10.1016/j.ymgme.2010.02.018. This article has 95 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2024theefficacyof pages 1-2): Rani H. Singh, Marie-Hélène Bourdages, Angela Kurtz, Erin MacLoed, Chelsea Norman, Suzanne Ratko, Sandra C. van Calcar, and Aileen Kenneson. The efficacy of carbamylglutamate impacts the nutritional management of patients with n-acetylglutamate synthase deficiency. Orphanet Journal of Rare Diseases, Apr 2024. URL: https://doi.org/10.1186/s13023-024-03167-0, doi:10.1186/s13023-024-03167-0. This article has 10 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mew2011nacetylglutamatesynthasedeficiency pages 5-6): Nicholas Ah Mew and Nicholas Ah Mew. N-acetylglutamate synthase deficiency: an insight into the genetics, epidemiology, pathophysiology, and treatment. The Application of Clinical Genetics, pages 127, Aug 2011. URL: https://doi.org/10.2147/tacg.s12702, doi:10.2147/tacg.s12702. This article has 53 citations.</p>
+</li>
+<li>
+<p>(morizono2004mammaliannacetylglutamatesynthase. pages 2-4): Hiroki Morizono, Ljubica Caldovic, Dashuang Shi, and Mendel Tuchman. Mammalian n-acetylglutamate synthase. Molecular genetics and metabolism, 81 Suppl 1:S4-11, Apr 2004. URL: https://doi.org/10.1016/j.ymgme.2003.10.017, doi:10.1016/j.ymgme.2003.10.017. This article has 76 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 15-17): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(haskins2016effectofarginine pages 1-2): N. Haskins, Amy Mumo, P. H. Brown, M. Tuchman, H. Morizono, and L. Caldovic. Effect of arginine on oligomerization and stability of n-acetylglutamate synthase. Scientific Reports, Dec 2016. URL: https://doi.org/10.1038/srep38711, doi:10.1038/srep38711. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caldovic2003nacetylglutamateandits pages 6-7): Ljubica CALDOVIC and Mendel TUCHMAN. N-acetylglutamate and its changing role through evolution. The Biochemical journal, 372 Pt 2:279-90, Jun 2003. URL: https://doi.org/10.1042/bj20030002, doi:10.1042/bj20030002. This article has 194 citations.</p>
+</li>
+<li>
+<p>(caldovic2010nacetylglutamatesynthasestructure pages 2-4): Ljubica Caldovic, Nicholas Ah Mew, Dashuang Shi, Hiroki Morizono, Marc Yudkoff, and Mendel Tuchman. N-acetylglutamate synthase: structure, function and defects. Molecular genetics and metabolism, 100 Suppl 1:S13-9, Jan 2010. URL: https://doi.org/10.1016/j.ymgme.2010.02.018, doi:10.1016/j.ymgme.2010.02.018. This article has 95 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haskins2008inversionofallosteric pages 9-10): Nantaporn Haskins, Maria Panglao, Qiuhao Qu, Himani Majumdar, Juan Cabrera-Luque, Hiroki Morizono, Mendel Tuchman, and Ljubica Caldovic. Inversion of allosteric effect of arginine on n-acetylglutamate synthase, a molecular marker for evolution of tetrapods. BMC Biochemistry, 9:24-24, Sep 2008. URL: https://doi.org/10.1186/1471-2091-9-24, doi:10.1186/1471-2091-9-24. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(shi2015thenacetylglutamatesynthase pages 8-11): Dashuang Shi, Norma Allewell, and Mendel Tuchman. The n-acetylglutamate synthase family: structures, function and mechanisms. International Journal of Molecular Sciences, 16:13004-13022, Jun 2015. URL: https://doi.org/10.3390/ijms160613004, doi:10.3390/ijms160613004. This article has 46 citations.</p>
+</li>
+<li>
+<p>(sonaimuthu2021genedeliverycorrects pages 1-2): P. Sonaimuthu, E. Senkevitch, N. Haskins, P. Uapinyoying, M. McNutt, H. Morizono, M. Tuchman, and L. Caldovic. Gene delivery corrects n-acetylglutamate synthase deficiency and enables insights in the physiological impact of l-arginine activation of n-acetylglutamate synthase. Scientific Reports, Feb 2021. URL: https://doi.org/10.1038/s41598-021-82994-8, doi:10.1038/s41598-021-82994-8. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sonaimuthu2021genedeliverycorrects pages 8-11): P. Sonaimuthu, E. Senkevitch, N. Haskins, P. Uapinyoying, M. McNutt, H. Morizono, M. Tuchman, and L. Caldovic. Gene delivery corrects n-acetylglutamate synthase deficiency and enables insights in the physiological impact of l-arginine activation of n-acetylglutamate synthase. Scientific Reports, Feb 2021. URL: https://doi.org/10.1038/s41598-021-82994-8, doi:10.1038/s41598-021-82994-8. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haskins2008inversionofallosteric pages 8-9): Nantaporn Haskins, Maria Panglao, Qiuhao Qu, Himani Majumdar, Juan Cabrera-Luque, Hiroki Morizono, Mendel Tuchman, and Ljubica Caldovic. Inversion of allosteric effect of arginine on n-acetylglutamate synthase, a molecular marker for evolution of tetrapods. BMC Biochemistry, 9:24-24, Sep 2008. URL: https://doi.org/10.1186/1471-2091-9-24, doi:10.1186/1471-2091-9-24. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haskins2008inversionofallosteric pages 1-2): Nantaporn Haskins, Maria Panglao, Qiuhao Qu, Himani Majumdar, Juan Cabrera-Luque, Hiroki Morizono, Mendel Tuchman, and Ljubica Caldovic. Inversion of allosteric effect of arginine on n-acetylglutamate synthase, a molecular marker for evolution of tetrapods. BMC Biochemistry, 9:24-24, Sep 2008. URL: https://doi.org/10.1186/1471-2091-9-24, doi:10.1186/1471-2091-9-24. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(haskins2008inversionofallosteric pages 4-5): Nantaporn Haskins, Maria Panglao, Qiuhao Qu, Himani Majumdar, Juan Cabrera-Luque, Hiroki Morizono, Mendel Tuchman, and Ljubica Caldovic. Inversion of allosteric effect of arginine on n-acetylglutamate synthase, a molecular marker for evolution of tetrapods. BMC Biochemistry, 9:24-24, Sep 2008. URL: https://doi.org/10.1186/1471-2091-9-24, doi:10.1186/1471-2091-9-24. This article has 38 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(qu2007anovelbifunctional pages 11-12): Qiuhao Qu, Hiroki Morizono, Dashuang Shi, Mendel Tuchman, and Ljubica Caldovic. A novel bifunctional n-acetylglutamate synthase-kinase from xanthomonas campestris that is closely related to mammalian n-acetylglutamate synthase. BMC Biochemistry, 8:4-4, Apr 2007. URL: https://doi.org/10.1186/1471-2091-8-4, doi:10.1186/1471-2091-8-4. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kenneson2020presentationandmanagement pages 6-7): Aileen Kenneson and Rani H. Singh. Presentation and management of n-acetylglutamate synthase deficiency: a review of the literature. Orphanet Journal of Rare Diseases, Oct 2020. URL: https://doi.org/10.1186/s13023-020-01560-z, doi:10.1186/s13023-020-01560-z. This article has 26 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(logt2016hyperammonemiadueto pages 2-4): Anne-Els van de Logt, Leo A. J. Kluijtmans, Marleen C. D. G. Huigen, and Mirian C. H. Janssen. Hyperammonemia due to adult-onset n-acetylglutamate synthase deficiency. JIMD reports, 31:95-99, May 2016. URL: https://doi.org/10.1007/8904_2016_565, doi:10.1007/8904_2016_565. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caldovic2024dataminingapproachesfor pages 4-6): Ljubica Caldovic, Julie J. Ahn, Jacklyn Andricovic, Veronica M. Balick, Mallory Brayer, Pamela A. Chansky, Tyson Dawson, Alex C. Edwards, Sara E. Felsen, Karim Ismat, Sveta V. Jagannathan, Brendan T. Mann, Jacob A. Medina, Toshio Morizono, Michio Morizono, Shatha Salameh, Neerja Vashist, Emily C. Williams, Zhe Zhou, and Hiroki Morizono. Datamining approaches for examining the low prevalence of n‐acetylglutamate synthase deficiency and understanding transcriptional regulation of urea cycle genes. Journal of Inherited Metabolic Disease, 47:1175-1193, Nov 2024. URL: https://doi.org/10.1002/jimd.12687, doi:10.1002/jimd.12687. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gougeard2024useofpure pages 14-16): Nadine Gougeard, Enea Sancho‐Vaello, M. Leonor Fernández‐Murga, Borja Martínez‐Sinisterra, Badr Loukili‐Hassani, Johannes Häberle, Clara Marco‐Marín, and Vicente Rubio. Use of pure recombinant human enzymes to assess the disease‐causing potential of missense mutations in urea cycle disorders, applied to n‐acetylglutamate synthase deficiency. Journal of Inherited Metabolic Disease, 47:1194-1212, May 2024. URL: https://doi.org/10.1002/jimd.12747, doi:10.1002/jimd.12747. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(caldovic2024dataminingapproachesfor pages 1-2): Ljubica Caldovic, Julie J. Ahn, Jacklyn Andricovic, Veronica M. Balick, Mallory Brayer, Pamela A. Chansky, Tyson Dawson, Alex C. Edwards, Sara E. Felsen, Karim Ismat, Sveta V. Jagannathan, Brendan T. Mann, Jacob A. Medina, Toshio Morizono, Michio Morizono, Shatha Salameh, Neerja Vashist, Emily C. Williams, Zhe Zhou, and Hiroki Morizono. Datamining approaches for examining the low prevalence of n‐acetylglutamate synthase deficiency and understanding transcriptional regulation of urea cycle genes. Journal of Inherited Metabolic Disease, 47:1175-1193, Nov 2024. URL: https://doi.org/10.1002/jimd.12687, doi:10.1002/jimd.12687. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sonaimuthu2021genedeliverycorrects pages 5-6): P. Sonaimuthu, E. Senkevitch, N. Haskins, P. Uapinyoying, M. McNutt, H. Morizono, M. Tuchman, and L. Caldovic. Gene delivery corrects n-acetylglutamate synthase deficiency and enables insights in the physiological impact of l-arginine activation of n-acetylglutamate synthase. Scientific Reports, Feb 2021. URL: https://doi.org/10.1038/s41598-021-82994-8, doi:10.1038/s41598-021-82994-8. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sonaimuthu2021genedeliverycorrects pages 6-8): P. Sonaimuthu, E. Senkevitch, N. Haskins, P. Uapinyoying, M. McNutt, H. Morizono, M. Tuchman, and L. Caldovic. Gene delivery corrects n-acetylglutamate synthase deficiency and enables insights in the physiological impact of l-arginine activation of n-acetylglutamate synthase. Scientific Reports, Feb 2021. URL: https://doi.org/10.1038/s41598-021-82994-8, doi:10.1038/s41598-021-82994-8. This article has 16 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="NAGS-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>shi2015thenacetylglutamatesynthase pages 3-6</li>
+<li>caldovic2010nacetylglutamatesynthasestructure pages 4-5</li>
+<li>shi2015thenacetylglutamatesynthase pages 1-3</li>
+<li>caldovic2010nacetylglutamatesynthasestructure pages 1-2</li>
+<li>caldovic2010nacetylglutamatesynthasestructure pages 2-4</li>
+<li>caldovic2003nacetylglutamateandits pages 7-8</li>
+<li>shi2015thenacetylglutamatesynthase pages 8-11</li>
+<li>haskins2016effectofarginine pages 1-2</li>
+<li>singh2024theefficacyof pages 1-2</li>
+<li>caldovic2024dataminingapproachesfor pages 2-4</li>
+<li>mew2011nacetylglutamatesynthasedeficiency pages 5-6</li>
+<li>kenneson2020presentationandmanagement pages 6-7</li>
+<li>caldovic2024dataminingapproachesfor pages 4-6</li>
+<li>caldovic2010nacetylglutamatesynthasestructure pages 5-7</li>
+<li>gougeard2024useofpure pages 14-16</li>
+<li>shi2015thenacetylglutamatesynthase pages 6-8</li>
+<li>shi2015thenacetylglutamatesynthase pages 11-15</li>
+<li>mew2011nacetylglutamatesynthasedeficiency pages 1-2</li>
+<li>shi2015thenacetylglutamatesynthase pages 15-17</li>
+<li>caldovic2003nacetylglutamateandits pages 6-7</li>
+<li>haskins2008inversionofallosteric pages 9-10</li>
+<li>sonaimuthu2021genedeliverycorrects pages 1-2</li>
+<li>sonaimuthu2021genedeliverycorrects pages 8-11</li>
+<li>haskins2008inversionofallosteric pages 8-9</li>
+<li>haskins2008inversionofallosteric pages 1-2</li>
+<li>haskins2008inversionofallosteric pages 4-5</li>
+<li>qu2007anovelbifunctional pages 11-12</li>
+<li>logt2016hyperammonemiadueto pages 2-4</li>
+<li>caldovic2024dataminingapproachesfor pages 1-2</li>
+<li>sonaimuthu2021genedeliverycorrects pages 5-6</li>
+<li>sonaimuthu2021genedeliverycorrects pages 6-8</li>
+<li>https://doi.org/10.1016/j.ymgme.2003.10.017,</li>
+<li>https://doi.org/10.1016/j.ymgme.2010.02.018,</li>
+<li>https://doi.org/10.1002/jimd.12687,</li>
+<li>https://doi.org/10.3390/ijms160613004,</li>
+<li>https://doi.org/10.1042/bj20030002,</li>
+<li>https://doi.org/10.2147/tacg.s12702,</li>
+<li>https://doi.org/10.1186/s13023-024-03167-0,</li>
+<li>https://doi.org/10.1038/srep38711,</li>
+<li>https://doi.org/10.1186/1471-2091-9-24,</li>
+<li>https://doi.org/10.1038/s41598-021-82994-8,</li>
+<li>https://doi.org/10.1186/1471-2091-8-4,</li>
+<li>https://doi.org/10.1186/s13023-020-01560-z,</li>
+<li>https://doi.org/10.1007/8904_2016_565,</li>
+<li>https://doi.org/10.1002/jimd.12747,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NAGS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N159" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nags-n-acetylglutamate-synthase-mitochondrial-review-notes">NAGS (N-acetylglutamate synthase, mitochondrial) — review notes</h1>
+<p>UniProt: Q8N159 (NAGS_HUMAN). Human, 534 aa precursor with N-terminal mitochondrial<br />
+transit peptide. EC 2.3.1.1.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>NAGS catalyzes: L-glutamate + acetyl-CoA = N-acetyl-L-glutamate (NAG) + CoA + H+<br />
+  (RHEA:24292, EC 2.3.1.1). This is the exact GO term GO:0004042<br />
+  "L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor"<br />
+  (synonym: "N-acetylglutamate synthase activity").<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12459178" title="N-acetylglutamate synthase (NAGS, E.C. 2.3.1.1) is a mitochondrial enzyme catalyzing the formation of N-acetylglutamate (NAG), an essential allosteric activator of carbamylphosphate synthase I (CPSI), the first enzyme of the urea cycle.">PMID:12459178</a></li>
+<li>NAG is the OBLIGATE allosteric activator of CPS1 (the first, rate-limiting enzyme of<br />
+  the urea cycle). Without NAG, CPS1 is inactive → hyperammonemia.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12459178" title="Patients with NAGS deficiency develop hyperammonemia because CPSI is inactive without NAG.">PMID:12459178</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23894642" title="an obligate cofactor for carbamyl phosphate synthetase I (CPSI) in the urea cycle">PMID:23894642</a></li>
+<li>Thus NAGS is the REGULATORY GATE of the urea cycle: not stoichiometrically part of the<br />
+  cycle, but the cycle cannot run without its product. In mammals NAG's role is entirely<br />
+  urea-cycle-related, NOT ongoing arginine biosynthesis (unlike bacteria/plants where NAG<br />
+  is the committed step of de novo arginine biosynthesis).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23894642" title="In microorganisms and plants, NAG is further converted to NAG phosphate by NAG kinase (NAGK, EC 2.7.2.8) to continue the L-arginine biosynthetic pathway ... However, in mammals, NAG has an entirely different role as the essential cofactor for carbamyl phosphate synthetase I (CPSI) in the urea cycle">PMID:23894642</a></li>
+<li>Localization: mitochondrial matrix (of hepatocytes and enterocytes). Enzyme purified<br />
+  from human liver mitochondria.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/7126172" title="Acetyl-CoA:L-glutamate N-acetyltransferase (amino acid acetyltransferase, EC 2.3.1.1) was isolated from human liver mitochondria">PMID:7126172</a></li>
+<li>Regulation: activity INCREASED by L-arginine in mammals (opposite of bacterial NAGS,<br />
+  which is arginine-inhibited). L-arginine binds the AAK (amino-acid kinase) domain.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23894642" title="in mammals, L-arginine enhances the NAGS activity">PMID:23894642</a></li>
+<li>Architecture: two domains — N-terminal AAK (amino-acid kinase-like, arginine binding /<br />
+  regulatory) and C-terminal NAT (GCN5-related N-acetyltransferase, catalytic). The NAT<br />
+  domain alone retains catalytic activity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23894642" title="the hNAT domain retains catalytic activity in the absence of the amino acid kinase (AAK) domain. Instead, the major functions of the AAK domain appear to be providing a binding site for the allosteric activator, L-arginine, and an N-terminal proline-rich motif that is likely to function in signal transduction to CPS1.">PMID:23894642</a></li>
+<li>Quaternary structure: homodimer / homotetramer. <a href="https://pubmed.ncbi.nlm.nih.gov/23894642" title="native NAGS from human and mouse exists in tetrameric form">PMID:23894642</a></li>
+<li>Tissue: highly expressed in adult liver, kidney, small intestine. [UniProt TISSUE SPECIFICITY]</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>NAGS deficiency (NAGSD; MIM:237310; MONDO:0009377) — autosomal recessive urea cycle<br />
+disorder, hyperammonemia without orotic aciduria; clinically indistinguishable from CPS1<br />
+deficiency. Uniquely treatable with carglumic acid (N-carbamyl-L-glutamate), a stable NAG<br />
+analogue that directly activates CPS1. [dismech N-Acetylglutamate_Synthase_Deficiency.yaml]</p>
+<h2 id="annotation-specific-notes">Annotation-specific notes</h2>
+<ul>
+<li>GO:0016747 (acyltransferase activity, transferring groups other than amino-acyl groups):<br />
+  IEA from InterPro GNAT domain (IPR000182). This is a broad parent of GO:0004042. Since the<br />
+  specific activity GO:0004042 is experimentally established and also present, GO:0016747 is<br />
+  an over-annotation (too general) → MODIFY to GO:0004042.</li>
+<li>GO:0006536 (glutamate metabolic process): IBA, true (NAG synthesis consumes glutamate) but<br />
+  broad; keep as non-core.</li>
+<li>GO:0006526 (L-arginine biosynthetic process): IBA + IEA. NAGS catalyzes step 1 of the<br />
+  L-arginine/ornithine biosynthetic pathway from glutamate (UniProt PATHWAY: UPA00068 UER00106,<br />
+  "N(2)-acetyl-L-ornithine from L-glutamate: step 1/4"). This is the canonical phylogenetic<br />
+  function of the family; accept, though in mammals the NAG product is primarily used to<br />
+  activate CPS1 rather than for net arginine synthesis. Accept (family-conserved committed step).</li>
+<li>GO:0090461 (intracellular glutamate homeostasis) IDA + GO:0000050 (urea cycle) IDA from<br />
+  PMID:21757002 (FXR paper). Cached publication is abstract-only (full_text_available: false);<br />
+  the BHF-UCL curator read the full text. Do not remove experimental annotations. urea cycle is<br />
+  a genuine core role; intracellular glutamate homeostasis is more peripheral → keep as non-core.</li>
+<li>GO:0005739 mitochondrion (HTP PMID:34800366; IDA PMID:7126172): broader than matrix but<br />
+  correct; accept.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<p>Falcon deep-research file (NAGS-deep-research-falcon.md) did not land during the polling<br />
+window (~12+ min). Review grounded in UniProt Q8N159, seeded GOA, cached publications<br />
+(PMID:12459178, 7126172, 23894642, 21757002, 34800366), and dismech disorder entry.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8N159
+gene_symbol: NAGS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  N-acetylglutamate synthase (NAGS; EC 2.3.1.1) is a nuclear-encoded, mitochondrial-matrix
+  enzyme that catalyzes the formation of N-acetyl-L-glutamate (NAG) from L-glutamate and
+  acetyl-CoA. In mammals, NAG is the obligate allosteric activator of carbamoyl phosphate
+  synthetase 1 (CPS1), the first and rate-limiting enzyme of the urea cycle; NAGS therefore
+  functions as the regulatory gate of hepatic ureagenesis and ammonia detoxification. Although
+  NAG is not consumed stoichiometrically in the urea cycle, the cycle cannot proceed without it.
+  The enzyme is a homotetramer whose subunits comprise an N-terminal amino-acid-kinase (AAK)
+  domain that binds the allosteric activator L-arginine (which enhances mammalian NAGS activity)
+  and a C-terminal GCN5-related N-acetyltransferase (NAT) domain that is catalytically competent
+  on its own. NAGS is expressed mainly in liver, kidney and small intestine and is imported into
+  the mitochondrion via a cleaved N-terminal transit peptide. Biallelic loss-of-function variants
+  cause N-acetylglutamate synthase deficiency, an autosomal recessive urea cycle disorder
+  presenting with hyperammonemia (without orotic aciduria) that, uniquely among urea cycle
+  disorders, is specifically treatable with the NAG analogue carglumic acid.
+existing_annotations:
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to arginine biosynthesis. NAGS catalyzes the acetylation of
+      L-glutamate to N-acetyl-L-glutamate, the committed first step of the acetylated ornithine
+      route to L-arginine (UniProt PATHWAY UPA00068: &#34;N(2)-acetyl-L-ornithine from L-glutamate:
+      step 1/4&#34;). This is the conserved ancestral function of the family across bacteria, plants
+      and fungi. In mammals the NAG product is primarily used to activate CPS1 in the urea cycle
+      rather than to make net arginine, but the enzymatic role at the head of the acetylornithine
+      pathway is real and correctly captured.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported family-conserved involvement in the acetylglutamate branch that leads to
+      arginine biosynthesis; consistent with UniProt PATHWAY annotation.
+    supported_by:
+    - reference_id: PMID:23894642
+      supporting_text: &gt;-
+        In microorganisms and plants, NAG is further converted to NAG phosphate by NAG kinase
+        (NAGK, EC 2.7.2.8) to continue the L-arginine biosynthetic pathway
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation placing NAGS activity in the mitochondrial matrix. Human NAGS
+      was purified from human liver mitochondria and carries a cleaved N-terminal mitochondrial
+      transit peptide; the enzyme acts in the matrix where its substrates and CPS1 reside.
+    action: ACCEPT
+    reason: &gt;-
+      Core subcellular location, supported experimentally by purification from human liver
+      mitochondria and by the presence of a mitochondrial targeting sequence.
+    supported_by:
+    - reference_id: PMID:7126172
+      supporting_text: &gt;-
+        was isolated from human liver mitochondria by precipitation with (NH4)2SO4
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation of the core catalytic activity (EC 2.3.1.1): acetylation of
+      L-glutamate by acetyl-CoA to yield N-acetyl-L-glutamate and CoA (RHEA:24292). This is the
+      defining molecular function of NAGS and is directly supported by human enzymology and
+      structure.
+    action: ACCEPT
+    reason: &gt;-
+      This is the primary, experimentally established molecular function of the gene product.
+    supported_by:
+    - reference_id: PMID:12459178
+      supporting_text: &gt;-
+        N-acetylglutamate synthase (NAGS, E.C. 2.3.1.1) is a mitochondrial enzyme catalyzing the
+        formation of N-acetylglutamate (NAG)
+- term:
+    id: GO:0006536
+    label: glutamate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to glutamate metabolism. NAGS consumes L-glutamate as a
+      substrate, so the annotation is not incorrect, but &#34;glutamate metabolic process&#34; is a broad
+      parent term that does not convey the specific biological role of NAGS (making the CPS1
+      activator NAG / feeding the acetylornithine pathway).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but generic; L-glutamate is the substrate, yet the specific processes (arginine
+      biosynthesis / urea cycle regulation) are more informative and are captured by other
+      annotations. Retain as a peripheral, non-core process term.
+    supported_by:
+    - reference_id: PMID:23894642
+      supporting_text: &gt;-
+        catalyzes the conversion of AcCoA and L-glutamate to CoA and N-acetyl-L-glutamate (NAG)
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) annotation of the core catalytic activity from combined automated methods
+      (ARBA, RHEA:24292, InterPro, ortholog transfer). Consistent with the experimentally
+      established EC 2.3.1.1 activity.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific molecular-function assignment; agrees with experimental annotations.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) annotation from the UniProt Swiss-Prot subcellular-location mapping
+      (SL-0170, mitochondrion matrix). Matches the experimentally supported matrix localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct location, corroborated by purification of the enzyme from liver mitochondria and by
+      the IBA/TAS matrix annotations.
+- term:
+    id: GO:0006526
+    label: L-arginine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (IEA) annotation to arginine biosynthesis from InterPro/UniPathway (UPA00068).
+      Same rationale as the IBA arginine-biosynthesis annotation: NAGS performs the committed
+      acetylglutamate-forming step of the acetylornithine pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the conserved pathway role and with the IBA annotation of the same term.
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) InterPro2GO annotation derived from the generic GNAT/N-acetyltransferase
+      domain signature (IPR000182). This is a broad parent term (&#34;acyltransferase activity,
+      transferring groups other than amino-acyl groups&#34;) that only states NAGS is an
+      acyltransferase. The specific, experimentally established activity of this enzyme,
+      GO:0004042 (L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor), is
+      already annotated, so the generic parent is an over-annotation.
+    action: MODIFY
+    reason: &gt;-
+      The generic acyltransferase term should be refined to the known specific activity GO:0004042.
+      NAGS is not a general acyltransferase acting on multiple acceptors; its physiological (and
+      only demonstrated) acetyl-acceptor is L-glutamate. Replace with the specific EC 2.3.1.1 term.
+    proposed_replacement_terms:
+    - id: GO:0004042
+      label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+    supported_by:
+    - reference_id: PMID:23894642
+      supporting_text: &gt;-
+        The NAT domain has a typical GCN5-related NAT fold and a site that catalyzes NAG synthesis
+- term:
+    id: GO:0090461
+    label: intracellular glutamate homeostasis
+  evidence_type: IDA
+  original_reference_id: PMID:21757002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation (BHF-UCL) from a study showing that the nuclear receptor FXR regulates
+      hepatic glutamine/glutamate metabolism and directly induces NAGS expression via an FXRE in
+      the NAGS promoter. In this context NAGS contributes to handling of the intracellular
+      glutamate pool by consuming glutamate to form NAG. The cached publication is abstract-only
+      (full_text_available: false); the experimental annotation reflects the curator&#39;s reading of
+      the full text and should not be removed.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      NAGS uses glutamate as a substrate and its expression is coupled to hepatic glutamate/glutamine
+      metabolism, so a role in intracellular glutamate homeostasis is defensible but peripheral. It
+      is not the core evolved function (production of the CPS1 activator NAG), so retain as non-core
+      rather than remove; defer to the experimental curator.
+    supported_by:
+    - reference_id: PMID:21757002
+      supporting_text: &gt;-
+        Glutamine is taken up by periportal hepatocytes and is the major source of ammonia for urea
+        synthesis and glutamate for N-acetylglutamate (NAG) synthesis, which is catalyzed by the
+        N-acetylglutamate synthase (NAGS).
+- term:
+    id: GO:0000050
+    label: urea cycle
+  evidence_type: IDA
+  original_reference_id: PMID:21757002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation (BHF-UCL) to the urea cycle. NAGS produces N-acetyl-L-glutamate, the obligate
+      allosteric activator of CPS1, the first enzyme of the urea cycle; loss of NAGS causes
+      hyperammonemia because CPS1 is inactive without NAG. NAGS is thus the regulatory gate of
+      ureagenesis. The cached reference is abstract-only, but the urea-cycle role of NAGS is
+      independently and strongly established by multiple sources.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological role. Although NAG is not stoichiometrically consumed in the cycle, NAGS is
+      indispensable for urea cycle function; the annotation correctly captures this involvement.
+    supported_by:
+    - reference_id: PMID:21757002
+      supporting_text: &gt;-
+        major source of ammonia for urea synthesis and glutamate for N-acetylglutamate (NAG)
+        synthesis, which is catalyzed by the N-acetylglutamate synthase (NAGS)
+    - reference_id: PMID:12459178
+      supporting_text: &gt;-
+        Patients with NAGS deficiency develop hyperammonemia because CPSI is inactive without NAG.
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: TAS
+  original_reference_id: PMID:21757002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS annotation of the core catalytic activity (EC 2.3.1.1). Redundant with the multiple
+      experimental IDA/EXP and IBA/IEA annotations of the same term; correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct assignment of the specific molecular function; duplicate of the experimentally
+      supported activity.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9955697
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) placing NAGS in the mitochondrial matrix, consistent with all other
+      localization evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location; agrees with the IBA/IEA/TAS matrix annotations.
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: EXP
+  original_reference_id: PMID:12459178
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation. Recombinant human NAGS (conserved domain) complemented an
+      NAGS-deficient E. coli strain and displayed arginine-responsive NAGS catalytic activity,
+      directly demonstrating the EC 2.3.1.1 activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration of the core catalytic activity in the human enzyme.
+    supported_by:
+    - reference_id: PMID:12459178
+      supporting_text: &gt;-
+        the recombinant protein has arginine-responsive NAGS catalytic activity
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) annotation from a quantitative high-confidence human mitochondrial
+      proteome study, identifying NAGS as a mitochondrial protein. Consistent with the more precise
+      matrix localization; &#34;mitochondrion&#34; is a correct but less specific parent term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization supported by proteomics; the specific compartment (matrix) is captured by
+      other annotations.
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: IDA
+  original_reference_id: PMID:23894642
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation from the crystal structure and enzymology of the human NAGS N-acetyltransferase
+      (NAT) domain in complex with N-acetyl-L-glutamate. The study directly measured NAGS catalytic
+      activity (with substrate-dependence, mutagenesis of active-site residues) confirming EC 2.3.1.1.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental (structural + kinetic) demonstration of the core catalytic activity.
+    supported_by:
+    - reference_id: PMID:23894642
+      supporting_text: &gt;-
+        NAGS deficiency results in elevated levels of plasma ammonia which is neurotoxic. We report
+        herein the first crystal structure of human NAGS, that of the catalytic N-acetyltransferase
+        (hNAT) domain with N-acetyl-L-glutamate bound at 2.1 Å resolution.
+- term:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  evidence_type: IDA
+  original_reference_id: PMID:7126172
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation from the classic purification and kinetic characterization of
+      acetyl-CoA:L-glutamate N-acetyltransferase (EC 2.3.1.1) from human liver, establishing the
+      substrate/product kinetics of the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration of the core catalytic activity in native human enzyme.
+    supported_by:
+    - reference_id: PMID:7126172
+      supporting_text: &gt;-
+        Acetyl-CoA:L-glutamate N-acetyltransferase (amino acid acetyltransferase, EC 2.3.1.1) was
+        isolated from human liver mitochondria
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:7126172
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation of mitochondrial localization, based on purification of the enzyme from human
+      liver mitochondria. Correct; the finer matrix localization is captured by other annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct experimentally supported localization; consistent with the matrix annotations.
+    supported_by:
+    - reference_id: PMID:7126172
+      supporting_text: &gt;-
+        was isolated from human liver mitochondria
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70542
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) for the reaction &#34;glutamate + acetyl CoA =&gt; N-acetyl glutamate + CoA&#34;
+      localizing NAGS to the mitochondrial matrix. Consistent with all other localization evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location; duplicate of the matrix annotations.
+core_functions:
+- description: &gt;-
+    NAGS catalyzes the acetylation of L-glutamate by acetyl-CoA to produce N-acetyl-L-glutamate
+    (NAG) and CoA (EC 2.3.1.1) in the mitochondrial matrix. NAG is the obligate allosteric
+    activator of carbamoyl phosphate synthetase 1 (CPS1), so NAGS provides the essential
+    regulatory input that gates the urea cycle and hepatic ammonia detoxification.
+  molecular_function:
+    id: GO:0004042
+    label: L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor
+  directly_involved_in:
+  - id: GO:0000050
+    label: urea cycle
+  - id: GO:0006526
+    label: L-arginine biosynthetic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:12459178
+    supporting_text: &gt;-
+      N-acetylglutamate synthase (NAGS, E.C. 2.3.1.1) is a mitochondrial enzyme catalyzing the
+      formation of N-acetylglutamate (NAG), an essential allosteric activator of carbamylphosphate
+      synthase I (CPSI), the first enzyme of the urea cycle.
+  - reference_id: PMID:23894642
+    supporting_text: &gt;-
+      NAGS deficiency results in elevated levels of plasma ammonia which is neurotoxic.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12459178
+  title: Cloning and expression of the human N-acetylglutamate synthase gene.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes human NAGS as a mitochondrial EC 2.3.1.1 enzyme producing NAG, the essential
+      allosteric activator of CPS1; recombinant human NAGS complements an NAGS-deficient E. coli
+      strain with arginine-responsive activity. Abstract-only cache but claims independently verified.
+- id: PMID:21757002
+  title: The nuclear receptor FXR regulates hepatic transport and metabolism of glutamine and
+    glutamate.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary source for the BHF-UCL IDA urea-cycle and glutamate-homeostasis annotations; shows FXR
+      directly induces NAGS expression via a promoter FXRE. Cached record is abstract-only
+      (full_text_available: false); the abstract supports NAGS catalyzing NAG synthesis and its
+      role in urea synthesis.
+- id: PMID:23894642
+  title: Crystal structure of the N-acetyltransferase domain of human N-acetyl-L-glutamate synthase
+    in complex with N-acetyl-L-glutamate provides insights into its catalytic and regulatory
+    mechanisms.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text structural/enzymology paper on human NAGS NAT domain; defines catalytic mechanism,
+      arginine regulation via the AAK domain, tetrameric assembly, and confirms EC 2.3.1.1 activity.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular
+    context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial proteomics supporting the HTP mitochondrion localization
+      annotation for NAGS.
+- id: PMID:7126172
+  title: Purification and properties of acetyl-CoA:L-glutamate N-acetyltransferase from human liver.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Classic purification of the native human liver enzyme from mitochondria with kinetic
+      characterization; supports EC 2.3.1.1 activity and mitochondrial localization.
+- id: Reactome:R-HSA-70542
+  title: glutamate + acetyl CoA =&gt; N-acetyl glutamate + CoA
+  findings: []
+- id: Reactome:R-HSA-9955697
+  title: NAGS variants don&#39;t synthesize N-acetylglutamate
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

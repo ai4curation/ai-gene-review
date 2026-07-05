@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DCV1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DCV1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P43595" target="_blank" class="term-link">
+                        P43595
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DCV1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P43595" data-a="DESCRIPTION: DCV1 (systematic name YFR012W) is a small (202-res..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DCV1 (systematic name YFR012W) is a small (202-residue) polytopic integral membrane protein of the budding yeast Saccharomyces cerevisiae. It has an N-terminal signal sequence and three predicted transmembrane helices, and belongs to the fungal Sur7/PalI/Rim9 family of tetraspan membrane proteins (Pfam SUR7 / InterPro SUR7-Rim9-like; PANTHER PTHR28013), which also contains its budding-yeast paralog RIM9 and, by whole-genome duplication, TOS7. Family members are plasma-membrane / eisosome-associated proteins, and several act in the fungal Rim101/PacC ambient-pH signalling pathway; DCV1 has itself been localized to the nuclear envelope. Its own molecular function and biological role are not experimentally established. It is dispensable for viability under standard conditions, and its principal recorded genetic characteristic is a requirement for Cdc28 (Cdk1) activity for viability — the source of its name, &#34;Demands Cdc28 kinase activity for Viability&#34;.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-propagated (IBA) plasma-membrane localization across the Sur7/PalI/Rim9 family (PANTHER PTHR28013). Family-consistent for a tetraspan fungal membrane protein but not experimentally demonstrated for DCV1 itself.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sur7/PalI-family members are characteristically plasma-membrane / eisosome (MCC) components, so a plasma-membrane localization is biologically plausible for DCV1 and is the most defensible of the propagated CC terms. It is flagged as an over-annotation because there is no DCV1-specific evidence placing it at the plasma membrane; the assignment is a whole-family default rather than a demonstrated DCV1 localization. This is a cellular-component term, not a molecular function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">SGD:S000004667</span>
+
+                                    &middot; RIM9
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Plasma-membrane/eisosome localization is well supported for Sur7/PalI-family members (the IBA donor set includes the S. cerevisiae PalI/Rim9 protein RIM9 (SGD:S000004667), the paralog TOS7 (SGD:S000005379), and S. pombe members), but transfer to DCV1 is a family default with no DCV1-specific plasma-membrane evidence.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032153" target="_blank" class="term-link">
+                                    GO:0032153
+                                </a>
+                            </span>
+                            <span class="term-label">cell division site</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0032153" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA &#34;cell division site&#34; localization propagated within PTHR28013 from a single Schizosaccharomyces pombe family member. Not supported for DCV1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The WITH/FROM evidence for this IBA is thin, tracing to one fission-yeast member (PomBase:SPCC1739.10). &#34;Cell division site&#34; (GO:0032153) is not lineage-specific — in S. cerevisiae the bud neck is a bona fide cell division site — so the problem is not a taxon mismatch but the absence of any DCV1-specific evidence for bud-neck / division-site localization; the term is a weak single-source phylogenetic propagation that should not transfer to DCV1.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">SOURCE EVIDENCE WEAK</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PomBase:SPCC1739.10</span>
+
+                                    &middot; S. pombe PTHR28013 member
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Single fission-yeast donor for this term; division-site localization is not demonstrated for DCV1, so the transfer is unsupported.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035838" target="_blank" class="term-link">
+                                    GO:0035838
+                                </a>
+                            </span>
+                            <span class="term-label">growing cell tip</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0035838" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA &#34;growing cell tip&#34; localization propagated from fission-yeast family members. The term describes polarized tip growth of elongated cells and is not applicable to the budding yeast S. cerevisiae.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;Growing cell tip&#34; (GO:0035838) is defined as the polarized-growth region at the ends of cylindrical/elongated cells — a hallmark of fission yeast, which grows by tip extension. The donor evidence is from S. pombe members (PomBase:SPAC13G7.04c, PomBase:SPCC1739.10). S. cerevisiae grows by budding, not tip extension, so this localization is not biologically applicable to DCV1 and represents a fission-yeast-specific over-propagation.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">LINEAGE OR TAXON MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PomBase:SPAC13G7.04c</span>
+
+                                    &middot; S. pombe PTHR28013 member (mac1-like)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Tip-growth localization is a fission-yeast trait; budding yeast has no growing cell tip, so the term cannot transfer to DCV1.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0005886" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation (IPR009571 SUR7/Rim9-like → plasma membrane). Redundant with the family IBA plasma-membrane annotation and, like it, not directly demonstrated for DCV1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA duplicates the IBA plasma-membrane localization from the same protein family and adds no independent evidence for DCV1. It is a reasonable family-level default but is an over-annotation given the absence of any DCV1-specific plasma-membrane data.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#34;membrane&#34; localization from the UniProt Subcellular Location mapping (SL-0162). Correct but uninformative given that DCV1 is already known to be a multi-pass membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DCV1 is a bona fide integral membrane protein (signal peptide + three TM helices), so the annotation is not wrong, but &#34;membrane&#34; is the uninformative parent of the more specific compartment terms already present. It is retained only as a high-level default and is marked over-annotated relative to the specific localizations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005635" target="_blank" class="term-link">
+                                    GO:0005635
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear envelope</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33002606" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33002606
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Sur7/PalI family transmembrane protein Tos7 (Yol019w) pl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0005635" data-r="PMID:33002606" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) nuclear-envelope localization curated by SGD. This is the only DCV1-specific experimental annotation and is treated as the primary localization evidence, though the primary source could not be independently verified here.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) localization assigned by an SGD curator who read the full text; per curation policy an experimental annotation is not removed on the basis of an abstract-only cache. The cited paper&#39;s abstract concerns the paralog Tos7 at the plasma membrane and I could not access the full text to confirm the DCV1 assay, so the localization is retained but flagged (see reference_review) and marked non-core: it is a cellular-component observation, not a molecular function or established biological role. The nuclear envelope is contiguous with the ER, a plausible endomembrane location for a signal-peptide-bearing polytopic protein.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular-function term with ND (No biological Data available). Accurately reflects that no molecular function has been experimentally or computationally established for DCV1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DCV1 has no assigned enzymatic activity and no demonstrated specific binding partner; the Sur7/PalI family has no known catalytic activity. The ND root annotation is the honest representation of the current state of knowledge and should be retained.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P43595" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological-process term with ND. Accurately reflects that no biological process has been experimentally established for DCV1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No coherent biological process is demonstrated for DCV1. The recorded characteristics (a synthetic requirement for CDC28 activity, and dispersed high-throughput deletion phenotypes) are genetic/phenotypic observations rather than a defined pathway role. The family-level Rim101 pH-response role of the paralog RIM9 is not established for DCV1. The ND root annotation should be retained.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DCV1 is a Sur7/PalI/Rim9-family tetraspan integral membrane protein whose specific molecular activity is unknown. The family has no known catalytic activity; members act as plasma-membrane/eisosome scaffolding or pH-sensing components. No molecular function, catalytic activity, or specific binding partner has been demonstrated for DCV1, and no molecular-function term more specific than the ND root can be justified from current evidence. Its localization is likewise unresolved (a single nuclear-envelope IDA versus family-propagated plasma-membrane predictions), so no core localization is asserted here.</h3>
+                <span class="vote-buttons" data-g="P43595" data-a="FUNCTION: DCV1 is a Sur7/PalI/Rim9-family tetraspan integral..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33002606" target="_blank" class="term-link">
+                                PMID:33002606
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Tos7 (Yol019w) is a Sur7/PalI family transmembrane protein in the budding yeast</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33002606" target="_blank" class="term-link">
+                            PMID:33002606
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Sur7/PalI family transmembrane protein Tos7 (Yol019w) plays a role in secretion in budding yeast.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22042866" target="_blank" class="term-link">
+                            PMID:22042866
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A chemical-genetic screen to unravel the genetic network of CDC28/CDK1 links ubiquitin and Rad6-Bre1 to cell cycle progression.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DCV1 function in the Rim101/PacC ambient-pH signalling pathway, as its PalI/Rim9 subfamily membership suggests, or has it diverged from that role?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="Q: Does DCV1 function in the Rim101/PacC ambient-pH s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Why is DCV1 required for viability specifically when Cdc28 (Cdk1) activity is limiting, and what does this reveal about a link between a Sur7/PalI membrane protein and the cell cycle?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="Q: Why is DCV1 required for viability specifically wh..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is DCV1 functionally redundant with its whole-genome-duplication paralog TOS7?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="Q: Is DCV1 functionally redundant with its whole-geno..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag DCV1 (e.g. C-terminal GFP) and image it against nuclear-envelope/ER and plasma-membrane/eisosome (MCC) markers under standard and alkaline-pH conditions to resolve the conflicting nuclear-envelope (IDA) vs plasma-membrane (IBA/IEA) localizations.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DCV1 localizes to a defined endomembrane or plasma-membrane microdomain rather than to both.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="EXPERIMENT: Endogenously tag DCV1 (e.g. C-terminal GFP) and im..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Assay dcv1 mutants for Rim101 proteolytic processing and for growth at alkaline pH, and test genetic interactions with RIM9 and other RIM-pathway genes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DCV1 contributes to the Rim101 pH-response pathway characteristic of its PalI/Rim9 subfamily.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="EXPERIMENT: Assay dcv1 mutants for Rim101 proteolytic processi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct dcv1 tos7 single and double deletions and characterize growth, cell-wall stress sensitivity, secretion, and CDC28-dependence to test paralog redundancy.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DCV1 and its WGD paralog TOS7 share overlapping functions masked by redundancy in single mutants.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P43595" data-a="EXPERIMENT: Construct dcv1 tos7 single and double deletions an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of DCV1 is unknown. No catalytic activity, transport activity, or specific binding partner has been assigned to DCV1, and the Sur7/PalI/Rim9 family to which it belongs has no defined molecular activity — its members are non-catalytic tetraspan membrane proteins whose scaffolding/sensing role is not captured by any GO molecular-function term. GOA carries only the ND root MF term for DCV1.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> DCV1 is firmly established as a 202-residue polytopic integral membrane protein (N-terminal signal peptide plus three transmembrane helices) belonging to the fungal Sur7/PalI/Rim9 family (Pfam SUR7; InterPro IPR009571; PANTHER PTHR28013, subfamily SF3 with the PalI/Rim9 orthologs, including the S. cerevisiae paralog RIM9). Its WGD paralog is TOS7. What is NOT known is any activity the protein performs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> DCV1 is a conserved-family membrane protein that has never been functionally characterized in its own right. Assigning its activity would clarify whether the budding-yeast Sur7/PalI subfamily has functions beyond the eisosome/pH-response roles known for other members, and a suitable ontology term for non-catalytic tetraspan scaffold/sensor activity would let such functions be expressed at all.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> DCV1-specific biochemistry and interaction mapping (affinity/proximity proteomics, reconstitution) to identify partners or any activity; and, for the ontology gap, a GO molecular-function term for the scaffolding/pH-sensing activity of Sur7/PalI-family tetraspan membrane proteins.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the cellular roles of Tos7 have not been established"</em> — PMID:33002606</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process DCV1 participates in is unknown. Whether DCV1 functions in the Rim101/PacC ambient-pH response pathway (the process characterized for its subfamily relative RIM9), in eisosome/plasma-membrane organization, or in some unrelated process, has not been tested; its only distinctive genetic characteristic is a requirement for Cdc28 (Cdk1) activity for viability, which is a genetic interaction rather than a defined pathway role.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> dcv1 deletion is viable under standard conditions but is lethal/synthetically sick when Cdc28 activity is compromised (the origin of the gene name), and dcv1 was a hit in a genome-wide chemical-genetic screen of the CDC28 network. High-throughput deletion phenotypes are dispersed (altered metal-ion accumulation, MMS sensitivity, reduced chronological lifespan) and do not converge on one process. Membership in the PalI/Rim9 subfamily is suggestive of a pH-response role but is homology-based only.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A defined process would explain why loss of DCV1 becomes lethal specifically when CDK1 activity is limiting, potentially linking a Sur7/PalI-family membrane protein to cell-cycle robustness — an unexpected connection for this family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test dcv1 for defects in Rim101 processing / alkaline-pH growth and in eisosome/MCC organization; dissect the dcv1-cdc28 genetic interaction (epistasis, suppressors); and test functional redundancy with the paralog TOS7 via a dcv1 tos7 double mutant.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"We identified 107 genes that strongly"</em> — PMID:22042866</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The subcellular localization of DCV1 is not resolved. A single SGD IDA places DCV1 at the nuclear envelope, whereas family/phylogenetic (IBA/IEA) evidence predicts the plasma membrane/eisosome; these have not been reconciled by an independent DCV1-specific study.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> DCV1 is certainly membrane-embedded (three TM helices). The nuclear-envelope assignment rests on one IDA (curated by SGD from PMID:33002606, which I could not verify in full text), while plasma-membrane assignments are homology-based propagations across the Sur7/PalI family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Correct localization is a prerequisite for inferring function: a nuclear-envelope/ER protein and a plasma-membrane eisosome protein imply very different roles for DCV1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Independent, DCV1-specific localization (endogenously tagged Dcv1 imaged against nuclear envelope/ER and plasma-membrane/eisosome markers) under standard and stress (e.g. alkaline pH) conditions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Tos7 localized to punctate"</em> — PMID:33002606</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DCV1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P43595" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:13:58.732194</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="DCV1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-on-dcv1-yfr012w-in-saccharomyces-cerevisiae">Comprehensive Research Report on DCV1 (YFR012W) in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="1-gene-identity-and-preliminary-note-on-literature-availability">1. Gene Identity and Preliminary Note on Literature Availability</h3>
+<p>DCV1 (systematic name YFR012W; UniProt P43595) encodes a poorly characterized integral membrane protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). The full protein name, "Demands CDC28 kinase activity for viability protein 1," suggests that the gene was originally named based on a genetic interaction screen—likely a synthetic dosage lethal (SDL) or synthetic lethal screen with the essential cyclin-dependent kinase CDC28/CDK1—though the original publication defining this naming could not be identified in the available literature. <strong>Direct experimental characterization of DCV1 itself is extremely limited</strong>, and almost all functional annotation must be inferred from its conserved domain architecture and the well-characterized biology of its protein family members.</p>
+<p>The summary table below consolidates the key features of DCV1 inferred from domain architecture and family biology:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / locus</td>
+<td><strong>DCV1</strong>; ordered locus <strong>YFR012W</strong> in <em>Saccharomyces cerevisiae</em> S288c; UniProt accession <strong>P43595</strong>. The gene is poorly characterized in the primary literature, so most functional interpretation is inferred from conserved domain architecture and better-studied family members.</td>
+</tr>
+<tr>
+<td>UniProt protein name</td>
+<td><strong>Protein DCV1</strong>; alternative name <strong>Demands CDC28 kinase activity for viability protein 1</strong>. No direct primary paper was identified here explaining the origin of this name; it likely reflects a historical genetic interaction/screen rather than a biochemically defined activity.</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td><strong>SUR7/PalI/Rim9-like fungal membrane protein family</strong>. Rim9/PalI is explicitly described as part of the <strong>Sur7 family</strong>, and DCV1 carries the same family/domain signatures, supporting assignment to this family by homology (athanasopoulos2019fungalplasmamembrane pages 31-31).</td>
+</tr>
+<tr>
+<td>Conserved domains</td>
+<td>UniProt/domain annotations for DCV1 include <strong>pH-response_reg_palI/RIM9</strong> and <strong>SUR7/Rim9-like_fungi / SUR7 (PF06687)</strong>, consistent with the family of fungal tetraspanner membrane proteins implicated in plasma-membrane organization and pH-response signaling.</td>
+</tr>
+<tr>
+<td>Predicted membrane topology</td>
+<td>Best inferred as a <strong>tetraspanner integral membrane protein</strong> with <strong>4 transmembrane domains</strong>, because SUR7 family proteins are described as tetraspanners/four-pass membrane proteins in fungi (douglas2012sur7promotesplasma pages 1-2, grossmann2008plasmamembranemicrodomains pages 2-4).</td>
+</tr>
+<tr>
+<td>Most likely subcellular localization</td>
+<td><strong>Plasma membrane</strong>, likely in specialized cortical membrane domains. This is an inference from the behavior of SUR7/Rim9 family proteins, which localize to plasma-membrane patches/MCC-associated regions rather than being soluble or organellar proteins (obara2012membraneproteinrim21 pages 5-6, douglas2012sur7promotesplasma pages 1-1, athanasopoulos2019fungalplasmamembrane pages 10-11).</td>
+</tr>
+<tr>
+<td>Relationship to MCC/eisosomes</td>
+<td>SUR7-family proteins commonly localize to the <strong>MCC (membrane compartment containing Can1)/eisosome</strong> domain system. Rim9 specifically shows <strong>partial MCC localization</strong>, labeling only a subset of MCCs; thus DCV1 may also associate with specialized plasma-membrane subdomains, but this has not been demonstrated directly for DCV1 (athanasopoulos2019fungalplasmamembrane pages 31-31, athanasopoulos2019fungalplasmamembrane pages 13-13).</td>
+</tr>
+<tr>
+<td>Pathway involvement</td>
+<td><strong>Not directly demonstrated for DCV1.</strong> However, because DCV1 carries a <strong>PalI/Rim9-like pH-response domain</strong>, the strongest hypothesis is that it is related to the broader fungal membrane-protein toolkit used for plasma-membrane organization and/or environmental signaling. No direct evidence was found that DCV1 itself is a canonical core Rim101-pathway component.</td>
+</tr>
+<tr>
+<td>Closest functional analogue</td>
+<td><strong>Rim9/PalI</strong> is the best-studied analogue. Rim9 is an auxiliary component of the <strong>Rim101 ambient-pH sensing pathway</strong>, helping maintain the sensor complex at the plasma membrane and supporting Rim21 localization/stability (athanasopoulos2019fungalplasmamembrane pages 31-31, penalva2008ambientphgene pages 5-6, obara2012membraneproteinrim21 pages 5-6, obara2012membraneproteinrim21 pages 4-5).</td>
+</tr>
+<tr>
+<td>Mechanistic inference from Rim9</td>
+<td>In <em>S. cerevisiae</em>, <strong>Rim21, Dfg16, and Rim9</strong> form a mutually dependent plasma-membrane complex. Deleting <strong>RIM9</strong> reduces <strong>Rim21</strong> levels and mislocalizes Rim21 away from the plasma membrane, indicating an auxiliary stabilizing/chaperoning role rather than primary sensing itself (obara2012membraneproteinrim21 pages 5-6, obara2012membraneproteinrim21 pages 4-5). DCV1 may perform an analogous accessory membrane role, but this remains unproven.</td>
+</tr>
+<tr>
+<td>Biological processes most plausibly associated with DCV1</td>
+<td>Based on family membership, the most plausible processes are <strong>plasma-membrane domain organization</strong>, <strong>stress-responsive membrane homeostasis</strong>, <strong>cell wall/plasma-membrane coordination</strong>, and potentially <strong>pH-responsive signaling support</strong>. These functions are established for SUR7-family and Rim9-related proteins generally, not directly for DCV1 (athanasopoulos2019fungalplasmamembrane pages 10-11, athanasopoulos2019fungalplasmamembrane pages 8-9, douglas2012sur7promotesplasma pages 1-2).</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td><strong>Unknown / no enzymatic activity established.</strong> There is no evidence that DCV1 is an enzyme or transporter with a defined substrate. Family evidence instead supports a role as an <strong>integral membrane organizer/adaptor/accessory factor</strong>.</td>
+</tr>
+<tr>
+<td>Real-world implementation / research use</td>
+<td>Proteins of this family are used as markers or mechanistic entry points for studying <strong>fungal plasma-membrane compartmentation</strong>, <strong>MCC/eisosome biology</strong>, and <strong>ambient-pH signaling</strong>. In pathogens, related family members such as Sur7 influence stress resistance and virulence, underscoring the broader biological importance of the family (douglas2012sur7promotesplasma pages 1-1, athanasopoulos2019fungalplasmamembrane pages 10-11).</td>
+</tr>
+<tr>
+<td>Related family members in <em>S. cerevisiae</em></td>
+<td>Documented <strong>Sur7-like proteins</strong> in <em>S. cerevisiae</em> include <strong>Sur7, Fmp45, Ynl194c, and Pun1/Ylr414c</strong> (athanasopoulos2019fungalplasmamembrane pages 10-11, douglas2012sur7promotesplasma pages 1-2). <strong>Rim9</strong> is a Sur7-family member specialized for pH sensing (athanasopoulos2019fungalplasmamembrane pages 31-31). DCV1/YFR012W is best interpreted as an additional <strong>SUR7/PalI/Rim9-like paralog</strong> based on domain architecture.</td>
+</tr>
+<tr>
+<td>Evidence strength</td>
+<td><strong>Low for DCV1-specific function; moderate-to-strong for family-level inference.</strong> No direct experimental characterization of DCV1/YFR012W was identified in the retrieved literature, so conclusions should be treated as <strong>homology-based functional annotation</strong> rather than definitive gene-specific proof.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the key annotated and inferred features of the poorly characterized yeast gene DCV1/YFR012W. It is useful because it separates direct evidence from family-based inference, especially regarding SUR7/PalI/Rim9 family membership, membrane localization, and possible pathway roles.</em></p>
+<h3 id="2-protein-family-and-domain-architecture">2. Protein Family and Domain Architecture</h3>
+<p>DCV1 belongs to the <strong>SUR7/PalI/Rim9-like protein family</strong>, a group of fungal integral membrane proteins defined by the SUR7 domain (Pfam PF06687) and the pH-response regulator PalI/Rim9 domain (IPR051380; IPR009571). Members of this family are characterized as <strong>tetraspanner proteins</strong>—integral membrane proteins predicted to contain <strong>four membrane-spanning domains</strong> (douglas2012sur7promotesplasma pages 1-2, grossmann2008plasmamembranemicrodomains pages 2-4). In <em>S. cerevisiae</em>, documented Sur7-like proteins include <strong>Sur7, Fmp45, Ynl194c, and Pun1/Ylr414c</strong>, all of which localize to the plasma membrane and are implicated in various aspects of membrane organization, cell wall integrity, sphingolipid signaling, and stress responses (athanasopoulos2019fungalplasmamembrane pages 10-11, douglas2012sur7promotesplasma pages 1-2). <strong>Rim9</strong> is another Sur7-family member that is specialized for ambient pH sensing within the Rim101/PacC signaling pathway (athanasopoulos2019fungalplasmamembrane pages 31-31). DCV1/YFR012W, by virtue of carrying both the SUR7 and PalI/Rim9 domains, is best classified as an additional paralog within this family.</p>
+<h3 id="3-inferred-function-plasma-membrane-organization-and-ph-response-signaling">3. Inferred Function: Plasma Membrane Organization and pH-Response Signaling</h3>
+<h4 id="31-the-sur7-family-and-mcceisosome-biology">3.1 The SUR7 Family and MCC/Eisosome Biology</h4>
+<p>Sur7-family proteins are components of the <strong>MCC (membrane compartment containing Can1)</strong>, a specialized plasma membrane subdomain that forms stable ~300 nm punctate patches and associates with cytoplasmic protein complexes called <strong>eisosomes</strong> (douglas2012sur7promotesplasma pages 1-1). Eisosomes are hemitubular structures composed primarily of the BAR-domain proteins Pil1 and Lsp1, which promote membrane curvature and compartmentalization (douglas2012sur7promotesplasma pages 1-2, grossmann2008plasmamembranemicrodomains pages 2-4). Sur7 serves as an endogenous marker of MCC patches (grossmann2008plasmamembranemicrodomains pages 2-4). These MCC/eisosome domains serve as <strong>protective membrane compartments</strong> that regulate turnover of nutrient transporters, control cell wall homeostasis, and participate in sphingolipid sensing through the Nce102-Pkh1/2-TORC2 signaling axis (athanasopoulos2019fungalplasmamembrane pages 8-9, athanasopoulos2019fungalplasmamembrane pages 13-13).</p>
+<p>A triple mutant lacking three Sur7-like proteins (sur7Δ fmp45Δ ynl194cΔ) exhibits <strong>altered sphingolipid biosynthesis and sporulation defects</strong>, indicating partial redundancy among family members but also their collective importance for lipid homeostasis (athanasopoulos2019fungalplasmamembrane pages 10-11). Individual Sur7-like proteins have distinct sub-functions: Sur7 is important for cell wall integrity, Pun1 for pseudohyphal growth, and Fmp45 for recovery from stationary phase (athanasopoulos2019fungalplasmamembrane pages 10-11). Given its domain homology, DCV1 likely performs a related but potentially distinct role in plasma membrane organization or signaling, though this has not been experimentally demonstrated.</p>
+<h4 id="32-the-rim9pali-paradigm-and-ph-sensing">3.2 The Rim9/PalI Paradigm and pH Sensing</h4>
+<p>The closest functional analogue to DCV1, based on domain composition, is <strong>Rim9</strong> (the <em>S. cerevisiae</em> homologue of PalI in <em>Aspergillus nidulans</em>). Rim9 is a core component of the <strong>Rim101 ambient pH signaling pathway</strong>, which senses extracellular alkalinization and activates the transcription factor Rim101/PacC (penalva2008ambientphgene pages 5-6, goodman2013furthercharacterisationof pages 17-20).</p>
+<p>In <em>S. cerevisiae</em>, the plasma membrane pH-sensing complex consists of three integral membrane proteins: <strong>Rim21</strong> (the primary pH sensor, a 7-transmembrane domain protein), <strong>Dfg16</strong>, and <strong>Rim9</strong> (obara2012membraneproteinrim21 pages 5-6, obara2012membraneproteinrim21 pages 4-5, obara2012membraneproteinrim21 pages 1-2). These three proteins form a complex at the plasma membrane and their localization and protein levels are <strong>mutually dependent</strong> (obara2012membraneproteinrim21 pages 4-5). Specifically:</p>
+<ul>
+<li>Rim21 levels are <strong>significantly decreased</strong> in rim9Δ cells, and Rim21 is largely mislocalized from the plasma membrane to intracellular organelles when Rim9 is absent (obara2012membraneproteinrim21 pages 5-6, obara2012membraneproteinrim21 pages 4-5).</li>
+<li>Transient degradation of Rim21 completely suppresses the Rim101 pathway, whereas degradation of Dfg16 or Rim9 alone does not, demonstrating that <strong>Rim21 is the actual sensor</strong> while <strong>Rim9 plays an auxiliary, stabilizing role</strong> (obara2012membraneproteinrim21 pages 5-6).</li>
+<li>Rim9 is proposed to function as a <strong>chaperone</strong> that maintains the sensor complex at the plasma membrane, assisting in the proper localization and stability of Rim21 (athanasopoulos2019fungalplasmamembrane pages 31-31, penalva2008ambientphgene pages 5-6, ost2015thecryptococcusneoformans pages 2-4).</li>
+</ul>
+<p>Upon external alkalinization, the Rim21-Dfg16-Rim9 complex is internalized and degraded, leading to ubiquitination of the arrestin-like protein Rim8/PalF, recruitment of ESCRT machinery, and ultimately proteolytic activation of Rim101 at endosomal membranes (penalva2008ambientphgene pages 5-6, goodman2013furthercharacterisationof pages 17-20).</p>
+<p>Rim9 contains four predicted transmembrane domains but is notably smaller (239 residues) than its <em>A. nidulans</em> homologue PalI (549 residues), lacking the large hydrophilic cytosolic tail present in PalI (penalva2002regulationofgene pages 12-13). The loss-of-function phenotype of rim9 mutants is milder than that of other Rim pathway components—palI/rim9 mutants retain some growth capability at alkaline pH, consistent with an auxiliary rather than essential sensing role (penalva2002regulationofgene pages 12-13, penalva2002regulationofgene pages 10-11).</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>Based on family membership, DCV1 is predicted to localize to the <strong>plasma membrane</strong>. Rim9 specifically displays a <strong>patchy distribution</strong> at the plasma membrane, with partial localization to MCC/eisosome domains—labeling only a subset of MCCs in both <em>S. cerevisiae</em> and <em>A. nidulans</em> (athanasopoulos2019fungalplasmamembrane pages 31-31). The physiological significance of this selective MCC localization remains unclear (athanasopoulos2019fungalplasmamembrane pages 31-31). Importantly, the RIM/Pal foci where Rim9 and related proteins function appear to be <strong>distinct from</strong> both MCC and other known plasma membrane compartments (MCP, MCL), as they form at PM regions devoid of cortical ER and with reduced Pma1 intensity (athanasopoulos2019fungalplasmamembrane pages 30-31). Given that DCV1 carries both the SUR7 and PalI/Rim9 domains, its subcellular localization is most likely the plasma membrane, potentially at specialized cortical foci.</p>
+<h3 id="5-signaling-pathway-context">5. Signaling Pathway Context</h3>
+<p>The Rim101 pathway is a conserved fungal signaling cascade responsible for sensing extracellular pH alkalization and regulating gene expression accordingly. The pathway proceeds as follows (goodman2013furthercharacterisationof pages 17-20, penalva2008ambientphgene pages 5-6):</p>
+<ol>
+<li><strong>Sensing</strong>: Rim21/Dfg16/Rim9 complex at the plasma membrane detects alkaline pH and/or loss of plasma membrane lipid asymmetry.</li>
+<li><strong>Signal transduction</strong>: The arrestin-like protein Rim8 is ubiquitinated, recruiting ESCRT-I via Vps23.</li>
+<li><strong>ESCRT assembly</strong>: ESCRT-I, -II, and -III (particularly Snf7/Vps20) are recruited to the endosomal membrane.</li>
+<li><strong>Proteolytic activation</strong>: Rim20 and the calpain-like protease Rim13 are recruited to cleave Rim101, generating its transcriptionally active form.</li>
+<li><strong>Transcriptional regulation</strong>: Active Rim101 translocates to the nucleus and represses acid-responsive genes while permitting alkaline-responsive gene expression.</li>
+</ol>
+<p>Whether DCV1 participates directly in this pathway or in a parallel membrane-organizing function has not been established experimentally.</p>
+<h3 id="6-genetic-interaction-with-cdc28">6. Genetic Interaction with CDC28</h3>
+<p>The alternative name "Demands CDC28 kinase activity for viability protein 1" implies a genetic interaction—most likely identified in a synthetic lethal or synthetic dosage lethal screen—between DCV1 and the essential cyclin-dependent kinase CDC28/CDK1, the master regulator of cell cycle progression in <em>S. cerevisiae</em>. CDC28 is known to participate in numerous genetic interaction networks, and synthetic dosage lethality screens have identified many genes whose overexpression is toxic specifically when CDC28 activity is compromised. The mechanistic basis for a DCV1–CDC28 interaction is unclear but could relate to a requirement for CDK activity in processes regulated by plasma membrane organization or the Rim101 pathway, such as cell wall remodeling during the cell cycle.</p>
+<h3 id="7-evolutionary-context">7. Evolutionary Context</h3>
+<p>The SUR7/PalI protein family is <strong>conserved across the fungal kingdom</strong>. The PalI/Rim9 module is present in ascomycete fungi including <em>A. nidulans</em>, <em>S. cerevisiae</em>, <em>Candida albicans</em>, and <em>Yarrowia lipolytica</em>, but is notably absent from basidiomycetes such as <em>Cryptococcus neoformans</em>, which have evolved alternative mechanisms (e.g., the Rra1 sensor) for Rim pathway activation (ost2015thecryptococcusneoformans pages 2-4). The SUR7 domain has been identified as a defining feature of the Rim9 protein family across fungal species (athanasopoulos2019fungalplasmamembrane pages 31-31). The presence of multiple SUR7/PalI paralogs in <em>S. cerevisiae</em> (Sur7, Fmp45, Ynl194c, Pun1, Rim9, and DCV1/YFR012W) suggests functional diversification within this family, with individual members acquiring specialized roles in membrane organization, stress response, and signaling.</p>
+<h3 id="8-conclusions-and-limitations">8. Conclusions and Limitations</h3>
+<p>DCV1/YFR012W is a <strong>poorly characterized member of the SUR7/PalI/Rim9 integral membrane protein family</strong> in <em>S. cerevisiae</em>. Its domain architecture strongly predicts it to be a <strong>tetraspanner plasma membrane protein</strong> potentially involved in <strong>plasma membrane domain organization and/or ambient pH signaling support</strong>, by analogy to its better-characterized relatives Sur7 and Rim9. DCV1 is not an enzyme, transporter, or receptor with a defined substrate or ligand; rather, it most likely functions as an <strong>integral membrane organizer or accessory/adaptor protein</strong> at the plasma membrane.</p>
+<p><strong>Key limitations</strong>: No direct biochemical or cell biological characterization of DCV1 was found in the available literature. All functional inferences are based on conserved domain architecture and the biology of related family members. Direct experimental studies—including localization by GFP tagging, deletion phenotype analysis, and genetic interaction mapping—would be needed to definitively establish DCV1's function, localization, and pathway membership.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 31-31): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(douglas2012sur7promotesplasma pages 1-2): Lois M. Douglas, Hong X. Wang, Sabine Keppler-Ross, Neta Dean, and James B. Konopka. Sur7 promotes plasma membrane organization and is needed for resistance to stressful conditions and to the invasive growth and virulence of candida albicans. mBio, Mar 2012. URL: https://doi.org/10.1128/mbio.00254-11, doi:10.1128/mbio.00254-11. This article has 87 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(grossmann2008plasmamembranemicrodomains pages 2-4): Guido Grossmann, Jan Malinsky, Wiebke Stahlschmidt, Martin Loibl, Ina Weig-Meckl, Wolf B. Frommer, Miroslava Opekarová, and Widmar Tanner. Plasma membrane microdomains regulate turnover of transport proteins in yeast. The Journal of Cell Biology, 183:1075-1088, Dec 2008. URL: https://doi.org/10.1083/jcb.200806035, doi:10.1083/jcb.200806035. This article has 284 citations.</p>
+</li>
+<li>
+<p>(obara2012membraneproteinrim21 pages 5-6): Keisuke Obara, Hayashi Yamamoto, and Akio Kihara. Membrane protein rim21 plays a central role in sensing ambient ph in saccharomyces cerevisiae. Journal of Biological Chemistry, 287:38473-38481, Nov 2012. URL: https://doi.org/10.1074/jbc.m112.394205, doi:10.1074/jbc.m112.394205. This article has 83 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(douglas2012sur7promotesplasma pages 1-1): Lois M. Douglas, Hong X. Wang, Sabine Keppler-Ross, Neta Dean, and James B. Konopka. Sur7 promotes plasma membrane organization and is needed for resistance to stressful conditions and to the invasive growth and virulence of candida albicans. mBio, Mar 2012. URL: https://doi.org/10.1128/mbio.00254-11, doi:10.1128/mbio.00254-11. This article has 87 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 10-11): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 13-13): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalva2008ambientphgene pages 5-6): Miguel A. Peñalva, Joan Tilburn, Elaine Bignell, and Herbert N. Arst. Ambient ph gene regulation in fungi: making connections. Trends in microbiology, 16 6:291-300, Jun 2008. URL: https://doi.org/10.1016/j.tim.2008.03.006, doi:10.1016/j.tim.2008.03.006. This article has 464 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obara2012membraneproteinrim21 pages 4-5): Keisuke Obara, Hayashi Yamamoto, and Akio Kihara. Membrane protein rim21 plays a central role in sensing ambient ph in saccharomyces cerevisiae. Journal of Biological Chemistry, 287:38473-38481, Nov 2012. URL: https://doi.org/10.1074/jbc.m112.394205, doi:10.1074/jbc.m112.394205. This article has 83 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 8-9): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(goodman2013furthercharacterisationof pages 17-20): Daniel Goodman. Further characterisation of the rim101 pathway in saccharomyces cerevisiae. Text, 2013. URL: https://doi.org/10.25560/14476, doi:10.25560/14476. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(obara2012membraneproteinrim21 pages 1-2): Keisuke Obara, Hayashi Yamamoto, and Akio Kihara. Membrane protein rim21 plays a central role in sensing ambient ph in saccharomyces cerevisiae. Journal of Biological Chemistry, 287:38473-38481, Nov 2012. URL: https://doi.org/10.1074/jbc.m112.394205, doi:10.1074/jbc.m112.394205. This article has 83 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ost2015thecryptococcusneoformans pages 2-4): Kyla S. Ost, Teresa R. O’Meara, Naureen Huda, Shannon K. Esher, and J. Andrew Alspaugh. The cryptococcus neoformans alkaline response pathway: identification of a novel rim pathway activator. PLOS Genetics, 11:e1005159, Apr 2015. URL: https://doi.org/10.1371/journal.pgen.1005159, doi:10.1371/journal.pgen.1005159. This article has 102 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalva2002regulationofgene pages 12-13): Miguel A. Peñalva and Herbert N. Arst. Regulation of gene expression by ambient ph in filamentous fungi and yeasts. Microbiology and Molecular Biology Reviews, 66:426-446, Sep 2002. URL: https://doi.org/10.1128/mmbr.66.3.426-446.2002, doi:10.1128/mmbr.66.3.426-446.2002. This article has 437 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(penalva2002regulationofgene pages 10-11): Miguel A. Peñalva and Herbert N. Arst. Regulation of gene expression by ambient ph in filamentous fungi and yeasts. Microbiology and Molecular Biology Reviews, 66:426-446, Sep 2002. URL: https://doi.org/10.1128/mmbr.66.3.426-446.2002, doi:10.1128/mmbr.66.3.426-446.2002. This article has 437 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 30-31): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="DCV1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>athanasopoulos2019fungalplasmamembrane pages 31-31</li>
+<li>grossmann2008plasmamembranemicrodomains pages 2-4</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 10-11</li>
+<li>penalva2002regulationofgene pages 12-13</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 30-31</li>
+<li>ost2015thecryptococcusneoformans pages 2-4</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 13-13</li>
+<li>penalva2008ambientphgene pages 5-6</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 8-9</li>
+<li>goodman2013furthercharacterisationof pages 17-20</li>
+<li>penalva2002regulationofgene pages 10-11</li>
+<li>https://doi.org/10.1093/femsre/fuz022,</li>
+<li>https://doi.org/10.1128/mbio.00254-11,</li>
+<li>https://doi.org/10.1083/jcb.200806035,</li>
+<li>https://doi.org/10.1074/jbc.m112.394205,</li>
+<li>https://doi.org/10.1016/j.tim.2008.03.006,</li>
+<li>https://doi.org/10.25560/14476,</li>
+<li>https://doi.org/10.1371/journal.pgen.1005159,</li>
+<li>https://doi.org/10.1128/mmbr.66.3.426-446.2002,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DCV1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P43595" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dcv1-yfr012w-curation-notes">DCV1 (YFR012W) — Curation notes</h1>
+<p>UniProt: P43595 · SGD: S000001908 · systematic name YFR012W · 202 aa · organism <em>Saccharomyces cerevisiae</em> S288C (NCBITaxon:559292)</p>
+<p>This is an <strong>understudied ("dark") gene</strong>. The primary deliverable is an honest<br />
+<code>knowledge_gaps</code> section plus carefully-reasoned <code>description</code>/<code>core_functions</code><br />
+grounded in domain/orthology/literature — never invented function.</p>
+<h2 id="1-identity-and-naming">1. Identity and naming</h2>
+<ul>
+<li>Standard name <strong>DCV1</strong> = "<strong>D</strong>emands <strong>C</strong>dc28 kinase activity for <strong>V</strong>iability protein <strong>1</strong>".<br />
+  [UniProt P43595 record: <code>AltName: Full=Demands CDC28 kinase activity for viability protein 1</code>]</li>
+<li>SGD gene description: "predicted integral membrane protein whose biological role is unknown"; name reflects a genetic interaction with the <em>cdc28-as1</em> (analog-sensitive) allele. [SGD locus page S000001908, fetched 2026-07-05]</li>
+</ul>
+<h2 id="2-what-is-known-with-provenance">2. What is KNOWN (with provenance)</h2>
+<h3 id="protein-architecture-from-the-uniprot-record-verifiable">Protein architecture (from the UniProt record, verifiable)</h3>
+<ul>
+<li>202 aa precursor with an N-terminal <strong>signal peptide (1–18)</strong> (ECO:0000255) and a mature chain 19–202.</li>
+<li><strong>Three predicted transmembrane helices</strong> (91–107, 137–155, 168–189) → <strong>multi-pass (polytopic) integral membrane protein</strong> [UniProt FT lines; <code>SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Multi-pass membrane protein {ECO:0000305}</code>].</li>
+<li>Domain assignments: <strong>Pfam PF06687 (SUR7)</strong>; <strong>InterPro IPR009571 (SUR7/Rim9-like_fungi)</strong> and <strong>IPR051380 (pH-response_reg palI/RIM9)</strong>; <strong>PANTHER PTHR28013</strong> ("Fungal pH-response regulator palI/RIM9"), subfamily <strong>PTHR28013:SF3 "PROTEIN DCV1-RELATED"</strong>.</li>
+<li>UniProt evidence level <strong>PE=3 (Inferred from homology)</strong> — i.e., no direct protein-level experimental characterization of function.</li>
+</ul>
+<h3 id="family-orthology-from-panther-pthr28013-member-list-interpropantherpthr28013pthr28013-entriescsv">Family / orthology (from PANTHER PTHR28013 member list, <code>interpro/panther/PTHR28013/PTHR28013-entries.csv</code>)</h3>
+<ul>
+<li>DCV1 sits in the <strong>Sur7/PalI/Rim9 family</strong> of fungal tetraspan plasma-membrane proteins.</li>
+<li>Its <strong>PANTHER SF3 subfamily</strong> groups it with the canonical <strong>pH-response regulator PalI/Rim9</strong> orthologs across fungi: <em>A. nidulans</em> palI (O93956), <em>S. cerevisiae</em> <strong>RIM9 (Q04734)</strong>, <em>C. albicans</em> RIM9, <em>N. crassa</em> prr-5, <em>S. pombe</em> mac1 (Q10268), etc. So <strong>DCV1 is a S. cerevisiae paralog of RIM9</strong> within the same subfamily.</li>
+<li>PANTHER family description (LLM-generated, EBI): the palI/RIM9 family is "involved in the regulation of pH response in various fungi … essential for the proteolytic cleavage of transcription factors, such as RIM101 … Some members may also function as pH sensors." <strong>NOTE: this is an LLM family blurb, <code>is_reviewed_llm: false</code> — treat as a hypothesis, not established fact for DCV1.</strong></li>
+<li>Paralog by whole-genome duplication (WGD): <strong>TOS7 / YOL019W</strong> (Q08157; PANTHER SF8). [SGD: "DCV1 has a paralog, TOS7, that arose from the whole genome duplication"]</li>
+</ul>
+<h3 id="cellular-localization">Cellular localization</h3>
+<ul>
+<li><strong>Nuclear envelope (GO:0005635)</strong> — <strong>IDA</strong>, assigned by SGD from <strong>PMID:33002606</strong> (date 20201016). [<code>DCV1-goa.tsv</code> row]</li>
+<li>CAVEAT: The cached PMID:33002606 record is <strong>abstract-only</strong> (<code>full_text_available: false</code>) and its title/abstract concern the <strong>paralog Tos7 (Yol019w)</strong> localizing to plasma-membrane MCC/eisosome microdomains, not DCV1. I could <strong>not</strong> access the full text (ScienceDirect 403; PubMed MCP OAuth unavailable) to confirm that DCV1/YFR012W was assayed for nuclear-envelope localization. Per curation policy I do <strong>not</strong> REMOVE an experimental (IDA) annotation on paralog grounds — the curator read the full text I cannot see. I ACCEPT it as a localization but flag the verification gap. SGD's own gene summary independently states DCV1 is "specifically localized to the nuclear envelope."</li>
+<li><strong>IBA (GO_Central) localizations</strong> propagated within PTHR28013:</li>
+<li>plasma membrane (GO:0005886), cell division site (GO:0032153), growing cell tip (GO:0035838). WITH/FROM includes S. pombe members (PomBase:SPAC13G7.04c, PomBase:SPCC1739.10) and A. nidulans palI (UniProtKB:O93956).</li>
+<li><strong>"growing cell tip" (GO:0035838)</strong> = polarized-growth region at the ends of elongated/cylindrical cells (OLS def). This is a <strong>fission-yeast</strong> concept; <em>S. cerevisiae</em> is a budding yeast and does not grow by tip extension. This IBA is a <strong>fission-yeast-specific localization over-propagated to budding yeast</strong> and is not appropriate for DCV1.</li>
+<li><strong>"cell division site" (GO:0032153)</strong> likewise reflects the S. pombe septation/tip pattern; questionable for budding-yeast DCV1 with no direct evidence.</li>
+<li><strong>plasma membrane (GO:0005886)</strong> is family-consistent (Sur7/PalI proteins are PM eisosome/MCC components) and is a defensible IBA localization for a tetraspan PM-family protein, even if DCV1's own IDA points to the nuclear envelope.</li>
+<li>IEA: plasma membrane (InterPro IPR009571 → GO:0005886, GO_REF:0000002) and membrane (UniProt SubCell SL-0162 → GO:0016020, GO_REF:0000044). The generic "membrane" (GO:0016020) is uninformative given 3 TM helices are known; plasma-membrane IEA duplicates the IBA.</li>
+</ul>
+<h3 id="genetics-phenotype">Genetics / phenotype</h3>
+<ul>
+<li><strong>Disruption/deletion phenotype (UniProt DISRUPTION PHENOTYPE, ECO:0000269|PMID:22042866): "Leads to lethality in absence of CDC28."</strong> i.e. <em>dcv1Δ</em> is synthetically lethal / sick with loss of Cdc28 (CDK1) activity — the source of the gene name. PMID:22042866 (Zimmermann et al. 2011 PNAS) is a genome-wide chemical-genetic array screen mapping the <em>CDC28</em> genetic network (107 strong interactors); DCV1/YFR012W was one of the hits. Cached record is abstract-only and the abstract does not name DCV1, but UniProt curators cite it specifically for this phenotype.</li>
+<li><em>dcv1Δ</em> is <strong>non-essential</strong> in S288C. Reported deletion phenotypes are pleiotropic and subtle (per SGD high-throughput phenotype data): altered metal-ion accumulation (Na+, Cd, Ni resistance), MMS sensitivity, decreased chronological lifespan/competitive fitness, reduced peroxisomal transport. These are dispersed HTP screen readouts, not a coherent molecular function.</li>
+</ul>
+<h2 id="3-what-is-not-known-knowledge-gaps">3. What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>Molecular function: unknown.</strong> No enzymatic activity; no direct binding partner established for DCV1 itself. The Sur7/PalI family has <strong>no catalytic activity</strong> — members are scaffolding/sensor tetraspan membrane proteins. GOA carries only the root MF (GO:0003674) with ND.</li>
+<li><strong>Biological process: unknown.</strong> GOA carries only the root BP (GO:0008150) with ND. Whether DCV1 participates in the <strong>Rim101 (PalI/Rim9) alkaline-pH response</strong> — the process characterised for its RIM9 paralog — is <strong>untested for DCV1</strong>; the subfamily assignment is suggestive but not evidence. The <em>cdc28</em>-dependence phenotype is a genetic interaction, not a defined pathway role.</li>
+<li><strong>Localization</strong> is only partly resolved: an SGD IDA says nuclear envelope, while family/IBA evidence points to plasma membrane/eisosome. These are not obviously reconcilable and the primary IDA source could not be verified here.</li>
+<li><strong>Redundancy with paralog TOS7</strong> is untested (no reported <em>dcv1Δ tos7Δ</em> double-mutant phenotype).</li>
+</ul>
+<h2 id="4-reasoning-for-annotation-actions">4. Reasoning for annotation actions</h2>
+<ul>
+<li>MF root (GO:0003674) ND, BP root (GO:0008150) ND → <strong>ACCEPT</strong> (correctly reflect "function unknown"; these are the honest state of knowledge).</li>
+<li>GO:0005635 nuclear envelope IDA (PMID:33002606) → <strong>KEEP_AS_NON_CORE</strong> (experimental, SGD-curated; keep, defer to curator, note verification gap; it is a localization, not a core function).</li>
+<li>GO:0005886 plasma membrane IBA and duplicate IEA (GO_REF:0000002) → both <strong>MARK_AS_OVER_ANNOTATED</strong> (family-consistent PM localization but no DCV1-specific evidence; DCV1's own IDA is nuclear envelope; kept consistent across evidence types for the same term).</li>
+<li>GO:0032153 cell division site IBA → <strong>REMOVE</strong>. NB (per PR review): GO:0032153 is NOT lineage-specific — the S. cerevisiae bud neck is a bona fide cell division site — so the justification is weak single-source phylogenetic propagation (one S. pombe donor, PomBase:SPCC1739.10) with no DCV1-specific division-site evidence, NOT a taxon mismatch. Failure mode set to SOURCE_EVIDENCE_WEAK + COMPARTMENT_OR_COMPLEX_MISMATCH (LINEAGE_OR_TAXON_MISMATCH reserved for GO:0035838 growing cell tip, which genuinely is a tip-growth concept absent in budding yeast).</li>
+<li>GO:0035838 growing cell tip IBA → <strong>REMOVE</strong> (fission-yeast polarized-tip-growth concept; not applicable to budding yeast S. cerevisiae).</li>
+<li>GO:0016020 membrane IEA (SubCell) → <strong>MARK_AS_OVER_ANNOTATED</strong> (uninformative generic parent; the protein's PM/multi-pass membrane status is already captured more specifically).</li>
+</ul>
+<p>No <code>protein binding</code> annotations present (good).</p>
+<h2 id="5-sources-consulted">5. Sources consulted</h2>
+<ul>
+<li>UniProt P43595 (<code>DCV1-uniprot.txt</code>) — architecture, family, disruption phenotype.</li>
+<li>GOA (<code>DCV1-goa.tsv</code>) — 8 annotations.</li>
+<li>PANTHER PTHR28013 member CSV + metadata (<code>interpro/panther/PTHR28013/</code>).</li>
+<li>SGD locus page S000001908 (WebFetch 2026-07-05) — description, paralog, phenotypes.</li>
+<li>PMID:33002606 (Tos7 paper, abstract-only cache) — paralog localization.</li>
+<li>PMID:22042866 (Zimmermann 2011 PNAS, abstract-only cache) — CDC28 genetic-network screen (source of DCV1 name/phenotype).</li>
+<li>OLS (GO term defs for GO:0035838, GO:0032153, GO:0005635).</li>
+<li>Falcon deep research: completed (<code>DCV1-deep-research-falcon.md</code>, ~29 min, 16 refs). <strong>Concordant</strong> with this review: it finds no DCV1-specific experimental characterization; all function is family-level inference (Sur7/PalI/Rim9 tetraspanner, plasma-membrane/MCC-eisosome, Rim101 pH-response by analogy to RIM9's auxiliary role in the Rim21–Dfg16–Rim9 sensor complex). Its citations are reviews / other-gene primary papers (Athanasopoulos 2019 FEMS Microbiol Rev; Obara 2012 JBC on Rim21; Douglas 2012 mBio on Sur7) — none are DCV1-specific, so they are used as background only and not added as <code>supporting_text</code> (falcon file: quote-tokens are not validator-verified per project guidance).<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P43595
+gene_symbol: DCV1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  DCV1 (systematic name YFR012W) is a small (202-residue) polytopic integral membrane protein
+  of the budding yeast Saccharomyces cerevisiae. It has an N-terminal signal sequence and three
+  predicted transmembrane helices, and belongs to the fungal Sur7/PalI/Rim9 family of tetraspan
+  membrane proteins (Pfam SUR7 / InterPro SUR7-Rim9-like; PANTHER PTHR28013), which also contains
+  its budding-yeast paralog RIM9 and, by whole-genome duplication, TOS7. Family members are
+  plasma-membrane / eisosome-associated proteins, and several act in the fungal Rim101/PacC
+  ambient-pH signalling pathway; DCV1 has itself been localized to the nuclear envelope. Its own
+  molecular function and biological role are not experimentally established. It is dispensable for
+  viability under standard conditions, and its principal recorded genetic characteristic is a
+  requirement for Cdc28 (Cdk1) activity for viability — the source of its name, &#34;Demands Cdc28
+  kinase activity for Viability&#34;.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms.
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+    mapping, accompanied by conservative changes to GO terms applied by UniProt.
+- id: PMID:33002606
+  title: The Sur7/PalI family transmembrane protein Tos7 (Yol019w) plays a role in secretion
+    in budding yeast.
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      Cited by SGD for the DCV1 nuclear-envelope IDA (GO:0005635). The cached record is
+      abstract-only and its title/abstract concern the paralog Tos7 (Yol019w) localizing to
+      plasma-membrane MCC/eisosome microdomains; I could not access the full text to confirm
+      that DCV1/YFR012W was assayed for nuclear-envelope localization. Retained per policy
+      (do not overrule an experimental annotation from incomplete evidence); marked UNVERIFIED.
+- id: PMID:22042866
+  title: A chemical-genetic screen to unravel the genetic network of CDC28/CDK1 links ubiquitin
+    and Rad6-Bre1 to cell cycle progression.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-wide chemical-genetic array screen mapping the CDC28/CDK1 genetic network; DCV1
+      (YFR012W) was a screen hit and is the origin of the gene name (&#34;Demands Cdc28 kinase
+      activity for Viability&#34;) and of the UniProt disruption phenotype (lethal in absence of
+      CDC28). Cached record is abstract-only; the abstract does not name DCV1 individually,
+      but UniProt curators cite it specifically for the dcv1 phenotype.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically-propagated (IBA) plasma-membrane localization across the Sur7/PalI/Rim9
+      family (PANTHER PTHR28013). Family-consistent for a tetraspan fungal membrane protein but
+      not experimentally demonstrated for DCV1 itself.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Sur7/PalI-family members are characteristically plasma-membrane / eisosome (MCC)
+      components, so a plasma-membrane localization is biologically plausible for DCV1 and is
+      the most defensible of the propagated CC terms. It is flagged as an over-annotation
+      because there is no DCV1-specific evidence placing it at the plasma membrane; the
+      assignment is a whole-family default rather than a demonstrated DCV1 localization. This is
+      a cellular-component term, not a molecular function.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      source_entities:
+      - source_id: SGD:S000004667
+        source_label: RIM9
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Plasma-membrane/eisosome localization is well supported for Sur7/PalI-family members
+          (the IBA donor set includes the S. cerevisiae PalI/Rim9 protein RIM9 (SGD:S000004667),
+          the paralog TOS7 (SGD:S000005379), and S. pombe members), but transfer to DCV1 is a
+          family default with no DCV1-specific plasma-membrane evidence.
+- term:
+    id: GO:0032153
+    label: cell division site
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IBA &#34;cell division site&#34; localization propagated within PTHR28013 from a single
+      Schizosaccharomyces pombe family member. Not supported for DCV1.
+    action: REMOVE
+    reason: &gt;-
+      The WITH/FROM evidence for this IBA is thin, tracing to one fission-yeast member
+      (PomBase:SPCC1739.10). &#34;Cell division site&#34; (GO:0032153) is not lineage-specific — in
+      S. cerevisiae the bud neck is a bona fide cell division site — so the problem is not a
+      taxon mismatch but the absence of any DCV1-specific evidence for bud-neck / division-site
+      localization; the term is a weak single-source phylogenetic propagation that should not
+      transfer to DCV1.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - SOURCE_EVIDENCE_WEAK
+      source_entities:
+      - source_id: PomBase:SPCC1739.10
+        source_label: S. pombe PTHR28013 member
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Single fission-yeast donor for this term; division-site localization is not
+          demonstrated for DCV1, so the transfer is unsupported.
+- term:
+    id: GO:0035838
+    label: growing cell tip
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IBA &#34;growing cell tip&#34; localization propagated from fission-yeast family members. The
+      term describes polarized tip growth of elongated cells and is not applicable to the
+      budding yeast S. cerevisiae.
+    action: REMOVE
+    reason: &gt;-
+      &#34;Growing cell tip&#34; (GO:0035838) is defined as the polarized-growth region at the ends of
+      cylindrical/elongated cells — a hallmark of fission yeast, which grows by tip extension.
+      The donor evidence is from S. pombe members (PomBase:SPAC13G7.04c, PomBase:SPCC1739.10).
+      S. cerevisiae grows by budding, not tip extension, so this localization is not
+      biologically applicable to DCV1 and represents a fission-yeast-specific over-propagation.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - LINEAGE_OR_TAXON_MISMATCH
+      source_entities:
+      - source_id: PomBase:SPAC13G7.04c
+        source_label: S. pombe PTHR28013 member (mac1-like)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Tip-growth localization is a fission-yeast trait; budding yeast has no growing cell
+          tip, so the term cannot transfer to DCV1.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation (IPR009571 SUR7/Rim9-like → plasma membrane). Redundant
+      with the family IBA plasma-membrane annotation and, like it, not directly demonstrated for
+      DCV1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This IEA duplicates the IBA plasma-membrane localization from the same protein family and
+      adds no independent evidence for DCV1. It is a reasonable family-level default but is an
+      over-annotation given the absence of any DCV1-specific plasma-membrane data.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic &#34;membrane&#34; localization from the UniProt Subcellular Location mapping (SL-0162).
+      Correct but uninformative given that DCV1 is already known to be a multi-pass membrane
+      protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      DCV1 is a bona fide integral membrane protein (signal peptide + three TM helices), so the
+      annotation is not wrong, but &#34;membrane&#34; is the uninformative parent of the more specific
+      compartment terms already present. It is retained only as a high-level default and is
+      marked over-annotated relative to the specific localizations.
+- term:
+    id: GO:0005635
+    label: nuclear envelope
+  evidence_type: IDA
+  original_reference_id: PMID:33002606
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) nuclear-envelope localization curated by SGD. This is the only
+      DCV1-specific experimental annotation and is treated as the primary localization evidence,
+      though the primary source could not be independently verified here.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental (IDA) localization assigned by an SGD curator who read the full text; per
+      curation policy an experimental annotation is not removed on the basis of an
+      abstract-only cache. The cited paper&#39;s abstract concerns the paralog Tos7 at the plasma
+      membrane and I could not access the full text to confirm the DCV1 assay, so the
+      localization is retained but flagged (see reference_review) and marked non-core: it is a
+      cellular-component observation, not a molecular function or established biological role.
+      The nuclear envelope is contiguous with the ER, a plausible endomembrane location for a
+      signal-peptide-bearing polytopic protein.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular-function term with ND (No biological Data available). Accurately reflects
+      that no molecular function has been experimentally or computationally established for DCV1.
+    action: ACCEPT
+    reason: &gt;-
+      DCV1 has no assigned enzymatic activity and no demonstrated specific binding partner; the
+      Sur7/PalI family has no known catalytic activity. The ND root annotation is the honest
+      representation of the current state of knowledge and should be retained.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological-process term with ND. Accurately reflects that no biological process has
+      been experimentally established for DCV1.
+    action: ACCEPT
+    reason: &gt;-
+      No coherent biological process is demonstrated for DCV1. The recorded characteristics
+      (a synthetic requirement for CDC28 activity, and dispersed high-throughput deletion
+      phenotypes) are genetic/phenotypic observations rather than a defined pathway role. The
+      family-level Rim101 pH-response role of the paralog RIM9 is not established for DCV1.
+      The ND root annotation should be retained.
+core_functions:
+- description: &gt;-
+    DCV1 is a Sur7/PalI/Rim9-family tetraspan integral membrane protein whose specific molecular
+    activity is unknown. The family has no known catalytic activity; members act as
+    plasma-membrane/eisosome scaffolding or pH-sensing components. No molecular function,
+    catalytic activity, or specific binding partner has been demonstrated for DCV1, and no
+    molecular-function term more specific than the ND root can be justified from current
+    evidence. Its localization is likewise unresolved (a single nuclear-envelope IDA versus
+    family-propagated plasma-membrane predictions), so no core localization is asserted here.
+  supported_by:
+  - reference_id: PMID:33002606
+    supporting_text: &gt;-
+      Tos7 (Yol019w) is a Sur7/PalI family transmembrane protein in the budding yeast
+    reference_section_type: ABSTRACT
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of DCV1 is unknown. No catalytic activity, transport activity, or
+    specific binding partner has been assigned to DCV1, and the Sur7/PalI/Rim9 family to which
+    it belongs has no defined molecular activity — its members are non-catalytic tetraspan
+    membrane proteins whose scaffolding/sensing role is not captured by any GO molecular-function
+    term. GOA carries only the ND root MF term for DCV1.
+  boundary: &gt;-
+    DCV1 is firmly established as a 202-residue polytopic integral membrane protein (N-terminal
+    signal peptide plus three transmembrane helices) belonging to the fungal Sur7/PalI/Rim9
+    family (Pfam SUR7; InterPro IPR009571; PANTHER PTHR28013, subfamily SF3 with the PalI/Rim9
+    orthologs, including the S. cerevisiae paralog RIM9). Its WGD paralog is TOS7. What is NOT
+    known is any activity the protein performs.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+  significance: &gt;-
+    DCV1 is a conserved-family membrane protein that has never been functionally characterized in
+    its own right. Assigning its activity would clarify whether the budding-yeast Sur7/PalI
+    subfamily has functions beyond the eisosome/pH-response roles known for other members, and a
+    suitable ontology term for non-catalytic tetraspan scaffold/sensor activity would let such
+    functions be expressed at all.
+  resolution: &gt;-
+    DCV1-specific biochemistry and interaction mapping (affinity/proximity proteomics,
+    reconstitution) to identify partners or any activity; and, for the ontology gap, a GO
+    molecular-function term for the scaffolding/pH-sensing activity of Sur7/PalI-family tetraspan
+    membrane proteins.
+  provenance:
+  - reference_id: PMID:33002606
+    supporting_text: &gt;-
+      the cellular roles of Tos7 have not been established
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The biological process DCV1 participates in is unknown. Whether DCV1 functions in the
+    Rim101/PacC ambient-pH response pathway (the process characterized for its subfamily relative
+    RIM9), in eisosome/plasma-membrane organization, or in some unrelated process, has not been
+    tested; its only distinctive genetic characteristic is a requirement for Cdc28 (Cdk1)
+    activity for viability, which is a genetic interaction rather than a defined pathway role.
+  boundary: &gt;-
+    dcv1 deletion is viable under standard conditions but is lethal/synthetically sick when Cdc28
+    activity is compromised (the origin of the gene name), and dcv1 was a hit in a genome-wide
+    chemical-genetic screen of the CDC28 network. High-throughput deletion phenotypes are
+    dispersed (altered metal-ion accumulation, MMS sensitivity, reduced chronological lifespan)
+    and do not converge on one process. Membership in the PalI/Rim9 subfamily is suggestive of a
+    pH-response role but is homology-based only.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A defined process would explain why loss of DCV1 becomes lethal specifically when CDK1
+    activity is limiting, potentially linking a Sur7/PalI-family membrane protein to cell-cycle
+    robustness — an unexpected connection for this family.
+  resolution: &gt;-
+    Test dcv1 for defects in Rim101 processing / alkaline-pH growth and in eisosome/MCC
+    organization; dissect the dcv1-cdc28 genetic interaction (epistasis, suppressors); and test
+    functional redundancy with the paralog TOS7 via a dcv1 tos7 double mutant.
+  provenance:
+  - reference_id: PMID:22042866
+    supporting_text: &gt;-
+      We identified 107 genes that strongly
+    reference_section_type: ABSTRACT
+- gap_statement: &gt;-
+    The subcellular localization of DCV1 is not resolved. A single SGD IDA places DCV1 at the
+    nuclear envelope, whereas family/phylogenetic (IBA/IEA) evidence predicts the plasma
+    membrane/eisosome; these have not been reconciled by an independent DCV1-specific study.
+  boundary: &gt;-
+    DCV1 is certainly membrane-embedded (three TM helices). The nuclear-envelope assignment rests
+    on one IDA (curated by SGD from PMID:33002606, which I could not verify in full text), while
+    plasma-membrane assignments are homology-based propagations across the Sur7/PalI family.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Correct localization is a prerequisite for inferring function: a nuclear-envelope/ER protein
+    and a plasma-membrane eisosome protein imply very different roles for DCV1.
+  resolution: &gt;-
+    Independent, DCV1-specific localization (endogenously tagged Dcv1 imaged against nuclear
+    envelope/ER and plasma-membrane/eisosome markers) under standard and stress (e.g. alkaline
+    pH) conditions.
+  provenance:
+  - reference_id: PMID:33002606
+    supporting_text: &gt;-
+      Tos7 localized to punctate
+    reference_section_type: ABSTRACT
+suggested_questions:
+- question: &gt;-
+    Does DCV1 function in the Rim101/PacC ambient-pH signalling pathway, as its PalI/Rim9
+    subfamily membership suggests, or has it diverged from that role?
+- question: &gt;-
+    Why is DCV1 required for viability specifically when Cdc28 (Cdk1) activity is limiting, and
+    what does this reveal about a link between a Sur7/PalI membrane protein and the cell cycle?
+- question: &gt;-
+    Is DCV1 functionally redundant with its whole-genome-duplication paralog TOS7?
+suggested_experiments:
+- description: &gt;-
+    Endogenously tag DCV1 (e.g. C-terminal GFP) and image it against nuclear-envelope/ER and
+    plasma-membrane/eisosome (MCC) markers under standard and alkaline-pH conditions to resolve
+    the conflicting nuclear-envelope (IDA) vs plasma-membrane (IBA/IEA) localizations.
+  hypothesis: &gt;-
+    DCV1 localizes to a defined endomembrane or plasma-membrane microdomain rather than to both.
+- description: &gt;-
+    Assay dcv1 mutants for Rim101 proteolytic processing and for growth at alkaline pH, and test
+    genetic interactions with RIM9 and other RIM-pathway genes.
+  hypothesis: &gt;-
+    DCV1 contributes to the Rim101 pH-response pathway characteristic of its PalI/Rim9 subfamily.
+- description: &gt;-
+    Construct dcv1 tos7 single and double deletions and characterize growth, cell-wall stress
+    sensitivity, secretion, and CDC28-dependence to test paralog redundancy.
+  hypothesis: &gt;-
+    DCV1 and its WGD paralog TOS7 share overlapping functions masked by redundancy in single
+    mutants.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
