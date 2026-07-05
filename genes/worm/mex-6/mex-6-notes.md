@@ -155,10 +155,17 @@ BP (biological process):
 ## Falcon deep research
 First attempt: `just deep-research-falcon worm mex-6 --fallback perplexity-lite` — the falcon
 (Edison) provider **timed out after 600s**, and the perplexity-lite fallback returned **HTTP 401
-(insufficient_quota)**, so no deep-research file was produced. A second falcon-only retry was
-launched. Per project guidelines, the review was therefore built entirely on **UniProt (Q09436),
-the QuickGO GOA, and the cached primary-literature abstracts** (PMID:10882103, 12588843, 17264081,
-18199581) — every `supporting_text` in the review is a verbatim substring of a real cached
-publication, grep-verified. No content was fabricated. Annotations that could not be corroborated
-from these sources were marked UNDECIDED (GO:0000900, GO:0017148). If the retry yields a genuine
-falcon file it will be committed alongside; otherwise this is the documented fallback path.
+(insufficient_quota)**, so no deep-research file was produced on the first pass. A second
+falcon-only retry was launched; the wrapper again reported a 600s timeout, but the underlying
+Edison client **did complete just after the timeout and wrote a genuine report**
+(`mex-6-deep-research-falcon.md`, Edison Scientific Literature, 33 citations, 636s duration,
++ `_artifacts/`). That file is retained as a committed research artifact. Its citations use
+falcon's internal `authorYYYY pages` format (not PMIDs), and the validator does not check
+non-PMID quotes, so — per project guidance — **I did NOT cite the falcon file in the review**;
+every `supporting_text` in the review is instead a verbatim substring of a cached PMID abstract,
+grep-verified. The falcon report is consistent with (and corroborates) the review: it independently
+describes mex-6 as the partially redundant paralog of mex-5, the CCCH-TZF poly-U RNA binding, the
+PAR-1/PP2A diffusion gradient, PLK-1/2 polo-box association, and the zif-1/ZIF-1 anti-germ-plasm
+axis. No content in the review was taken uncritically from it, and nothing was fabricated.
+Annotations that could not be corroborated from cached primary sources remain UNDECIDED
+(GO:0000900, GO:0017148).
