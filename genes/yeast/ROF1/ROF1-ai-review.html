@@ -1,0 +1,2741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROF1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ROF1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P38867" target="_blank" class="term-link">
+                        P38867
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">YHR177W</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ROF1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P38867" data-a="DESCRIPTION: ROF1 (YHR177W) is a putative sequence-specific DNA..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ROF1 (YHR177W) is a putative sequence-specific DNA-binding transcription factor of the fungal Gti1/Pac2 (WOPR-domain) family. Its N-terminal WOPR domain (residues ~6-201) has been crystallized in complex with a preferred DNA site, establishing it as a bona fide sequence-specific DNA-binding protein, and the protein is a paralog of the S. cerevisiae pseudohyphal-growth regulator Mit1 and an ortholog of the Candida albicans white-opaque master regulator Wor1. Rof1 acts in the nucleus as a regulator of the transcriptional program controlling filamentous/pseudohyphal growth and complex (biofilm-like &#34;fluffy&#34;) colony morphology: its overexpression represses the FLO11/flocculin and filamentation-MAPK regulon and flattens complex colony structure, while its deletion can increase colony structure. The direction of its transcriptional effect on direct targets, and its physiological trigger, remain incompletely defined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0003700" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation from the Gti1/Pac2 (WOPR) family. Family members (Wor1, Mit1, Ryp1) are sequence-specific DNA-binding transcription factors, and the ROF1 WOPR domain has been crystallized bound to DNA (PMID:24994900). Domain- and structure-defensible core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22095082" target="_blank" class="term-link">
+                                        PMID:22095082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">recognize the same DNA sequence</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is expected for a sequence-specific DNA-binding transcription factor and is consistent with the curator IC nucleus annotation. Retained as the core site of action.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0043565" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Directly supported by the co-crystal structure of the ROF1 WOPR domain with a preferred DNA site (PMID:24994900) and by the shared sequence-specific recognition of the Wor1/Mit1/Ryp1 family. Core molecular function.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22095082" target="_blank" class="term-link">
+                                        PMID:22095082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">recognize the same DNA sequence</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0045944" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ROF1 is a transcriptional regulator, so involvement in regulation of RNA polymerase II transcription is well supported. However, the POSITIVE direction is not established for ROF1 in S. cerevisiae: the direct budding-yeast data show ROF1 overexpression REPRESSING the FLO11/flocculin and filamentation-MAPK program, and the IBA/ISS positive direction derives from the C. albicans activator Wor1. The regulatory role is real but its direction on direct targets is a knowledge gap; kept as non-core, and a direction-neutral parent term is proposed as a better fit.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    regulation of transcription by RNA polymerase II
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" target="_blank" class="term-link">
+                                        PMID:28673928
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as regulators of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24994900
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of a new DNA-binding domain which regulates pathog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0003677" data-r="PMID:24994900" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence: the ROF1 WOPR domain (PDB 4M8B, residues 6-201 of P38867) was crystallized in complex with its preferred DNA sequence. GO:0043565 (sequence-specific DNA binding) is the more precise term for the same activity; this general parent is retained as accurate.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link">
+                                        PMID:24994900
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WOPR-domain proteins are found throughout the fungal kingdom where they function</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24994900
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of a new DNA-binding domain which regulates pathog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0005634" data-r="PMID:24994900" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (IC) of nuclear localization from the transcription-factor role. Appropriate for a sequence-specific DNA-binding transcription factor; the core cellular location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045944" target="_blank" class="term-link">
+                                    GO:0045944
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24994900
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of a new DNA-binding domain which regulates pathog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:0045944" data-r="PMID:24994900" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS from C. albicans Wor1 (with/from UniProtKB:Q5AP80), an activator of opaque-phase genes. The orthology is genuine (both are WOPR-family regulators), but the transferred POSITIVE direction is Wor1-specific; ROF1 experimental data in S. cerevisiae point to repression of the filamentation/FLO11 program. Not removed (well-grounded curator ISS), but the direction is uncertain, so kept as non-core and flagged in knowledge_gaps.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22095082" target="_blank" class="term-link">
+                                        PMID:22095082
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">recognize the same DNA sequence</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900428" target="_blank" class="term-link">
+                                    GO:1900428
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of filamentous growth of a population of unicellular organisms</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28673928
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Transcriptional Profiling of Biofilm Regulators Identified b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P38867" data-a="GO:1900428" data-r="PMID:28673928" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed NEW annotation not currently in GOA. ROF1 was identified in an overexpression screen as a regulator of complex (&#34;fluffy&#34;) colony morphology: overexpression reduces, and deletion increases, complex colony structure, and the overexpression transcriptional profile represses the FLO11/flocculin and filamentation-MAPK regulon. This establishes ROF1 as a regulator of the filamentous/pseudohyphal growth program in S. cerevisiae. A direction-neutral term is used because the direct-target direction (activation vs repression) is a knowledge gap.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" target="_blank" class="term-link">
+                                        PMID:28673928
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">as regulators of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sequence-specific DNA-binding transcription factor (Gti1/Pac2/WOPR family) acting in the nucleus to regulate the RNA polymerase II transcriptional program governing filamentous/pseudohyphal growth and complex (&#34;fluffy&#34;) colony morphology. The WOPR domain provides sequence-specific DNA recognition (co-crystal with DNA); in budding yeast ROF1 modulates the FLO11/flocculin and filamentation-MAPK regulon shared with its paralog Mit1.</h3>
+                <span class="vote-buttons" data-g="P38867" data-a="FUNCTION: Sequence-specific DNA-binding transcription factor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                            DNA-binding transcription factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1900428" target="_blank" class="term-link">
+                                regulation of filamentous growth of a population of unicellular organisms
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link">
+                                PMID:24994900
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">WOPR-domain proteins are found throughout the fungal kingdom where they function</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" target="_blank" class="term-link">
+                                PMID:28673928
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">as regulators of</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" target="_blank" class="term-link">
+                            PMID:24994900
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of a new DNA-binding domain which regulates pathogenesis in a wide variety of fungi.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" target="_blank" class="term-link">
+                            PMID:28673928
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transcriptional Profiling of Biofilm Regulators Identified by an Overexpression Screen in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22095082" target="_blank" class="term-link">
+                            PMID:22095082
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A conserved transcriptional regulator governs fungal morphology in widely diverged species.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Rof1 bind the FLO11 promoter directly, or does it act indirectly through shared targets with its paralog Mit1?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38867" data-a="Q: Does Rof1 bind the FLO11 promoter directly, or doe..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Under what physiological condition is Rof1 activity required, and is it functionally antagonistic, redundant, or parallel to Mit1?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38867" data-a="Q: Under what physiological condition is Rof1 activit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Genome-wide ChIP-seq/CUT&amp;RUN of epitope-tagged Rof1 under filamentation-inducing conditions, integrated with RNA-seq of rof1 deletion and overexpression, and compared to Mit1 binding maps, to define direct targets and the activation/repression direction.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38867" data-a="EXPERIMENT: Genome-wide ChIP-seq/CUT&amp;RUN of epitope-tagged Rof..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Epistasis and expression analysis of rof1, mit1, and rof1 mit1 mutants across colony-morphology conditions and strain backgrounds to resolve the paralog relationship and a clean loss-of-function phenotype.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P38867" data-a="EXPERIMENT: Epistasis and expression analysis of rof1, mit1, a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct in vivo target genes of Rof1 in S. cerevisiae are undetermined. No genome-wide Rof1 ChIP dataset has been reported (unlike its paralog Mit1); the available data are downstream expression changes from overexpression, not direct binding, and SGD lists zero known targets.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Rof1 is established as a sequence-specific DNA-binding protein (WOPR domain co-crystallized with DNA) and its paralog Mit1 binds the control regions of known pseudohyphal-growth regulators and flocculin genes, so a plausible target space is the FLO11/filamentation regulon - but ROF1&#39;s own direct binding sites are unmapped.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without direct targets, ROF1&#39;s placement in the filamentous-growth regulatory network (and whether it acts on FLO11 directly or via Mit1-shared sites) cannot be fixed.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Genome-wide ChIP-seq / CUT&amp;RUN for tagged Rof1 under filamentation-inducing conditions, compared with Mit1 binding maps.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"recognize the same DNA sequence"</em> — PMID:22095082</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether Rof1 functions as a transcriptional activator or repressor of its direct targets in S. cerevisiae is unresolved. GO annotations encode positive regulation (transferred from the C. albicans activator Wor1), yet the budding-yeast phenotypic and expression data indicate repression of the complex-colony/FLO11 program.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that ROF1 overexpression reduces complex &#34;fluffy&#34; colony morphology and that its deletion can increase colony structure, and that the overexpression profile is dominated by repression of FLO11, FLO10 and TEC1. The mechanistic direction on genes it binds directly is not established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Activator-vs-repressor identity determines how ROF1 is wired into the filamentous-growth circuit and how it relates functionally to the activator paralog Mit1 and to Wor1.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct-target reporter/expression assays with DNA-binding-competent vs -defective Rof1 alleles, and Rof1 ChIP integrated with target expression.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"as master regulators of cell morphology and pathogenesis"</em> — PMID:24994900</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Rof1 has no penetrant, condition-independent loss-of-function phenotype, and the physiological signal or condition that activates it is unknown. Single-deletion effects on colony morphology are strain-background dependent and conflicting between studies.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Deletion increases colony structure in one background and suppresses hog1-driven hyper-filamentation in another, and overexpression reduces complex colony morphology; but a clean, condition-independent single-deletion phenotype has not been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A defined activating condition and a clean phenotype are prerequisites for placing ROF1 in a specific signaling pathway (HOG / filamentation-MAPK / cAMP-PKA) rather than the broad morphology network.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Systematic phenotyping of rof1 deletion (and rof1 mit1 double mutants) across nutrient/stress conditions and strain backgrounds; identification of upstream regulators.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"adaptive morphological"</em> — PMID:28673928</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ROF1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38867" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:08:35.709396</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ROF1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-rof1yhr177w-in-saccharomyces-cerevisiae">Comprehensive Research Report: ROF1/YHR177W in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="gene-identity-and-symbol-disambiguation">Gene Identity and Symbol Disambiguation</h3>
+<p><strong>Important note on gene symbol ambiguity:</strong> The symbol "ROF1" is used in <em>Arabidopsis thaliana</em> to designate an FKBP-type immunophilin (AtFKBP62), which is entirely unrelated to the yeast protein discussed here. In <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c), ROF1 (Regulator of Fluffy 1) corresponds to the systematic open reading frame <strong>YHR177W</strong> (UniProt: P38867). This protein was initially annotated as uncharacterized but has since been functionally characterized as a WOPR-domain transcription factor belonging to the fungal-specific Gti1/Pac2 family (luo2024therolesof pages 2-4, luo2024therolesof pages 1-2, arita2021agenome‐scaleyeast pages 8-10).</p>
+<p>The key characteristics of ROF1/YHR177W are summarized in the following table:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene Name</td>
+<td><strong>ROF1</strong> (Regulator of Fluffy 1); also referred to as <strong>YHR177W</strong> in the yeast systematic nomenclature; identified as the <strong>Pac2 ortholog</strong> in <em>S. cerevisiae</em> (luo2024therolesof pages 2-4, luo2024therolesof pages 1-2)</td>
+</tr>
+<tr>
+<td>Systematic Name</td>
+<td><strong>YHR177W</strong> (luo2024therolesof pages 2-4, luo2024therolesof pages 1-2)</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td><strong>P38867</strong> (user-provided target identity)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><strong>Saccharomyces cerevisiae</strong> (strain ATCC 204508 / S288c), baker's yeast (luo2024therolesof pages 2-4)</td>
+</tr>
+<tr>
+<td>Protein Family</td>
+<td><strong>Gti1/Pac2 family</strong>; fungal-specific <strong>WOPR-domain transcription factor</strong> family (luo2024therolesof pages 1-2, luo2024therolesof pages 4-5)</td>
+</tr>
+<tr>
+<td>Domain(s)</td>
+<td>Conserved N-terminal <strong>Gti1/Pac2 (WOPR) domain</strong> corresponding to PF09729/IPR018608; WOPR domain comprises <strong>WOPRa</strong> and <strong>WOPRb</strong> globular subdomains required for DNA binding (luo2024therolesof pages 1-2, tollot2016thewoprprotein pages 2-4, luo2024therolesof pages 4-5)</td>
+</tr>
+<tr>
+<td>DNA Binding Motif</td>
+<td>Promoters repressed by Rof1 are enriched for a <strong>WOPR-like motif</strong>: <strong>[A/T]TTAAACTTT</strong> (arita2021agenome‐scaleyeast pages 8-10)</td>
+</tr>
+<tr>
+<td>Primary Function</td>
+<td><strong>Sequence-specific transcriptional repressor</strong> that regulates gene expression programs linked to colony morphology/biofilm-related traits and broader transcription-factor networks; it is not an enzyme or transporter, but a <strong>fungal transcriptional regulator</strong> (arita2021agenome‐scaleyeast pages 8-10, arita2021agenome‐scaleyeast pages 10-12)</td>
+</tr>
+<tr>
+<td>Paralog</td>
+<td><strong>MIT1</strong>, the <em>S. cerevisiae</em> <strong>Gti1 ortholog</strong> and Wor1 homolog; Rof1 and Mit1 share overlapping DNA-binding regions and regulate many of the same genes (luo2024therolesof pages 2-4)</td>
+</tr>
+<tr>
+<td>Subcellular Localization</td>
+<td>Most likely <strong>nuclear</strong>, based on family-level evidence that Gti1/Pac2 proteins are nuclear-localizing transcriptional regulators with NLS features; direct YHR177W-specific localization evidence was not found in the gathered literature, so this is an inference rather than a direct experimental localization claim here (luo2024therolesof pages 6-7, luo2024therolesof pages 4-5)</td>
+</tr>
+<tr>
+<td>Key Phenotypes (deletion and overexpression)</td>
+<td><strong>Deletion:</strong> YHR177W deletion alone had <strong>no clear effect on morphological switching/vegetative growth</strong>, but deletion suppresses the <strong>hog1Δ hyper-filamentous/complex colony/invasive growth phenotype</strong> in diploids; YHR177W is also described as required for <strong>biofilm formation</strong> in review-level synthesis (luo2024therolesof pages 7-7, luo2024therolesof pages 2-4, furukawa2011efficientconstructionof pages 5-6). <strong>Overexpression:</strong> reduces expression of a subset of target genes, causes <strong>fitness defects</strong>, <strong>prevents fluffy colony morphology</strong>, and <strong>reduces colony structure complexity</strong> (luo2024therolesof pages 4-5, arita2021agenome‐scaleyeast pages 8-10, arita2021agenome‐scaleyeast pages 10-12)</td>
+</tr>
+<tr>
+<td>Regulon (key repressed genes)</td>
+<td>Rof1-repressed genes include transcription factors <strong>MOT3, CUP9, PHD1, YAP6, NRG1, GAT2, TBS1, ACA1, GCN4, CIN5, and MIT1</strong>; repressed gene sets are enriched for <strong>water transport</strong>, <strong>siderophore transmembrane transport</strong>, and <strong>transcription factor binding</strong> functions (arita2021agenome‐scaleyeast pages 8-10)</td>
+</tr>
+<tr>
+<td>Genetic Interactions</td>
+<td><strong>264 synthetic dosage lethality interactions</strong> were identified upon ROF1 overexpression; strongest interactions involve the <strong>cell wall integrity (CWI) pathway</strong> (<strong>SLT2, BCK1, PKC1</strong>) and cell wall biosynthesis genes (<strong>GFA1, QRI1</strong>), plus chromatin/transcription regulators including <strong>SWR1, INO80, Rpd3L, NuA4, and COMPASS</strong> components (arita2021agenome‐scaleyeast pages 10-12)</td>
+</tr>
+<tr>
+<td>Signaling Pathway Connections</td>
+<td>Connected most clearly to <strong>morphogenesis/filamentation regulatory networks</strong> and genetically to the <strong>cell wall integrity (PKC1-BCK1-SLT2/Mpk1) MAPK pathway</strong>; YHR177W also emerges in <strong>hog1Δ suppressor</strong> screens, linking it indirectly to HOG-dependent control of filamentous growth. At the family level, Gti1/Pac2 proteins are associated with <strong>PKA</strong> and <strong>MAPK</strong> regulatory logic in fungi (arita2021agenome‐scaleyeast pages 10-12, luo2024therolesof pages 2-4, luo2024therolesof pages 6-7, furukawa2011efficientconstructionof pages 5-6)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the key molecular, functional, and phenotypic characteristics of the yeast gene ROF1/YHR177W from the gathered evidence. It is useful as a compact reference for identity verification, inferred function, regulatory targets, and pathway connections.</em></p>
+<h3 id="1-primary-function-sequence-specific-transcriptional-repressor">1. Primary Function: Sequence-Specific Transcriptional Repressor</h3>
+<p>ROF1 encodes a sequence-specific DNA-binding transcriptional repressor. When Rof1 expression is induced (using the YETI inducible expression system), it rapidly reduces the expression of a defined subset of target genes (arita2021agenome‐scaleyeast pages 8-10). This repressive activity is mediated through its WOPR DNA-binding domain, which recognizes promoter sequences enriched for the motif <strong>[A/T]TTAAACTTT</strong> (arita2021agenome‐scaleyeast pages 8-10). Rof1 is not an enzyme or transporter; rather, it functions as a transcriptional regulator that modulates gene expression programs related to colony morphology, biofilm formation, and broader transcription factor networks.</p>
+<p>The Rof1 regulon, identified by transcriptomic analysis following rapid induction, includes genes functionally enriched for water transport, siderophore transmembrane transport, and transcription factor binding activity (arita2021agenome‐scaleyeast pages 8-10). Notably, Rof1 represses the expression of numerous transcription factor genes, including <strong>MOT3, CUP9, PHD1, YAP6, NRG1, GAT2, TBS1, ACA1, GCN4, CIN5</strong>, and <strong>MIT1</strong> (its own paralog) (arita2021agenome‐scaleyeast pages 8-10). This highly interconnected nature—a transcription factor that represses other transcription factors—positions Rof1 as a potential upstream modulator of multiple regulatory circuits.</p>
+<h3 id="2-domain-architecture-and-structural-features">2. Domain Architecture and Structural Features</h3>
+<p>ROF1 belongs to the <strong>Gti1/Pac2 protein family</strong>, also known as the WOPR (Wor1, Pac2, Ryp1) transcription factor family, which is fungal-specific (luo2024therolesof pages 1-2). The defining structural feature is a conserved N-terminal <strong>Gti1/Pac2 domain</strong> (Pfam PF09729 / InterPro IPR018608). This domain consists of two globular subdomains, <strong>WOPRa</strong> and <strong>WOPRb</strong>, separated by a linker region of variable length and sequence (tollot2016thewoprprotein pages 2-4, luo2024therolesof pages 4-5). Both subdomains are required for DNA binding activity—neither alone is sufficient (tollot2016thewoprprotein pages 2-4). The N-terminal Gti1/Pac2 domain also contains a conserved <strong>protein kinase A (Pka1) phosphorylation site</strong>, suggesting regulation by PKA-dependent signaling (luo2024therolesof pages 2-4, luo2024therolesof pages 1-2).</p>
+<p>Structural modeling has confirmed that key amino acids critical for WOPR motif binding are highly conserved across WOPR family members. Crystal structures of the WOPR domain from Wor1 in <em>Candida albicans</em> and YHR177W from <em>S. cerevisiae</em> have been used as structural templates for comparative modeling (duttke2022decodingtranscriptionregulatory pages 7-8), indicating that the structural basis for DNA binding is conserved across the family.</p>
+<p>The C-terminal region of Rof1, in contrast to the conserved N-terminal domain, is divergent and variable among Gti1/Pac2 family members, and this divergence may contribute to the functional differences between the two paralogs in <em>S. cerevisiae</em> (luo2024therolesof pages 5-6).</p>
+<h3 id="3-relationship-with-paralog-mit1-and-the-morphogenesis-regulatory-network">3. Relationship with Paralog Mit1 and the Morphogenesis Regulatory Network</h3>
+<p><em>S. cerevisiae</em> possesses two WOPR-family paralogs: <strong>Mit1</strong> (the Gti1/Wor1 ortholog) and <strong>ROF1/YHR177W</strong> (the Pac2 ortholog) (luo2024therolesof pages 2-4). These two proteins share substantial functional overlap: over 50% of YHR177W-bound intergenic regions overlap with Mit1-bound regions, indicating shared DNA-binding specificities and co-regulation of many of the same target genes (luo2024therolesof pages 2-4). Despite this overlap, the two paralogs have distinct phenotypic consequences. Mit1 is a central regulator of morphological transitions—its absence prevents diploid pseudohyphal growth and haploid invasive growth—whereas deletion of YHR177W alone has no clear effect on morphological switching or vegetative growth (luo2024therolesof pages 2-4, luo2024therolesof pages 7-7). Instead, YHR177W is required for biofilm formation and complex colony structure (luo2024therolesof pages 2-4).</p>
+<p>Intriguingly, deletion of <em>MIT1</em> substantially increases <em>YHR177W</em> expression levels, suggesting a regulatory feedback loop between the two paralogs (luo2024therolesof pages 2-4). Both Rof1 and Mit1 are integrated into a broader morphogenesis transcriptional network that includes Phd1, Sok2, Mga1, Flo8, Tec1, and Ste12 (luo2024therolesof pages 2-4). The Rof1 overexpression regulon also includes Mit1 itself as a repressed target, further underscoring the interconnectedness of these regulatory circuits (arita2021agenome‐scaleyeast pages 8-10).</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>Although direct experimental localization data specific to YHR177W/Rof1 (e.g., from GFP fusion imaging) were not identified in the primary literature gathered here, the protein is predicted to localize to the <strong>nucleus</strong>. This inference is strongly supported by multiple lines of evidence: (i) Gti1/Pac2 family proteins across fungal species contain nuclear localization signals (NLS) and have been characterized as nuclear-localizing transcriptional regulators (luo2024therolesof pages 2-4, luo2024therolesof pages 6-7); (ii) Rof1 possesses a sequence-specific DNA-binding domain and functions as a transcription factor, which necessitates nuclear localization; and (iii) the Saccharomyces Genome Database annotates Rof1 localization as nuclear. These converging lines of evidence strongly support a nuclear site of action.</p>
+<h3 id="5-role-in-filamentous-growth-and-colony-morphology">5. Role in Filamentous Growth and Colony Morphology</h3>
+<p>Rof1 plays a defined role in the complex colony morphology and filamentous growth programs of <em>S. cerevisiae</em>. In a genetic screen for suppressors of the hyper-filamentous phenotype caused by deletion of the Hog1 MAPK in diploid Σ1278b strains, <em>YHR177W</em> was identified as one of 30 genes whose insertion/deletion significantly suppressed enhanced morphological developments, including hyper-filamentous growth, agar invasion, and complex colony morphology (luo2024therolesof pages 2-4, furukawa2011efficientconstructionof pages 5-6). This screen categorized YHR177W as being involved in control of cell cycle or cell division, although the precise mechanistic basis for suppression was not elucidated (furukawa2011efficientconstructionof pages 5-6).</p>
+<p>Overexpression of ROF1, conversely, reduces the complexity of colony structure and prevents the formation of "fluffy" colony morphology, a phenotype associated with biofilm-like growth (luo2024therolesof pages 4-5, arita2021agenome‐scaleyeast pages 10-12). This is consistent with Rof1's role as a transcriptional repressor of genes involved in morphological complexity.</p>
+<h3 id="6-genetic-interactions-and-pathway-connections">6. Genetic Interactions and Pathway Connections</h3>
+<p>A genome-wide synthetic dosage lethality (SDL) screen using the YETI system identified <strong>264 genes</strong> with synthetic genetic interactions upon ROF1 overexpression (arita2021agenome‐scaleyeast pages 10-12). The strongest interactions were with components of the <strong>cell wall integrity (CWI) signaling pathway</strong>, specifically <strong>SLT2</strong> (the MAPK), <strong>BCK1</strong> (MAPKKK), and <strong>PKC1</strong> (protein kinase C), as well as cell wall biosynthesis genes <strong>GFA1</strong> and <strong>QRI1</strong> (arita2021agenome‐scaleyeast pages 10-12). This genetic connection to the CWI pathway suggests that Rof1 overexpression imposes cell wall stress or reduces cell wall integrity, such that cells become dependent on the CWI pathway for survival.</p>
+<p>Additionally, ROF1 displayed synthetic interactions with genes encoding components of multiple chromatin remodeling and transcriptional regulation complexes, including the <strong>SWR1 complex</strong>, <strong>INO80 complex</strong>, <strong>Rpd3L histone deacetylase complex</strong>, <strong>NuA4 histone acetyltransferase complex</strong>, and the <strong>COMPASS (Set1) histone methyltransferase complex</strong> (arita2021agenome‐scaleyeast pages 10-12). These interactions are consistent with Rof1's function as a transcriptional repressor that may require proper chromatin architecture for its activity or whose repressive effects create a cellular dependency on chromatin-mediated gene regulation.</p>
+<h3 id="7-evolutionary-context-the-gti1pac2-wopr-family">7. Evolutionary Context: The Gti1/Pac2 (WOPR) Family</h3>
+<p>The Gti1/Pac2 family is a well-conserved, fungal-specific transcription factor family found throughout the fungal kingdom (luo2024therolesof pages 1-2, luo2024therolesof pages 7-8). Most fungal genomes encode two paralogous WOPR proteins—one Gti1-type (e.g., Wor1 in <em>Candida albicans</em>, Ryp1 in <em>Histoplasma capsulatum</em>, Sge1 in <em>Fusarium</em> species, Mit1 in <em>S. cerevisiae</em>) and one Pac2-type (e.g., ROF1/YHR177W in <em>S. cerevisiae</em>, Pac2 in <em>Schizosaccharomyces pombe</em>) (luo2024therolesof pages 2-4, luo2024therolesof pages 5-6). The Gti1 orthologs have been more extensively studied and are generally considered master regulators of morphological switching and virulence in pathogenic fungi, while the Pac2 orthologs tend to play more minor or modulatory roles (luo2024therolesof pages 5-6, luo2024therolesof pages 7-8).</p>
+<p>In <em>S. pombe</em>, the founding member Pac2 controls the onset of sexual development through a pathway independent of the cAMP cascade, specifically in response to nitrogen starvation (luo2024therolesof pages 2-4, luo2024therolesof pages 1-2). Gti1 in <em>S. pombe</em> functions as a downstream target of the Wis1-Sty1 MAPK (HOG) pathway and promotes gluconate uptake during glucose starvation (luo2024therolesof pages 2-4, luo2024therolesof pages 6-7). This family-level context—regulation by MAPK and PKA pathways and involvement in nutrient-responsive developmental decisions—provides a framework for understanding Rof1's role in <em>S. cerevisiae</em> as a regulator positioned at the intersection of nutrient sensing and morphological development.</p>
+<h3 id="8-summary">8. Summary</h3>
+<p>ROF1/YHR177W encodes a fungal-specific WOPR-domain transcription factor that functions primarily as a <strong>transcriptional repressor</strong> in <em>S. cerevisiae</em>. It binds DNA through its conserved WOPRa/WOPRb domain to the motif [A/T]TTAAACTTT and represses a regulon of genes including multiple transcription factors, as well as genes involved in water transport and siderophore transport. Rof1 is the Pac2 ortholog in the Gti1/Pac2 family, paralogous to Mit1 (the Gti1/Wor1 ortholog), and the two share &gt;50% of their DNA-binding targets. While deletion of Rof1 alone does not abolish morphological transitions, it is required for biofilm formation and was identified as a positive regulator of the hyper-filamentous growth phenotype in <em>hog1Δ</em> diploids. Its overexpression suppresses fluffy colony morphology and creates a genetic dependency on the cell wall integrity MAPK pathway. Rof1 is predicted to function in the <strong>nucleus</strong> as a DNA-binding transcriptional regulator, consistent with its family-level properties including conserved nuclear localization signals and its demonstrated capacity for sequence-specific DNA binding.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(luo2024therolesof pages 2-4): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 1-2): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(arita2021agenome‐scaleyeast pages 8-10): Yuko Arita, Griffin Kim, Zhijian Li, Helena Friesen, Gina Turco, Rebecca Y Wang, Dale Climie, Matej Usaj, Manuel Hotz, Emily H Stoops, Anastasia Baryshnikova, Charles Boone, David Botstein, Brenda J Andrews, and R Scott McIsaac. A genome‐scale yeast library with inducible expression of individual genes. Molecular Systems Biology, Jun 2021. URL: https://doi.org/10.15252/msb.202110207, doi:10.15252/msb.202110207. This article has 77 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 4-5): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(tollot2016thewoprprotein pages 2-4): Marie Tollot, Daniela Assmann, Christian Becker, Janine Altmüller, Julien Y. Dutheil, Carl-Eric Wegner, and Regine Kahmann. The wopr protein ros1 is a master regulator of sporogenesis and late effector gene expression in the maize pathogen ustilago maydis. PLOS Pathogens, 12:e1005697, Jun 2016. URL: https://doi.org/10.1371/journal.ppat.1005697, doi:10.1371/journal.ppat.1005697. This article has 106 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arita2021agenome‐scaleyeast pages 10-12): Yuko Arita, Griffin Kim, Zhijian Li, Helena Friesen, Gina Turco, Rebecca Y Wang, Dale Climie, Matej Usaj, Manuel Hotz, Emily H Stoops, Anastasia Baryshnikova, Charles Boone, David Botstein, Brenda J Andrews, and R Scott McIsaac. A genome‐scale yeast library with inducible expression of individual genes. Molecular Systems Biology, Jun 2021. URL: https://doi.org/10.15252/msb.202110207, doi:10.15252/msb.202110207. This article has 77 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 6-7): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 7-7): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(furukawa2011efficientconstructionof pages 5-6): Kentaro Furukawa, Takako Furukawa, and Stefan Hohmann. Efficient construction of homozygous diploid strains identifies genes required for the hyper-filamentous phenotype in saccharomyces cerevisiae. PLoS ONE, 6:e26584, Oct 2011. URL: https://doi.org/10.1371/journal.pone.0026584, doi:10.1371/journal.pone.0026584. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(duttke2022decodingtranscriptionregulatory pages 7-8): Sascha H. Duttke, Sinem Beyhan, Rajendra Singh, Sonya Neal, Suganya Viriyakosol, Joshua Fierer, Theo N. Kirkland, Jason E. Stajich, Christopher Benner, and Aaron F. Carlin. Decoding transcription regulatory mechanisms associated with <i>coccidioides immitis</i> phase transition using total rna. mSystems, Feb 2022. URL: https://doi.org/10.1128/msystems.01404-21, doi:10.1128/msystems.01404-21. This article has 17 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 5-6): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+<li>
+<p>(luo2024therolesof pages 7-8): Zheng Luo, Dianguang Xiong, and Chengming Tian. The roles of gti1/pac2 family proteins in fungal growth, morphogenesis, stress response, and pathogenicity. Molecular Plant-Microbe Interactions®, 37:488-497, Jun 2024. URL: https://doi.org/10.1094/mpmi-11-23-0198-cr, doi:10.1094/mpmi-11-23-0198-cr. This article has 9 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ROF1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>luo2024therolesof pages 2-4</li>
+<li>luo2024therolesof pages 1-2</li>
+<li>tollot2016thewoprprotein pages 2-4</li>
+<li>duttke2022decodingtranscriptionregulatory pages 7-8</li>
+<li>luo2024therolesof pages 5-6</li>
+<li>furukawa2011efficientconstructionof pages 5-6</li>
+<li>luo2024therolesof pages 4-5</li>
+<li>luo2024therolesof pages 6-7</li>
+<li>luo2024therolesof pages 7-7</li>
+<li>luo2024therolesof pages 7-8</li>
+<li>A/T</li>
+<li>https://doi.org/10.1094/mpmi-11-23-0198-cr,</li>
+<li>https://doi.org/10.15252/msb.202110207,</li>
+<li>https://doi.org/10.1371/journal.ppat.1005697,</li>
+<li>https://doi.org/10.1371/journal.pone.0026584,</li>
+<li>https://doi.org/10.1128/msystems.01404-21,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ROF1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38867" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rof1-yhr177w-s-cerevisiae-curation-notes">ROF1 (YHR177W) — S. cerevisiae — Curation Notes</h1>
+<p>Journal for the AI GO-annotation review of ROF1. Provenance recorded inline as<br />
+<code>[PMID:xxxx "verbatim supporting text"]</code> or <code>[SGD]</code> / <code>[UniProt]</code> where appropriate.</p>
+<h2 id="identity-verified">Identity (verified)</h2>
+<ul>
+<li><strong>Standard name:</strong> ROF1 (SGD standard name description = <strong>"Regulator Of Fluffy"</strong>, verified via SGD API for locus S000001220). NOTE: the task hint "Repressor Of Filamentation" is NOT the SGD name; the SGD-verified expansion is "Regulator Of Fluffy 1" <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" title="we have given YHR177W the name ROF1 (Regulator Of Fluffy1)">PMID:28673928</a>. The two are conceptually related (ROF1 represses the fluffy/filamentous colony program), but I use the SGD-verified name.</li>
+<li><strong>Systematic name / ORF:</strong> YHR177W (Verified ORF, chromosome VIII).</li>
+<li><strong>UniProt:</strong> P38867 (YHX7_YEAST), reviewed Swiss-Prot, 453 aa, PE=1 (evidence at protein level). [UniProt]</li>
+<li><strong>SGD:</strong> S000001220.</li>
+<li><strong>NCBI Taxon:</strong> 559292 (S. cerevisiae S288C).</li>
+</ul>
+<h2 id="domain-structure-inline-domain-analysis">Domain / structure (inline domain analysis)</h2>
+<ul>
+<li><strong>Pfam PF09729 (Gti1_Pac2); InterPro IPR018608 (Gti1/Pac2)</strong> — this is the <strong>WOPR domain</strong>, the DNA-binding domain of the Wor1/Mit1/Ryp1/Gti1/Pac2/Sge1 family of fungal transcriptional regulators. [UniProt DR lines]</li>
+<li><strong>PANTHER PTHR28027 "TRANSCRIPTIONAL REGULATOR MIT1"</strong>, subfamily SF2. Family members include ROF1 (P38867), its S. cerevisiae paralog <strong>MIT1 (P40002)</strong>, C. albicans <strong>Wor1 (Q5AP80)</strong>, S. pombe <strong>Gti1/Pac2</strong>, Fusarium/Verticillium <strong>Sge1</strong>, and H. capsulatum <strong>Ryp1</strong>. [interpro/panther/PTHR28027/PTHR28027-entries.csv]</li>
+<li><strong>PDB 4M8B</strong> — 2.6 Å crystal structure of the WOPR domain of YHR177W (residues <strong>6–201</strong>) bound to an optimized 19-bp DNA site <a href="https://pubmed.ncbi.nlm.nih.gov/24994900" title="the 2.6-Å crystal structure of a WOPR domain in complex with its preferred DNA sequence">PMID:24994900</a>. The paper's abstract describes the fold as "two highly conserved regions, separated by an unconserved linker, form an interdigitated β-sheet that is tilted into the major groove of DNA" and notes minor-groove contacts "primarily through a deeply penetrating arginine residue." This is the structural basis for ROF1 being a bona fide sequence-specific DNA-binding protein.</li>
+<li>UniProt features: two disordered regions (183–210, 428–453), a basic-residue compositional bias (198–207) just C-terminal to the structured WOPR domain — consistent with a nuclear TF (DNA-binding domain + disordered activation/regulatory tail). [UniProt FT]</li>
+</ul>
+<p>Domain reasoning: The WOPR domain is a <em>demonstrated</em> DNA-binding fold (co-crystal with DNA for this exact protein fragment). Sequence-specific DNA binding and nuclear localization are therefore domain-defensible. Family membership (Wor1/Mit1) makes "transcription regulator" a well-supported functional class.</p>
+<h2 id="what-is-known-experimental-structural">What is KNOWN (experimental / structural)</h2>
+<ol>
+<li>
+<p><strong>Sequence-specific DNA binding (WOPR domain).</strong> The YHR177W WOPR domain (res 6–201) was crystallized bound to its preferred DNA site <a href="https://pubmed.ncbi.nlm.nih.gov/24994900">PMID:24994900</a>. → supports GO:0003677 DNA binding (IDA, SGD) and GO:0043565 sequence-specific DNA binding (domain-defensible). Cromie: "YHR177W has been shown to encode a protein having DNA-binding properties (Cain et al. 2012)" <a href="https://pubmed.ncbi.nlm.nih.gov/28673928">PMID:28673928</a>.</p>
+</li>
+<li>
+<p><strong>Negative regulator of complex ("fluffy") colony morphology / biofilm formation.</strong> In an overexpression screen for genes that reduce fluffy colony structure, ROF1/YHR177W was one of the verified hits <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" title="five genes were verified: SAN1, TOS8, YHR177W, HEK2, and SFL1">PMID:28673928</a>. Overexpression REDUCES fluffy morphology and DELETION INCREASES colony structure [PMID:28673928 "Increase in copy number of DIG1, SFL1, HEK2, ROF1/YHR177W, SAN1, and TOS8 leads to a reduction in fluffy morphology in strain F45" ; "Deletion of DIG1, SFL1, HEK2, ROF1/YHR177W, SAN1, and TOS8 leads to an increase in fluffy morphology in strain F13"]. This defines ROF1 as a <strong>repressor</strong> of the biofilm/complex-colony program.</p>
+</li>
+<li>
+<p><strong>Overexpression represses the FLO11/filamentation-MAPK regulon.</strong> The ROF1 overexpression transcriptional profile is part of a "common factor" shared with SFL1/HEK2/SAN1 in which FLO11, FLO10, TEC1 and filamentation-MAPK/mating genes are repressed <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" title="TEC1 itself was also one of the genes commonly repressed, as were the flocculin genes FLO10 and FLO11 that are known to be effectors of complex colony phenotypes">PMID:28673928</a>. The ROF1 overexpression profile correlated most strongly with SAN1 (R = 0.84).</p>
+</li>
+<li>
+<p><strong>Overexpression cell-cycle phenotype.</strong> SGD description: "overexpression causes a cell cycle delay or arrest" [SGD; underlying screens PMID:16455487 (Sopko 2006), PMID:18617996 (Niu 2008)].</p>
+</li>
+<li>
+<p><strong>Family / orthology:</strong> paralog of MIT1 (S. cerevisiae master regulator of pseudohyphal growth) and ortholog of C. albicans WOR1 [PMID:28673928 "YHR177W is a paralog of MIT1 ... and is an ortholog of WOR1, a master regulator of the white-opaque phenotypic switch in Candida albicans"; PMID:22095082 for Mit1 being a master regulator of pseudohyphal growth]. Cain 2012 showed Wor1/Mit1/Ryp1 recognize the same DNA sequence but control largely non-overlapping gene sets between species <a href="https://pubmed.ncbi.nlm.nih.gov/22095082" title="the genes controlled by the orthologous regulators overlap only slightly ... despite the fact that the DNA binding specificity of the regulators has remained largely unchanged">PMID:22095082</a>.</p>
+</li>
+</ol>
+<h2 id="what-is-not-known-knowledge-gaps">What is NOT known (knowledge gaps)</h2>
+<ul>
+<li><strong>Direct in vivo target genes of Rof1 in S. cerevisiae.</strong> Genome-wide ChIP for Rof1 (as done for Mit1 in PMID:22095082) has not, to my knowledge, been reported; the overexpression RNA-seq (PMID:28673928) reports downstream expression changes, not direct binding. SGD lists "0 known targets."</li>
+<li><strong>Activator vs repressor direction.</strong> The GO annotation set encodes GO:0045944 <strong>positive</strong> regulation of transcription (ISS from C. albicans Wor1, which is an activator of white-opaque genes). However, the S. cerevisiae experimental data (PMID:28673928) show ROF1 behaving as a <strong>repressor</strong> of the FLO11/filamentation program (overexpression represses; deletion de-represses colony structure). WOPR proteins can act as activators or repressors depending on target/context (Wor1 activates opaque genes; Sfl1 is a repressor in the same regulon). The physiological direction of Rof1's transcriptional effect on its own direct targets in budding yeast is unresolved.</li>
+<li><strong>Loss-of-function phenotype is background-dependent / conflicting.</strong> Deletion reduced complex colony morphology in one study (Furukawa et al. 2011) but had little effect in another (Cain et al. 2012), per Cromie <a href="https://pubmed.ncbi.nlm.nih.gov/28673928" title="deletion reducing complex colony morphology in one study (Furukawa et al. 2011) but having little effect in another (Cain et al. 2012)">PMID:28673928</a>. There is no clean, penetrant single-deletion phenotype under standard laboratory conditions.</li>
+<li><strong>Physiological condition / signal that activates Rof1.</strong> Unknown upstream signal; WOPR-family members respond to nutrient/morphogenic cues, but the S. cerevisiae Rof1 trigger is uncharacterized.</li>
+<li><strong>Whether Rof1 and its paralog Mit1 act antagonistically, redundantly, or on distinct regulons</strong> in budding yeast is not established.</li>
+</ul>
+<h2 id="annotation-by-annotation-reasoning-7-goa-rows">Annotation-by-annotation reasoning (7 GOA rows)</h2>
+<p>GOA source: genes/yeast/ROF1/ROF1-goa.tsv (7 annotations).</p>
+<ol>
+<li>
+<p><strong>GO:0003700 DNA-binding transcription factor activity — IBA (GO_REF:0000033), enables.</strong><br />
+   PANTHER IBA from the WOPR/Mit1/Wor1 family. Family members are DNA-binding transcription factors; the WOPR domain is a demonstrated DNA-binding fold and Mit1/Wor1 are TFs. Domain-defensible. ACCEPT (this is a strong, family-supported MF; the specific <em>activity</em> subtype—activator vs repressor—is the open question, but "DNA-binding transcription factor activity" is the correct parent). Core MF.</p>
+</li>
+<li>
+<p><strong>GO:0005634 nucleus — IBA (GO_REF:0000033), is_active_in.</strong> Nuclear localization expected for a DNA-binding TF; consistent with IC nucleus below. ACCEPT.</p>
+</li>
+<li>
+<p><strong>GO:0043565 sequence-specific DNA binding — IBA (GO_REF:0000033), enables.</strong> Directly supported by the co-crystal structure with a specific DNA site <a href="https://pubmed.ncbi.nlm.nih.gov/24994900">PMID:24994900</a> and family DNA-binding specificity <a href="https://pubmed.ncbi.nlm.nih.gov/22095082">PMID:22095082</a>. ACCEPT. Core MF.</p>
+</li>
+<li>
+<p><strong>GO:0045944 positive regulation of transcription by RNA polymerase II — IBA (GO_REF:0000033), involved_in.</strong> IBA-propagated from the family; but note the <em>direction</em> (positive) is not established for Rof1 in S. cerevisiae and the direct budding-yeast experimental data point to repression of the FLO11 program. The safe, defensible statement is that Rof1 is involved in <strong>regulation</strong> of Pol II transcription; the specific positive direction is a knowledge gap. KEEP_AS_NON_CORE (regulatory role is real but non-core given uncertain direction / no direct targets), and flag the directionality gap. Consider that a more neutral term (regulation of transcription by RNA polymerase II) better reflects current evidence — but per guidance I will not rewrite the GOA id; I will note this in the review reason and knowledge_gaps and propose the neutral parent as a replacement suggestion.</p>
+</li>
+<li>
+<p><strong>GO:0003677 DNA binding — IDA (PMID:24994900), enables.</strong> Directly from the crystal structure of the YHR177W WOPR domain bound to DNA. Strong experimental support. ACCEPT. (GO:0043565 is the more specific term; this is the general parent — both are fine to retain, keep IDA general one as ACCEPT.)</p>
+</li>
+<li>
+<p><strong>GO:0005634 nucleus — IC (PMID:24994900), located_in.</strong> Inferred by curator (IC) from the transcription-factor role. Reasonable for a sequence-specific DNA-binding TF. ACCEPT. Core location.</p>
+</li>
+<li>
+<p><strong>GO:0045944 positive regulation of transcription by RNA polymerase II — ISS (PMID:24994900, with/from UniProtKB:Q5AP80 = C. albicans Wor1), involved_in.</strong> ISS from Wor1, an <em>activator</em> of opaque-phase genes. The inference transfers "regulates Pol II transcription" but the <em>positive</em> direction is Wor1-specific; S. cerevisiae Rof1 experimental data (PMID:28673928) indicate repression of FLO11/filamentation genes. Do NOT REMOVE (experimental/curator ISS grounded in real orthology), but mark the directionality as uncertain. KEEP_AS_NON_CORE with a note that direction is a knowledge gap.</p>
+</li>
+</ol>
+<h2 id="core-functions-defensible">Core functions (defensible)</h2>
+<ul>
+<li>MF: sequence-specific DNA-binding transcription factor activity (WOPR domain; co-crystal with DNA). Domain- and structure-supported.</li>
+<li>CC: nucleus.</li>
+<li>BP: regulation of transcription by RNA polymerase II, in the context of the FLO11/filamentous-growth (complex colony / biofilm) regulon — experimentally a repressor of that program on overexpression. Direction of effect on direct targets is unresolved; treat BP role as a regulator of the filamentous-growth transcriptional program.</li>
+</ul>
+<h2 id="references-gathered">References gathered</h2>
+<ul>
+<li>PMID:24994900 (Lohse 2014) — WOPR domain crystal structure + DNA binding (GO source; abstract-only cache, full_text_available:false).</li>
+<li>PMID:28673928 (Cromie 2017) — biofilm-regulator overexpression screen; ROF1 naming; repressor of fluffy/FLO11 program (FULL TEXT cached).</li>
+<li>PMID:22095082 (Cain 2012) — Mit1/Wor1/Ryp1 conserved regulator; YHR177W DNA-binding; paralog relationship (abstract-only cache).</li>
+<li>PMID:16455487 (Sopko 2006) — systematic overexpression phenotypes (abstract-only) — overexpression cell-cycle phenotype context.</li>
+<li>PMID:18617996 (Niu 2008) — cell cycle control by overexpression (full text cached) — overexpression phenotype context.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P38867
+gene_symbol: ROF1
+aliases:
+- YHR177W
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  ROF1 (YHR177W) is a putative sequence-specific DNA-binding transcription factor
+  of the fungal Gti1/Pac2 (WOPR-domain) family. Its N-terminal WOPR domain (residues
+  ~6-201) has been crystallized in complex with a preferred DNA site, establishing
+  it as a bona fide sequence-specific DNA-binding protein, and the protein is a paralog
+  of the S. cerevisiae pseudohyphal-growth regulator Mit1 and an ortholog of the
+  Candida albicans white-opaque master regulator Wor1. Rof1 acts in the nucleus as a
+  regulator of the transcriptional program controlling filamentous/pseudohyphal growth
+  and complex (biofilm-like &#34;fluffy&#34;) colony morphology: its overexpression represses
+  the FLO11/flocculin and filamentation-MAPK regulon and flattens complex colony
+  structure, while its deletion can increase colony structure. The direction of its
+  transcriptional effect on direct targets, and its physiological trigger, remain
+  incompletely defined.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+- id: PMID:24994900
+  title: Structure of a new DNA-binding domain which regulates pathogenesis in a wide
+    variety of fungi.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Reports the 2.6 A co-crystal structure of the WOPR domain bound
+      to DNA (PDB 4M8B is the YHR177W/ROF1 WOPR domain, residues 6-201, per UniProt),
+      the direct experimental basis for the IDA DNA-binding annotation. Cached record
+      is abstract-only (full_text_available:false); the structural assay of the ROF1
+      fragment is in the full text and is trusted per curator IDA.
+- id: PMID:28673928
+  title: Transcriptional Profiling of Biofilm Regulators Identified by an Overexpression
+    Screen in Saccharomyces cerevisiae.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, full text available. Names YHR177W as ROF1 (Regulator Of Fluffy
+      1), identifies it as a repressor of complex/fluffy colony morphology
+      (overexpression reduces, deletion increases colony structure), and shows the
+      overexpression profile represses FLO11/FLO10/TEC1 and filamentation-MAPK genes.
+      Establishes the S. cerevisiae biological-process context and the paralog (MIT1)/
+      ortholog (WOR1) relationships.
+- id: PMID:22095082
+  title: A conserved transcriptional regulator governs fungal morphology in widely
+    diverged species.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; cached record abstract-only. Establishes the Wor1/Mit1/Ryp1
+      WOPR family as sequence-specific transcriptional regulators recognizing the same
+      DNA motif and that Mit1 (ROF1&#39;s paralog) is a master regulator of pseudohyphal
+      growth. Cited by Cromie 2017 for YHR177W/ROF1 DNA-binding properties. Directly
+      about the paralog Mit1, so relevance to ROF1 itself is corroborative rather than
+      primary.
+existing_annotations:
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation from the Gti1/Pac2 (WOPR) family. Family members
+      (Wor1, Mit1, Ryp1) are sequence-specific DNA-binding transcription factors, and
+      the ROF1 WOPR domain has been crystallized bound to DNA (PMID:24994900). Domain-
+      and structure-defensible core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22095082
+      supporting_text: recognize the same DNA sequence
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Nuclear localization is expected for a sequence-specific DNA-binding
+      transcription factor and is consistent with the curator IC nucleus annotation.
+      Retained as the core site of action.
+    action: ACCEPT
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Directly supported by the co-crystal structure of the ROF1 WOPR domain with a
+      preferred DNA site (PMID:24994900) and by the shared sequence-specific
+      recognition of the Wor1/Mit1/Ryp1 family. Core molecular function.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:22095082
+      supporting_text: recognize the same DNA sequence
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ROF1 is a transcriptional regulator, so involvement in regulation of RNA
+      polymerase II transcription is well supported. However, the POSITIVE direction is
+      not established for ROF1 in S. cerevisiae: the direct budding-yeast data show ROF1
+      overexpression REPRESSING the FLO11/flocculin and filamentation-MAPK program, and
+      the IBA/ISS positive direction derives from the C. albicans activator Wor1. The
+      regulatory role is real but its direction on direct targets is a knowledge gap;
+      kept as non-core, and a direction-neutral parent term is proposed as a better fit.
+    action: KEEP_AS_NON_CORE
+    proposed_replacement_terms:
+    - id: GO:0006357
+      label: regulation of transcription by RNA polymerase II
+    supported_by:
+    - reference_id: PMID:28673928
+      supporting_text: as regulators of
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:24994900
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental evidence: the ROF1 WOPR domain (PDB 4M8B, residues 6-201 of
+      P38867) was crystallized in complex with its preferred DNA sequence. GO:0043565
+      (sequence-specific DNA binding) is the more precise term for the same activity;
+      this general parent is retained as accurate.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:24994900
+      supporting_text: WOPR-domain proteins are found throughout the fungal kingdom
+        where they function
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IC
+  original_reference_id: PMID:24994900
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator inference (IC) of nuclear localization from the transcription-factor
+      role. Appropriate for a sequence-specific DNA-binding transcription factor; the
+      core cellular location.
+    action: ACCEPT
+- term:
+    id: GO:0045944
+    label: positive regulation of transcription by RNA polymerase II
+  evidence_type: ISS
+  original_reference_id: PMID:24994900
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS from C. albicans Wor1 (with/from UniProtKB:Q5AP80), an activator of
+      opaque-phase genes. The orthology is genuine (both are WOPR-family regulators),
+      but the transferred POSITIVE direction is Wor1-specific; ROF1 experimental data in
+      S. cerevisiae point to repression of the filamentation/FLO11 program. Not removed
+      (well-grounded curator ISS), but the direction is uncertain, so kept as non-core
+      and flagged in knowledge_gaps.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:22095082
+      supporting_text: recognize the same DNA sequence
+- term:
+    id: GO:1900428
+    label: regulation of filamentous growth of a population of unicellular organisms
+  evidence_type: IMP
+  original_reference_id: PMID:28673928
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed NEW annotation not currently in GOA. ROF1 was identified in an
+      overexpression screen as a regulator of complex (&#34;fluffy&#34;) colony morphology:
+      overexpression reduces, and deletion increases, complex colony structure, and the
+      overexpression transcriptional profile represses the FLO11/flocculin and
+      filamentation-MAPK regulon. This establishes ROF1 as a regulator of the
+      filamentous/pseudohyphal growth program in S. cerevisiae. A direction-neutral term
+      is used because the direct-target direction (activation vs repression) is a
+      knowledge gap.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:28673928
+      supporting_text: as regulators of
+core_functions:
+- description: &gt;-
+    Sequence-specific DNA-binding transcription factor (Gti1/Pac2/WOPR family) acting
+    in the nucleus to regulate the RNA polymerase II transcriptional program governing
+    filamentous/pseudohyphal growth and complex (&#34;fluffy&#34;) colony morphology. The WOPR
+    domain provides sequence-specific DNA recognition (co-crystal with DNA); in budding
+    yeast ROF1 modulates the FLO11/flocculin and filamentation-MAPK regulon shared with
+    its paralog Mit1.
+  molecular_function:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  - id: GO:1900428
+    label: regulation of filamentous growth of a population of unicellular organisms
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:24994900
+    supporting_text: WOPR-domain proteins are found throughout the fungal kingdom where
+      they function
+  - reference_id: PMID:28673928
+    supporting_text: as regulators of
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct in vivo target genes of Rof1 in S. cerevisiae are undetermined. No
+    genome-wide Rof1 ChIP dataset has been reported (unlike its paralog Mit1); the
+    available data are downstream expression changes from overexpression, not direct
+    binding, and SGD lists zero known targets.
+  boundary: &gt;-
+    Rof1 is established as a sequence-specific DNA-binding protein (WOPR domain
+    co-crystallized with DNA) and its paralog Mit1 binds the control regions of known
+    pseudohyphal-growth regulators and flocculin genes, so a plausible target space is
+    the FLO11/filamentation regulon - but ROF1&#39;s own direct binding sites are unmapped.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Without direct targets, ROF1&#39;s placement in the filamentous-growth regulatory
+    network (and whether it acts on FLO11 directly or via Mit1-shared sites) cannot be
+    fixed.
+  resolution: &gt;-
+    Genome-wide ChIP-seq / CUT&amp;RUN for tagged Rof1 under filamentation-inducing
+    conditions, compared with Mit1 binding maps.
+  provenance:
+  - reference_id: PMID:22095082
+    supporting_text: recognize the same DNA sequence
+- gap_statement: &gt;-
+    Whether Rof1 functions as a transcriptional activator or repressor of its direct
+    targets in S. cerevisiae is unresolved. GO annotations encode positive regulation
+    (transferred from the C. albicans activator Wor1), yet the budding-yeast phenotypic
+    and expression data indicate repression of the complex-colony/FLO11 program.
+  boundary: &gt;-
+    It is firmly established that ROF1 overexpression reduces complex &#34;fluffy&#34; colony
+    morphology and that its deletion can increase colony structure, and that the
+    overexpression profile is dominated by repression of FLO11, FLO10 and TEC1. The
+    mechanistic direction on genes it binds directly is not established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Activator-vs-repressor identity determines how ROF1 is wired into the
+    filamentous-growth circuit and how it relates functionally to the activator paralog
+    Mit1 and to Wor1.
+  resolution: &gt;-
+    Direct-target reporter/expression assays with DNA-binding-competent vs -defective
+    Rof1 alleles, and Rof1 ChIP integrated with target expression.
+  provenance:
+  - reference_id: PMID:24994900
+    supporting_text: as master regulators of cell morphology and pathogenesis
+- gap_statement: &gt;-
+    Rof1 has no penetrant, condition-independent loss-of-function phenotype, and the
+    physiological signal or condition that activates it is unknown. Single-deletion
+    effects on colony morphology are strain-background dependent and conflicting between
+    studies.
+  boundary: &gt;-
+    Deletion increases colony structure in one background and suppresses hog1-driven
+    hyper-filamentation in another, and overexpression reduces complex colony
+    morphology; but a clean, condition-independent single-deletion phenotype has not
+    been established.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A defined activating condition and a clean phenotype are prerequisites for placing
+    ROF1 in a specific signaling pathway (HOG / filamentation-MAPK / cAMP-PKA) rather
+    than the broad morphology network.
+  resolution: &gt;-
+    Systematic phenotyping of rof1 deletion (and rof1 mit1 double mutants) across
+    nutrient/stress conditions and strain backgrounds; identification of upstream
+    regulators.
+  provenance:
+  - reference_id: PMID:28673928
+    supporting_text: adaptive morphological
+suggested_questions:
+- question: &gt;-
+    Does Rof1 bind the FLO11 promoter directly, or does it act indirectly through
+    shared targets with its paralog Mit1?
+- question: &gt;-
+    Under what physiological condition is Rof1 activity required, and is it functionally
+    antagonistic, redundant, or parallel to Mit1?
+suggested_experiments:
+- description: &gt;-
+    Genome-wide ChIP-seq/CUT&amp;RUN of epitope-tagged Rof1 under filamentation-inducing
+    conditions, integrated with RNA-seq of rof1 deletion and overexpression, and
+    compared to Mit1 binding maps, to define direct targets and the activation/repression
+    direction.
+- description: &gt;-
+    Epistasis and expression analysis of rof1, mit1, and rof1 mit1 mutants across
+    colony-morphology conditions and strain backgrounds to resolve the paralog
+    relationship and a clean loss-of-function phenotype.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

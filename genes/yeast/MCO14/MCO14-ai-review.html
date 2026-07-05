@@ -1,0 +1,2272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCO14 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MCO14</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P38744" target="_blank" class="term-link">
+                        P38744
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">YHL018W</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MCO14";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P38744" data-a="DESCRIPTION: MCO14 (systematic name YHL018W) is a small (120 aa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MCO14 (systematic name YHL018W) is a small (120 aa, ~14 kDa) mitochondrial protein of Saccharomyces cerevisiae belonging to the pterin-4-alpha-carbinolamine dehydratase (PCD/DCoH) family (Pfam PF01329; InterPro IPR001533/IPR036428; PANTHER PTHR12599). It carries the diagnostic PCD catalytic His-His-Pro motif and the PCD-like fold, so it is a predicted 4-alpha-hydroxytetrahydrobiopterin dehydratase (EC 4.2.1.96), the activity that regenerates tetrahydrobiopterin during aromatic amino acid hydroxylation and that additionally, in vertebrate paralogs (DCoH), moonlights as a transcriptional coactivator of HNF1. The protein is localized to mitochondria, where its precursor is imported in a membrane-potential (delta-psi)-dependent manner and assembles into a higher-molecular-weight complex. Its enzymatic activity has not been measured directly in yeast and is annotated as putative; the canonical tetrahydrobiopterin pathway and the aromatic amino acid hydroxylases that generate its expected substrate are largely absent from budding yeast, so the physiological substrate and biological role of MCO14 in yeast are not established. It is non-essential, of moderate abundance, and has no reported deletion phenotype.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006729" target="_blank" class="term-link">
+                                    GO:0006729
+                                </a>
+                            </span>
+                            <span class="term-label">tetrahydrobiopterin biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P38744" data-a="GO:0006729" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic InterPro2GO annotation propagated from the PCD/DCoH family signature. The process is biologically questionable in Saccharomyces cerevisiae: budding yeast lacks the BH4-specific biosynthetic enzymes (6-pyruvoyl-tetrahydropterin synthase and sepiapterin reductase) and the aromatic amino acid hydroxylases whose reaction produces the 4a-carbinolamine that PCD regenerates. PCD&#39;s role is in regeneration/recycling during hydroxylation rather than de novo tetrahydrobiopterin biosynthesis per se, and neither the pathway nor its substrate-generating enzymes operate natively in yeast. The term is appropriate for the family but its pathway context is absent in this organism, so it is over-annotated here.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-propagated IEA whose metazoan/bacterial pathway context (BH4 biosynthesis and aromatic amino acid hydroxylation) is largely absent from S. cerevisiae; kept as family-level context rather than removed because the fold/motif are genuinely PCD-type.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008124" target="_blank" class="term-link">
+                                    GO:0008124
+                                </a>
+                            </span>
+                            <span class="term-label">4-alpha-hydroxytetrahydrobiopterin dehydratase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38744" data-a="GO:0008124" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC/RHEA/InterPro-based) molecular-function annotation. MCO14 has the PCD-like fold and retains the diagnostic catalytic His-His-Pro motif, so this is the single best-supported functional hypothesis for the protein and is retained as its (predicted) core molecular function. The important caveat, recorded in the knowledge_gaps, is that UniProt flags the activity as &#34;Putative&#34; (no enzyme assay of the yeast protein has been reported) and the physiological substrate in yeast is unknown; the annotation therefore rests on family/domain inference, not direct evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Defensible domain/family-based MF prediction (conserved PCD catalytic motif) and the only informative functional hypothesis for the protein; accepted as the predicted core molecular function while its putative, unproven-in-yeast status is captured in the knowledge_gaps.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38744" data-a="GO:0005739" data-r="PMID:14562095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mitochondrial localization from the genome-wide GFP-fusion dataset (Huh et al. 2003, assigned by SGD). Independently corroborated by the high-confidence mitochondrial proteome study of Morgenstern et al. 2017 (PMID:28658629), which additionally showed that the Mco14 precursor is imported in a membrane-potential-dependent manner and forms a high-molecular-weight complex. This is the best-supported and core localization for the protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported by two independent high-throughput datasets (GFP localization and quantitative mitochondrial proteomics with import assays).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P38744" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function annotation with the ND (no biological data) evidence code, recorded by SGD to indicate that no experimental molecular-function data are available for this protein. This accurately reflects the curation state: the dehydratase activity is only a family-based electronic prediction. The ND root placeholder is superseded by the more informative (if putative) GO:0008124 IEA annotation and carries no specific information.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative root-term placeholder; a specific (electronic) molecular-function annotation (GO:0008124) now exists, making the ND root redundant.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P38744" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process annotation with the ND (no biological data) evidence code. This honestly reflects that the biological role of MCO14 in yeast is not experimentally established. It is an uninformative root placeholder and conveys no specific process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative root-term placeholder; the genuine unknown biological role is captured in the knowledge_gaps section rather than by a root ND annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted pterin-4-alpha-carbinolamine (4a-hydroxytetrahydrobiopterin) dehydratase. MCO14 has the PCD/DCoH fold and retains the diagnostic catalytic His-His-Pro motif conserved with characterized family members (e.g. human PCBD1), so a dehydratase activity (EC 4.2.1.96) is the leading molecular-function hypothesis. This is a family/domain-based inference only: UniProt annotates the activity as putative, no enzyme assay of the yeast protein has been reported, and the physiological substrate in yeast is unknown. The protein is mitochondrial.</h3>
+                <span class="vote-buttons" data-g="P38744" data-a="FUNCTION: Predicted pterin-4-alpha-carbinolamine (4a-hydroxy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008124" target="_blank" class="term-link">
+                            4-alpha-hydroxytetrahydrobiopterin dehydratase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProtKB:P38744
+
+                        </span>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28658629" target="_blank" class="term-link">
+                                PMID:28658629
+                            </a>
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide GFP-fusion localization study of budding yeast; the source of the SGD high-throughput (HDA) mitochondrial localization assignment for YHL018W/MCO14. The cached entry is abstract-only; the per-ORF localization is in the study&#39;s supplementary dataset.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28658629" target="_blank" class="term-link">
+                            PMID:28658629
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Definition of a High-Confidence Mitochondrial Proteome at Quantitative Scale.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-confidence yeast mitochondrial proteome study that named MCO14 (the MCO &#34;mitochondrial class one&#34; series). Mco14 is a high-confidence mitochondrial protein whose radiolabeled precursor is imported in a membrane-potential (delta-psi)-dependent manner and assembles into a distinct high-molecular-weight complex, indicating an inner-membrane / matrix-facing location. The study assigns no molecular function to Mco14.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProtKB:P38744
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P38744 (PHS_YEAST): Putative pterin-4-alpha-carbinolamine dehydratase</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt reviewed (Swiss-Prot) entry. RecName &#34;Putative pterin-4-alpha-carbinolamine dehydratase&#34; (EC 4.2.1.96); assigns the protein to the pterin-4-alpha-carbinolamine dehydratase family (Pfam PF01329; InterPro IPR001533/IPR036428; CDD cd00488) and notes &#34;Present with 752 molecules/cell in log phase SD medium&#34;. The &#34;Putative&#34; designation reflects that the catalytic activity is a family-based inference, not a measured activity for the yeast protein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is MCO14 a catalytically active pterin-4-alpha-carbinolamine dehydratase in yeast, and what is its physiological substrate given that yeast lacks the canonical tetrahydrobiopterin pathway?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38744" data-a="Q: Is MCO14 a catalytically active pterin-4-alpha-car..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the composition of the membrane-potential-dependent high-molecular-weight complex that Mco14 assembles into after mitochondrial import?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38744" data-a="Q: What is the composition of the membrane-potential-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant P38744 and assay dehydratase activity in vitro against 4a-hydroxytetrahydrobiopterin / 4a-hydroxytetrahydropterin substrates (spectrophotometric or coupled assay), comparing to a catalytic-His mutant.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MCO14 has 4a-hydroxytetrahydropterin dehydratase activity.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38744" data-a="EXPERIMENT: Express and purify recombinant P38744 and assay de..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Perform affinity purification-mass spectrometry of chromosomally tagged Mco14 from purified mitochondria under membrane-potential-permissive conditions to identify stoichiometric complex partners.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MCO14 functions within a defined mitochondrial complex.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: affinity purification-MS</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38744" data-a="EXPERIMENT: Perform affinity purification-mass spectrometry of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Profile the growth/fitness of an mco14-delta strain across respiratory, oxidative-stress, amino-acid-limitation, and pterin/folate-perturbation conditions, and measure mitochondrial pteridine metabolite levels versus wild type.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: MCO14 is required under a specific physiological condition.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: phenotypic profiling / metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38744" data-a="EXPERIMENT: Profile the growth/fitness of an mco14-delta strai..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process in which MCO14 participates in yeast mitochondria is unknown. The family-derived tetrahydrobiopterin pathway is largely absent from S. cerevisiae, so the process the protein actually serves (metabolic, structural, or regulatory) is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: MCO14 is a mitochondrial protein whose precursor is imported in a membrane-potential-dependent manner and forms a high-molecular-weight complex. Not established: any pathway membership; yeast lacks the BH4-specific enzymes (PTS/PTPS, sepiapterin reductase) and aromatic amino acid hydroxylases that define the family&#39;s canonical process, and no deletion or conditional phenotype has been reported (SGD lists no phenotypes).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> MCO14 is a conserved-but-dark mitochondrial protein; establishing its process would connect a widespread PCD-family fold to a defined mitochondrial function and clarify what, if anything, the pterin-dehydratase chemistry does in an organism thought to lack the pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phenotypic profiling of mco14-delta under diverse conditions (respiratory/oxidative/pterin stress), affinity-purification of the membrane-potential-dependent complex to identify partners, and mitochondrial pteridine metabolomics.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The composition of the high-molecular-weight, membrane-potential-dependent complex that Mco14 assembles into is unknown; no specific interaction partner has been curated.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: blue-native and import assays show Mco14 forms a distinct high-molecular-weight complex after inner-membrane import. Not established: the identity of the partner subunit(s); the ~97 SGD interactions are high-throughput and non-specific.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying complex partners would place MCO14 in a functional module and is the most tractable route to its in-vivo role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reciprocal affinity purification-MS of tagged Mco14 from isolated mitochondria under membrane-potential-permissive conditions.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MCO14-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38744" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mco14-yhl018w-p38744-review-notes">MCO14 (YHL018W / P38744) review notes</h1>
+<h2 id="identity-verified">Identity (verified)</h2>
+<ul>
+<li><strong>Standard name:</strong> MCO14 (SGD). Name description at SGD: "Mitochondrial Class One protein of 14 kDa".<br />
+  The <code>MCO</code> prefix = "Mitochondrial Class One" protein, a naming series introduced by Morgenstern et al.<br />
+  2017 for high-confidence mitochondrial proteins of previously unknown function<br />
+  [PMID:28658629, "The mitochondrial class 1 protein of 10 kDa (Mco10)..."]. MCO14 was named in the same<br />
+  study; the trailing number encodes the ~kDa mass (Mco14 ≈ 14 kDa).</li>
+<li><strong>Systematic name:</strong> YHL018W (chromosome VIII). <strong>SGDID:</strong> S000001010. <strong>UniProt:</strong> P38744 (PHS_YEAST),<br />
+  120 aa, 14 kDa, "Evidence at protein level" (PE1).</li>
+<li><strong>UniProt RecName:</strong> "<strong>Putative</strong> pterin-4-alpha-carbinolamine dehydratase" (EC 4.2.1.96); AltNames<br />
+  "4-alpha-hydroxy-tetrahydropterin dehydratase", "Pterin carbinolamine dehydratase (PCD)". The word<br />
+<em>Putative</em> is important: the enzymatic activity is a <strong>family-based inference</strong>, not measured in yeast.</li>
+<li>Verified via SGD REST (<code>/backend/locus/MCO14</code>): gene_name MCO14, uniprot_id P38744, feature YHL018W,<br />
+  qualifier "Verified" ORF.</li>
+</ul>
+<h2 id="domain-family-inline-analysis-of-mco14-uniprottxt">Domain / family (inline analysis of MCO14-uniprot.txt)</h2>
+<ul>
+<li>Belongs to the <strong>pterin-4-alpha-carbinolamine dehydratase (PCD/DCoH) family</strong> (UniProt SIMILARITY,<br />
+  ECO:0000305). Domain hits in the UniProt record:</li>
+<li>Pfam <strong>PF01329</strong> (Pterin_4a)</li>
+<li>InterPro <strong>IPR001533</strong> (Pterin dehydratase), <strong>IPR036428</strong> (PCD superfamily)</li>
+<li>CDD <strong>cd00488</strong> (PCD_DCoH)</li>
+<li>PANTHER <strong>PTHR12599</strong> / <strong>PTHR12599:SF0</strong> (PTERIN-4-ALPHA-CARBINOLAMINE DEHYDRATASE)</li>
+<li>Gene3D 3.30.1360.20 "Transcriptional coactivator/pterin dehydratase"; SUPFAM SSF55248 PCD-like.</li>
+<li><strong>Catalytic-motif conservation (inline sequence analysis).</strong> MCO14 sequence<br />
+<code>...VSMRSHLWG​HHPLIH...</code> contains the diagnostic PCD catalytic <strong>HHP</strong> motif. Aligning to human PCBD1<br />
+  (P61457), whose UniProt BINDING sites are residues 61-63 (<code>DHH</code>, containing the catalytic His pair) and<br />
+  78-81, the human catalytic motif <code>DHHPEW</code> aligns to MCO14 <code>GHHPLIH</code> — the <strong>His-His-Pro core is<br />
+  conserved</strong>, and the upstream <code>TRV</code> (human <code>TRVAL</code> / yeast <code>TRVSM</code>) is conserved. So MCO14 <strong>retains the<br />
+  PCD catalytic signature</strong> and is a plausible (not obviously defunct) dehydratase — but note this is a<br />
+  distant homolog (~30% local identity around the catalytic window), and no direct enzyme assay exists for<br />
+  the yeast protein.</li>
+<li>CDD/Gene3D also flag the shared fold with the <strong>DCoH transcriptional-coactivator (dimerization cofactor<br />
+  of HNF1)</strong> moonlighting activity known for the vertebrate paralogs. There is no evidence for a<br />
+  transcription-factor partner in yeast (yeast has no HNF1 ortholog), so that moonlighting role is not<br />
+  expected here.</li>
+</ul>
+<h2 id="localization-known">Localization (KNOWN)</h2>
+<ul>
+<li><strong>Mitochondrion.</strong> GOA: GO:0005739 mitochondrion, HDA, assigned by SGD from the genome-wide GFP<br />
+  localization dataset [PMID:14562095, Huh et al. 2003] (per-ORF localization is in that study's<br />
+  supplement; the cached entry is abstract-only).</li>
+<li>Independently confirmed by the high-confidence mitochondrial proteome study [PMID:28658629,<br />
+  Morgenstern et al. 2017], which included Mco14 among high-confidence mitochondrial proteins and studied<br />
+  its import/complex formation. In their blue-native + import assays, complex formation was<br />
+  membrane-potential (Δψ)-dependent: "<em>the precursor proteins were translocated into or across the inner<br />
+  membrane to form a complex (shown here for Dpa10, Mco14, Dpi29, and Dpi34)</em>" — indicating an<br />
+  inner-membrane/matrix-facing location rather than the outer membrane/IMS. Blue-native analysis also<br />
+  showed Mco14 forms "<em>distinct high-molecular-weight complexes</em>".</li>
+</ul>
+<h2 id="molecular-function-what-is-known-vs-not">Molecular function — what is known vs not</h2>
+<ul>
+<li><strong>KNOWN (family inference):</strong> PCD-family fold with conserved catalytic HHP motif → predicted<br />
+  4-alpha-hydroxytetrahydrobiopterin dehydratase (EC 4.2.1.96). This is the single most-supported<br />
+  functional hypothesis, but is IEA/IBA only and flagged "Putative" by UniProt.</li>
+<li><strong>NOT KNOWN:</strong> No direct enzymatic assay of P38744; no measured substrate; no in-vivo function; no<br />
+  deletion phenotype (SGD phenotype_details returns 0 phenotypes); no genetic pathway placement. GOA has<br />
+  the ND (no-data) root annotations GO:0003674 and GO:0008150 recorded by SGD — an explicit statement<br />
+  that curators could not assign specific function/process from experiment.</li>
+</ul>
+<h2 id="biological-process-the-bh4-pathway-is-largely-absent-in-yeast-key-reviewer-point">Biological process — the BH4 pathway is largely ABSENT in yeast (key reviewer point)</h2>
+<ul>
+<li>The IEA BP annotation GO:0006729 "tetrahydrobiopterin biosynthetic process" (InterPro2GO, GO_REF:0000002)<br />
+  carries a <strong>metazoan/bacterial pathway context that S. cerevisiae mostly lacks</strong>:</li>
+<li>Yeast has GTP cyclohydrolase I (<strong>FOL2/GCH1</strong>), but that enzyme feeds <strong>folate</strong> biosynthesis; the<br />
+    downstream <strong>BH4-specific</strong> enzymes 6-pyruvoyl-tetrahydropterin synthase (PTS/PTPS) and sepiapterin<br />
+    reductase (SPR) are <strong>not present natively</strong> — heterologous PTS and SPR must be introduced to make BH4<br />
+    in yeast (Germann et al. 2016, <em>Biotechnol J</em>, PMC5066760: "GCH1/Fol2 is natively present in wild-type<br />
+    S. cerevisiae, whereas heterologous PTS and SPR were introduced to enable BH4 production").</li>
+<li>Yeast also lacks the aromatic amino acid hydroxylases (PAH/TH/TPH) whose reaction generates the<br />
+    4a-carbinolamine substrate that PCD/DCoH regenerates. PCD's canonical role is <strong>regeneration/recycling</strong><br />
+    of BH4 during aromatic amino acid hydroxylation, not de novo BH4 <em>biosynthesis</em> — and neither the<br />
+    substrate-producing hydroxylases nor de novo BH4 synthesis operate natively in budding yeast.</li>
+<li>Reactome maps P38744 to "Phenylalanine metabolism" (R-SCE-8964208) purely by family orthology; there<br />
+    is no evidence yeast runs Phe hydroxylation.<br />
+  → The BH4-biosynthesis BP is therefore an over-propagation in this organism (PATHWAY_CONTEXT_IGNORED).<br />
+  Marked MARK_AS_OVER_ANNOTATED (not a flat REMOVE: the term is family-appropriate; it is the yeast<br />
+  pathway context that is missing).</li>
+</ul>
+<h2 id="interactions-abundance">Interactions / abundance</h2>
+<ul>
+<li>Abundance: "<em>Present with 752 molecules/cell in log phase SD medium</em>" (UniProt MISCELLANEOUS, from<br />
+  PMID:14562106). SGD lists 97 physical/genetic interactions, essentially all high-throughput; no<br />
+  curated functional complex partner. BioGRID-ORCS: 0 hits in 10 CRISPR screens (non-essential, no strong<br />
+  fitness signal).</li>
+</ul>
+<h2 id="summary-of-known-vs-not-known-for-knowledge_gaps">Summary of KNOWN vs NOT-known (for knowledge_gaps)</h2>
+<ul>
+<li>KNOWN: mitochondrial protein (dual proteomic evidence); ~14 kDa; PCD/DCoH fold with conserved catalytic<br />
+  HHP motif; imported in a Δψ-dependent manner and part of a high-MW complex; non-essential; moderate<br />
+  abundance.</li>
+<li>NOT KNOWN: the actual biochemical substrate and whether MCO14 is catalytically active in vivo; its<br />
+  physiological mitochondrial role/process; any deletion or conditional phenotype; whether the annotated<br />
+  BH4/pterin chemistry occurs at all in yeast mitochondria; its complex partners; any regulatory or<br />
+  moonlighting function.</li>
+</ul>
+<h2 id="provenance-log">Provenance log</h2>
+<ul>
+<li>SGD REST <code>/backend/locus/MCO14</code> and <code>/S000001010/phenotype_details</code>, <code>/interaction_details</code> (2026-07-05).</li>
+<li>UniProt P38744 (cached MCO14-uniprot.txt); human PCBD1 P61457 (rest.uniprot.org, for catalytic-residue<br />
+  comparison).</li>
+<li>PMID:28658629 (Morgenstern 2017, full text cached) — mitochondrial proteome, MCO naming, Mco14 import.</li>
+<li>PMID:14562095 (Huh 2003, abstract cached) — GFP localization source for the mitochondrion annotation.</li>
+<li>Germann et al. 2016 (PMC5066760, WebFetch) — yeast lacks native PTS/SPR for BH4.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P38744
+gene_symbol: MCO14
+aliases:
+- YHL018W
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  MCO14 (systematic name YHL018W) is a small (120 aa, ~14 kDa) mitochondrial
+  protein of Saccharomyces cerevisiae belonging to the pterin-4-alpha-carbinolamine
+  dehydratase (PCD/DCoH) family (Pfam PF01329; InterPro IPR001533/IPR036428;
+  PANTHER PTHR12599). It carries the diagnostic PCD catalytic His-His-Pro motif and
+  the PCD-like fold, so it is a predicted 4-alpha-hydroxytetrahydrobiopterin
+  dehydratase (EC 4.2.1.96), the activity that regenerates tetrahydrobiopterin during
+  aromatic amino acid hydroxylation and that additionally, in vertebrate paralogs
+  (DCoH), moonlights as a transcriptional coactivator of HNF1. The protein is
+  localized to mitochondria, where its precursor is imported in a membrane-potential
+  (delta-psi)-dependent manner and assembles into a higher-molecular-weight complex.
+  Its enzymatic activity has not been measured directly in yeast and is annotated as
+  putative; the canonical tetrahydrobiopterin pathway and the aromatic amino acid
+  hydroxylases that generate its expected substrate are largely absent from budding
+  yeast, so the physiological substrate and biological role of MCO14 in yeast are not
+  established. It is non-essential, of moderate abundance, and has no reported
+  deletion phenotype.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings:
+  - statement: &gt;-
+      Genome-wide GFP-fusion localization study of budding yeast; the source of the
+      SGD high-throughput (HDA) mitochondrial localization assignment for YHL018W/MCO14.
+      The cached entry is abstract-only; the per-ORF localization is in the study&#39;s
+      supplementary dataset.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified GFP localization dataset (Huh et al. 2003, Nature). Basis for the
+      mitochondrion CC annotation; the mitochondrial localization is independently
+      confirmed by Morgenstern et al. 2017 (PMID:28658629).
+- id: PMID:28658629
+  title: Definition of a High-Confidence Mitochondrial Proteome at Quantitative Scale.
+  findings:
+  - statement: &gt;-
+      High-confidence yeast mitochondrial proteome study that named MCO14 (the MCO
+      &#34;mitochondrial class one&#34; series). Mco14 is a high-confidence mitochondrial
+      protein whose radiolabeled precursor is imported in a membrane-potential
+      (delta-psi)-dependent manner and assembles into a distinct high-molecular-weight
+      complex, indicating an inner-membrane / matrix-facing location. The study assigns
+      no molecular function to Mco14.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text read and verified (cached). Establishes and names MCO14 as a
+      mitochondrial protein, corroborates the mitochondrion CC, and provides
+      import/complex evidence. Verbatim from the full text: &#34;the precursor proteins were
+      translocated into or across the inner membrane to form a complex (shown here for
+      Dpa10, Mco14, Dpi29, and Dpi34)&#34; and blue-native analysis &#34;revealing distinct
+      high-molecular-weight complexes&#34;.
+- id: UniProtKB:P38744
+  title: &#34;UniProtKB entry P38744 (PHS_YEAST): Putative pterin-4-alpha-carbinolamine dehydratase&#34;
+  findings:
+  - statement: &gt;-
+      UniProt reviewed (Swiss-Prot) entry. RecName &#34;Putative pterin-4-alpha-carbinolamine
+      dehydratase&#34; (EC 4.2.1.96); assigns the protein to the pterin-4-alpha-carbinolamine
+      dehydratase family (Pfam PF01329; InterPro IPR001533/IPR036428; CDD cd00488) and
+      notes &#34;Present with 752 molecules/cell in log phase SD medium&#34;. The &#34;Putative&#34;
+      designation reflects that the catalytic activity is a family-based inference, not a
+      measured activity for the yeast protein.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of the family assignment, the (putative) EC 4.2.1.96 activity, and the
+      abundance datum; used as provenance for the predicted molecular function.
+existing_annotations:
+- term:
+    id: GO:0006729
+    label: tetrahydrobiopterin biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic InterPro2GO annotation propagated from the PCD/DCoH family signature.
+      The process is biologically questionable in Saccharomyces cerevisiae: budding
+      yeast lacks the BH4-specific biosynthetic enzymes (6-pyruvoyl-tetrahydropterin
+      synthase and sepiapterin reductase) and the aromatic amino acid hydroxylases whose
+      reaction produces the 4a-carbinolamine that PCD regenerates. PCD&#39;s role is in
+      regeneration/recycling during hydroxylation rather than de novo tetrahydrobiopterin
+      biosynthesis per se, and neither the pathway nor its substrate-generating enzymes
+      operate natively in yeast. The term is appropriate for the family but its pathway
+      context is absent in this organism, so it is over-annotated here.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Over-propagated IEA whose metazoan/bacterial pathway context (BH4 biosynthesis and
+      aromatic amino acid hydroxylation) is largely absent from S. cerevisiae; kept as
+      family-level context rather than removed because the fold/motif are genuinely
+      PCD-type.
+- term:
+    id: GO:0008124
+    label: 4-alpha-hydroxytetrahydrobiopterin dehydratase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (EC/RHEA/InterPro-based) molecular-function annotation. MCO14 has the
+      PCD-like fold and retains the diagnostic catalytic His-His-Pro motif, so this is
+      the single best-supported functional hypothesis for the protein and is retained as
+      its (predicted) core molecular function. The important caveat, recorded in the
+      knowledge_gaps, is that UniProt flags the activity as &#34;Putative&#34; (no enzyme assay of
+      the yeast protein has been reported) and the physiological substrate in yeast is
+      unknown; the annotation therefore rests on family/domain inference, not direct
+      evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Defensible domain/family-based MF prediction (conserved PCD catalytic motif) and the
+      only informative functional hypothesis for the protein; accepted as the predicted
+      core molecular function while its putative, unproven-in-yeast status is captured in
+      the knowledge_gaps.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mitochondrial localization from the genome-wide GFP-fusion dataset (Huh et al.
+      2003, assigned by SGD). Independently corroborated by the high-confidence
+      mitochondrial proteome study of Morgenstern et al. 2017 (PMID:28658629), which
+      additionally showed that the Mco14 precursor is imported in a
+      membrane-potential-dependent manner and forms a high-molecular-weight complex.
+      This is the best-supported and core localization for the protein.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by two independent high-throughput datasets (GFP localization and
+      quantitative mitochondrial proteomics with import assays).
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function annotation with the ND (no biological data) evidence code,
+      recorded by SGD to indicate that no experimental molecular-function data are
+      available for this protein. This accurately reflects the curation state: the
+      dehydratase activity is only a family-based electronic prediction. The ND root
+      placeholder is superseded by the more informative (if putative) GO:0008124 IEA
+      annotation and carries no specific information.
+    action: REMOVE
+    reason: &gt;-
+      Uninformative root-term placeholder; a specific (electronic) molecular-function
+      annotation (GO:0008124) now exists, making the ND root redundant.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process annotation with the ND (no biological data) evidence code.
+      This honestly reflects that the biological role of MCO14 in yeast is not
+      experimentally established. It is an uninformative root placeholder and conveys no
+      specific process.
+    action: REMOVE
+    reason: &gt;-
+      Uninformative root-term placeholder; the genuine unknown biological role is
+      captured in the knowledge_gaps section rather than by a root ND annotation.
+core_functions:
+- description: &gt;-
+    Predicted pterin-4-alpha-carbinolamine (4a-hydroxytetrahydrobiopterin) dehydratase.
+    MCO14 has the PCD/DCoH fold and retains the diagnostic catalytic His-His-Pro motif
+    conserved with characterized family members (e.g. human PCBD1), so a dehydratase
+    activity (EC 4.2.1.96) is the leading molecular-function hypothesis. This is a
+    family/domain-based inference only: UniProt annotates the activity as putative, no
+    enzyme assay of the yeast protein has been reported, and the physiological substrate
+    in yeast is unknown. The protein is mitochondrial.
+  molecular_function:
+    id: GO:0008124
+    label: 4-alpha-hydroxytetrahydrobiopterin dehydratase activity
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  supported_by:
+  - reference_id: UniProtKB:P38744
+  - reference_id: PMID:28658629
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether MCO14 is a catalytically active dehydratase in yeast, and if so its true
+      physiological substrate, is undetermined; the annotated 4a-carbinolamine
+      dehydratase activity is a family/motif-based prediction (UniProt &#34;Putative&#34;) with
+      no direct enzyme assay of P38744.
+    boundary: &gt;-
+      Established: MCO14 has the PCD/DCoH fold, retains the conserved catalytic His-His-Pro
+      motif, and is mitochondrial. Not established: any measured catalytic activity, kcat,
+      or substrate for the yeast protein.
+    gap_kind:
+    - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Determines whether MCO14 is a genuine pterin-recycling enzyme in yeast mitochondria
+      or a fold-retaining protein repurposed for another (e.g. structural or moonlighting)
+      role, as seen for the DCoH branch of the family.
+    resolution: &gt;-
+      In vitro dehydratase assay of recombinant P38744 with 4a-hydroxytetrahydropterin
+      substrates; targeted metabolomics of pterin/pteridine species in wild-type vs
+      mco14-delta mitochondria.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The biological process in which MCO14 participates in yeast mitochondria is unknown.
+    The family-derived tetrahydrobiopterin pathway is largely absent from S. cerevisiae,
+    so the process the protein actually serves (metabolic, structural, or regulatory) is
+    undetermined.
+  boundary: &gt;-
+    Established: MCO14 is a mitochondrial protein whose precursor is imported in a
+    membrane-potential-dependent manner and forms a high-molecular-weight complex. Not
+    established: any pathway membership; yeast lacks the BH4-specific enzymes (PTS/PTPS,
+    sepiapterin reductase) and aromatic amino acid hydroxylases that define the family&#39;s
+    canonical process, and no deletion or conditional phenotype has been reported (SGD
+    lists no phenotypes).
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    MCO14 is a conserved-but-dark mitochondrial protein; establishing its process would
+    connect a widespread PCD-family fold to a defined mitochondrial function and clarify
+    what, if anything, the pterin-dehydratase chemistry does in an organism thought to
+    lack the pathway.
+  resolution: &gt;-
+    Phenotypic profiling of mco14-delta under diverse conditions
+    (respiratory/oxidative/pterin stress), affinity-purification of the
+    membrane-potential-dependent complex to identify partners, and mitochondrial
+    pteridine metabolomics.
+- gap_statement: &gt;-
+    The composition of the high-molecular-weight, membrane-potential-dependent complex
+    that Mco14 assembles into is unknown; no specific interaction partner has been
+    curated.
+  boundary: &gt;-
+    Established: blue-native and import assays show Mco14 forms a distinct
+    high-molecular-weight complex after inner-membrane import. Not established: the
+    identity of the partner subunit(s); the ~97 SGD interactions are high-throughput and
+    non-specific.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Identifying complex partners would place MCO14 in a functional module and is the most
+    tractable route to its in-vivo role.
+  resolution: &gt;-
+    Reciprocal affinity purification-MS of tagged Mco14 from isolated mitochondria under
+    membrane-potential-permissive conditions.
+suggested_questions:
+- question: &gt;-
+    Is MCO14 a catalytically active pterin-4-alpha-carbinolamine dehydratase in yeast,
+    and what is its physiological substrate given that yeast lacks the canonical
+    tetrahydrobiopterin pathway?
+  experts: []
+- question: &gt;-
+    What is the composition of the membrane-potential-dependent high-molecular-weight
+    complex that Mco14 assembles into after mitochondrial import?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    MCO14 has 4a-hydroxytetrahydropterin dehydratase activity.
+  description: &gt;-
+    Express and purify recombinant P38744 and assay dehydratase activity in vitro against
+    4a-hydroxytetrahydrobiopterin / 4a-hydroxytetrahydropterin substrates
+    (spectrophotometric or coupled assay), comparing to a catalytic-His mutant.
+  experiment_type: enzyme assay
+- hypothesis: &gt;-
+    MCO14 functions within a defined mitochondrial complex.
+  description: &gt;-
+    Perform affinity purification-mass spectrometry of chromosomally tagged Mco14 from
+    purified mitochondria under membrane-potential-permissive conditions to identify
+    stoichiometric complex partners.
+  experiment_type: affinity purification-MS
+- hypothesis: &gt;-
+    MCO14 is required under a specific physiological condition.
+  description: &gt;-
+    Profile the growth/fitness of an mco14-delta strain across respiratory,
+    oxidative-stress, amino-acid-limitation, and pterin/folate-perturbation conditions,
+    and measure mitochondrial pteridine metabolite levels versus wild type.
+  experiment_type: phenotypic profiling / metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

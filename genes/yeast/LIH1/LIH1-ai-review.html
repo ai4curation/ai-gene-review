@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIH1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LIH1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P47145" target="_blank" class="term-link">
+                        P47145
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LIH1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P47145" data-a="DESCRIPTION: LIH1 (Lipase homolog 1; systematic name YJR107W) i..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LIH1 (Lipase homolog 1; systematic name YJR107W) is an uncharacterized Saccharomyces cerevisiae protein of the fungal Lipase_3 / alpha-beta hydrolase (AB hydrolase) superfamily. The 328-residue protein retains the canonical serine hydrolase catalytic triad, with the nucleophilic serine (Ser181) located in the conserved GHSLG pentapeptide of the nucleophile elbow, together with an aspartate (Asp253) and histidine (His315) charge-relay pair, and it carries the InterPro fungal-lipase-type and AB-hydrolase-fold signatures. Its functional assignment as a lipase is based entirely on sequence and domain homology: it is the single Saccharomycetaceae relative of the expanded Yarrowia clade lipase (LIP) family, sharing only about 26% sequence identity with Yarrowia lipolytica Lip2, its closest characterized homolog. No catalytic activity, substrate, subcellular localization, or biological role has been experimentally established for the LIH1 protein, and it has no reported loss-of-function phenotype; it is a functionally dark gene whose fold predicts, but does not demonstrate, a carboxylic-ester hydrolase / lipase activity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004806" target="_blank" class="term-link">
+                                    GO:0004806
+                                </a>
+                            </span>
+                            <span class="term-label">triacylglycerol lipase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P47145" data-a="GO:0004806" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic EC-to-GO mapping (EC 3.1.1.3 -&gt; triacylglycerol lipase activity). The EC number is itself a curator/homology inference (UniProt ECO:0000305), not a measured activity. LIH1 has an intact serine-hydrolase catalytic triad (Ser181/Asp253/His315) and belongs to the fungal Lipase_3 family, so a fold-level hydrolase/lipase activity is plausible; however, asserting the specific triacylglycerol substrate over-annotates a protein that has never been assayed and shares only ~26% identity with the nearest characterized lipase (Y. lipolytica Lip2). Generalize to lipase activity (or, most conservatively, carboxylic ester hydrolase activity) and treat as non-core pending biochemical evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific triacylglycerol-lipase substrate claim is unsupported by any experimental data for LIH1; the defensible homology-based claim is a fold-level lipase / carboxylic-ester-hydrolase activity.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016298" target="_blank" class="term-link">
+                                    lipase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P47145" data-a="GO:0006629" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-domain-based (IPR002921, fungal lipase-type) electronic annotation to the broad process &#34;lipid metabolic process&#34;. This is consistent with the fold and is appropriately general, but the specific physiological role of LIH1 in lipid metabolism has never been demonstrated. Retain as a general, non-core process annotation reflecting the domain inference.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broad, domain-consistent BP inference; defensible at this level of generality but not an experimentally established core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47145" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component with ND (No biological Data) evidence, correctly recording that no subcellular localization is known for LIH1. Accurate placeholder.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root annotation faithfully represents the absence of localization data; no change warranted.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P47145" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process with ND evidence, correctly recording that no biological process has been experimentally established for LIH1. Accurate placeholder; note the coexisting IEA BP annotation (lipid metabolic process) is a domain inference, not experimental.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ND root annotation faithfully represents the absence of experimental process data; no change warranted.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted serine hydrolase of the fungal Lipase_3 / alpha-beta hydrolase family. LIH1 retains an intact, canonically positioned Ser-Asp-His catalytic triad (nucleophilic Ser181 in the GHSLG pentapeptide) and all diagnostic AB-hydrolase signatures, so it is predicted to hydrolyze a carboxylic ester / lipid substrate. No catalytic activity, substrate, or biological role has been experimentally verified; this core function is a fold/homology-based prediction only and is stated at the most defensible level of generality.</h3>
+                <span class="vote-buttons" data-g="P47145" data-a="FUNCTION: Predicted serine hydrolase of the fungal Lipase_3 ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016298" target="_blank" class="term-link">
+                            lipase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26580812" target="_blank" class="term-link">
+                                PMID:26580812
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">All the proteins in this region harbored the conserved serine, aspartic acid, and histidine catalytic triad characteristic of the α/β hydrolase with the catalytic nucleophile serine located in the highly conserved pentapeptide GHS[LFM]G</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26580812" target="_blank" class="term-link">
+                            PMID:26580812
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comprehensive Analysis of a Yeast Lipase Family in the Yarrowia Clade.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LIH1 (YJR107W) is named as a putative lipase solely on the basis of sequence homology; it is the S. cerevisiae relative of the Yarrowia LIP family and shares only 26% identity (44% similarity) with Y. lipolytica Lip2, its closest relative. It was not biochemically characterized in this study.</div>
+
+                        <div class="finding-text">"This putative lipase in Saccharomyces cerevisiae, called Lih1 and encoded by YJR107W, shares 26% identity and 44% similarity with YlLip2, its closest relative in Y. lipolytica."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Members of this fungal lipase family carry the conserved Ser-Asp-His catalytic triad with the catalytic serine in the GHS[LFM]G pentapeptide, characteristic of the alpha/beta hydrolase fold; this is a family/fold-level bioinformatic argument, consistent with LIH1 retaining an intact triad.</div>
+
+                        <div class="finding-text">"All the proteins in this region harbored the conserved serine, aspartic acid, and histidine catalytic triad characteristic of the α/β hydrolase with the catalytic nucleophile serine located in the highly conserved pentapeptide GHS[LFM]G"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8641269" target="_blank" class="term-link">
+                            PMID:8641269
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete nucleotide sequence of Saccharomyces cerevisiae chromosome X.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24374639" target="_blank" class="term-link">
+                            PMID:24374639
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The reference genome sequence of Saccharomyces cerevisiae: Then and now.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is LIH1 a catalytically active hydrolase, and if so what is its natural substrate (triacylglycerol, other acylglycerols, or a non-lipid carboxylic ester)?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Neuvéglise C, Nicaud JM</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47145" data-a="Q: Is LIH1 a catalytically active hydrolase, and if s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Where in the cell does LIH1 act, and is it secreted like many of its Yarrowia clade relatives?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47145" data-a="Q: Where in the cell does LIH1 act, and is it secrete..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Heterologously express and purify recombinant LIH1 (and a Ser181Ala catalytic mutant) and assay hydrolase activity against a substrate panel spanning tri-, di- and mono-acylglycerols of varying chain length and synthetic p-nitrophenyl esters; loss of activity in the Ser181Ala mutant would confirm triad-dependent catalysis and define substrate preference.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LIH1 is an active serine hydrolase whose activity depends on the conserved Ser181 nucleophile.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47145" data-a="EXPERIMENT: Heterologously express and purify recombinant LIH1..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Profile a lih1-delta deletion strain for growth and lipid-related phenotypes across carbon sources (including fatty acids and triacylglycerol-based media) and stress conditions, combined with transcriptional profiling to identify conditions that induce LIH1 expression.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LIH1 contributes to lipid metabolism under specific, non-standard conditions.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics / phenotypic profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P47145" data-a="EXPERIMENT: Profile a lih1-delta deletion strain for growth an..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The actual catalytic activity of the LIH1 protein is undetermined. Although LIH1 retains an intact serine-hydrolase catalytic triad (Ser181/Asp253/His315) and the GHSLG nucleophile-elbow motif, it has never been expressed, purified, or assayed; whether it hydrolyzes triacylglycerol (as its EC 3.1.1.3 mapping asserts), some other lipid or carboxylic ester, or is catalytically inert in vivo, is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: LIH1 is a member of the fungal Lipase_3 / AB-hydrolase superfamily (Pfam PF01764, InterPro IPR002921/IPR029058, PROSITE PS00120, ESTHER Lipase_3) and its catalytic triad and nucleophile pentapeptide are conserved and correctly positioned. Its only characterized relative is Y. lipolytica Lip2, from which it diverges strongly (~26% identity), and the &#34;triacylglycerol lipase&#34; EC assignment is a curator homology inference (UniProt ECO:0000305), not a measurement.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> LIH1 is the sole Saccharomycetaceae representative of a lipase family that underwent dramatic expansion in the Yarrowia clade; establishing whether this ancestral-type lipase homolog is an active enzyme, and on what substrate, would anchor the functional history of the family and clarify whether S. cerevisiae retains this lipase activity at all.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Heterologous expression and purification of LIH1 followed by in vitro assays against a panel of tri-, di- and mono-acylglycerols and synthetic esters (e.g. p-nitrophenyl esters of varying acyl-chain length) to test for and define hydrolase activity and substrate preference; a catalytically dead Ser181Ala control to confirm triad dependence.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"This putative lipase in Saccharomyces cerevisiae, called Lih1 and encoded by YJR107W, shares 26% identity and 44% similarity with YlLip2, its closest relative in Y. lipolytica."</em> — PMID:26580812</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The subcellular localization of LIH1 is unknown. It is not established whether LIH1 is secreted (as many fungal lipases of this family are), retained intracellularly, or membrane-associated.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The SGD-assigned cellular_component annotation is a root/ND placeholder, i.e. no localization data exist. LIH1 has no annotated signal peptide or transmembrane region in its UniProt record, but this has not been experimentally tested and its Yarrowia relatives include both secreted and non-secreted members.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether LIH1 acts on extracellular lipid substrates (secreted lipase) or in an intracellular compartment is a prerequisite for interpreting any activity and for placing it in a pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous C-terminal fluorescent tagging and microscopy, and/or subcellular fractionation and proteomics, to determine where the protein resides; secretion assays if extracellular activity is suspected.</p>
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process and physiological role of LIH1 are unknown. No loss-of-function phenotype has been reported, the conditions (if any) under which LIH1 is required or induced are undefined, and the assignment to &#34;lipid metabolic process&#34; rests solely on domain inference.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The SGD-assigned biological_process annotation is a root/ND placeholder; the only process annotation (lipid metabolic process) is an InterPro-domain-based IEA. LIH1 appears dispensable under standard laboratory conditions, so any role is likely conditional or redundant.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying a condition-specific phenotype (e.g. growth on particular lipid carbon sources or under lipid stress) would convert LIH1 from a fold-based prediction into an annotated participant in yeast lipid metabolism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phenotypic profiling of a lih1-delta strain across carbon sources and stress conditions (including lipid/fatty-acid media), expression profiling to find inducing conditions, and genetic-interaction screening to reveal redundancy.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LIH1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P47145" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lih1-yjr107w-curation-notes">LIH1 (YJR107W) — curation notes</h1>
+<h2 id="deep-research-provenance-note-2026-07-05">Deep-research provenance note (2026-07-05)</h2>
+<p>Automated deep research could not be generated for LIH1. <code>just deep-research-falcon</code><br />
+(falcon provider) timed out twice at 600 s (exit 143/144), and the <code>perplexity-lite</code><br />
+fallback returned HTTP 401 (insufficient_quota — API billing exhausted). Per project<br />
+policy I did NOT fabricate a <code>-deep-research-{provider}.md</code> file. This review is therefore<br />
+grounded directly in: (1) the UniProt record (P47145), (2) the QuickGO GOA export<br />
+(LIH1-goa.tsv), (3) the full text of the sole primary reference PMID:26580812 (fetched to<br />
+publications/, verified by grep), and (4) inline domain/catalytic-triad analysis of the<br />
+deposited sequence (below). This is a genuinely dark gene, so the literature is thin and<br />
+these sources are, in fact, essentially the entire evidence base.</p>
+<p>UniProt: P47145 (LIH1_YEAST). SGD: S000003868. Systematic: YJR107W. ORF: J1983.<br />
+Length 328 aa; 37.2 kDa. Reference proteome (S288c). PE=1 (Evidence at protein level —<br />
+but see caveat below: this is a UniProt "protein level" that rests on peptide detection,<br />
+not on a functional assay).</p>
+<h2 id="bottom-line-dark-gene">Bottom line (dark gene)</h2>
+<p>LIH1 ("Lipase homolog 1") is a <strong>putative</strong> lipase. Its "lipase" identity is an inference<br />
+from sequence homology and domain architecture, NOT from any biochemical characterization of<br />
+the LIH1 protein itself. There is:<br />
+- NO demonstrated enzymatic activity for LIH1.<br />
+- NO known natural substrate.<br />
+- NO reported subcellular localization (SGD MF/BP/CC are ND).<br />
+- NO reported loss-of-function phenotype (BioGRID-ORCS: 0 hits in 10 CRISPR screens; the<br />
+  gene is non-essential and no strong phenotype is on record).<br />
+- NO experimental paper that characterizes LIH1 as an enzyme.</p>
+<p>This is a genuine biology knowledge gap (the unknome): the fold and catalytic machinery are<br />
+present, but what the protein does, where, and why is unknown.</p>
+<h2 id="identity-domain-reasoning-from-lih1-uniprottxt-verified-inline">Identity / domain reasoning (from LIH1-uniprot.txt, verified inline)</h2>
+<ul>
+<li>Family: AB hydrolase superfamily, Lipase family (UniProt SIMILARITY, ECO:0000305).</li>
+<li>Pfam PF01764 (Lipase_3); CDD cd00519 (Lipase_3); InterPro IPR002921 (Fungal lipase-type),<br />
+  IPR029058 (AB hydrolase fold), IPR051299 (AB_hydrolase_lip/est); Gene3D 3.40.50.1820<br />
+  (alpha/beta hydrolase); PROSITE PS00120 (LIPASE_SER).</li>
+<li>ESTHER classification: yeast-yj77, family "Lipase_3".</li>
+<li>PANTHER: PTHR46640 / PTHR46640:SF3 "LIPASE LIH1-RELATED".</li>
+<li>Catalytic triad (by similarity to O59952, a fungal/Rhizomucor-type lipase):</li>
+<li>ACT_SITE Ser181 (Nucleophile) — verified in sequence: sits in the canonical pentapeptide<br />
+<strong>GHSLG</strong> (residues 179–183; I recomputed from the UniProt sequence: positions 179–183 =<br />
+    G-H-S181-L-G). This is the classic filamentous-fungal lipase / α/β-hydrolase catalytic<br />
+    serine motif GHS[LFM]G.</li>
+<li>ACT_SITE Asp253 (charge relay) — verified: context HTG-<strong>D253</strong>-YIP.</li>
+<li>ACT_SITE His315 (charge relay) — verified: context VYE-<strong>H315</strong>-RAY.</li>
+<li>=&gt; The catalytic triad Ser-Asp-His is INTACT. LIH1 is NOT an obvious pseudoenzyme<br />
+    (catalytic residues are conserved), so a fold-level catalytic annotation is defensible;<br />
+    but "intact triad" is necessary, not sufficient, for TAG-lipase activity.</li>
+<li>Sequence version 2 (2011) revised residues 14 and 66 vs the original 1996 chromosome-X<br />
+  sequence (CONFLICTs at 14 P-&gt;L and 66 G-&gt;P in Ref.1) — a common early-yeast-genome artifact.</li>
+</ul>
+<h2 id="literature-verified-against-cached-full-text">Literature (verified against cached full text)</h2>
+<ol>
+<li>PMID:26580812 — Meunchan et al. 2015, PLoS ONE, "Comprehensive Analysis of a Yeast Lipase<br />
+   Family in the Yarrowia Clade." <strong>This is the sole source cited by UniProt for the LIH1<br />
+   name and the EC=3.1.1.3 designation, and both are ECO:0000303 / ECO:0000305 (author<br />
+   statement / curator inference), NOT experimental.</strong></li>
+<li>The paper is about the <em>Yarrowia</em> clade LIP gene family. S. cerevisiae is only mentioned<br />
+     as an outgroup context. The ONLY statement about LIH1 (verbatim):<br />
+     &gt; "A putative lipase was also identified in Sacharomycetaceae. This putative lipase in<br />
+     &gt; Saccharomyces cerevisiae, called Lih1 and encoded by YJR107W, shares 26% identity and<br />
+     &gt; 44% similarity with YlLip2, its closest relative in Y. lipolytica. Lih1 and its<br />
+     &gt; counterparts in other Hemiascomycetes may derive from a common LIP ancestor."</li>
+<li>i.e. LIH1 is named by homology to Y. lipolytica Lip2 (only 26% identity). It was NOT<br />
+     expressed, assayed, or biochemically characterized in this study.</li>
+<li>
+<p>The catalytic-triad / GHS[LFM]G statement in the paper describes the <em>Yarrowia</em> LIP<br />
+     family proteins collectively (verbatim: "All the proteins in this region harbored the<br />
+     conserved serine, aspartic acid, and histidine catalytic triad characteristic of the<br />
+     α/β hydrolase with the catalytic nucleophile serine located in the highly conserved<br />
+     pentapeptide GHS[LFM]G ... This finding confirms that all of these genes encode<br />
+     lipases.") — this is a family/fold-level bioinformatic argument, consistent with LIH1<br />
+     retaining the triad, but does not itself test LIH1.</p>
+</li>
+<li>
+<p>PMID:8641269 — Galibert et al. 1996, EMBO J — complete sequence of chromosome X. Genomic<br />
+   sequencing only; establishes the ORF (YJR107W). Not functional. Abstract-only cached.</p>
+</li>
+<li>
+<p>PMID:24374639 — Engel et al. 2014, G3 — S. cerevisiae reference genome reannotation.<br />
+   Source of the 2011 sequence revision. Not functional.</p>
+</li>
+</ol>
+<h2 id="go-annotation-assessment-goa-lih1-goatsv">GO annotation assessment (GOA, LIH1-goa.tsv)</h2>
+<ul>
+<li>GO:0004806 triacylglycerol lipase activity | IEA | GO_REF:0000120 (RHEA:12044 | EC:3.1.1.3).<br />
+  This is an electronic EC-&gt;GO mapping. The EC number itself (3.1.1.3) is a curator inference<br />
+  (ECO:0000305) from homology, not measured. Asserting the <em>specific TAG substrate</em> is an<br />
+  over-annotation for a protein with only 26% identity to the nearest characterized lipase and<br />
+  no biochemical data. The intact triad supports at most a general fold-level activity.<br />
+  -&gt; MODIFY / generalize toward lipase activity (GO:0016298) or carboxylic ester hydrolase<br />
+     activity (GO:0052689). Keep non-core.</li>
+<li>GO:0006629 lipid metabolic process | IEA | GO_REF:0000002 (InterPro:IPR002921). Broad,<br />
+  domain-based; consistent with the fold. Defensible as a general, non-core BP.</li>
+<li>GO:0005575 cellular_component (root) | ND | GO_REF:0000015. Root/ND placeholder — no CC<br />
+  known. Keep as-is (accurately records "unknown location").</li>
+<li>GO:0008150 biological_process (root) | ND | GO_REF:0000015. Root/ND placeholder — no BP<br />
+  known experimentally. Keep as-is.</li>
+</ul>
+<h2 id="go-term-hierarchy-verified-via-ols">GO term hierarchy (verified via OLS)</h2>
+<ul>
+<li>GO:0052689 carboxylic ester hydrolase activity — "Catalysis of the hydrolysis of a<br />
+  carboxylic ester bond." (most general; matches AB hydrolase fold)</li>
+<li>GO:0016298 lipase activity — "Catalysis of the hydrolysis of a lipid."</li>
+<li>GO:0004806 triacylglycerol lipase activity — "a triacylglycerol + H2O = a diacylglycerol +<br />
+  a fatty acid + H+." (specific substrate; the EC-mapped IEA term)</li>
+</ul>
+<h2 id="known-vs-not-known">KNOWN vs NOT-known</h2>
+<p>KNOWN (bioinformatic / sequence-level):<br />
+- Belongs to the fungal Lipase_3 / AB-hydrolase family (multiple orthogonal signatures).<br />
+- Retains an intact, canonically-positioned Ser181–Asp253–His315 catalytic triad and the<br />
+  GHSLG nucleophile-elbow pentapeptide.<br />
+- Encoded on chr X, YJR107W; 328 aa; expressed at the protein level (peptide evidence).<br />
+- Non-essential (no CRISPR-screen hits; a viable deletion is expected for a lone S. cerevisiae<br />
+  lipase homolog).</p>
+<p>NOT known (the real gaps):<br />
+- Actual catalytic activity of the LIH1 protein (never assayed).<br />
+- Natural / physiological substrate (TAG? di-/mono-acylglycerol? other ester? unknown).<br />
+- Whether it is catalytically active at all in vivo, or a vestigial homolog.<br />
+- Subcellular localization (secreted? intracellular? membrane-associated? unknown).<br />
+- Biological process / physiological role (lipid catabolism is a fold-level guess, unverified).<br />
+- Loss-of-function phenotype / conditions under which it matters.<br />
+- Regulation / expression conditions.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P47145
+gene_symbol: LIH1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  LIH1 (Lipase homolog 1; systematic name YJR107W) is an uncharacterized
+  Saccharomyces cerevisiae protein of the fungal Lipase_3 / alpha-beta hydrolase
+  (AB hydrolase) superfamily. The 328-residue protein retains the canonical serine
+  hydrolase catalytic triad, with the nucleophilic serine (Ser181) located in the
+  conserved GHSLG pentapeptide of the nucleophile elbow, together with an aspartate
+  (Asp253) and histidine (His315) charge-relay pair, and it carries the InterPro
+  fungal-lipase-type and AB-hydrolase-fold signatures. Its functional assignment as
+  a lipase is based entirely on sequence and domain homology: it is the single
+  Saccharomycetaceae relative of the expanded Yarrowia clade lipase (LIP) family,
+  sharing only about 26% sequence identity with Yarrowia lipolytica Lip2, its
+  closest characterized homolog. No catalytic activity, substrate, subcellular
+  localization, or biological role has been experimentally established for the LIH1
+  protein, and it has no reported loss-of-function phenotype; it is a functionally
+  dark gene whose fold predicts, but does not demonstrate, a carboxylic-ester
+  hydrolase / lipase activity.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:26580812
+  title: Comprehensive Analysis of a Yeast Lipase Family in the Yarrowia Clade.
+  findings:
+  - statement: &gt;-
+      LIH1 (YJR107W) is named as a putative lipase solely on the basis of sequence
+      homology; it is the S. cerevisiae relative of the Yarrowia LIP family and
+      shares only 26% identity (44% similarity) with Y. lipolytica Lip2, its
+      closest relative. It was not biochemically characterized in this study.
+    supporting_text: &gt;-
+      This putative lipase in Saccharomyces cerevisiae, called Lih1 and encoded by
+      YJR107W, shares 26% identity and 44% similarity with YlLip2, its closest
+      relative in Y. lipolytica.
+  - statement: &gt;-
+      Members of this fungal lipase family carry the conserved Ser-Asp-His
+      catalytic triad with the catalytic serine in the GHS[LFM]G pentapeptide,
+      characteristic of the alpha/beta hydrolase fold; this is a family/fold-level
+      bioinformatic argument, consistent with LIH1 retaining an intact triad.
+    supporting_text: &gt;-
+      All the proteins in this region harbored the conserved serine, aspartic acid,
+      and histidine catalytic triad characteristic of the α/β hydrolase with the
+      catalytic nucleophile serine located in the highly conserved pentapeptide
+      GHS[LFM]G
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text verified. This is the source UniProt cites (ECO:0000303 /
+      ECO:0000305) for the LIH1 name and the EC 3.1.1.3 designation. Confirms that
+      the lipase assignment for LIH1 is homology-based, not experimental: LIH1 is
+      only mentioned as a distant (26% identity) Saccharomycetaceae relative of the
+      Yarrowia LIP family and was not expressed or assayed.
+- id: PMID:8641269
+  title: Complete nucleotide sequence of Saccharomyces cerevisiae chromosome X.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genomic sequencing of chromosome X that defines the YJR107W ORF; provides no
+      functional information. Cached abstract-only.
+- id: PMID:24374639
+  title: &#34;The reference genome sequence of Saccharomyces cerevisiae: Then and now.&#34;
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reference-genome reannotation; source of the 2011 sequence revision at
+      residues 14 and 66. No functional characterization of LIH1.
+existing_annotations:
+- term:
+    id: GO:0004806
+    label: triacylglycerol lipase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic EC-to-GO mapping (EC 3.1.1.3 -&gt; triacylglycerol lipase activity).
+      The EC number is itself a curator/homology inference (UniProt ECO:0000305),
+      not a measured activity. LIH1 has an intact serine-hydrolase catalytic triad
+      (Ser181/Asp253/His315) and belongs to the fungal Lipase_3 family, so a
+      fold-level hydrolase/lipase activity is plausible; however, asserting the
+      specific triacylglycerol substrate over-annotates a protein that has never
+      been assayed and shares only ~26% identity with the nearest characterized
+      lipase (Y. lipolytica Lip2). Generalize to lipase activity (or, most
+      conservatively, carboxylic ester hydrolase activity) and treat as non-core
+      pending biochemical evidence.
+    action: MODIFY
+    reason: &gt;-
+      The specific triacylglycerol-lipase substrate claim is unsupported by any
+      experimental data for LIH1; the defensible homology-based claim is a
+      fold-level lipase / carboxylic-ester-hydrolase activity.
+    proposed_replacement_terms:
+    - id: GO:0016298
+      label: lipase activity
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-domain-based (IPR002921, fungal lipase-type) electronic annotation
+      to the broad process &#34;lipid metabolic process&#34;. This is consistent with the
+      fold and is appropriately general, but the specific physiological role of
+      LIH1 in lipid metabolism has never been demonstrated. Retain as a general,
+      non-core process annotation reflecting the domain inference.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Broad, domain-consistent BP inference; defensible at this level of generality
+      but not an experimentally established core function.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component with ND (No biological Data) evidence, correctly
+      recording that no subcellular localization is known for LIH1. Accurate
+      placeholder.
+    action: ACCEPT
+    reason: &gt;-
+      ND root annotation faithfully represents the absence of localization data;
+      no change warranted.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process with ND evidence, correctly recording that no
+      biological process has been experimentally established for LIH1. Accurate
+      placeholder; note the coexisting IEA BP annotation (lipid metabolic process)
+      is a domain inference, not experimental.
+    action: ACCEPT
+    reason: &gt;-
+      ND root annotation faithfully represents the absence of experimental
+      process data; no change warranted.
+core_functions:
+- description: &gt;-
+    Predicted serine hydrolase of the fungal Lipase_3 / alpha-beta hydrolase family.
+    LIH1 retains an intact, canonically positioned Ser-Asp-His catalytic triad
+    (nucleophilic Ser181 in the GHSLG pentapeptide) and all diagnostic AB-hydrolase
+    signatures, so it is predicted to hydrolyze a carboxylic ester / lipid substrate.
+    No catalytic activity, substrate, or biological role has been experimentally
+    verified; this core function is a fold/homology-based prediction only and is
+    stated at the most defensible level of generality.
+  molecular_function:
+    id: GO:0016298
+    label: lipase activity
+  supported_by:
+  - reference_id: PMID:26580812
+    supporting_text: &gt;-
+      All the proteins in this region harbored the conserved serine, aspartic acid,
+      and histidine catalytic triad characteristic of the α/β hydrolase with the
+      catalytic nucleophile serine located in the highly conserved pentapeptide
+      GHS[LFM]G
+knowledge_gaps:
+- gap_statement: &gt;-
+    The actual catalytic activity of the LIH1 protein is undetermined. Although LIH1
+    retains an intact serine-hydrolase catalytic triad (Ser181/Asp253/His315) and
+    the GHSLG nucleophile-elbow motif, it has never been expressed, purified, or
+    assayed; whether it hydrolyzes triacylglycerol (as its EC 3.1.1.3 mapping
+    asserts), some other lipid or carboxylic ester, or is catalytically inert in
+    vivo, is unknown.
+  boundary: &gt;-
+    Firmly established: LIH1 is a member of the fungal Lipase_3 / AB-hydrolase
+    superfamily (Pfam PF01764, InterPro IPR002921/IPR029058, PROSITE PS00120,
+    ESTHER Lipase_3) and its catalytic triad and nucleophile pentapeptide are
+    conserved and correctly positioned. Its only characterized relative is
+    Y. lipolytica Lip2, from which it diverges strongly (~26% identity), and the
+    &#34;triacylglycerol lipase&#34; EC assignment is a curator homology inference
+    (UniProt ECO:0000305), not a measurement.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    LIH1 is the sole Saccharomycetaceae representative of a lipase family that
+    underwent dramatic expansion in the Yarrowia clade; establishing whether this
+    ancestral-type lipase homolog is an active enzyme, and on what substrate, would
+    anchor the functional history of the family and clarify whether S. cerevisiae
+    retains this lipase activity at all.
+  resolution: &gt;-
+    Heterologous expression and purification of LIH1 followed by in vitro assays
+    against a panel of tri-, di- and mono-acylglycerols and synthetic esters
+    (e.g. p-nitrophenyl esters of varying acyl-chain length) to test for and define
+    hydrolase activity and substrate preference; a catalytically dead Ser181Ala
+    control to confirm triad dependence.
+  provenance:
+  - reference_id: PMID:26580812
+    supporting_text: &gt;-
+      This putative lipase in Saccharomyces cerevisiae, called Lih1 and encoded by
+      YJR107W, shares 26% identity and 44% similarity with YlLip2, its closest
+      relative in Y. lipolytica.
+- gap_statement: &gt;-
+    The subcellular localization of LIH1 is unknown. It is not established whether
+    LIH1 is secreted (as many fungal lipases of this family are), retained
+    intracellularly, or membrane-associated.
+  boundary: &gt;-
+    The SGD-assigned cellular_component annotation is a root/ND placeholder, i.e.
+    no localization data exist. LIH1 has no annotated signal peptide or
+    transmembrane region in its UniProt record, but this has not been
+    experimentally tested and its Yarrowia relatives include both secreted and
+    non-secreted members.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Whether LIH1 acts on extracellular lipid substrates (secreted lipase) or in an
+    intracellular compartment is a prerequisite for interpreting any activity and
+    for placing it in a pathway.
+  resolution: &gt;-
+    Endogenous C-terminal fluorescent tagging and microscopy, and/or subcellular
+    fractionation and proteomics, to determine where the protein resides; secretion
+    assays if extracellular activity is suspected.
+- gap_statement: &gt;-
+    The biological process and physiological role of LIH1 are unknown. No
+    loss-of-function phenotype has been reported, the conditions (if any) under
+    which LIH1 is required or induced are undefined, and the assignment to &#34;lipid
+    metabolic process&#34; rests solely on domain inference.
+  boundary: &gt;-
+    The SGD-assigned biological_process annotation is a root/ND placeholder; the
+    only process annotation (lipid metabolic process) is an InterPro-domain-based
+    IEA. LIH1 appears dispensable under standard laboratory conditions, so any role
+    is likely conditional or redundant.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying a condition-specific phenotype (e.g. growth on particular lipid
+    carbon sources or under lipid stress) would convert LIH1 from a fold-based
+    prediction into an annotated participant in yeast lipid metabolism.
+  resolution: &gt;-
+    Phenotypic profiling of a lih1-delta strain across carbon sources and stress
+    conditions (including lipid/fatty-acid media), expression profiling to find
+    inducing conditions, and genetic-interaction screening to reveal redundancy.
+suggested_questions:
+- question: &gt;-
+    Is LIH1 a catalytically active hydrolase, and if so what is its natural
+    substrate (triacylglycerol, other acylglycerols, or a non-lipid carboxylic
+    ester)?
+  experts:
+  - Neuvéglise C
+  - Nicaud JM
+- question: &gt;-
+    Where in the cell does LIH1 act, and is it secreted like many of its Yarrowia
+    clade relatives?
+suggested_experiments:
+- hypothesis: &gt;-
+    LIH1 is an active serine hydrolase whose activity depends on the conserved
+    Ser181 nucleophile.
+  description: &gt;-
+    Heterologously express and purify recombinant LIH1 (and a Ser181Ala catalytic
+    mutant) and assay hydrolase activity against a substrate panel spanning tri-,
+    di- and mono-acylglycerols of varying chain length and synthetic p-nitrophenyl
+    esters; loss of activity in the Ser181Ala mutant would confirm triad-dependent
+    catalysis and define substrate preference.
+  experiment_type: biochemical enzyme assay
+- hypothesis: &gt;-
+    LIH1 contributes to lipid metabolism under specific, non-standard conditions.
+  description: &gt;-
+    Profile a lih1-delta deletion strain for growth and lipid-related phenotypes
+    across carbon sources (including fatty acids and triacylglycerol-based media)
+    and stress conditions, combined with transcriptional profiling to identify
+    conditions that induce LIH1 expression.
+  experiment_type: genetics / phenotypic profiling
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

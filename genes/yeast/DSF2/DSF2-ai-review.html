@@ -1,0 +1,2792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSF2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DSF2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P38213" target="_blank" class="term-link">
+                        P38213
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DSF2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P38213" data-a="DESCRIPTION: DSF2 (YBR007C) is a 736-residue protein of the bud..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DSF2 (YBR007C) is a 736-residue protein of the budding yeast Saccharomyces cerevisiae composed of a large intrinsically disordered / low-complexity N-terminal half (~residues 1-461) and a C-terminal Sel1-like tetratricopeptide (TPR) repeat solenoid (~residues 560-736). Sel1/TPR repeats are alpha-helical scaffolds that typically mediate protein-protein interactions, and DSF2 has no predicted catalytic domain. The protein localizes to the bud tip and bud neck of growing cells and moves to the cytoplasm during DNA-replication stress. It is a low-abundance phosphoprotein. Its molecular function and the biological process it participates in are not experimentally established. DSF2 belongs to a Sel1-repeat protein family (PANTHER PTHR43628) whose best-characterized member is the fission-yeast mitotic inhibitor Nif1, which negatively regulates entry into mitosis; whether DSF2 has an analogous cell-cycle role in S. cerevisiae has not been demonstrated. DSF2 was originally identified as a deletion suppressor of the puf5/mpt5 RNA-binding-protein deletion, a genetic relationship that does not by itself define its own function. Despite the shared &#34;Dsf&#34; name, DSF2 is not a homolog of DSF1 (YEL070W, a mannitol dehydrogenase); both were merely recovered in the same suppressor screen.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010972" target="_blank" class="term-link">
+                                    GO:0010972
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of G2/M transition of mitotic cell cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38213" data-a="GO:0010972" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference propagated from the fission-yeast ortholog Nif1 (PomBase:SPBC23G7.04c), which negatively regulates mitotic entry. DSF2 and Nif1 share only Sel1-like/TPR repeats, and no S. cerevisiae experiment shows DSF2 acting on Swe1/Cdc28 or a Nim1-family kinase. The inference is plausible but uncorroborated for budding yeast, so it is kept as a non-core annotation rather than removed (per guidance not to REMOVE on distant-ortholog grounds alone).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Legitimate IBA transfer from Nif1 but not experimentally supported in S. cerevisiae; DSF2&#39;s own biological process is unknown, so this cannot be treated as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16328373" target="_blank" class="term-link">
+                                        PMID:16328373
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dsf1 (YEL070W), dsf2 (YBR007C)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032153" target="_blank" class="term-link">
+                                    GO:0032153
+                                </a>
+                            </span>
+                            <span class="term-label">cell division site</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P38213" data-a="GO:0032153" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA inference from the same Nif1 ortholog. It is loosely consistent with the experimentally observed bud-tip / bud-neck localization of DSF2, but &#34;is_active_in the cell division site&#34; asserts a functional activity there that has not been demonstrated for DSF2. Retained as non-core given the supporting localization but flagged as unverified for activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Distant-ortholog IBA; the localization component is consistent with HDA bud-tip data, but no DSF2 activity at the division site is established.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005934" target="_blank" class="term-link">
+                                    GO:0005934
+                                </a>
+                            </span>
+                            <span class="term-label">cellular bud tip</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22842922
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dissecting DNA damage response pathways by analysing protein...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38213" data-a="GO:0005934" data-r="PMID:22842922" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct high-throughput GFP-localization evidence (HDA) that Dsf2 localizes to the bud tip (and bud neck), from a genome-wide imaging screen. This is the best-supported annotation for DSF2 and is accepted; it is the anchor for the protein&#39;s cellular location, although localization alone does not define molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (HDA) localization for DSF2 itself; consistent with SGD&#39;s bud-tip/bud-neck localization and the replication-stress relocalization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                                        PMID:22842922
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">one that reflects movement away from the budneck or bud tip</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38213" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function annotation with ND (no biological data) evidence, correctly recording that DSF2&#39;s molecular function is unknown. This is an honest placeholder and is retained: no specific MF term is defensible from current evidence (the Sel1/TPR architecture suggests a protein-interaction module but no partner or activity has been shown).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurately reflects the genuine absence of molecular-function knowledge for this dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38213" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process annotation with ND evidence, correctly recording that DSF2&#39;s biological process is unknown at the level of direct evidence. The only BP signal is the distant-ortholog IBA (negative regulation of G2/M), which is not corroborated in S. cerevisiae, so retaining the ND root is the honest position.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurately reflects the genuine absence of direct biological-process knowledge for this dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DSF2 is a Sel1-like / TPR-repeat protein with a large disordered N-terminal region, an architecture consistent with a protein-interaction scaffold or adaptor, that localizes to the bud tip and bud neck. No specific molecular activity or partner has been experimentally established, so the molecular function is recorded at the root; the confident, evidence-based statement is the cellular location. The bud-tip localization is the only directly demonstrated feature of DSF2&#39;s cellular behavior.</h3>
+                <span class="vote-buttons" data-g="P38213" data-a="FUNCTION: DSF2 is a Sel1-like / TPR-repeat protein with a la..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                            molecular_function
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005934" target="_blank" class="term-link">
+                                cellular bud tip
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                                PMID:22842922
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">one that reflects movement away from the budneck or bud tip</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16328373" target="_blank" class="term-link">
+                                PMID:16328373
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">dsf1 (YEL070W), dsf2 (YBR007C)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:yeast/DSF2/DSF2-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">non-enzymatic adaptor or scaffold protein</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22842922" target="_blank" class="term-link">
+                            PMID:22842922
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dissecting DNA damage response pathways by analysing protein localization and abundance changes during DNA replication stress.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide GFP screen scoring subcellular localization changes during DNA replication stress; one localization-change class captures proteins moving away from the bud neck / bud tip, and HU/MMS caused a decrease in bud-neck/bud-tip localization. DSF2 is one of the proteins scored (in the supplementary datasets), which is the basis for its high-throughput (HDA) bud-tip localization annotation.</div>
+
+                        <div class="finding-text">"one that reflects movement away from the budneck or bud tip"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/DSF2/DSF2-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep-research report on S. cerevisiae DSF2 (YBR007C)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Domain-based synthesis: characterized Sel1-like-repeat proteins act as non-enzymatic adaptor/scaffold proteins; on this basis DSF2 is best interpreted as a scaffold/adaptor at the bud neck. The report also raises (as unverified inferences) a possible link to the Cbk1/RAM network and specific phosphosites; these are not adopted as supported claims here.</div>
+
+                        <div class="finding-text">"non-enzymatic adaptor or scaffold protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16328373" target="_blank" class="term-link">
+                            PMID:16328373
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Suppressor analysis of the mpt5/htr1/uth4/puf5 deletion in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Screen for deletion suppressors that rescue the temperature-sensitivity of an mpt5 (puf5) deletion identified dsf1 (YEL070W) and dsf2 (YBR007C), among others. This is the origin of the DSF2 gene name and its only dedicated functional study; it establishes a genetic suppressor relationship, not a molecular function.</div>
+
+                        <div class="finding-text">"dsf1 (YEL070W), dsf2 (YBR007C)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The mpt5 deletion strain is hydroxyurea (HU) sensitive; DSF2 loss partially suppresses this HU sensitivity (per UniProt disruption phenotype).</div>
+
+                        <div class="finding-text">"The Deltampt5 disruptant was also hydroxyurea (HU) sensitive"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the physiological binding partners of Dsf2, and do they define it as a scaffold/adaptor at the bud tip or bud neck?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="Q: What are the physiological binding partners of Dsf..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DSF2 have any role in the budding-yeast G2/M transition (e.g. through Swe1 or Cdc28), as its phylogenetic annotation from Nif1 would predict?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="Q: Does DSF2 have any role in the budding-yeast G2/M ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> By what mechanism does dsf2 deletion suppress the temperature and hydroxyurea sensitivity of a puf5/mpt5 deletion?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="Q: By what mechanism does dsf2 deletion suppress the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity purification-mass spectrometry (or proximity labeling such as BioID/TurboID) of endogenously tagged Dsf2 in log-phase and replication-stress conditions to identify stable and stress-dependent interactors.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Dsf2 uses its Sel1/TPR solenoid to scaffold a specific partner at the bud tip/neck; identifying that partner would define its molecular function.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: affinity purification-mass spectrometry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="EXPERIMENT: Affinity purification-mass spectrometry (or proxim..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative cell-morphology and cell-cycle profiling of dsf2 deletion and overexpression strains, plus genetic-interaction tests with SWE1 and CDC28, to test the phylogenetically inferred negative regulation of G2/M.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: If the Nif1-based inference holds, perturbing DSF2 will change cell length or G2/M timing and interact genetically with the Swe1-Cdc28 axis.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic interaction / cell-cycle phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="EXPERIMENT: Quantitative cell-morphology and cell-cycle profil..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Epistasis analysis of the dsf2-mediated suppression of puf5/mpt5 phenotypes, testing dependence on known mpt5-suppression modifiers (e.g. PUF4, IME4) and whether Dsf2 abundance/localization changes in a puf5 background.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: dsf2 suppression of mpt5 operates through a definable branch of the Puf-family regulatory network rather than a nonspecific fitness effect.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38213" data-a="EXPERIMENT: Epistasis analysis of the dsf2-mediated suppressio..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of DSF2 is undetermined: no catalytic activity, no specific binding partner, and no scaffold/adaptor role has been experimentally demonstrated. The only structural clue is a C-terminal Sel1-like/TPR repeat solenoid, a generic protein-interaction module that does not specify an activity or a partner.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: DSF2 is a 736-aa protein with a disordered N-terminal half and a C-terminal Sel1-like/TPR-repeat region (UniProt P38213: SMART SEL1, InterPro IPR006597/IPR011990, SUPFAM HCP-like), it is a detected phosphoprotein, and it localizes to the bud tip/neck. SGD lists molecular function as Unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> DSF2 is a conserved (fungal-to-bacterial Sel1-repeat) yet functionally dark protein; identifying its binding partner(s) would convert a structural guess into an actual molecular function and likely explain its cell-cycle-adjacent annotations.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity purification / proximity labeling of Dsf2 to identify stable interactors, followed by testing whether it acts as a scaffold for the identified partner(s); a defensible specific MF term (e.g. a protein-binding adaptor term) could then replace the MF root.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"dsf1 (YEL070W), dsf2 (YBR007C)"</em> — PMID:16328373</li>
+
+                <li><em>"SEL1"</em> — file:yeast/DSF2/DSF2-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process DSF2 participates in is unknown. The sole process annotation (negative regulation of the G2/M transition) is a phylogenetic (IBA) inference from the distant fission-yeast ortholog Nif1 and has never been tested in S. cerevisiae; whether DSF2 regulates the budding-yeast cell cycle (e.g. via Swe1/Cdc28) is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: the IBA is transferred from Nif1 (PomBase:SPBC23G7.04c), a Sel1-repeat mitotic inhibitor. DSF2 shares only Sel1/TPR repeats with Nif1, and there is no budding-yeast experimental link between DSF2 and the Swe1-Cdc28 or Nim1-kinase machinery.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Confirming or refuting a cell-cycle role would either validate the cross-species inference or reveal that DSF2&#39;s bud-tip localization serves an unrelated process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Epistasis and cell-length/cell-cycle phenotyping of dsf2 mutants combined with genetic interaction tests against SWE1/CDC28; direct assay of whether Dsf2 binds or modulates Swe1 or Cdc28.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"dsf1 (YEL070W), dsf2 (YBR007C)"</em> — PMID:16328373</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The mechanism by which loss of DSF2 suppresses the temperature- and hydroxyurea-sensitivity of a puf5/mpt5 deletion is unknown. It is not established whether this reflects a direct functional relationship between Dsf2 and the Puf5 RNA-binding pathway or an indirect, downstream effect.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: dsf2 was recovered as a deletion suppressor of mpt5/puf5 temperature-sensitivity, and DSF2 loss partially suppresses mpt5 HU sensitivity (PMID:16328373; UniProt P38213 disruption phenotype). No molecular mechanism for this suppression has been reported.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Puf5/Mpt5 is a well-studied Puf-family translational repressor; explaining how a bud-tip Sel1-repeat protein feeds into its pathway could place DSF2 in a defined regulatory network.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Dissect the suppression genetically (is it PUF4/IME4-dependent, as for other mpt5 suppressors?) and test whether Dsf2 abundance or localization changes in a puf5 background.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The Deltampt5 disruptant was also hydroxyurea (HU) sensitive"</em> — PMID:16328373</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The functional significance of DSF2 relocalizing from the bud tip/neck to the cytoplasm during DNA-replication stress (HU/MMS) is unknown; it is not known whether this movement is part of a stress response or an incidental consequence of bud-neck disassembly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Established: a genome-wide GFP screen scored DSF2 among proteins that lose bud-neck/bud-tip localization under replication stress (PMID:22842922; SGD). No follow-up has tested the consequence of this relocalization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Stress-induced relocalization is often functionally informative; resolving it could link DSF2&#39;s location to a specific process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test whether blocking DSF2 relocalization (or deleting DSF2) alters replication-stress survival, and identify the signal driving the move.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"one that reflects movement away from the budneck or bud tip"</em> — PMID:22842922</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DSF2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38213" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: DSF2 (YBR007C) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T14:12:22.176383</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="DSF2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="DSF2-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-dsf2-ybr007c-in-saccharomyces-cerevisiae">Comprehensive Research Report: DSF2 (YBR007C) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>DSF2 (systematic name YBR007C; UniProt P38213) encodes a protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c) whose full name is "Deletion Suppressor of MPT5 mutation protein 2." The gene was originally identified through genetic screens in which its deletion suppressed phenotypes associated with loss of MPT5 (also known as PUF5/HTR1/UTH4), an RNA-binding protein of the Pumilio family involved in mRNA regulation (coorey2012anovelhighthroughput pages 83-88, zhang2025theyeastgsk3 pages 14-15). DSF2 is a relatively undercharacterized gene, and no dedicated primary study of its molecular function has been published; instead, evidence about its function derives from high-throughput studies, phosphoproteomics, computational analyses, and comparative genomics.</p>
+<p>The following table summarizes verified properties of DSF2:</p>
+<table>
+<thead>
+<tr>
+<th>Gene Name</th>
+<th>Systematic Name</th>
+<th>UniProt ID</th>
+<th>Organism</th>
+<th>Protein Size</th>
+<th>Key Domains</th>
+<th>Subcellular Localization</th>
+<th>Genetic Interactions</th>
+<th>Phosphorylation Sites</th>
+<th>Potential Kinase Regulators</th>
+<th>Orthologs</th>
+<th>Proposed Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DSF2</strong></td>
+<td><strong>YBR007C</strong> (ORF alias reported by UniProt: <strong>YBR0113</strong>)</td>
+<td><strong>P38213</strong></td>
+<td><em>Saccharomyces cerevisiae</em> strain ATCC 204508 / S288c</td>
+<td>Not established from the literature retrieved here; UniProt accession verified as the target protein</td>
+<td><strong>Sel1-like repeats</strong>, <strong>TPR-like helical domain superfamily</strong>, <strong>Mitotic_Regulator</strong> domain; these domains are most consistent with a protein-protein interaction scaffold/adaptor role rather than catalytic activity (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2, mittl2007sel1likerepeatproteins pages 6-8)</td>
+<td>Localizes to the <strong>bud neck</strong> under standard conditions; reported to relocalize from the <strong>bud neck to the cytoplasm upon DNA replication stress</strong>, supporting a role in cell-cycle-linked cortical structures (mamun2023largescaleidentificationof pages 12-13, zhang2025theyeastgsk3 pages 14-15)</td>
+<td>Originally identified as <strong>deletion suppressor of MPT5 mutation</strong>; thus genetically linked to <strong>MPT5/PUF5</strong>, an RNA regulatory factor (coorey2012anovelhighthroughput pages 83-88, gogl2015thestructureof pages 12-15)</td>
+<td><strong>S391</strong>, <strong>S395</strong> detected in phosphoproteomic data (zhang2025theyeastgsk3 pages 13-14, zhang2025theyeastgsk3 pages 14-15)</td>
+<td><strong>Cbk1</strong> is the strongest inferred regulator from sequence/pathway analysis: Dsf2 contains conserved <strong>Cbk1 phosphorylation consensus motifs</strong> but lacks the canonical <strong>Cbk1 docking motif</strong>; therefore it is a <strong>putative non-docking Cbk1 substrate</strong> rather than a confirmed direct substrate (gogl2015thestructureof pages 12-15, gogl2015thestructureof pages 15-17)</td>
+<td><strong>Nif1</strong> in <em>Schizosaccharomyces pombe</em> and <strong>SppD</strong> in <em>Aspergillus</em> spp.; comparative analyses link this family to mitotic/cytokinetic functions, though septal-pore functions appear lineage-specialized in filamentous fungi (mamun2023largescaleidentificationof pages 12-13)</td>
+<td>Best-supported current model: <strong>non-enzymatic adaptor/scaffold protein</strong> acting at the <strong>bud neck</strong> in processes related to <strong>cell division/cytokinesis</strong> and possibly integrated with the <strong>RAM/Cbk1 signaling network</strong>; precise molecular mechanism remains incompletely characterized (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2, mamun2023largescaleidentificationof pages 12-13, gogl2015thestructureof pages 12-15, zhang2025theyeastgsk3 pages 14-15)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, domains, localization, genetic interactions, phosphorylation evidence, orthology, and best-supported functional interpretation for the yeast DSF2/YBR007C protein. It is useful as a compact reference for distinguishing experimentally supported facts from mechanistic inferences.</em></p>
+<h2 id="2-domain-architecture-and-structural-features">2. Domain Architecture and Structural Features</h2>
+<p>DSF2 harbors three notable domain annotations: Sel1-like repeats (SLR; InterPro IPR006597), a TPR-like helical domain superfamily (IPR011990), and a Mitotic Regulator domain (IPR052945). These domains provide strong functional clues.</p>
+<h3 id="21-sel1-like-repeats-slr">2.1 Sel1-like Repeats (SLR)</h3>
+<p>Sel1-like repeats are α-helical structural motifs related to tetratricopeptide repeats (TPRs). A comprehensive review of SLR proteins established that, despite their diverse cellular roles, all characterized SLR proteins function as <strong>adaptor or scaffold proteins</strong> that mediate protein-protein interactions and facilitate assembly of macromolecular complexes (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2). SLR domains achieve selectivity through a combination of short-range protein-peptide interactions and long-range electrostatic interactions, enabling discrimination between different target sequences (mittl2007sel1likerepeatproteins pages 6-8).</p>
+<p>In yeast specifically, well-characterized SLR proteins include:<br />
+- <strong>Hrd3</strong>, which contains 12 Sel1-like repeats and functions as the ER-lumenal substrate recognition adaptor for the Hrd1 ubiquitin ligase complex in ER-associated degradation (ERAD) (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 6-8);<br />
+- <strong>Chs4</strong>, which contains 7 Sel1-like repeats and functions as a chitin synthase III activator, recruiting the activated Chs3/Chs4 complex to the septum via interaction with the Bni4/Cdc10 complex (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2);<br />
+- <strong>Nif1</strong>, which regulates mitosis in fission yeast (mittl2007sel1likerepeatproteins pages 1-2).</p>
+<p>The SLR domain architecture of DSF2 thus strongly suggests it operates as a <strong>non-enzymatic adaptor or scaffold protein</strong> involved in protein-protein interactions at sites relevant to cell division.</p>
+<h3 id="22-mitotic-regulator-domain">2.2 Mitotic Regulator Domain</h3>
+<p>The Mitotic Regulator domain (IPR052945) connects DSF2 to Nif1, its ortholog in <em>Schizosaccharomyces pombe</em>. Nif1 acts as a <strong>mitotic inhibitor</strong> through direct interaction with the Nim1 protein kinase, thereby regulating mitotic entry (mamun2023largescaleidentificationof pages 12-13). This domain assignment is consistent with a role for DSF2 in cell cycle regulation.</p>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<p>Dsf2 localizes to the <strong>bud neck</strong> under normal growth conditions (mamun2023largescaleidentificationof pages 12-13, zhang2025theyeastgsk3 pages 14-15). The bud neck is the constriction site between mother and daughter cells in budding yeast, where the septin ring, actomyosin ring, and cell wall remodeling machinery converge to execute cytokinesis. Phosphoproteomic data from Zhang et al. (2025) demonstrate that upon <strong>DNA replication stress</strong>, Dsf2 <strong>relocalizes from the bud neck to the cytoplasm</strong>, indicating that its localization is dynamically regulated in a cell cycle- and stress-dependent manner (zhang2025theyeastgsk3 pages 14-15). Phosphorylation at residues <strong>S391 and S395</strong> was detected in phosphoproteomic analyses, suggesting regulation of Dsf2 by one or more kinases (zhang2025theyeastgsk3 pages 13-14, zhang2025theyeastgsk3 pages 14-15).</p>
+<p>The bud neck localization places Dsf2 at the same subcellular site as other key regulators of cytokinesis and cell separation, including Chs4 (septum formation), Dbf2-Mob1 (mitotic exit network), and components of the actomyosin ring.</p>
+<h2 id="4-genetic-interactions-and-the-mpt5-connection">4. Genetic Interactions and the MPT5 Connection</h2>
+<p>DSF2 was named for its property as a <strong>deletion suppressor of mpt5 mutations</strong>: deletion of DSF2 suppresses phenotypes caused by loss of MPT5/PUF5 (coorey2012anovelhighthroughput pages 83-88, zhang2025theyeastgsk3 pages 14-15). MPT5 is a member of the PUF (Pumilio and FBF) family of RNA-binding proteins that promotes mRNA decapping and deadenylation of target transcripts (gogl2015thestructureof pages 18-20). MPT5 targets include mRNAs encoding cell wall proteins and regulators of cell morphogenesis. The fact that loss of DSF2 can compensate for loss of MPT5 implies that DSF2 and MPT5 have opposing or balancing roles in a shared pathway, possibly related to post-transcriptional regulation of cell wall or cytokinesis-related transcripts.</p>
+<h2 id="5-connection-to-the-cbk1ram-signaling-network">5. Connection to the Cbk1/RAM Signaling Network</h2>
+<p>A key study by Gögl et al. (2015) systematically analyzed substrates of the NDR/LATS family kinase <strong>Cbk1</strong>, a central component of the RAM (Regulation of Ace2 and cellular Morphogenesis) signaling network. This analysis revealed that Dsf2 <strong>contains conserved Cbk1 phosphorylation consensus sequences</strong> (Hx[RK]xx[ST]) but notably <strong>lacks the canonical Cbk1 core docking motif</strong> ([YF]xFP) (gogl2015thestructureof pages 12-15). DSF2 was grouped alongside <strong>Mpt5 and Sec3</strong> as proteins with conserved Cbk1 consensus sites but no docking motif, suggesting these may represent a class of <strong>non-docking Cbk1 substrates</strong> (gogl2015thestructureof pages 12-15). While in vivo phosphorylation at Cbk1 consensus sites has been confirmed for Mpt5 and Sec3, such evidence for Dsf2 specifically remains indirect (gogl2015thestructureof pages 12-15).</p>
+<p>The RAM network, through Cbk1 phosphorylation of the mRNA-binding protein Ssd1 and the transcription factor Ace2, coordinates cell wall biogenesis, cell separation, and polarized growth (gogl2015thestructureof pages 17-18, gogl2015thestructureof pages 18-20, gogl2015thestructureof pages 11-12). Cbk1 phosphorylation of Ssd1 permits translation of mRNAs encoding cell wall proteins required for bud growth, while phosphorylation of Ace2 activates transcription of cell separation genes (gogl2015thestructureof pages 12-15). The connection of DSF2 to this network—through conserved phosphorylation motifs, bud neck localization, and genetic interaction with MPT5—suggests Dsf2 participates in this signaling axis, potentially as a scaffold or adaptor that facilitates pathway component interactions at the site of cytokinesis.</p>
+<h2 id="6-evolutionary-conservation-and-ortholog-analysis">6. Evolutionary Conservation and Ortholog Analysis</h2>
+<p>Comparative genomic and phylogenetic analyses have identified orthologs of DSF2 in other fungi, providing additional functional insight:</p>
+<table>
+<thead>
+<tr>
+<th>Protein Name</th>
+<th>Organism</th>
+<th>Domain Architecture</th>
+<th>Subcellular Localization</th>
+<th>Known Function</th>
+<th>Relationship to DSF2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dsf2</strong></td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Sel1-like repeats; TPR-like helical domain; Mitotic_Regulator domain</td>
+<td>Bud neck; relocalizes to cytoplasm upon DNA replication stress</td>
+<td>Best-supported as a non-enzymatic adaptor/scaffold protein associated with bud-neck/cell-division functions; genetically linked to <strong>MPT5</strong> and inferred to connect to the <strong>Cbk1/RAM</strong> network (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2, gogl2015thestructureof pages 12-15, zhang2025theyeastgsk3 pages 14-15)</td>
+<td>Self</td>
+</tr>
+<tr>
+<td><strong>Nif1</strong></td>
+<td><em>Schizosaccharomyces pombe</em></td>
+<td>Sel1-like repeats</td>
+<td>Not clearly established in the retrieved evidence</td>
+<td>Mitotic inhibitor acting via interaction with <strong>Nim1</strong> protein kinase (mamun2023largescaleidentificationof pages 12-13)</td>
+<td>Ortholog</td>
+</tr>
+<tr>
+<td><strong>SppD</strong></td>
+<td><em>Aspergillus oryzae</em></td>
+<td>3 SEL1 domain repeats</td>
+<td>Septum / septal pore; accumulates at septal structures involved in wound response</td>
+<td>Required for septal pore plugging upon wounding; proposed to have evolved in Pezizomycotina by gene duplication from a yeast-like orthologous lineage (mamun2023largescaleidentificationof pages 7-8, mamun2023largescaleidentificationof pages 12-13)</td>
+<td>Ortholog; likely lineage-specialized derivative</td>
+</tr>
+<tr>
+<td><strong>Hrd3</strong></td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>12 Sel1-like repeats</td>
+<td>ER membrane / ER lumenal HRD complex</td>
+<td>ERAD substrate-recognition adaptor/scaffold in the <strong>Hrd1</strong> complex; Sel1-like repeats mediate substrate and partner recognition (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 6-8)</td>
+<td>Same Sel1-like repeat protein family</td>
+</tr>
+<tr>
+<td><strong>Chs4</strong></td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>7 Sel1-like repeats</td>
+<td>Septum / bud neck</td>
+<td>Activator and recruitment factor for chitin synthase III during septum formation; adaptor/scaffold role in cytokinetic cell-wall assembly (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2)</td>
+<td>Same Sel1-like repeat protein family</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares DSF2 with orthologous or domain-related fungal Sel1-like repeat proteins to clarify what is directly known about DSF2 versus what can be inferred from better-characterized family members. It is useful for interpreting DSF2 as a likely scaffold/adaptor protein involved in cell division-related processes.</em></p>
+<p>In <em>Schizosaccharomyces pombe</em>, the ortholog <strong>Nif1</strong> functions as a <strong>mitotic inhibitor</strong> through interaction with the Nim1 protein kinase, establishing a direct connection between this protein family and cell cycle control (mamun2023largescaleidentificationof pages 12-13). In <em>Aspergillus oryzae</em>, the ortholog <strong>SppD</strong> contains three SEL1 domain repeats and was identified in a large-scale screening of genes involved in <strong>septal pore plugging</strong> upon hyphal wounding (mamun2023largescaleidentificationof pages 7-8). Mamun et al. (2023) specifically noted that "Nif1 and Dsf2 are orthologs of SppD in fission and budding yeasts, respectively," and that "Nif1 acts as a mitotic inhibitor via interaction with Nim1 protein kinase, whereas Dsf2 localizes to the bud neck, the site of cytokinesis," suggesting a possible role of SppD in cell-cycle regulation or cytokinesis (mamun2023largescaleidentificationof pages 12-13). However, the SppD subclade in Pezizomycotina is distinct from the subclade containing yeast orthologs, and the authors hypothesize that SppD evolved through gene duplication to perform septal pore-related functions specific to filamentous fungi (mamun2023largescaleidentificationof pages 12-13).</p>
+<h2 id="7-proposed-functional-model">7. Proposed Functional Model</h2>
+<p>Based on the convergent lines of evidence, Dsf2 is best understood as a <strong>non-enzymatic adaptor/scaffold protein</strong> that functions at the <strong>bud neck</strong> in processes related to <strong>cell division and cytokinesis</strong>. Its Sel1-like repeat architecture is consistent with a role as a protein-protein interaction platform, analogous to other yeast SLR proteins such as Hrd3 (ERAD substrate recognition) and Chs4 (chitin synthase III activation at the septum) (mittl2007sel1likerepeatproteins pages 5-6, mittl2007sel1likerepeatproteins pages 1-2, mittl2007sel1likerepeatproteins pages 6-8). Its dynamic localization—from the bud neck to the cytoplasm upon DNA replication stress—implies cell-cycle-dependent regulation (zhang2025theyeastgsk3 pages 14-15).</p>
+<p>The genetic interaction with MPT5 (a PUF-family mRNA regulator) and the presence of conserved Cbk1 phosphorylation consensus sites place Dsf2 within the broader <strong>Cbk1/RAM signaling network</strong> that coordinates post-transcriptional control of cell wall biogenesis and cell separation with cell cycle progression (gogl2015thestructureof pages 12-15, gogl2015thestructureof pages 18-20). The Mitotic Regulator domain annotation and orthology with the fission yeast mitotic inhibitor Nif1 further support a cell-cycle regulatory function (mamun2023largescaleidentificationof pages 12-13).</p>
+<h2 id="8-knowledge-gaps-and-limitations">8. Knowledge Gaps and Limitations</h2>
+<p>It is important to note that DSF2 remains incompletely characterized. Key unresolved questions include:</p>
+<ol>
+<li><strong>Precise molecular function</strong>: No specific binding partners have been identified for Dsf2, and its exact role at the bud neck remains undefined.</li>
+<li><strong>Cbk1 phosphorylation</strong>: While Dsf2 contains conserved Cbk1 consensus phosphorylation sites, direct phosphorylation by Cbk1 has not been experimentally demonstrated.</li>
+<li><strong>Mechanism of MPT5 suppression</strong>: The molecular mechanism by which DSF2 deletion suppresses mpt5 mutation phenotypes is unknown.</li>
+<li><strong>Enzymatic activity</strong>: Dsf2 is predicted to lack enzymatic activity based on its domain architecture, but this has not been formally tested.</li>
+<li><strong>Physical interaction partners</strong>: No large-scale interaction studies have identified specific Dsf2-interacting proteins at the bud neck.</li>
+</ol>
+<p>In summary, DSF2 encodes a Sel1-like repeat-containing adaptor protein that localizes to the bud neck during cell division, is integrated into the Cbk1/RAM signaling network through conserved phosphorylation motifs, and functions in a pathway that intersects with MPT5-mediated post-transcriptional regulation. Its precise molecular role likely involves scaffolding protein-protein interactions at the site of cytokinesis, consistent with the established functions of the SLR protein family across eukaryotes.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(coorey2012anovelhighthroughput pages 83-88): Namal V C Coorey. A novel high-throughput screening tool in saccharomyces cerevisiae. ArXiv, 2012. URL: https://doi.org/10.26686/wgtn.17004727.v1, doi:10.26686/wgtn.17004727.v1. This article has 0 citations.</p>
+</li>
+<li>
+<p>(zhang2025theyeastgsk3 pages 14-15): Fan Zhang, Yingzhi Tang, Houjiang Zhou, Kaiqiang Li, James A. West, Julian L. Griffin, Kathryn S. Lilley, and Nianshu Zhang. The yeast gsk-3 kinase mck1 is necessary for cell wall remodeling in glucose-starved and cell wall-stressed cells. International Journal of Molecular Sciences, 26:3534, Apr 2025. URL: https://doi.org/10.3390/ijms26083534, doi:10.3390/ijms26083534. This article has 0 citations.</p>
+</li>
+<li>
+<p>(mittl2007sel1likerepeatproteins pages 5-6): Peer R.E. Mittl and Wulf Schneider-Brachert. Sel1-like repeat proteins in signal transduction. Cellular signalling, 19 1:20-31, Jan 2007. URL: https://doi.org/10.1016/j.cellsig.2006.05.034, doi:10.1016/j.cellsig.2006.05.034. This article has 215 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mittl2007sel1likerepeatproteins pages 1-2): Peer R.E. Mittl and Wulf Schneider-Brachert. Sel1-like repeat proteins in signal transduction. Cellular signalling, 19 1:20-31, Jan 2007. URL: https://doi.org/10.1016/j.cellsig.2006.05.034, doi:10.1016/j.cellsig.2006.05.034. This article has 215 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mittl2007sel1likerepeatproteins pages 6-8): Peer R.E. Mittl and Wulf Schneider-Brachert. Sel1-like repeat proteins in signal transduction. Cellular signalling, 19 1:20-31, Jan 2007. URL: https://doi.org/10.1016/j.cellsig.2006.05.034, doi:10.1016/j.cellsig.2006.05.034. This article has 215 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mamun2023largescaleidentificationof pages 12-13): Md. Abdulla Al Mamun, Wei Cao, Shugo Nakamura, and Jun-ichi Maruyama. Large-scale identification of genes involved in septal pore plugging in multicellular fungi. Nature Communications, Mar 2023. URL: https://doi.org/10.1038/s41467-023-36925-y, doi:10.1038/s41467-023-36925-y. This article has 16 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gogl2015thestructureof pages 12-15): Gergő Gógl, Kyle D. Schneider, Brian J. Yeh, Nashida Alam, Alex N. Nguyen Ba, Alan M. Moses, Csaba Hetényi, Attila Reményi, and Eric L. Weiss. The structure of an ndr/lats kinase–mob complex reveals a novel kinase–coactivator system and substrate docking mechanism. PLOS Biology, 13:e1002146, May 2015. URL: https://doi.org/10.1371/journal.pbio.1002146, doi:10.1371/journal.pbio.1002146. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2025theyeastgsk3 pages 13-14): Fan Zhang, Yingzhi Tang, Houjiang Zhou, Kaiqiang Li, James A. West, Julian L. Griffin, Kathryn S. Lilley, and Nianshu Zhang. The yeast gsk-3 kinase mck1 is necessary for cell wall remodeling in glucose-starved and cell wall-stressed cells. International Journal of Molecular Sciences, 26:3534, Apr 2025. URL: https://doi.org/10.3390/ijms26083534, doi:10.3390/ijms26083534. This article has 0 citations.</p>
+</li>
+<li>
+<p>(gogl2015thestructureof pages 15-17): Gergő Gógl, Kyle D. Schneider, Brian J. Yeh, Nashida Alam, Alex N. Nguyen Ba, Alan M. Moses, Csaba Hetényi, Attila Reményi, and Eric L. Weiss. The structure of an ndr/lats kinase–mob complex reveals a novel kinase–coactivator system and substrate docking mechanism. PLOS Biology, 13:e1002146, May 2015. URL: https://doi.org/10.1371/journal.pbio.1002146, doi:10.1371/journal.pbio.1002146. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gogl2015thestructureof pages 18-20): Gergő Gógl, Kyle D. Schneider, Brian J. Yeh, Nashida Alam, Alex N. Nguyen Ba, Alan M. Moses, Csaba Hetényi, Attila Reményi, and Eric L. Weiss. The structure of an ndr/lats kinase–mob complex reveals a novel kinase–coactivator system and substrate docking mechanism. PLOS Biology, 13:e1002146, May 2015. URL: https://doi.org/10.1371/journal.pbio.1002146, doi:10.1371/journal.pbio.1002146. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gogl2015thestructureof pages 17-18): Gergő Gógl, Kyle D. Schneider, Brian J. Yeh, Nashida Alam, Alex N. Nguyen Ba, Alan M. Moses, Csaba Hetényi, Attila Reményi, and Eric L. Weiss. The structure of an ndr/lats kinase–mob complex reveals a novel kinase–coactivator system and substrate docking mechanism. PLOS Biology, 13:e1002146, May 2015. URL: https://doi.org/10.1371/journal.pbio.1002146, doi:10.1371/journal.pbio.1002146. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gogl2015thestructureof pages 11-12): Gergő Gógl, Kyle D. Schneider, Brian J. Yeh, Nashida Alam, Alex N. Nguyen Ba, Alan M. Moses, Csaba Hetényi, Attila Reményi, and Eric L. Weiss. The structure of an ndr/lats kinase–mob complex reveals a novel kinase–coactivator system and substrate docking mechanism. PLOS Biology, 13:e1002146, May 2015. URL: https://doi.org/10.1371/journal.pbio.1002146, doi:10.1371/journal.pbio.1002146. This article has 57 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mamun2023largescaleidentificationof pages 7-8): Md. Abdulla Al Mamun, Wei Cao, Shugo Nakamura, and Jun-ichi Maruyama. Large-scale identification of genes involved in septal pore plugging in multicellular fungi. Nature Communications, Mar 2023. URL: https://doi.org/10.1038/s41467-023-36925-y, doi:10.1038/s41467-023-36925-y. This article has 16 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="DSF2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="DSF2-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mamun2023largescaleidentificationof pages 12-13</li>
+<li>gogl2015thestructureof pages 18-20</li>
+<li>gogl2015thestructureof pages 12-15</li>
+<li>mamun2023largescaleidentificationof pages 7-8</li>
+<li>coorey2012anovelhighthroughput pages 83-88</li>
+<li>gogl2015thestructureof pages 15-17</li>
+<li>gogl2015thestructureof pages 17-18</li>
+<li>gogl2015thestructureof pages 11-12</li>
+<li>RK</li>
+<li>ST</li>
+<li>YF</li>
+<li>https://doi.org/10.26686/wgtn.17004727.v1,</li>
+<li>https://doi.org/10.3390/ijms26083534,</li>
+<li>https://doi.org/10.1016/j.cellsig.2006.05.034,</li>
+<li>https://doi.org/10.1038/s41467-023-36925-y,</li>
+<li>https://doi.org/10.1371/journal.pbio.1002146,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DSF2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38213" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dsf2-ybr007c-p38213-curation-notes">DSF2 (YBR007C / P38213) — curation notes</h1>
+<p>Journal-style notes for the AI GO review of <em>Saccharomyces cerevisiae</em> DSF2. Provenance is<br />
+recorded inline as <code>[PMID:xxxx "verbatim supporting text"]</code> or <code>[SGD]</code>/<code>[UniProt P38213]</code>.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li><strong>Standard name:</strong> DSF2 = "<strong>D</strong>eletion <strong>S</strong>uppressor of mpt<strong>F</strong>ive" (MPT5 = PUF5). The<br />
+  UniProt alt name is "Deletion suppressor of MPT5 mutation protein 2" [UniProt P38213].</li>
+<li><strong>Systematic name:</strong> YBR007C (chromosome II). UniProt AC <strong>P38213</strong>; SGD <strong>S000000211</strong>.</li>
+<li>736 aa, ~82.3 kDa, PE 1 (protein-level evidence: detected by mass spectrometry).</li>
+<li><strong>Verified ORF</strong> in SGD, but SGD lists <strong>molecular function = Unknown</strong> and <strong>biological<br />
+  process = Unknown</strong> [SGD]. This is a genuinely understudied ("dark") gene.</li>
+</ul>
+<h2 id="critical-attribution-dsf2-vs-dsf1-are-not-homologs">CRITICAL attribution: DSF2 vs DSF1 are NOT homologs</h2>
+<p>The names DSF1 and DSF2 come from the <strong>same phenotypic screen</strong>, not from sequence homology.<br />
+Both <code>dsf1</code> (YEL070W) and <code>dsf2</code> (YBR007C) were recovered as deletion suppressors that rescue<br />
+the temperature-sensitivity of an mpt5Δ (puf5Δ) strain<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16328373" title="we screened deletion suppressors to rescue the temperature sensitivity of Deltampt5, and identified dsf1 (YEL070W), dsf2 (YBR007C), sir2, sir3, sir4 and swe1">PMID:16328373</a>.</p>
+<ul>
+<li><strong>DSF1 (YEL070W)</strong> is a <strong>mannitol dehydrogenase</strong> (alias MAN1), an oxidoreductase enzyme<br />
+  with a paralog MAN2 [SGD].</li>
+<li><strong>DSF2 (YBR007C)</strong> is a <strong>Sel1-like / TPR-repeat protein</strong> with no known catalytic activity.</li>
+</ul>
+<p>So DSF1 and DSF2 are functionally and structurally <strong>unrelated</strong>; the shared "Dsf" prefix is a<br />
+phenotype label. DSF2-specific evidence must not be conflated with DSF1 enzymology. DSF2's<br />
+closest characterized family member is instead the fission-yeast <strong>Nif1</strong> (see Orthology).</p>
+<h2 id="domain-architecture-inline-analysis-of-dsf2-uniprottxt">Domain architecture (inline analysis of DSF2-uniprot.txt)</h2>
+<p>Reading <code>DSF2-uniprot.txt</code> (P38213):</p>
+<ul>
+<li><strong>N-terminal ~1–461: extensively disordered / low-complexity.</strong> UniProt/MobiDB-lite marks<br />
+  disordered REGIONs at 1–46, 178–208, 229–410, 440–461, with many polar / low-complexity /<br />
+  basic-and-acidic COMPBIAS stretches [UniProt P38213]. This half of the protein is a large<br />
+  intrinsically-disordered region with no recognizable folded domain.</li>
+<li><strong>C-terminal ~560–736: Sel1-like TPR/α-solenoid.</strong> UniProt records SMART <strong>SM00671 SEL1</strong><br />
+  (Sel1-like repeat), InterPro <strong>IPR006597 (Sel1-like)</strong>, <strong>IPR011990 (TPR-like helical domain<br />
+  superfamily)</strong>, Gene3D <strong>1.25.40.10 (TPR domain)</strong>, and SUPFAM <strong>SSF81901 (HCP-like)</strong><br />
+  [UniProt P38213]. Sel1/TPR repeats form α-helical solenoids that are generic<br />
+<strong>protein–protein interaction / scaffolding</strong> modules — they do NOT specify a catalytic<br />
+  activity or a particular partner.</li>
+<li><strong>Phosphoprotein.</strong> UniProt cites two large-scale phosphoproteomics/Cdk1-substrate studies<br />
+  (PMID:18407956, PMID:19779198) as evidence at protein level. DSF2 is not named in the cached<br />
+  text of either (the hits are in supplementary tables), so specific phosphosites are not<br />
+  extracted here; the safe statement is that DSF2 is a detected phosphoprotein.</li>
+</ul>
+<p>Interpretation: a disordered N-terminal region plus a C-terminal Sel1/TPR solenoid is the<br />
+architecture of a <strong>scaffold / adaptor</strong>, but the architecture alone does not tell us <em>which</em><br />
+complex or <em>which</em> partners, and there is no experimental interactor that pins down a molecular<br />
+function. Domain content is therefore consistent with, but not proof of, an adaptor role.</p>
+<h2 id="orthology-family-context-panther-pthr43628">Orthology / family context (PANTHER PTHR43628)</h2>
+<ul>
+<li>UniProt assigns DSF2 to <strong>PANTHER PTHR43628</strong> (family), subfamily <strong>PTHR43628:SF11 "PROTEIN<br />
+  DSF2"</strong> [UniProt P38213].</li>
+<li>The reviewed members of PTHR43628 (<code>interpro/panther/PTHR43628/PTHR43628-entries.csv</code>) are<br />
+  DSF2 (yeast), <strong>S. pombe Nif1 (P87159, "Mitosis inhibitor nif1", SPBC23G7.04c)</strong>, and several<br />
+  bacterial/viral Sel1-repeat proteins (E. coli YjcO/YbeT, mimivirus L18). The family is united<br />
+  by <strong>Sel1-like repeats</strong>, i.e. it is a <em>structural</em> family, not a family with a single shared<br />
+  biochemistry.</li>
+<li>The PANTHER family name "Mitotic Progression Regulator" and its description are<br />
+<strong>LLM-generated and unreviewed</strong> (<code>llm: true, checked: false</code> in the metadata YAML) — treat<br />
+  as a hypothesis, not evidence.</li>
+<li><strong>S. pombe Nif1</strong> negatively regulates mitotic entry by binding and inhibiting the Nim1/Cdr1<br />
+  kinase (Nim1 normally inhibits Wee1, so Nif1 keeps Wee1 active → Cdc2/Cdk1 stays inhibited)<br />
+  [Wu &amp; Russell 1997 EMBO J 16:1342, PMID:9135149 (Nif1 novel mitotic inhibitor); via WebSearch].<br />
+  This is the biological source of the DSF2 <strong>IBA</strong> annotations (GOA <code>with</code> field =<br />
+<code>PomBase:SPBC23G7.04c</code>).</li>
+</ul>
+<p><strong>Caveat on the IBA propagation:</strong> the inference DSF2 → "negative regulation of G2/M transition"<br />
++ "cell division site" is a <strong>phylogenetic (IBA) transfer from a distant fungal ortholog that<br />
+shares only Sel1/TPR repeats</strong>. There is <strong>no S. cerevisiae experimental evidence</strong> that DSF2<br />
+acts on Swe1 (the budding-yeast Wee1), Cdc28/Cdk1, or a Nim1-family kinase. The IBA is a<br />
+reasonable placeholder but is not independently corroborated for DSF2.</p>
+<h2 id="what-is-experimentally-known-about-dsf2-budding-yeast">What is experimentally KNOWN about DSF2 (budding yeast)</h2>
+<ol>
+<li><strong>Genetic:</strong> dsf2 deletion suppresses (rescues) the temperature-sensitivity of mpt5Δ/puf5Δ,<br />
+   and partially suppresses its hydroxyurea sensitivity<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16328373" title="identified dsf1 (YEL070W), dsf2 (YBR007C), sir2, sir3, sir4 and swe1">PMID:16328373</a>;<br />
+   [UniProt P38213 DISRUPTION PHENOTYPE "Rescues temperature-sensitivity of MPT5 deletion. Partially suppresses the hydroxyurea (HU) sensitivity of MPT5 deletion."].<br />
+   Note this is a <strong>suppressor genetic interaction</strong>, i.e. loss of DSF2 compensates for loss of<br />
+   the Puf5 RNA-binding protein; it does not define DSF2's own molecular function.</li>
+<li><strong>Localization:</strong> Dsf2-GFP localizes to the <strong>bud tip / bud neck</strong> in unperturbed cells and<br />
+<strong>relocalizes to the cytoplasm upon DNA-replication stress (HU/MMS)</strong> in a genome-wide GFP<br />
+   screen [SGD; PMID:22842922]. This is the basis of the HDA "cellular bud tip" (GO:0005934)<br />
+   annotation. DSF2 is not discussed individually in the PMID:22842922 text (it is one of the<br />
+   254 relocalizing proteins scored in the supplementary tables), so the localization is a<br />
+   high-throughput imaging call, not a dedicated study of DSF2.</li>
+<li><strong>Expression:</strong> low-abundance protein (~377 molecules/cell log phase per UniProt<br />
+   [UniProt P38213 MISCELLANEOUS]; ~1,600/cell per SGD).</li>
+<li><strong>Post-translational:</strong> detected as a phosphoprotein in Cdk1-substrate / phosphoproteome<br />
+   screens (PMID:19779198, PMID:18407956) — DSF2 in the supplementary hit lists.</li>
+<li><strong>Deletion phenotypes (SGD systematic data):</strong> increased replicative lifespan; decreased<br />
+   competitive fitness; sensitivity to the calcium chelator BAPTA [SGD]. These are pleiotropic<br />
+   fitness readouts, not a mechanistic function.</li>
+</ol>
+<h2 id="what-is-not-known-candidate-knowledge-gaps">What is NOT known (candidate knowledge gaps)</h2>
+<ul>
+<li><strong>Molecular function is unknown.</strong> No catalytic activity is expected (Sel1/TPR = binding<br />
+  module). No specific binding partner has been shown to define an adaptor/scaffold role.<br />
+  → MF_DARK.</li>
+<li><strong>Biological process is unknown.</strong> The only BP annotation is the distant-ortholog IBA<br />
+  (negative regulation of G2/M). There is no direct evidence DSF2 regulates the budding-yeast<br />
+  cell cycle, and the suppressor and lifespan phenotypes could reflect an unrelated process.</li>
+<li><strong>Mechanism of mpt5Δ suppression is unknown</strong> — how loss of a bud-tip Sel1/TPR protein<br />
+  rescues loss of the Puf5 RNA-binding protein is not established.</li>
+<li><strong>Relationship to DNA-replication-stress relocalization is unexplained</strong> — why a bud-tip<br />
+  protein moves to the cytoplasm under HU/MMS, and whether this matters functionally, is unknown.</li>
+<li><strong>Redundancy:</strong> DSF2 has NO close sequence paralog in S. cerevisiae (it is NOT a paralog of<br />
+  DSF1); the only same-family protein is the distant fission-yeast Nif1. So genetic redundancy<br />
+  is unlikely to explain the mild phenotypes; the weak phenotypes more likely reflect a<br />
+  conditional / accessory role.</li>
+</ul>
+<h2 id="go-annotation-review-plan">GO annotation review plan</h2>
+<p>Five GOA annotations:</p>
+<table>
+<thead>
+<tr>
+<th>term</th>
+<th>ev</th>
+<th>ref</th>
+<th>plan</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0010972 neg reg G2/M transition (P, involved_in)</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>KEEP_AS_NON_CORE — distant-ortholog (Nif1) inference; plausible but not corroborated in S. cerevisiae; not a core function</td>
+</tr>
+<tr>
+<td>GO:0032153 cell division site (C, is_active_in)</td>
+<td>IBA</td>
+<td>GO_REF:0000033</td>
+<td>KEEP_AS_NON_CORE — same Nif1 IBA source; consistent with bud-tip/bud-neck localization but low-confidence for "is_active_in"</td>
+</tr>
+<tr>
+<td>GO:0005934 cellular bud tip (C, located_in)</td>
+<td>HDA</td>
+<td>PMID:22842922</td>
+<td>ACCEPT — high-throughput GFP localization, direct experimental (HDA) for DSF2</td>
+</tr>
+<tr>
+<td>GO:0003674 molecular_function (root)</td>
+<td>ND</td>
+<td>GO_REF:0000015</td>
+<td>ACCEPT — correctly records MF unknown; honest root annotation</td>
+</tr>
+<tr>
+<td>GO:0008150 biological_process (root)</td>
+<td>ND</td>
+<td>GO_REF:0000015</td>
+<td>ACCEPT — correctly records BP unknown</td>
+</tr>
+</tbody>
+</table>
+<p>Rationale for keeping the IBAs rather than removing: per CLAUDE.md we do not REMOVE on<br />
+paralog/ortholog grounds alone; the Nif1 IBA is a legitimate phylogenetic inference and the<br />
+bud-tip/bud-neck localization is loosely consistent with a cell-division-site association. But<br />
+neither is corroborated by DSF2 experiment, so they are marked non-core and the honest position<br />
+(MF/BP unknown) is retained in core_functions/knowledge_gaps.</p>
+<h2 id="falcon-deep-research-dsf2-deep-research-falconmd-corroboration-and-cautions">Falcon deep-research (DSF2-deep-research-falcon.md) — corroboration and cautions</h2>
+<p>The falcon report (2026-07-05, 16 citations) corroborates the core picture: Sel1-like/TPR<br />
+scaffold with no catalytic domain, bud-neck localization, relocalization to the cytoplasm under<br />
+DNA-replication stress, mpt5/puf5 deletion-suppressor origin, and Nif1 (S. pombe) as the<br />
+same-family mitotic inhibitor. It adds two <em>inferences</em> that I deliberately did NOT promote into<br />
+the review's supported claims because they are not verified from primary full text here:</p>
+<ul>
+<li>A proposed link to the <strong>Cbk1 / RAM</strong> signaling network (Dsf2 has Cbk1 phospho-consensus<br />
+  motifs but LACKS the canonical Cbk1 docking motif — a "non-docking putative substrate", per<br />
+  Gögl et al. 2015). This is an inference from motif presence, and even the report states the<br />
+  in-vivo phosphorylation evidence for Dsf2 specifically "remains indirect". Treated as a lead.</li>
+<li>Specific phosphosites (S391/S395) attributed to a 2025 GSK3 phosphoproteomics preprint.<br />
+  Unverified against cached full text; not cited in the review.</li>
+</ul>
+<p>The falcon report's citations use internal keys (e.g. <code>gogl2015thestructureof</code>), not PMIDs, so<br />
+per project policy they are NOT used as <code>supported_by</code> in the review; the review is grounded only<br />
+on verified PMIDs (16328373, 22842922), UniProt P38213, and the PANTHER family file. The falcon<br />
+file is retained in the gene folder as the deep-research artifact.</p>
+<h2 id="core_functions-position">core_functions position</h2>
+<p>Given MF and BP are genuinely unknown, <code>core_functions</code> will be <strong>minimal</strong>: a single entry<br />
+capturing the best-supported, domain-grounded statement — that DSF2 is a Sel1-like/TPR-repeat<br />
+protein consistent with a protein-interaction/scaffold module localizing to the bud tip/neck —<br />
+using the MF root (GO:0003674) since no specific MF term is defensible, and locations<br />
+(GO:0005934). The real deliverable is <code>knowledge_gaps</code>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P38213
+gene_symbol: DSF2
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  DSF2 (YBR007C) is a 736-residue protein of the budding yeast Saccharomyces
+  cerevisiae composed of a large intrinsically disordered / low-complexity
+  N-terminal half (~residues 1-461) and a C-terminal Sel1-like tetratricopeptide
+  (TPR) repeat solenoid (~residues 560-736). Sel1/TPR repeats are alpha-helical
+  scaffolds that typically mediate protein-protein interactions, and DSF2 has no
+  predicted catalytic domain. The protein localizes to the bud tip and bud neck
+  of growing cells and moves to the cytoplasm during DNA-replication stress. It
+  is a low-abundance phosphoprotein. Its molecular function and the biological
+  process it participates in are not experimentally established. DSF2 belongs to
+  a Sel1-repeat protein family (PANTHER PTHR43628) whose best-characterized
+  member is the fission-yeast mitotic inhibitor Nif1, which negatively regulates
+  entry into mitosis; whether DSF2 has an analogous cell-cycle role in
+  S. cerevisiae has not been demonstrated. DSF2 was originally identified as a
+  deletion suppressor of the puf5/mpt5 RNA-binding-protein deletion, a genetic
+  relationship that does not by itself define its own function. Despite the
+  shared &#34;Dsf&#34; name, DSF2 is not a homolog of DSF1 (YEL070W, a mannitol
+  dehydrogenase); both were merely recovered in the same suppressor screen.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:22842922
+  title: Dissecting DNA damage response pathways by analysing protein localization
+    and abundance changes during DNA replication stress.
+  findings:
+  - statement: &gt;-
+      Genome-wide GFP screen scoring subcellular localization changes during DNA
+      replication stress; one localization-change class captures proteins moving
+      away from the bud neck / bud tip, and HU/MMS caused a decrease in
+      bud-neck/bud-tip localization. DSF2 is one of the proteins scored (in the
+      supplementary datasets), which is the basis for its high-throughput
+      (HDA) bud-tip localization annotation.
+    supporting_text: &gt;-
+      one that reflects movement away from the budneck or bud tip
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text confirmed. This is a large-scale GFP localization screen;
+      DSF2 is not discussed by name in the main text (it is one of hundreds of
+      scored strains in the supplementary tables). It legitimately supports the
+      HDA &#34;cellular bud tip&#34; localization annotation but does not provide a
+      dedicated functional characterization of DSF2.
+- id: file:yeast/DSF2/DSF2-deep-research-falcon.md
+  title: Falcon deep-research report on S. cerevisiae DSF2 (YBR007C)
+  findings:
+  - statement: &gt;-
+      Domain-based synthesis: characterized Sel1-like-repeat proteins act as
+      non-enzymatic adaptor/scaffold proteins; on this basis DSF2 is best
+      interpreted as a scaffold/adaptor at the bud neck. The report also raises
+      (as unverified inferences) a possible link to the Cbk1/RAM network and
+      specific phosphosites; these are not adopted as supported claims here.
+    supporting_text: &gt;-
+      non-enzymatic adaptor or scaffold protein
+- id: PMID:16328373
+  title: Suppressor analysis of the mpt5/htr1/uth4/puf5 deletion in Saccharomyces
+    cerevisiae.
+  findings:
+  - statement: &gt;-
+      Screen for deletion suppressors that rescue the temperature-sensitivity of
+      an mpt5 (puf5) deletion identified dsf1 (YEL070W) and dsf2 (YBR007C), among
+      others. This is the origin of the DSF2 gene name and its only dedicated
+      functional study; it establishes a genetic suppressor relationship, not a
+      molecular function.
+    supporting_text: &gt;-
+      dsf1 (YEL070W), dsf2 (YBR007C)
+  - statement: &gt;-
+      The mpt5 deletion strain is hydroxyurea (HU) sensitive; DSF2 loss partially
+      suppresses this HU sensitivity (per UniProt disruption phenotype).
+    supporting_text: &gt;-
+      The Deltampt5 disruptant was also hydroxyurea (HU) sensitive
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache (full_text_available: false). PubMed-verified. This is
+      the paper that named DSF2 and is the primary DSF2-specific functional
+      report, but it only demonstrates a genetic suppressor relationship with
+      mpt5/puf5; it does not assign DSF2 a molecular function or a direct
+      biological process. Note dsf1 and dsf2 are unrelated genes co-recovered in
+      the same screen.
+existing_annotations:
+- term:
+    id: GO:0010972
+    label: negative regulation of G2/M transition of mitotic cell cycle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference propagated from the fission-yeast ortholog
+      Nif1 (PomBase:SPBC23G7.04c), which negatively regulates mitotic entry.
+      DSF2 and Nif1 share only Sel1-like/TPR repeats, and no S. cerevisiae
+      experiment shows DSF2 acting on Swe1/Cdc28 or a Nim1-family kinase. The
+      inference is plausible but uncorroborated for budding yeast, so it is kept
+      as a non-core annotation rather than removed (per guidance not to REMOVE
+      on distant-ortholog grounds alone).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legitimate IBA transfer from Nif1 but not experimentally supported in
+      S. cerevisiae; DSF2&#39;s own biological process is unknown, so this cannot be
+      treated as a core function.
+    supported_by:
+    - reference_id: PMID:16328373
+      supporting_text: &gt;-
+        dsf1 (YEL070W), dsf2 (YBR007C)
+- term:
+    id: GO:0032153
+    label: cell division site
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IBA inference from the same Nif1 ortholog. It is loosely consistent with
+      the experimentally observed bud-tip / bud-neck localization of DSF2, but
+      &#34;is_active_in the cell division site&#34; asserts a functional activity there
+      that has not been demonstrated for DSF2. Retained as non-core given the
+      supporting localization but flagged as unverified for activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Distant-ortholog IBA; the localization component is consistent with HDA
+      bud-tip data, but no DSF2 activity at the division site is established.
+- term:
+    id: GO:0005934
+    label: cellular bud tip
+  evidence_type: HDA
+  original_reference_id: PMID:22842922
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct high-throughput GFP-localization evidence (HDA) that Dsf2 localizes
+      to the bud tip (and bud neck), from a genome-wide imaging screen. This is
+      the best-supported annotation for DSF2 and is accepted; it is the anchor
+      for the protein&#39;s cellular location, although localization alone does not
+      define molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (HDA) localization for DSF2 itself; consistent with SGD&#39;s
+      bud-tip/bud-neck localization and the replication-stress relocalization.
+    supported_by:
+    - reference_id: PMID:22842922
+      supporting_text: &gt;-
+        one that reflects movement away from the budneck or bud tip
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function annotation with ND (no biological data) evidence,
+      correctly recording that DSF2&#39;s molecular function is unknown. This is an
+      honest placeholder and is retained: no specific MF term is defensible from
+      current evidence (the Sel1/TPR architecture suggests a protein-interaction
+      module but no partner or activity has been shown).
+    action: ACCEPT
+    reason: &gt;-
+      Accurately reflects the genuine absence of molecular-function knowledge for
+      this dark gene.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process annotation with ND evidence, correctly recording
+      that DSF2&#39;s biological process is unknown at the level of direct evidence.
+      The only BP signal is the distant-ortholog IBA (negative regulation of
+      G2/M), which is not corroborated in S. cerevisiae, so retaining the ND root
+      is the honest position.
+    action: ACCEPT
+    reason: &gt;-
+      Accurately reflects the genuine absence of direct biological-process
+      knowledge for this dark gene.
+core_functions:
+- description: &gt;-
+    DSF2 is a Sel1-like / TPR-repeat protein with a large disordered N-terminal
+    region, an architecture consistent with a protein-interaction scaffold or
+    adaptor, that localizes to the bud tip and bud neck. No specific molecular
+    activity or partner has been experimentally established, so the molecular
+    function is recorded at the root; the confident, evidence-based statement is
+    the cellular location. The bud-tip localization is the only directly
+    demonstrated feature of DSF2&#39;s cellular behavior.
+  molecular_function:
+    id: GO:0003674
+    label: molecular_function
+  locations:
+  - id: GO:0005934
+    label: cellular bud tip
+  supported_by:
+  - reference_id: PMID:22842922
+    supporting_text: &gt;-
+      one that reflects movement away from the budneck or bud tip
+  - reference_id: PMID:16328373
+    supporting_text: &gt;-
+      dsf1 (YEL070W), dsf2 (YBR007C)
+  - reference_id: file:yeast/DSF2/DSF2-deep-research-falcon.md
+    supporting_text: &gt;-
+      non-enzymatic adaptor or scaffold protein
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of DSF2 is undetermined: no catalytic activity, no
+    specific binding partner, and no scaffold/adaptor role has been experimentally
+    demonstrated. The only structural clue is a C-terminal Sel1-like/TPR repeat
+    solenoid, a generic protein-interaction module that does not specify an
+    activity or a partner.
+  boundary: &gt;-
+    Established: DSF2 is a 736-aa protein with a disordered N-terminal half and a
+    C-terminal Sel1-like/TPR-repeat region (UniProt P38213: SMART SEL1, InterPro
+    IPR006597/IPR011990, SUPFAM HCP-like), it is a detected phosphoprotein, and
+    it localizes to the bud tip/neck. SGD lists molecular function as Unknown.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    DSF2 is a conserved (fungal-to-bacterial Sel1-repeat) yet functionally dark
+    protein; identifying its binding partner(s) would convert a structural guess
+    into an actual molecular function and likely explain its cell-cycle-adjacent
+    annotations.
+  resolution: &gt;-
+    Affinity purification / proximity labeling of Dsf2 to identify stable
+    interactors, followed by testing whether it acts as a scaffold for the
+    identified partner(s); a defensible specific MF term (e.g. a protein-binding
+    adaptor term) could then replace the MF root.
+  provenance:
+  - reference_id: PMID:16328373
+    supporting_text: &gt;-
+      dsf1 (YEL070W), dsf2 (YBR007C)
+  - reference_id: file:yeast/DSF2/DSF2-uniprot.txt
+    supporting_text: SEL1
+- gap_statement: &gt;-
+    The biological process DSF2 participates in is unknown. The sole process
+    annotation (negative regulation of the G2/M transition) is a phylogenetic
+    (IBA) inference from the distant fission-yeast ortholog Nif1 and has never
+    been tested in S. cerevisiae; whether DSF2 regulates the budding-yeast cell
+    cycle (e.g. via Swe1/Cdc28) is undetermined.
+  boundary: &gt;-
+    Established: the IBA is transferred from Nif1 (PomBase:SPBC23G7.04c), a
+    Sel1-repeat mitotic inhibitor. DSF2 shares only Sel1/TPR repeats with Nif1,
+    and there is no budding-yeast experimental link between DSF2 and the
+    Swe1-Cdc28 or Nim1-kinase machinery.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Confirming or refuting a cell-cycle role would either validate the
+    cross-species inference or reveal that DSF2&#39;s bud-tip localization serves an
+    unrelated process.
+  resolution: &gt;-
+    Epistasis and cell-length/cell-cycle phenotyping of dsf2 mutants combined
+    with genetic interaction tests against SWE1/CDC28; direct assay of whether
+    Dsf2 binds or modulates Swe1 or Cdc28.
+  provenance:
+  - reference_id: PMID:16328373
+    supporting_text: &gt;-
+      dsf1 (YEL070W), dsf2 (YBR007C)
+- gap_statement: &gt;-
+    The mechanism by which loss of DSF2 suppresses the temperature- and
+    hydroxyurea-sensitivity of a puf5/mpt5 deletion is unknown. It is not
+    established whether this reflects a direct functional relationship between
+    Dsf2 and the Puf5 RNA-binding pathway or an indirect, downstream effect.
+  boundary: &gt;-
+    Established: dsf2 was recovered as a deletion suppressor of mpt5/puf5
+    temperature-sensitivity, and DSF2 loss partially suppresses mpt5 HU
+    sensitivity (PMID:16328373; UniProt P38213 disruption phenotype). No
+    molecular mechanism for this suppression has been reported.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Puf5/Mpt5 is a well-studied Puf-family translational repressor; explaining
+    how a bud-tip Sel1-repeat protein feeds into its pathway could place DSF2 in
+    a defined regulatory network.
+  resolution: &gt;-
+    Dissect the suppression genetically (is it PUF4/IME4-dependent, as for other
+    mpt5 suppressors?) and test whether Dsf2 abundance or localization changes in
+    a puf5 background.
+  provenance:
+  - reference_id: PMID:16328373
+    supporting_text: &gt;-
+      The Deltampt5 disruptant was also hydroxyurea (HU) sensitive
+- gap_statement: &gt;-
+    The functional significance of DSF2 relocalizing from the bud tip/neck to
+    the cytoplasm during DNA-replication stress (HU/MMS) is unknown; it is not
+    known whether this movement is part of a stress response or an incidental
+    consequence of bud-neck disassembly.
+  boundary: &gt;-
+    Established: a genome-wide GFP screen scored DSF2 among proteins that lose
+    bud-neck/bud-tip localization under replication stress (PMID:22842922; SGD).
+    No follow-up has tested the consequence of this relocalization.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Stress-induced relocalization is often functionally informative; resolving it
+    could link DSF2&#39;s location to a specific process.
+  resolution: &gt;-
+    Test whether blocking DSF2 relocalization (or deleting DSF2) alters
+    replication-stress survival, and identify the signal driving the move.
+  provenance:
+  - reference_id: PMID:22842922
+    supporting_text: &gt;-
+      one that reflects movement away from the budneck or bud tip
+suggested_questions:
+- question: &gt;-
+    What are the physiological binding partners of Dsf2, and do they define it as
+    a scaffold/adaptor at the bud tip or bud neck?
+- question: &gt;-
+    Does DSF2 have any role in the budding-yeast G2/M transition (e.g. through
+    Swe1 or Cdc28), as its phylogenetic annotation from Nif1 would predict?
+- question: &gt;-
+    By what mechanism does dsf2 deletion suppress the temperature and hydroxyurea
+    sensitivity of a puf5/mpt5 deletion?
+suggested_experiments:
+- description: &gt;-
+    Affinity purification-mass spectrometry (or proximity labeling such as
+    BioID/TurboID) of endogenously tagged Dsf2 in log-phase and replication-stress
+    conditions to identify stable and stress-dependent interactors.
+  hypothesis: &gt;-
+    Dsf2 uses its Sel1/TPR solenoid to scaffold a specific partner at the bud
+    tip/neck; identifying that partner would define its molecular function.
+  experiment_type: affinity purification-mass spectrometry
+- description: &gt;-
+    Quantitative cell-morphology and cell-cycle profiling of dsf2 deletion and
+    overexpression strains, plus genetic-interaction tests with SWE1 and CDC28,
+    to test the phylogenetically inferred negative regulation of G2/M.
+  hypothesis: &gt;-
+    If the Nif1-based inference holds, perturbing DSF2 will change cell length or
+    G2/M timing and interact genetically with the Swe1-Cdc28 axis.
+  experiment_type: genetic interaction / cell-cycle phenotyping
+- description: &gt;-
+    Epistasis analysis of the dsf2-mediated suppression of puf5/mpt5 phenotypes,
+    testing dependence on known mpt5-suppression modifiers (e.g. PUF4, IME4) and
+    whether Dsf2 abundance/localization changes in a puf5 background.
+  hypothesis: &gt;-
+    dsf2 suppression of mpt5 operates through a definable branch of the Puf-family
+    regulatory network rather than a nonspecific fitness effect.
+  experiment_type: genetic epistasis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
