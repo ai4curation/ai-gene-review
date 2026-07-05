@@ -1,0 +1,3720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bbs-4 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>bbs-4</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q5CZ52" target="_blank" class="term-link">
+                        Q5CZ52
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "bbs-4";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q5CZ52" data-a="DESCRIPTION: BBS-4 is a tetratricopeptide-repeat (TPR) protein ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BBS-4 is a tetratricopeptide-repeat (TPR) protein that is a peripheral structural subunit of the BBSome, an octameric complex (BBS-1, BBS-2, BBS-4, BBS-5, OSM-12/BBS-7, BBS-8/TTC-8, BBS-9) that couples intraflagellar transport (IFT) to the trafficking of membrane cargo at sensory cilia. Like the COPI, COPII and clathrin coats it structurally resembles, the BBSome assembles IFT particles at the ciliary base, binds the anterograde IFT particle, and reaches the ciliary tip where it regulates IFT turnaround and recycling. Within the complex BBS-4 binds directly to BBS-5 through its C-terminal TPR region and localizes to the ciliary base/basal body and along cilia. In C. elegans, BBS-4 is functionally redundant with BBS-5: single mutants have essentially normal cilia, whereas bbs-4; bbs-5 double mutants phenocopy loss of the whole BBSome, showing IFT-A/IFT-B uncoupling, disrupted ciliogenesis, and defective polycystin-mediated cilia signaling. Beyond building cilia, BBS-4 (redundantly with BBS-5) is required for the removal of ciliary sensory receptors — including polycystin-2/PKD-2, the TRP channel OSM-9 and the GPCR ODR-10 — from cilia for lysosome-targeted degradation, acting upstream of the early endosome at the ciliary base. A conserved C-terminal residue (A388 in the worm protein, A364 in human BBS4) is required for the BBS-4–BBS-5 interaction and for ciliary targeting, and its mutation models human Bardet-Biedl syndrome.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                                    GO:0034464
+                                </a>
+                            </span>
+                            <span class="term-label">BBSome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0034464" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4 is a bona fide subunit of the BBSome, the octameric complex containing BBS-1, BBS-2, BBS-4, BBS-5, OSM-12/BBS-7, BBS-8/TTC-8 and BBS-9. This is the core cellular-component assignment for bbs-4 and is supported experimentally in C. elegans, where BBS-4 co-behaves with the other BBSome subunits during IFT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Complex membership is the defining property of bbs-4 and is strongly supported by both C. elegans experiments and cross-species orthology. This is a core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                                        PMID:26150102
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">during the assembly of the BBSome, BBS2, 7, and 9 form the core, then BBS1, 5, 8, and finally BBS4 are added in a stepwise manner</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:worm/bbs-4/bbs-4-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">model: Edison Scientific Literature</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                                    GO:0030674
+                                </a>
+                            </span>
+                            <span class="term-label">protein-macromolecule adaptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0030674" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This adaptor-activity term is transferred by sequence similarity from human BBS4 (UniProtKB:Q96RK4). It captures the fact that BBS-4, as a TPR-repeat subunit of the coat-like BBSome, acts as a scaffold/adaptor rather than an enzyme. It is far more informative than a generic &#39;protein binding&#39; term, and reflects the best current molecular-function description for a BBSome coat subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Adaptor activity is the most defensible molecular function for a BBSome structural subunit and is preferable to uninformative protein binding. However, no experimental MF has been measured for BBS-4 itself, and no GO term specifically expresses the BBSome coat/cargo-adaptor role — see knowledge_gaps.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">shares the common structural features with COPI, COPII, and clathrin coats, and can directly recognize IFT cargos</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4 contributes to cilium assembly as part of the BBSome. In C. elegans this is genetically redundant with BBS-5: single mutants are normal, but bbs-4; bbs-5 double mutants show typical bbs-class cilia defects, confirming a real (if buffered) role in ciliogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by phylogenetic inference and by direct C. elegans genetics (redundancy with bbs-5). A core biological-process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                                        PMID:26150102
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">bbs-4; bbs-5 double mutants show typical cilia defect as observed in other bbs mutants</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0060271" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (NAS) assignment of the cilium-assembly role, duplicating the IBA annotation. The BBSome assembles IFT particles required for ciliogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and consistent with the IBA annotation and with C. elegans genetics; both are retained as complementary evidence for the same core role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                    GO:0061512
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0061512" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a BBSome subunit, BBS-4 is required for correct localization of membrane and signaling proteins to/from cilia. In C. elegans the BBSome (redundantly requiring bbs-4/bbs-5) governs the ciliary homeostasis of sensory receptors such as PKD-2, OSM-9 and ODR-10, which mislocalize and accumulate when the complex is disrupted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Central to BBSome function and supported by both phylogenetic inference and C. elegans experiments. Core biological-process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                                        PMID:26150102
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">with ~6-fold increasing of protein levels in their native expressing cilia in bbs-4; bbs-5 mutants</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0036064" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4 acts at the ciliary basal body / ciliary base, where the BBSome assembles IFT particles prior to anterograde transport. Supported phylogenetically and consistent with direct C. elegans localization data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Basal-body localization is a core, well-supported cellular-component annotation and matches the site of BBSome-mediated IFT assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                    GO:0036064
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary basal body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0036064" data-r="PMID:22922713" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization of BBS-4 to the ciliary basal body/base in C. elegans, consistent with BBSome accumulation around the ciliary base when it is uncoupled from moving IFT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental localization; the strongest evidence class for the basal-body assignment. Core cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Some of them (BBS-1, BBS-4) totally lost the ciliary localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0005929" data-r="PMID:22922713" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4 localizes to cilia as a BBSome subunit that undergoes IFT along the ciliary axoneme. A correct, if general, cellular-component assignment (the basal-body and ciliary-base terms are more specific).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate general localization supported by the referenced work, but non-core relative to the more specific basal-body/ciliary-base terms which are the core CC annotations; retained as a valid non-core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Some of them (BBS-1, BBS-4) totally lost the ciliary localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060170" target="_blank" class="term-link">
+                                    GO:0060170
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0060170" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ciliary-membrane localization is inferred from the UniProt subcellular-location mapping (Cell projection, cilium membrane, By similarity). It is consistent with the BBSome&#39;s role as a membrane-associated coat that traffics and removes ciliary membrane receptors.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with BBSome coat function at the ciliary membrane and with the receptor trafficking/removal role demonstrated for bbs-4/bbs-5.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005813" target="_blank" class="term-link">
+                                    GO:0005813
+                                </a>
+                            </span>
+                            <span class="term-label">centrosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0005813" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Centrosome localization is an electronic UniProt subcellular-location mapping derived from the mammalian BBS4 annotation (Cytoplasm, cytoskeleton, MTOC, centrosome, By similarity). In C. elegans the relevant structure is the centriole-derived ciliary basal body, which is separately annotated; a distinct centrosomal pool has not been demonstrated for worm BBS-4.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The basal body is centriole-derived, so a centrosomal assignment is not wrong, but it is a non-specific/derived term for this organism where the experimentally supported site is the ciliary basal body/base. Kept as non-core rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005856" target="_blank" class="term-link">
+                                    GO:0005856
+                                </a>
+                            </span>
+                            <span class="term-label">cytoskeleton</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0005856" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-level cytoskeleton localization from the UniProt subcellular-location mapping. This is a very general parent term encompassing the more specific ciliary/basal-body localizations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not incorrect but uninformative relative to the specific ciliary basal body and ciliary base terms. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000242" target="_blank" class="term-link">
+                                    GO:0000242
+                                </a>
+                            </span>
+                            <span class="term-label">pericentriolar material</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0000242" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pericentriolar-material localization is transferred by similarity from human BBS4, which has a mammalian pericentriolar/centriolar-satellite role. C. elegans BBS-4 has been characterized only in the ciliary/BBSome context, and nematodes largely lack the mammalian centriolar-satellite system; no worm experiment supports a pericentriolar-material localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a mammalian-derived ISS transfer with no experimental support in C. elegans and is not part of the conserved core BBSome/ciliary function assayed in this organism. Flagged as over-annotation for the worm rather than a core localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007098" target="_blank" class="term-link">
+                                    GO:0007098
+                                </a>
+                            </span>
+                            <span class="term-label">centrosome cycle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0007098" data-r="GO_REF:0000024" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The centrosome-cycle process is transferred by similarity from mammalian BBS4, which has been implicated in microtubule anchoring and dynein-mediated pericentriolar transport. There is no C. elegans evidence that BBS-4 participates in the centrosome cycle; all worm phenotypes concern cilia and IFT.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mammalian-derived ISS process transfer without worm support and outside the conserved core ciliary role. Flagged as over-annotation for this organism.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                    GO:0097546
+                                </a>
+                            </span>
+                            <span class="term-label">ciliary base</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0097546" data-r="PMID:22922713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4 and the other BBSome subunits concentrate at the ciliary base, where the BBSome assembles IFT particles; when the BBSome is uncoupled from moving IFT the proteins strongly accumulate there. This is a more precise localization than the general &#39;cilium&#39; term and complements the ciliary basal body annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ciliary base is the experimentally supported site of BBSome-mediated IFT assembly in C. elegans and is included as a location in core_functions; added here as a specific cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all BBS proteins examined strongly accumulated around the ciliary base</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22922713
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The BBSome controls IFT assembly and turnaround in cilia.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q5CZ52" data-a="GO:0042073" data-r="PMID:22922713" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> BBS-4, as a BBSome subunit, itself undergoes IFT movement along the ciliary axoneme and is required for normal intraflagellar transport; loss of the BBSome (e.g. in bbs-4; bbs-5 double mutants) uncouples IFT-A from IFT-B and disrupts IFT integrity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Intraciliary transport is a core biological process for the BBSome, captured in core_functions; added here as a specific process annotation supported by BBS-protein IFT movement and the IFT defects of bbs mutants.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                        PMID:22922713
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all BBS proteins completely lost IFT movement</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                                        PMID:26150102
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">bbs-4; bbs-5 and bbs-7 share similar mutant phenotypes in that CHE-11 is absent, but OSM-6 abnormally accumulates, in the distal segments of plasmid cilia</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>BBS-4 acts as a TPR-repeat structural/adaptor subunit of the coat-like BBSome. Through its C-terminal TPR region it binds BBS-5 and integrates into the complex, contributing to BBSome-mediated assembly of IFT particles at the ciliary base and to the IFT-coupled trafficking and degradative removal of ciliary membrane cargo. Its molecular activity is best described as a protein-macromolecule adaptor within the BBSome coat; no independent enzymatic activity is known.</h3>
+                <span class="vote-buttons" data-g="Q5CZ52" data-a="FUNCTION: BBS-4 acts as a TPR-repeat structural/adaptor subu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030674" target="_blank" class="term-link">
+                            protein-macromolecule adaptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061512" target="_blank" class="term-link">
+                                protein localization to cilium
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                cilium assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                intraciliary transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036064" target="_blank" class="term-link">
+                                ciliary basal body
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097546" target="_blank" class="term-link">
+                                ciliary base
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060170" target="_blank" class="term-link">
+                                ciliary membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034464" target="_blank" class="term-link">
+                            BBSome
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                                PMID:22922713
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                                PMID:26150102
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">mapped down the binding region in BBS-4 to the C-terminal 193 amino acids (a.a. 270–462)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" target="_blank" class="term-link">
+                            PMID:22922713
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The BBSome controls IFT assembly and turnaround in cilia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BBSome assembles IFT particles at the ciliary base and regulates IFT turnaround/recycling at the ciliary tip.</div>
+
+                        <div class="finding-text">"the in vivo function for the BBSome is to regulate the assembly of the IFT particles at the ciliary base"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BBSome binds the IFT particle as a cargo, not as an integral structural component.</div>
+
+                        <div class="finding-text">"the BBSome binds to the IFT particle like a cargo but not a structural component"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BBS-4 loses ciliary localization and accumulates at the ciliary base when the BBSome is uncoupled from moving IFT.</div>
+
+                        <div class="finding-text">"Some of them (BBS-1, BBS-4) totally lost the ciliary localization"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BBSome shares coat features with COPI/COPII/clathrin and can directly recognize IFT cargo.</div>
+
+                        <div class="finding-text">"shares the common structural features with COPI, COPII, and clathrin coats, and can directly recognize IFT cargos"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" target="_blank" class="term-link">
+                            PMID:26150102
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">BBS4 and BBS5 show functional redundancy in the BBSome to regulate the degradative sorting of ciliary sensory receptors.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BBS-4 directly interacts with BBS-5 through its C-terminal region (a.a. 270-462).</div>
+
+                        <div class="finding-text">"mapped down the binding region in BBS-4 to the C-terminal 193 amino acids (a.a. 270–462)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">bbs-4 and bbs-5 single mutants have normal cilia; bbs-4; bbs-5 double mutants phenocopy whole-BBSome loss.</div>
+
+                        <div class="finding-text">"bbs-4 or bbs-5 single mutants are completely normal in dye-filling assay"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">BBS-4 and BBS-5 redundantly regulate lysosome-targeted degradation of ciliary sensory receptors.</div>
+
+                        <div class="finding-text">"BBS-4 and BBS-5 play redundant role in the BBSome to ubiquitously regulate the lysosome-targeted degradation of ciliary sensory receptors"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The BBSome acts upstream of the early endosome at the ciliary base to direct receptors to lysosomal degradation.</div>
+
+                        <div class="finding-text">"the BBSome acts upstream of the early endosome, probably in endocytic stage at cilia base, to regulate the lysosomal sorting of ciliary receptors"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:worm/bbs-4/bbs-4-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report on bbs-4 (Edison/falcon)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does BBS-4&#39;s TPR surface directly contact a specific ciliary membrane cargo within the BBSome, or does it act purely as a scaffold linking BBS-5 into the coat?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5CZ52" data-a="Q: Does BBS-4&#39;s TPR surface directly contact a specif..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What endocytic/ubiquitin effectors at the ciliary base connect the BBSome to lysosome-targeted degradation of sensory receptors?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5CZ52" data-a="Q: What endocytic/ubiquitin effectors at the ciliary ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Proximity-dependent biotinylation (TurboID) or affinity proteomics of BBS-4 at the ciliary base in wild-type versus bbs-5 mutant worms to identify cargo and endocytic/ubiquitin effectors.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: BBS-4 within the BBSome physically links ciliary sensory receptors to the early-endosome/lysosome sorting machinery at the ciliary base.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5CZ52" data-a="EXPERIMENT: Proximity-dependent biotinylation (TurboID) or aff..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided separation-of-function alleles of bbs-4 that abolish BBS-5 binding (C-terminal TPR) while preserving BBSome incorporation, scored for ciliogenesis, IFT integrity, and receptor removal.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The BBS-4–BBS-5 interaction is specifically required for receptor degradative sorting, separable from bulk IFT assembly.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q5CZ52" data-a="EXPERIMENT: Structure-guided separation-of-function alleles of..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> There is no GO molecular-function term that expresses the role of a BBSome coat/cargo- adaptor subunit, and the specific cargo(es) that BBS-4&#39;s TPR array directly recognizes within the BBSome are undefined. BBS-4 has no experimentally measured biochemical activity of its own; its sole MF annotation (protein-macromolecule adaptor activity) is a generic sequence-similarity transfer.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span><span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> BBS-4 is an established BBSome subunit built from tetratricopeptide repeats; the BBSome is explicitly coat-like (shares structural features with COPI, COPII and clathrin) and is proposed to polymerize and recognize ciliary membrane proteins, and it can directly recognize IFT cargo. What is missing is a molecular-function term (and the direct cargo identity) for the coat subunit rather than the complex-level process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> BBSome subunits illustrate the structural-subunit ontology gap: their function is &#39;be part of the coat&#39;, which the GO molecular-function aspect cannot currently express, so the gene reads as MF-dark despite a well-defined cellular role central to Bardet-Biedl syndrome.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Ontology development of a BBSome coat/cargo-adaptor molecular-function term (analogous to a vesicle-coat adaptor), plus proximity/affinity proteomics and structural work to identify the membrane cargo directly contacted by the BBS-4 TPR surface.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"shares the common structural features with COPI, COPII, and clathrin coats, and can directly recognize IFT cargos"</em> — PMID:22922713</li>
+
+                <li><em>"has been proposed to polymerize and recognize the ciliary membrane proteins"</em> — PMID:26150102</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>BBSome coat cargo-adaptor activity</strong> — BBSome subunits such as BBS-4 have no adequate GO molecular-function term; they are annotatable only with the generic &#39;protein-macromolecule adaptor activity&#39; or the uninformative &#39;protein binding&#39;, leaving them MF-dark despite a well-defined coat-subunit role.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular mechanism by which the BBSome triggers degradative (lysosome-targeted) removal of ciliary sensory receptors — the direct effectors linking the ciliary-base BBSome to the endocytic/ubiquitin machinery — and the molecular basis of the BBS-4/BBS-5 functional redundancy (two subunits with no shared domain, each dispensable alone) are undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> bbs-4 and bbs-5 single mutants have normal cilia; bbs-4; bbs-5 double mutants phenocopy whole-BBSome loss, with IFT-A/IFT-B uncoupling and ~3–6-fold ciliary accumulation of PKD-2, OSM-9 and ODR-10. RAB-5 overexpression rescues, and STAM-1 epistasis places the BBSome upstream of the early endosome at the ciliary base for these non-IFT cargoes; BBS-4 binds BBS-5 directly via its C-terminal TPR region. What remains unknown is the biochemical output that couples the BBSome to receptor endocytosis/degradation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This receptor-downregulation activity is conserved to human BBS4/BBS5 and to polycystin-2, directly relevant to Bardet-Biedl syndrome and polycystic kidney disease; the missing effectors are the mechanistic link between the BBSome and ciliary signaling homeostasis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Proximity/affinity proteomics of the ciliary-base BBSome to identify the endocytic/ ubiquitin effectors; separation-of-function bbs-4 alleles that uncouple BBS-5 binding from cargo removal; and structural definition of how BBS-4 and BBS-5 co-contribute to a shared coat surface.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the definite molecular activity of the BBSome in regulating the homoeostasis of ciliary membrane proteins remain unclear"</em> — PMID:26150102</li>
+
+                <li><em>"two BBSome components that share no similar protein domains"</em> — PMID:26150102</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Tags</h2>
+        <div class="aliases">
+
+            <span class="badge">caeel-ciliopathy</span>
+
+        </div>
+    </div>
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bbs-4-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5CZ52" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *bbs-4* (BBS-4) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">36 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T15:45:00.093261</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="bbs-4-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-bbs-4-bbs-4-in-caenorhabditis-elegans">Comprehensive Research Report: <em>bbs-4</em> (BBS-4) in <em>Caenorhabditis elegans</em></h1>
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>The gene <em>bbs-4</em> (ORF name F58A4.14) in <em>C. elegans</em> encodes the BBSome complex member BBS-4 (UniProt: Q5CZ52), a homolog of the human Bardet-Biedl syndrome 4 protein (BBS4). The protein belongs to the BBS4 family and contains multiple tetratricopeptide repeat (TPR) domains (IPR019734, IPR011990), consistent with its characterized role as a structural adaptor protein within the BBSome complex. The gene symbol, organism, protein family, and domain architecture all align with the literature reviewed below.</p>
+<table>
+<thead>
+<tr>
+<th>Gene name</th>
+<th>Protein name</th>
+<th>Organism</th>
+<th>Protein family</th>
+<th>Key domains</th>
+<th>Primary function</th>
+<th>Subcellular localization</th>
+<th>Interacting partners / complex context</th>
+<th>Mutant phenotypes in <em>C. elegans</em></th>
+<th>Disease relevance / human ortholog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>bbs-4</strong></td>
+<td>BBS-4; BBSome complex member bbs-4; Bardet-Biedl syndrome 4 protein homolog</td>
+<td><em>Caenorhabditis elegans</em></td>
+<td>BBS4 family; BBSome subunit</td>
+<td>TPR-like helical domain superfamily; tetratricopeptide repeats (TPRs), consistent with a TPR α-solenoid/adaptor architecture (klink2020structureofthe pages 2-4, singh2020structureandactivation pages 5-8, klink2020structureofthe pages 4-6)</td>
+<td>Non-enzymatic trafficking adaptor subunit of the BBSome. Helps organize ciliary membrane protein trafficking, especially removal/degradative sorting of sensory receptors, and contributes to IFT particle assembly/turnaround through the BBSome rather than catalyzing a chemical reaction (xu2015bbs4andbbs5 pages 2-4, xu2015bbs4andbbs5 pages 6-7, wei2012thebbsomecontrols pages 1-2, tian2023organizationfunctionsand pages 16-18)</td>
+<td>Localizes to cilia and the ciliary base in worms; in dyf-2 mutants accumulates around the ciliary base and loses normal ciliary localization. In broader BBS literature, BBS4/BBSome also associates with basal body, centrosomal/pericentriolar regions and centriolar satellites (xu2015bbs4andbbs5 pages 6-7, novas2015bardet–biedlsyndromeis pages 4-4, wei2012thebbsomecontrols pages 2-4)</td>
+<td>Directly interacts with <strong>BBS-5</strong> in worms; structurally connected within the BBSome to BBS1, BBS8, BBS9, and BBS18; assembled late into the BBSome after the BBS2-BBS7-BBS9 core and after incorporation of BBS1/BBS5/BBS8 in assembly models (xu2015bbs4andbbs5 pages 6-7, klink2020structureofthe pages 4-6, tian2023organizationfunctionsand pages 7-9, zhang2012intrinsicproteinproteininteractionmediated pages 6-8, zhang2012intrinsicproteinproteininteractionmediated pages 8-10)</td>
+<td><strong>Single mutants:</strong> often normal in dye-filling/ciliogenesis assays but show defects in polycystin signaling. <strong>bbs-4;bbs-5 double mutants:</strong> strong ciliary dysfunction, IFT-A/IFT-B dissociation with altered velocities, receptor accumulation in cilia (e.g., PKD-2, OSM-9, ODR-10), and defective sensory/ciliary homeostasis (xu2015bbs4andbbs5 pages 2-4, wingfield2018traffickingofciliary pages 4-5)</td>
+<td>Human ortholog <strong>BBS4</strong> is a Bardet-Biedl syndrome gene. Disease associations include Bardet-Biedl syndrome / Bardet-Biedl syndrome 4, retinitis pigmentosa, and polydactyly, supporting evolutionary conservation of BBS4-dependent ciliary trafficking (OpenTargets Search: -BBS4)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core molecular and functional properties of </em>C. elegans<em> bbs-4/BBS-4, emphasizing its role as a TPR-containing BBSome subunit involved in ciliary trafficking and IFT-related processes. It also links worm findings to conserved human BBS4 disease relevance.</em></p>
+<h2 id="1-primary-function-non-enzymatic-structural-adaptor-in-the-bbsome-complex">1. Primary Function: Non-Enzymatic Structural Adaptor in the BBSome Complex</h2>
+<p>BBS-4 is not an enzyme; it does not catalyze a chemical reaction. Rather, it functions as a <strong>structural adaptor subunit of the BBSome</strong>, an octameric protein complex that acts as a cargo adapter linking ciliary membrane proteins to the intraflagellar transport (IFT) machinery (xu2015bbs4andbbs5 pages 2-4, tian2023organizationfunctionsand pages 3-5). The BBSome was originally discovered through tandem affinity purification of BBS4, which identified six other BBS proteins (BBS1, BBS2, BBS5, BBS7, BBS8, and BBS9) associating with BBS4 in stoichiometric ratios (tian2023organizationfunctionsand pages 3-5). A later-identified eighth subunit, BBS18/BBIP10, completes the octameric complex (tian2023organizationfunctionsand pages 3-5).</p>
+<p>The primary molecular role of BBS-4 within the BBSome is to contribute to the complex's function as a <strong>planar coat complex</strong> that recognizes ciliary membrane proteins—particularly G protein-coupled receptors (GPCRs) and sensory receptors—and mediates their trafficking into and, predominantly, out of cilia via association with IFT trains (tian2023organizationfunctionsand pages 16-18, wingfield2018traffickingofciliary pages 5-7, wingfield2018traffickingofciliary pages 2-4). In <em>C. elegans</em>, BBS-4 is specifically implicated in regulating the <strong>degradative sorting of ciliary sensory receptors</strong>, directing ubiquitinated receptors toward lysosomal degradation rather than simply mediating retrograde IFT transport (xu2015bbs4andbbs5 pages 6-7).</p>
+<h2 id="2-functional-redundancy-with-bbs-5">2. Functional Redundancy with BBS-5</h2>
+<p>A key finding in <em>C. elegans</em> is that BBS-4 and BBS-5 exhibit <strong>unexpected functional redundancy</strong> within the BBSome. Single <em>bbs-4</em> mutants are largely normal in ciliogenesis and dye-filling assays, though they do show defective polycystin-mediated mechanosensory signaling (xu2015bbs4andbbs5 pages 2-4). However, <em>bbs-4; bbs-5</em> double mutants display severe ciliary defects, including abnormal cilia biogenesis, disrupted IFT velocities (with IFT-A and IFT-B complexes separating and moving at distinct speeds), and aberrant accumulation of ciliary sensory receptors such as PKD-2, OSM-9, and ODR-10 (xu2015bbs4andbbs5 pages 2-4, wingfield2018traffickingofciliary pages 4-5). BBS-4 directly interacts with BBS-5 through its carboxyl-terminus, and a conserved mutation (A388E) in BBS-4 can disrupt this interaction and impair ciliary targeting (xu2015bbs4andbbs5 pages 6-7).</p>
+<p>The double mutant phenotype reveals that BBS-4 and BBS-5 act redundantly within the BBSome to regulate the <strong>ciliary removal and lysosome-targeted degradative sorting</strong> of mono-ubiquitinated sensory receptors, rather than their ciliary entry or retrograde IFT transport per se (xu2015bbs4andbbs5 pages 6-7). This function is conserved in mammals, where BBS4 and BBS5 also interact directly and coordinate ciliary removal of polycystin 2 (xu2015bbs4andbbs5 pages 6-7).</p>
+<h2 id="3-protein-structure-and-domain-architecture">3. Protein Structure and Domain Architecture</h2>
+<p>BBS-4 contains multiple <strong>tetratricopeptide repeat (TPR) domains</strong> that fold into a characteristic α-solenoid (superhelical) structure (singh2020structureandactivation pages 5-8, klink2020structureofthe pages 4-6). High-resolution cryo-EM structures of the human and bovine BBSome have revealed the atomic-level architecture of BBS4 within the complex:</p>
+<ul>
+<li>BBS4 forms a conventional, uninterrupted α-solenoid that runs along the side of the BBSome "body" domain, which also includes BBS5, BBS8, and BBS18 (singh2020structureandactivation pages 5-8). These four subunits collectively comprise approximately one-third of the BBSome's molecular mass.</li>
+<li><strong>BBS18</strong> acts as a stabilizing "U-bolt," winding through the TPR domains of both BBS4 and BBS8 (klink2020structureofthe pages 4-6).</li>
+<li><strong>BBS1</strong> interacts with BBS4 through its N-terminal β-propeller domain binding to the N-terminus of BBS4's TPR superhelix, while the BBS1 C-terminal GAE domain binds to BBS8 (klink2020structureofthe pages 4-6).</li>
+<li>BBS4 also interacts with <strong>BBS9</strong> through BBS9's C-terminal domain (tian2023organizationfunctionsand pages 7-9).</li>
+<li>The TPR domains of BBS4 participate in extensive interactions with β-propeller domains through hydrophobic and ionic contacts (klink2020structureofthe pages 4-6).</li>
+</ul>
+<p>The BBSome contains a prominent <strong>negatively charged cleft</strong> at its center, with contributions from multiple subunits, that likely mediates recognition of positively charged ciliary targeting sequences on cargo proteins (klink2020structureofthe pages 2-4, klink2020structureofthe pages 11-12). A large positively charged patch on the complex surface strengthens membrane association (klink2020structureofthe pages 2-4).</p>
+<h2 id="4-bbsome-assembly-bbs-4-is-the-last-subunit-added">4. BBSome Assembly: BBS-4 is the Last Subunit Added</h2>
+<p>The BBSome assembles through a <strong>regulated, sequential pathway</strong>. Three non-core BBS proteins—BBS6, BBS10, and BBS12—form a chaperonin complex with CCT/TRiC proteins that first stabilizes BBS7 (zhang2012intrinsicproteinproteininteractionmediated pages 6-8, tian2023organizationfunctionsand pages 5-6). BBS7 then forms a ternary core complex with BBS2 and BBS9 (the "BBSome core complex"). Subsequently, BBS1, BBS5, and BBS8 are incorporated through intrinsic protein-protein interactions with BBS9, which serves as the organizational hub (tian2023organizationfunctionsand pages 6-7). <strong>BBS4 is the last subunit added</strong> to complete the BBSome, and its incorporation requires BBS1 (zhang2012intrinsicproteinproteininteractionmediated pages 6-8, zhang2012intrinsicproteinproteininteractionmediated pages 8-10, zhang2012intrinsicproteinproteininteractionmediated pages 2-4). This peripheral position in the assembly hierarchy is consistent with the observation that BBS4 localizes to the periphery of the complex and has a dispensable role in BBSome assembly per se (tian2023organizationfunctionsand pages 7-9).</p>
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>In <em>C. elegans</em>, BBS-4 localizes to the <strong>cilia of ciliated sensory neurons</strong> and to the <strong>ciliary base</strong> (xu2015bbs4andbbs5 pages 6-7, wei2012thebbsomecontrols pages 2-4). GFP-tagged BBS-4 can be observed along the length of cilia from base to tip. In <em>dyf-2</em> (WDR19 ortholog) mutants, BBS-4 loses ciliary localization and instead accumulates strongly around the ciliary base, indicating that DYF-2 is required for loading the BBSome onto anterograde IFT trains for ciliary entry (wei2012thebbsomecontrols pages 2-4). Despite this accumulation, the BBSome complex itself still forms but remains restricted to the base (wei2012thebbsomecontrols pages 2-4).</p>
+<p>In mammalian cells, BBS4 localizes to <strong>centriolar satellites</strong>, the <strong>centrosome/basal body</strong>, and the <strong>periciliary region</strong> (novas2015bardet–biedlsyndromeis pages 4-4, novas2015bardet–biedlsyndromeis pages 3-4). BBS4 interacts with <strong>PCM1</strong> (the main component of pericentriolar satellites) and <strong>AZI1</strong> (another centriolar satellite protein), and must properly relocalize from satellites to the cilium for recruitment of other BBSome components like BBS8 (novas2015bardet–biedlsyndromeis pages 3-4, novas2015bardet–biedlsyndromeis pages 4-4). In mammalian olfactory sensory neurons, BBS4 localizes to basal bodies and ciliary knobs and undergoes bidirectional IFT movement along the entire ciliary length (williams2014directevidencefor pages 7-8).</p>
+<h2 id="6-role-in-intraflagellar-transport-ift">6. Role in Intraflagellar Transport (IFT)</h2>
+<p>The BBSome, including BBS-4, plays critical roles in <strong>IFT complex organization and turnaround</strong> in <em>C. elegans</em> cilia:</p>
+<ul>
+<li>The BBSome <strong>assembles IFT complexes</strong> at the ciliary base, stabilizing the interaction between IFT-A and IFT-B subcomplexes (wei2012thebbsomecontrols pages 1-2, wingfield2018traffickingofciliary pages 4-5). In <em>bbs</em> mutants, IFT-A and IFT-B dissociate and move with distinct velocities corresponding to their associated motor proteins (OSM-3/kinesin for IFT-B, heterotrimeric kinesin-II for IFT-A) (wingfield2018traffickingofciliary pages 4-5).</li>
+<li>The BBSome binds to anterograde IFT particles in a <strong>DYF-2- and BBS-1-dependent manner</strong>, reaches the ciliary tip, and there <strong>regulates IFT turnaround</strong> from anterograde to retrograde transport (wei2012thebbsomecontrols pages 1-2, wei2012thebbsomecontrols pages 14-16). In <em>bbs-1</em> mutants, IFT-B components (OSM-6, DYF-1) accumulate at the ciliary tip with greatly reduced retrograde movement, while IFT-A maintains normal transport (wei2012thebbsomecontrols pages 8-14).</li>
+<li>Notably, <em>C. elegans</em> lacks certain mammalian mediators of BBSome-IFT interaction (IFT25, IFT27, LZTFL1), indicating that <strong>distinct BBSome-IFT coupling mechanisms</strong> have evolved in nematodes (wingfield2018traffickingofciliary pages 4-5).</li>
+</ul>
+<h2 id="7-cargo-trafficking-and-signaling-pathways">7. Cargo Trafficking and Signaling Pathways</h2>
+<p>The BBSome functions as a multivalent cargo adapter for ciliary membrane proteins. In <em>C. elegans</em>, BBS-4 (together with BBS-5) is required for proper homeostasis of several ciliary sensory receptors:</p>
+<ul>
+<li><strong>PKD-2</strong> (polycystin-2): a TRP channel involved in mechanosensory signaling in male-specific neurons (xu2015bbs4andbbs5 pages 6-7)</li>
+<li><strong>OSM-9</strong>: a TRPV channel involved in osmosensation and olfaction (xu2015bbs4andbbs5 pages 2-4)</li>
+<li><strong>ODR-10</strong>: an olfactory receptor for diacetyl chemotaxis (xu2015bbs4andbbs5 pages 2-4)</li>
+</ul>
+<p>In <em>bbs-4; bbs-5</em> double mutants, these receptors abnormally accumulate in cilia due to disrupted lysosome-targeted degradative sorting of ubiquitinated receptors (xu2015bbs4andbbs5 pages 6-7, wingfield2018traffickingofciliary pages 4-5). This demonstrates that BBS-4 functions in a <strong>post-ciliary export degradative sorting pathway</strong> rather than solely in retrograde IFT.</p>
+<p>In vertebrate systems, the BBSome (of which BBS4 is a subunit) mediates ciliary export of GPCRs including Smoothened (SMO), GPR161, SSTR3, and MCHR1 (yang2020nearatomicstructuresof pages 12-13, tian2023organizationfunctionsand pages 16-18, tian2023organizationfunctionsand pages 15-16). The BBSome recognizes specific motifs in cargo proteins, including the [W/F/Y][K/R] motif in GPCR helix 8, the Ax[S/A]xQ consensus in intracellular loops, and C-terminal VxP sequences (yang2020nearatomicstructuresof pages 12-13, tian2023organizationfunctionsand pages 15-16). BBSome-mediated GPCR removal is critical for <strong>Hedgehog signaling</strong> (via SMO and GPR161 trafficking) and other cilium-dependent signaling pathways (tian2023organizationfunctionsand pages 16-18, wingfield2018traffickingofciliary pages 5-7).</p>
+<h2 id="8-extra-ciliary-functions">8. Extra-Ciliary Functions</h2>
+<p>Beyond ciliary trafficking, BBS4/BBS-4 has been implicated in several non-ciliary processes:<br />
+- <strong>Actin cytoskeleton regulation</strong>: Bbs4-deficient mammalian cells show disrupted actin stress fibers, upregulated RhoA-GTP levels, impaired cell migration, adhesion, and division, and abnormal focal adhesion formation (tian2023organizationfunctionsand pages 9-11).<br />
+- <strong>Centriolar satellite organization</strong>: BBS4 recruits BBSome subunits to centriolar satellites and interacts with PCM1 and the dynein/dynactin motor complex via p150Glued (novas2015bardet–biedlsyndromeis pages 4-4).<br />
+- Additional reported roles include Notch recycling, transcriptional regulation of RNF2, and pericentriolar cargo targeting (novas2015bardet–biedlsyndromeis pages 3-4).</p>
+<h2 id="9-disease-relevance">9. Disease Relevance</h2>
+<p>The human ortholog BBS4 is causally associated with <strong>Bardet-Biedl syndrome type 4</strong> (OMIM), a ciliopathy characterized by retinal degeneration, obesity, polydactyly, renal abnormalities, and cognitive impairment (OpenTargets Search: -BBS4). BBS4 mutations are also associated with retinitis pigmentosa and polydactyly (OpenTargets Search: -BBS4). The conserved role of BBS-4 in ciliary sensory receptor trafficking in <em>C. elegans</em> provides a mechanistic basis for understanding the sensory and developmental deficits observed in BBS patients.</p>
+<h2 id="10-summary">10. Summary</h2>
+<p><em>C. elegans</em> BBS-4 is a TPR-containing structural adaptor protein that functions as a subunit of the octameric BBSome complex. It is the last subunit incorporated during BBSome assembly and localizes to cilia and the ciliary base in sensory neurons. BBS-4's primary molecular function is to contribute to the BBSome's role as a cargo adapter that couples ciliary membrane proteins (sensory receptors and GPCRs) to the IFT machinery for regulated ciliary export and degradative sorting. BBS-4 exhibits functional redundancy with BBS-5 in <em>C. elegans</em>, and their combined loss leads to severe defects in cilia structure, IFT organization, and sensory receptor homeostasis. The protein's TPR α-solenoid architecture mediates critical protein-protein interactions within the BBSome body domain, connecting to BBS1, BBS8, BBS9, and BBS18. These findings, derived from genetic, biochemical, and structural studies in <em>C. elegans</em> and mammalian systems, establish BBS-4 as an essential component of the ciliary trafficking machinery with conserved roles from nematodes to humans.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(klink2020structureofthe pages 2-4): Björn Udo Klink, Christos Gatsogiannis, Oliver Hofnagel, Alfred Wittinghofer, and Stefan Raunser. Structure of the human bbsome core complex. Jan 2020. URL: https://doi.org/10.7554/elife.53910, doi:10.7554/elife.53910. This article has 97 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singh2020structureandactivation pages 5-8): Sandeep K Singh, Miao Gui, Fujiet Koh, Matthew CJ Yip, and Alan Brown. Structure and activation mechanism of the bbsome membrane protein trafficking complex. eLife, Jan 2020. URL: https://doi.org/10.7554/elife.53322, doi:10.7554/elife.53322. This article has 106 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(klink2020structureofthe pages 4-6): Björn Udo Klink, Christos Gatsogiannis, Oliver Hofnagel, Alfred Wittinghofer, and Stefan Raunser. Structure of the human bbsome core complex. Jan 2020. URL: https://doi.org/10.7554/elife.53910, doi:10.7554/elife.53910. This article has 97 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2015bbs4andbbs5 pages 2-4): Qingwen Xu, Yuxia Zhang, Qing Wei, Yan Huang, Yan Li, Kun Ling, and Jinghua Hu. Bbs4 and bbs5 show functional redundancy in the bbsome to regulate the degradative sorting of ciliary sensory receptors. Scientific Reports, Jul 2015. URL: https://doi.org/10.1038/srep11855, doi:10.1038/srep11855. This article has 93 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2015bbs4andbbs5 pages 6-7): Qingwen Xu, Yuxia Zhang, Qing Wei, Yan Huang, Yan Li, Kun Ling, and Jinghua Hu. Bbs4 and bbs5 show functional redundancy in the bbsome to regulate the degradative sorting of ciliary sensory receptors. Scientific Reports, Jul 2015. URL: https://doi.org/10.1038/srep11855, doi:10.1038/srep11855. This article has 93 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2012thebbsomecontrols pages 1-2): Qing Wei, Yuxia Zhang, Yujie Li, Qing Zhang, Kun Ling, and Jinghua Hu. The bbsome controls ift assembly and turnaround in cilia. Aug 2012. URL: https://doi.org/10.1038/ncb2560, doi:10.1038/ncb2560. This article has 273 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 16-18): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novas2015bardet–biedlsyndromeis pages 4-4): Rossina Novas, Magdalena Cardenas-Rodriguez, Florencia Irigoín, and Jose L. Badano. Bardet–biedl syndrome: is it only cilia dysfunction? FEBS Letters, 589:3479-3491, Nov 2015. URL: https://doi.org/10.1016/j.febslet.2015.07.031, doi:10.1016/j.febslet.2015.07.031. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2012thebbsomecontrols pages 2-4): Qing Wei, Yuxia Zhang, Yujie Li, Qing Zhang, Kun Ling, and Jinghua Hu. The bbsome controls ift assembly and turnaround in cilia. Aug 2012. URL: https://doi.org/10.1038/ncb2560, doi:10.1038/ncb2560. This article has 273 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 7-9): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012intrinsicproteinproteininteractionmediated pages 6-8): Qihong Zhang, Dahai Yu, Seongjin Seo, Edwin M. Stone, and Val C. Sheffield. Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential assembly of stable bardet-biedl syndrome protein complex, the bbsome. Journal of Biological Chemistry, 287:20625-20635, Jun 2012. URL: https://doi.org/10.1074/jbc.m112.341487, doi:10.1074/jbc.m112.341487. This article has 206 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012intrinsicproteinproteininteractionmediated pages 8-10): Qihong Zhang, Dahai Yu, Seongjin Seo, Edwin M. Stone, and Val C. Sheffield. Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential assembly of stable bardet-biedl syndrome protein complex, the bbsome. Journal of Biological Chemistry, 287:20625-20635, Jun 2012. URL: https://doi.org/10.1074/jbc.m112.341487, doi:10.1074/jbc.m112.341487. This article has 206 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wingfield2018traffickingofciliary pages 4-5): Jenna L. Wingfield, Karl-Ferdinand Lechtreck, and Esben Lorentzen. Trafficking of ciliary membrane proteins by the intraflagellar transport/bbsome machinery. Essays in biochemistry, 62 6:753-763, Oct 2018. URL: https://doi.org/10.1042/ebc20180030, doi:10.1042/ebc20180030. This article has 186 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -BBS4): Open Targets Query (-BBS4, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 3-5): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wingfield2018traffickingofciliary pages 5-7): Jenna L. Wingfield, Karl-Ferdinand Lechtreck, and Esben Lorentzen. Trafficking of ciliary membrane proteins by the intraflagellar transport/bbsome machinery. Essays in biochemistry, 62 6:753-763, Oct 2018. URL: https://doi.org/10.1042/ebc20180030, doi:10.1042/ebc20180030. This article has 186 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wingfield2018traffickingofciliary pages 2-4): Jenna L. Wingfield, Karl-Ferdinand Lechtreck, and Esben Lorentzen. Trafficking of ciliary membrane proteins by the intraflagellar transport/bbsome machinery. Essays in biochemistry, 62 6:753-763, Oct 2018. URL: https://doi.org/10.1042/ebc20180030, doi:10.1042/ebc20180030. This article has 186 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(klink2020structureofthe pages 11-12): Björn Udo Klink, Christos Gatsogiannis, Oliver Hofnagel, Alfred Wittinghofer, and Stefan Raunser. Structure of the human bbsome core complex. Jan 2020. URL: https://doi.org/10.7554/elife.53910, doi:10.7554/elife.53910. This article has 97 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 5-6): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 6-7): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2012intrinsicproteinproteininteractionmediated pages 2-4): Qihong Zhang, Dahai Yu, Seongjin Seo, Edwin M. Stone, and Val C. Sheffield. Intrinsic protein-protein interaction-mediated and chaperonin-assisted sequential assembly of stable bardet-biedl syndrome protein complex, the bbsome. Journal of Biological Chemistry, 287:20625-20635, Jun 2012. URL: https://doi.org/10.1074/jbc.m112.341487, doi:10.1074/jbc.m112.341487. This article has 206 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novas2015bardet–biedlsyndromeis pages 3-4): Rossina Novas, Magdalena Cardenas-Rodriguez, Florencia Irigoín, and Jose L. Badano. Bardet–biedl syndrome: is it only cilia dysfunction? FEBS Letters, 589:3479-3491, Nov 2015. URL: https://doi.org/10.1016/j.febslet.2015.07.031, doi:10.1016/j.febslet.2015.07.031. This article has 111 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(williams2014directevidencefor pages 7-8): Corey L. Williams, Jeremy C. McIntyre, Stephen R. Norris, Paul M. Jenkins, Lian Zhang, Qinglin Pei, Kristen Verhey, and Jeffrey R. Martens. Direct evidence for bbsome-associated intraflagellar transport reveals distinct properties of native mammalian cilia. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6813, doi:10.1038/ncomms6813. This article has 187 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2012thebbsomecontrols pages 14-16): Qing Wei, Yuxia Zhang, Yujie Li, Qing Zhang, Kun Ling, and Jinghua Hu. The bbsome controls ift assembly and turnaround in cilia. Aug 2012. URL: https://doi.org/10.1038/ncb2560, doi:10.1038/ncb2560. This article has 273 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wei2012thebbsomecontrols pages 8-14): Qing Wei, Yuxia Zhang, Yujie Li, Qing Zhang, Kun Ling, and Jinghua Hu. The bbsome controls ift assembly and turnaround in cilia. Aug 2012. URL: https://doi.org/10.1038/ncb2560, doi:10.1038/ncb2560. This article has 273 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2020nearatomicstructuresof pages 12-13): Shuang Yang, Kriti Bahl, Hui-Ting Chou, Jonathan Woodsmith, Ulrich Stelzl, Thomas Walz, and Maxence V Nachury. Near-atomic structures of the bbsome reveal the basis for bbsome activation and binding to gpcr cargoes. Jun 2020. URL: https://doi.org/10.7554/elife.55954, doi:10.7554/elife.55954. This article has 56 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 15-16): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tian2023organizationfunctionsand pages 9-11): Xiaoyu Tian, Huijie Zhao, and Jun Zhou. Organization, functions, and mechanisms of the bbsome in development, ciliopathies, and beyond. eLife, Jul 2023. URL: https://doi.org/10.7554/elife.87623, doi:10.7554/elife.87623. This article has 88 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="bbs-4-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tian2023organizationfunctionsand pages 3-5</li>
+<li>singh2020structureandactivation pages 5-8</li>
+<li>klink2020structureofthe pages 4-6</li>
+<li>tian2023organizationfunctionsand pages 7-9</li>
+<li>klink2020structureofthe pages 2-4</li>
+<li>tian2023organizationfunctionsand pages 6-7</li>
+<li>wei2012thebbsomecontrols pages 2-4</li>
+<li>williams2014directevidencefor pages 7-8</li>
+<li>wingfield2018traffickingofciliary pages 4-5</li>
+<li>wei2012thebbsomecontrols pages 8-14</li>
+<li>tian2023organizationfunctionsand pages 9-11</li>
+<li>wei2012thebbsomecontrols pages 1-2</li>
+<li>tian2023organizationfunctionsand pages 16-18</li>
+<li>zhang2012intrinsicproteinproteininteractionmediated pages 6-8</li>
+<li>zhang2012intrinsicproteinproteininteractionmediated pages 8-10</li>
+<li>wingfield2018traffickingofciliary pages 5-7</li>
+<li>wingfield2018traffickingofciliary pages 2-4</li>
+<li>klink2020structureofthe pages 11-12</li>
+<li>tian2023organizationfunctionsand pages 5-6</li>
+<li>zhang2012intrinsicproteinproteininteractionmediated pages 2-4</li>
+<li>wei2012thebbsomecontrols pages 14-16</li>
+<li>yang2020nearatomicstructuresof pages 12-13</li>
+<li>tian2023organizationfunctionsand pages 15-16</li>
+<li>W/F/Y</li>
+<li>K/R</li>
+<li>S/A</li>
+<li>https://doi.org/10.7554/elife.53910,</li>
+<li>https://doi.org/10.7554/elife.53322,</li>
+<li>https://doi.org/10.1038/srep11855,</li>
+<li>https://doi.org/10.1038/ncb2560,</li>
+<li>https://doi.org/10.7554/elife.87623,</li>
+<li>https://doi.org/10.1016/j.febslet.2015.07.031,</li>
+<li>https://doi.org/10.1074/jbc.m112.341487,</li>
+<li>https://doi.org/10.1042/ebc20180030,</li>
+<li>https://doi.org/10.1038/ncomms6813,</li>
+<li>https://doi.org/10.7554/elife.55954,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(bbs-4-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q5CZ52" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bbs-4-c-elegans-research-notes">bbs-4 (C. elegans) research notes</h1>
+<p>UniProt: Q5CZ52 (BBS4_CAEEL). WormBase: WBGene00043992 / F58A4.14. 462 aa.<br />
+Gene: bbs-4 (Bardet-Biedl syndrome 4 protein homolog / "BBSome complex member bbs-4").</p>
+<h2 id="summary-of-gene-identity">Summary of gene identity</h2>
+<p>BBS-4 is a <strong>core structural subunit of the BBSome</strong>, the octameric complex (bbs-1, bbs-2,<br />
+bbs-4, bbs-5, osm-12/bbs-7, bbs-8/ttc-8, bbs-9) that couples intraflagellar transport (IFT)<br />
+to ciliary membrane-cargo trafficking. BBS-4 is a tetratricopeptide-repeat (TPR) protein<br />
+(UniProt annotates 7 TPR repeats spanning ~89–402, with a disordered N-terminal region<br />
+1–46). The BBSome shares structural features with the COPI/COPII/clathrin vesicle coats and<br />
+is thought to act as a membrane coat/cargo adaptor at cilia.</p>
+<h2 id="known-with-provenance">KNOWN (with provenance)</h2>
+<h3 id="bbsome-membership-and-architecture">BBSome membership and architecture</h3>
+<ul>
+<li>BBS-4 is part of the BBSome: [UniProt SUBUNIT "Part of BBSome complex, that contains at<br />
+  least bbs-1, bbs-2, bbs-4, bbs-5, osm-12, bbs-8/ttc-8 and bbs-9 (By similarity)"].</li>
+<li>Assembly order places BBS4 peripherally, added last: <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="during the assembly   of the BBSome, BBS2, 7, and 9 form the core, then BBS1, 5, 8, and finally BBS4 are added   in a stepwise manner">PMID:26150102</a>.</li>
+<li>BBS-4 is a TPR protein; BBS5 is a PH-domain protein — the two share no domains yet are<br />
+  functionally redundant: <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="BBS4 is a multiple tetratricopeptide repeats (TPR)   containing protein, whereas BBS5 is a pleckstrin homology (PH) domain-containing protein   ... two BBSome components that share no similar protein domains ... can function redundantly   in the context of cilia">PMID:26150102</a>.</li>
+</ul>
+<h3 id="bbsome-function-in-ift-assembly-turnaround-the-core-ciliary-role">BBSome function in IFT assembly / turnaround (the core ciliary role)</h3>
+<ul>
+<li>The BBSome assembles IFT particles at the ciliary base and rides the anterograde IFT<br />
+  particle to the tip to regulate turnaround/recycling: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="the BBSome ...   assembles IFT complexes at the ciliary base, then binds to the anterograde IFT particle in   a DYF-2- ... and BBS-1-dependent manner, and lastly reaches the ciliary tip to regulate   proper IFT recycling">PMID:22922713</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="the in vivo function for the BBSome is to regulate   the assembly of the IFT particles at the ciliary base">PMID:22922713</a>.</li>
+<li>The BBSome binds IFT like a cargo, not as an integral structural part of the IFT particle:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="After IFT particles are assembled at the ciliary base, the BBSome binds to   the IFT particle like a cargo but not a structural component">PMID:22922713</a>.</li>
+<li>BBSome shares coat features and can recognize IFT cargo: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="The BBSome also   shares the common structural features with COPI, COPII, and clathrin coats, and can directly   recognize IFT cargos">PMID:22922713</a>.</li>
+</ul>
+<h3 id="bbs-4-ciliary-localization-experimental-worm">BBS-4 ciliary localization (experimental, worm)</h3>
+<ul>
+<li>BBS-4 localizes to cilia / ciliary basal body (GOA IDA GO:0036064, MGI, PMID:22922713).</li>
+<li>In dyf-2 or bbs-1 mutants that uncouple the BBSome from moving IFT, BBS-4 completely loses<br />
+  ciliary localization and accumulates at the ciliary base: <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="Some of them   (BBS-1, BBS-4) totally lost the ciliary localization; the others (BBS-2, -5, -7, -8, -9)   only showed very dim ciliary staining">PMID:22922713</a>.</li>
+</ul>
+<h3 id="bbs-4bbs-5-direct-interaction-and-redundancy-pmid26150102">BBS-4–BBS-5 direct interaction and redundancy (PMID:26150102)</h3>
+<ul>
+<li>BBS-4 directly interacts with BBS-5, via its C-terminus: <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="We further mapped   down the binding region in BBS-4 to the C-terminal 193 amino acids (a.a. 270–462)">PMID:26150102</a> and<br />
+  in vivo <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="strong fluorescence complementation between BBS-4 and BBS-5 was   observed ... indicative of in vivo BBS-4-BBS-5 association">PMID:26150102</a>.</li>
+<li>Single mutants have no ciliogenesis defect; double bbs-4; bbs-5 mutants do:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="bbs-4 or bbs-5 single mutants are completely normal in dye-filling assay,   indicating that BBS-4 or BBS-5 alone is dispensable for ciliogenesis">PMID:26150102</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="bbs-4; bbs-5 double mutants show typical cilia defect as observed in other bbs mutants">PMID:26150102</a>.</li>
+<li>Double mutants disrupt IFT integrity (IFT-A/IFT-B uncoupling, CHE-11 absent distally,<br />
+  OSM-6 accumulates): <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="bbs-4; bbs-5 and bbs-7 share similar mutant phenotypes   in that CHE-11 is absent, but OSM-6 abnormally accumulates, in the distal segments">PMID:26150102</a>.</li>
+</ul>
+<h3 id="bbs-4bbs-5-role-in-ciliary-sensory-receptor-removal-degradative-sorting">BBS-4/BBS-5 role in ciliary sensory-receptor removal / degradative sorting</h3>
+<ul>
+<li>Redundantly required for <strong>removal</strong> (not entry) of ciliary sensory receptors PKD-2,<br />
+  OSM-9, ODR-10 — receptors abnormally accumulate in double mutants: <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="both   OSM-9 and ODR-10 show strong accumulations, with ~6-fold increasing of protein levels in   their native expressing cilia in bbs-4; bbs-5 mutants">PMID:26150102</a>, and the defect is degradative:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="BBS-4 and BBS-5 play redundant role in the BBSome to ubiquitously regulate   the lysosome-targeted degradation of ciliary sensory receptors">PMID:26150102</a>.</li>
+<li>The BBSome acts upstream of the early endosome, at the ciliary base, not by retrograde IFT<br />
+  for these non-IFT cargoes: <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="the BBSome acts upstream of the early endosome,   probably in endocytic stage at cilia base, to regulate the lysosomal sorting of ciliary   receptors">PMID:26150102</a>.</li>
+<li>Polycystin signaling (mating behavior) is defective in double but not single mutants:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="bbs-4; bbs-5 double mutants, but not bbs-4 or bbs-5 single mutants, exhibit   defective polycystin signaling similar to that observed in bbs-7 mutants">PMID:26150102</a>.</li>
+</ul>
+<h3 id="disease-relevant-mutagenesis-worm-mimics-of-human-bbs4-alleles">Disease-relevant mutagenesis (worm mimics of human BBS4 alleles)</h3>
+<ul>
+<li>A388E (mimics human pathogenic BBS4 A364E): abolishes BBS-4–BBS-5 interaction and ciliary<br />
+  targeting: [UniProt MUTAGEN 388 "A-&gt;E: Abolishes interaction with bbs-5. Unable to target<br />
+  to cilia."], <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="BBS-4A388E, but not BBS-4E107Q, lost ciliary targeting">PMID:26150102</a>.</li>
+<li>E107Q (mimics weak human BBS4 E85Q, LCA-like): no obvious phenotype; still rescues:<br />
+  [UniProt MUTAGEN 107 "E-&gt;Q: No obvious phenotype."], <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="BBS-4E107Q, but not   BBS-4A388E, can rescue the ciliogenesis defect in bbs-4; bbs-5 mutants">PMID:26150102</a>.</li>
+<li>Conservation to mammals: human BBS4 and BBS5 also interact directly and redundantly<br />
+  downregulate ciliary polycystin-2 <a href="https://pubmed.ncbi.nlm.nih.gov/26150102" title="human BBS4 and BBS5 interact directly and   function redundantly in downregulating ciliary polycystin-2">PMID:26150102</a>.</li>
+</ul>
+<h2 id="not-known-knowledge-gaps">NOT known / knowledge gaps</h2>
+<ul>
+<li><strong>No experimentally demonstrated biochemical/molecular activity for BBS-4 itself.</strong> The only<br />
+  MF annotation (GO:0030674 protein-macromolecule adaptor activity) is an ISS transfer from<br />
+  human BBS4 (UniProtKB:Q96RK4). What cargo(s) BBS-4's TPR array directly recognizes within<br />
+  the BBSome coat is undefined.</li>
+<li><strong>Ontology gap:</strong> there is no GO molecular-function term expressing "membrane-coat / cargo-<br />
+  adaptor subunit of the BBSome" analogous to a COPI/COPII/clathrin coat subunit. The BBSome<br />
+  is explicitly described as coat-like <a href="https://pubmed.ncbi.nlm.nih.gov/22922713" title="shares the common structural features   with COPI, COPII, and clathrin coats">PMID:22922713</a>, but a subunit of it is annotatable only with the<br />
+  generic adaptor term or <code>protein binding</code>. This is the same structural-subunit pattern<br />
+  flagged as an ontology gap in projects/FUNCTION_KNOWLEDGE_GAPS.md.</li>
+<li><strong>Centrosome / pericentriolar-material role is mammalian-derived, not shown in worm.</strong> The<br />
+  ISS annotations GO:0000242 (pericentriolar material) and GO:0007098 (centrosome cycle), and<br />
+  the SubCell-mapped GO:0005813 centrosome / GO:0005856 cytoskeleton, all trace to the<br />
+  mammalian BBS4 pericentriolar/dynein role (By similarity, UniProtKB:Q96RK4). C. elegans<br />
+  BBS-4 has been characterized only in the ciliary/BBSome context; no worm experiment supports<br />
+  a pericentriolar-satellite function (and nematodes largely lack the mammalian centriolar-<br />
+  satellite system). Treated here as over-annotation for this organism.</li>
+<li>Structural position/stoichiometry of BBS-4 in the worm BBSome, and whether its redundancy<br />
+  with BBS-5 reflects a shared coat-surface, are not resolved.</li>
+</ul>
+<h2 id="annotation-review-plan-13-goa-rows">Annotation-review plan (13 GOA rows)</h2>
+<ul>
+<li>GO:0034464 BBSome (NAS, part_of) — ACCEPT (core; complex membership).</li>
+<li>GO:0030674 protein-macromolecule adaptor activity (ISS, enables) — ACCEPT as the best<br />
+  available (subunit-adaptor) MF; flag the ontology gap.</li>
+<li>GO:0060271 cilium assembly (IBA + NAS) — ACCEPT (core; redundant with bbs-5 experimentally).</li>
+<li>GO:0061512 protein localization to cilium (IBA) — ACCEPT (core; BBSome traffics membrane<br />
+  cargo to/from cilium).</li>
+<li>GO:0036064 ciliary basal body (IBA is_active_in + IDA located_in) — ACCEPT (IDA experimental).</li>
+<li>GO:0005929 cilium (NAS) — ACCEPT (general but correct).</li>
+<li>GO:0060170 ciliary membrane (IEA SubCell) — ACCEPT.</li>
+<li>GO:0005813 centrosome (IEA SubCell) — KEEP_AS_NON_CORE (basal body is centriole-derived;<br />
+  general).</li>
+<li>GO:0005856 cytoskeleton (IEA SubCell) — KEEP_AS_NON_CORE (general parent).</li>
+<li>GO:0000242 pericentriolar material (ISS) — MARK_AS_OVER_ANNOTATED (mammalian-derived, no<br />
+  worm support).</li>
+<li>GO:0007098 centrosome cycle (ISS) — MARK_AS_OVER_ANNOTATED (mammalian-derived, no worm<br />
+  support).</li>
+</ul>
+<h2 id="references-used">References used</h2>
+<ul>
+<li>PMID:22922713 Wei et al. 2012 Nat Cell Biol — BBSome controls IFT assembly &amp; turnaround (full text cached).</li>
+<li>PMID:26150102 Xu et al. 2015 Sci Rep — BBS4/BBS5 redundancy, direct interaction, receptor removal (full text cached).</li>
+<li>UniProt Q5CZ52 (BBS4_CAEEL).<br />
+</content><br />
+</invoke></li>
+</ul>
+<h2 id="deep-research-falcon-edison-scientific-literature">Deep research (falcon / Edison Scientific Literature)</h2>
+<p><code>bbs-4-deep-research-falcon.md</code> was generated by the falcon provider (Edison Scientific<br />
+Literature; 36 citations, ~29 min run; the just-recipe wrapper reported a 600s subprocess<br />
+timeout but the client completed and wrote real output). It corroborates every point above<br />
+and adds cross-species structural/assembly context (not in the two worm papers, cited by DOI<br />
+in that report, so used here only as background, not as annotation provenance):</p>
+<ul>
+<li>BBS-4 is a <strong>non-enzymatic TPR α-solenoid structural adaptor</strong>; cryo-EM places it in the<br />
+  BBSome "body" with BBS5/BBS8/BBS18, with BBS18 acting as a stabilizing "U-bolt" through the<br />
+  BBS4/BBS8 TPRs and BBS1's β-propeller binding the BBS4 TPR N-terminus (Klink 2020 eLife<br />
+  10.7554/elife.53910; Singh 2020 eLife 10.7554/elife.53322; Tian 2023 eLife 10.7554/elife.87623).</li>
+<li>BBS-4 is the <strong>last subunit added</strong> to the BBSome and its incorporation requires BBS1<br />
+  (Zhang 2012 JBC 10.1074/jbc.m112.341487) — consistent with PMID:26150102's stepwise-assembly<br />
+  statement used in the review.</li>
+<li>The BBSome recognizes cargo via a central negatively-charged cleft and specific GPCR motifs<br />
+  ([W/F/Y][K/R] in helix 8, VxP C-terminal) (Yang 2020 eLife 10.7554/elife.55954) — background<br />
+  for the ontology-gap framing (no GO MF term for a coat cargo-adaptor subunit).</li>
+<li>The centriolar-satellite / PCM1 / actin-cytoskeleton roles are reported for <strong>mammalian</strong><br />
+  BBS4 (Novas 2015 FEBS Lett 10.1016/j.febslet.2015.07.031; Tian 2023) — supporting the<br />
+  MARK_AS_OVER_ANNOTATED calls on the worm pericentriolar-material and centrosome-cycle ISS rows.</li>
+</ul>
+<p>These DOI-only sources are recorded here as background; the review's annotation provenance<br />
+uses only the two cached full-text worm papers (PMID:22922713, PMID:26150102) plus the falcon<br />
+file reference.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q5CZ52
+gene_symbol: bbs-4
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  BBS-4 is a tetratricopeptide-repeat (TPR) protein that is a peripheral structural
+  subunit of the BBSome, an octameric complex (BBS-1, BBS-2, BBS-4, BBS-5, OSM-12/BBS-7,
+  BBS-8/TTC-8, BBS-9) that couples intraflagellar transport (IFT) to the trafficking of
+  membrane cargo at sensory cilia. Like the COPI, COPII and clathrin coats it structurally
+  resembles, the BBSome assembles IFT particles at the ciliary base, binds the anterograde
+  IFT particle, and reaches the ciliary tip where it regulates IFT turnaround and recycling.
+  Within the complex BBS-4 binds directly to BBS-5 through its C-terminal TPR region and
+  localizes to the ciliary base/basal body and along cilia. In C. elegans, BBS-4 is
+  functionally redundant with BBS-5: single mutants have essentially normal cilia, whereas
+  bbs-4; bbs-5 double mutants phenocopy loss of the whole BBSome, showing IFT-A/IFT-B
+  uncoupling, disrupted ciliogenesis, and defective polycystin-mediated cilia signaling.
+  Beyond building cilia, BBS-4 (redundantly with BBS-5) is required for the removal of
+  ciliary sensory receptors — including polycystin-2/PKD-2, the TRP channel OSM-9 and the
+  GPCR ODR-10 — from cilia for lysosome-targeted degradation, acting upstream of the early
+  endosome at the ciliary base. A conserved C-terminal residue (A388 in the worm protein,
+  A364 in human BBS4) is required for the BBS-4–BBS-5 interaction and for ciliary targeting,
+  and its mutation models human Bardet-Biedl syndrome.
+alternative_products:
+  - name: a
+    id: Q5CZ52-1
+  - name: b
+    id: Q5CZ52-2
+    sequence_note: VSP_044208
+references:
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+    findings: []
+  - id: PMID:22922713
+    title: The BBSome controls IFT assembly and turnaround in cilia.
+    findings:
+      - statement: The BBSome assembles IFT particles at the ciliary base and regulates
+          IFT turnaround/recycling at the ciliary tip.
+        supporting_text: the in vivo function for the BBSome is to regulate the assembly
+          of the IFT particles at the ciliary base
+      - statement: The BBSome binds the IFT particle as a cargo, not as an integral
+          structural component.
+        supporting_text: the BBSome binds to the IFT particle like a cargo but not a
+          structural component
+      - statement: BBS-4 loses ciliary localization and accumulates at the ciliary base
+          when the BBSome is uncoupled from moving IFT.
+        supporting_text: Some of them (BBS-1, BBS-4) totally lost the ciliary localization
+      - statement: The BBSome shares coat features with COPI/COPII/clathrin and can
+          directly recognize IFT cargo.
+        supporting_text: shares the common structural features with COPI, COPII, and
+          clathrin coats, and can directly recognize IFT cargos
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Wei et al. 2012, Nat Cell Biol; PMC3434251). Full text cached.
+        C. elegans forward-genetic study establishing the BBSome (including BBS-4) as the
+        regulator of IFT assembly and turnaround; directly supports the BBSome-membership,
+        cilium-assembly and ciliary-localization annotations for bbs-4.
+  - id: PMID:26150102
+    title: BBS4 and BBS5 show functional redundancy in the BBSome to regulate the
+      degradative sorting of ciliary sensory receptors.
+    findings:
+      - statement: BBS-4 directly interacts with BBS-5 through its C-terminal region
+          (a.a. 270-462).
+        supporting_text: mapped down the binding region in BBS-4 to the C-terminal 193
+          amino acids (a.a. 270–462)
+      - statement: bbs-4 and bbs-5 single mutants have normal cilia; bbs-4; bbs-5 double
+          mutants phenocopy whole-BBSome loss.
+        supporting_text: bbs-4 or bbs-5 single mutants are completely normal in dye-filling
+          assay
+      - statement: BBS-4 and BBS-5 redundantly regulate lysosome-targeted degradation of
+          ciliary sensory receptors.
+        supporting_text: BBS-4 and BBS-5 play redundant role in the BBSome to ubiquitously
+          regulate the lysosome-targeted degradation of ciliary sensory receptors
+      - statement: The BBSome acts upstream of the early endosome at the ciliary base to
+          direct receptors to lysosomal degradation.
+        supporting_text: the BBSome acts upstream of the early endosome, probably in
+          endocytic stage at cilia base, to regulate the lysosomal sorting of ciliary
+          receptors
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified (Xu et al. 2015, Sci Rep; PMC4493597). Full text cached. The
+        primary experimental paper for C. elegans bbs-4: GST pull-down + BiFC show direct
+        BBS-4–BBS-5 interaction via the BBS-4 C-terminus; genetic redundancy in
+        ciliogenesis, IFT integrity, polycystin signaling; and a conserved role in
+        degradative removal of ciliary receptors. Also cited by UniProt for the FUNCTION,
+        INTERACTION, DISRUPTION PHENOTYPE and MUTAGENESIS of E107 and A388.
+  - id: file:worm/bbs-4/bbs-4-deep-research-falcon.md
+    title: Deep research report on bbs-4 (Edison/falcon)
+    findings: []
+existing_annotations:
+  - term:
+      id: GO:0034464
+      label: BBSome
+    evidence_type: NAS
+    original_reference_id: PMID:22922713
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        BBS-4 is a bona fide subunit of the BBSome, the octameric complex containing
+        BBS-1, BBS-2, BBS-4, BBS-5, OSM-12/BBS-7, BBS-8/TTC-8 and BBS-9. This is the core
+        cellular-component assignment for bbs-4 and is supported experimentally in
+        C. elegans, where BBS-4 co-behaves with the other BBSome subunits during IFT.
+      action: ACCEPT
+      reason: &gt;-
+        Complex membership is the defining property of bbs-4 and is strongly supported by
+        both C. elegans experiments and cross-species orthology. This is a core annotation.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: the in vivo function for the BBSome is to regulate the assembly
+            of the IFT particles at the ciliary base
+        - reference_id: PMID:26150102
+          supporting_text: during the assembly of the BBSome, BBS2, 7, and 9 form the
+            core, then BBS1, 5, 8, and finally BBS4 are added in a stepwise manner
+        - reference_id: file:worm/bbs-4/bbs-4-deep-research-falcon.md
+          supporting_text: &#39;model: Edison Scientific Literature&#39;
+  - term:
+      id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: enables
+    review:
+      summary: &gt;-
+        This adaptor-activity term is transferred by sequence similarity from human BBS4
+        (UniProtKB:Q96RK4). It captures the fact that BBS-4, as a TPR-repeat subunit of the
+        coat-like BBSome, acts as a scaffold/adaptor rather than an enzyme. It is far more
+        informative than a generic &#39;protein binding&#39; term, and reflects the best current
+        molecular-function description for a BBSome coat subunit.
+      action: ACCEPT
+      reason: &gt;-
+        Adaptor activity is the most defensible molecular function for a BBSome structural
+        subunit and is preferable to uninformative protein binding. However, no experimental
+        MF has been measured for BBS-4 itself, and no GO term specifically expresses the
+        BBSome coat/cargo-adaptor role — see knowledge_gaps.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: shares the common structural features with COPI, COPII, and
+            clathrin coats, and can directly recognize IFT cargos
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        BBS-4 contributes to cilium assembly as part of the BBSome. In C. elegans this is
+        genetically redundant with BBS-5: single mutants are normal, but bbs-4; bbs-5 double
+        mutants show typical bbs-class cilia defects, confirming a real (if buffered) role
+        in ciliogenesis.
+      action: ACCEPT
+      reason: &gt;-
+        Well supported by phylogenetic inference and by direct C. elegans genetics
+        (redundancy with bbs-5). A core biological-process annotation.
+      supported_by:
+        - reference_id: PMID:26150102
+          supporting_text: bbs-4; bbs-5 double mutants show typical cilia defect as
+            observed in other bbs mutants
+        - reference_id: PMID:22922713
+          supporting_text: the in vivo function for the BBSome is to regulate the assembly
+            of the IFT particles at the ciliary base
+  - term:
+      id: GO:0060271
+      label: cilium assembly
+    evidence_type: NAS
+    original_reference_id: PMID:22922713
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Author-stated (NAS) assignment of the cilium-assembly role, duplicating the IBA
+        annotation. The BBSome assembles IFT particles required for ciliogenesis.
+      action: ACCEPT
+      reason: &gt;-
+        Correct and consistent with the IBA annotation and with C. elegans genetics; both
+        are retained as complementary evidence for the same core role.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: the in vivo function for the BBSome is to regulate the assembly
+            of the IFT particles at the ciliary base
+  - term:
+      id: GO:0061512
+      label: protein localization to cilium
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        As a BBSome subunit, BBS-4 is required for correct localization of membrane and
+        signaling proteins to/from cilia. In C. elegans the BBSome (redundantly requiring
+        bbs-4/bbs-5) governs the ciliary homeostasis of sensory receptors such as PKD-2,
+        OSM-9 and ODR-10, which mislocalize and accumulate when the complex is disrupted.
+      action: ACCEPT
+      reason: &gt;-
+        Central to BBSome function and supported by both phylogenetic inference and
+        C. elegans experiments. Core biological-process annotation.
+      supported_by:
+        - reference_id: PMID:26150102
+          supporting_text: with ~6-fold increasing of protein levels in their native
+            expressing cilia in bbs-4; bbs-5 mutants
+  - term:
+      id: GO:0036064
+      label: ciliary basal body
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        BBS-4 acts at the ciliary basal body / ciliary base, where the BBSome assembles IFT
+        particles prior to anterograde transport. Supported phylogenetically and consistent
+        with direct C. elegans localization data.
+      action: ACCEPT
+      reason: &gt;-
+        Basal-body localization is a core, well-supported cellular-component annotation and
+        matches the site of BBSome-mediated IFT assembly.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: the in vivo function for the BBSome is to regulate the assembly
+            of the IFT particles at the ciliary base
+  - term:
+      id: GO:0036064
+      label: ciliary basal body
+    evidence_type: IDA
+    original_reference_id: PMID:22922713
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Direct experimental (IDA) localization of BBS-4 to the ciliary basal body/base in
+        C. elegans, consistent with BBSome accumulation around the ciliary base when it is
+        uncoupled from moving IFT.
+      action: ACCEPT
+      reason: &gt;-
+        Experimental localization; the strongest evidence class for the basal-body
+        assignment. Core cellular-component annotation.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: Some of them (BBS-1, BBS-4) totally lost the ciliary localization
+  - term:
+      id: GO:0005929
+      label: cilium
+    evidence_type: NAS
+    original_reference_id: PMID:22922713
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        BBS-4 localizes to cilia as a BBSome subunit that undergoes IFT along the ciliary
+        axoneme. A correct, if general, cellular-component assignment (the basal-body and
+        ciliary-base terms are more specific).
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Accurate general localization supported by the referenced work, but non-core
+        relative to the more specific basal-body/ciliary-base terms which are the core CC
+        annotations; retained as a valid non-core localization.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: Some of them (BBS-1, BBS-4) totally lost the ciliary localization
+  - term:
+      id: GO:0060170
+      label: ciliary membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Ciliary-membrane localization is inferred from the UniProt subcellular-location
+        mapping (Cell projection, cilium membrane, By similarity). It is consistent with the
+        BBSome&#39;s role as a membrane-associated coat that traffics and removes ciliary
+        membrane receptors.
+      action: ACCEPT
+      reason: &gt;-
+        Consistent with BBSome coat function at the ciliary membrane and with the receptor
+        trafficking/removal role demonstrated for bbs-4/bbs-5.
+  - term:
+      id: GO:0005813
+      label: centrosome
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Centrosome localization is an electronic UniProt subcellular-location mapping
+        derived from the mammalian BBS4 annotation (Cytoplasm, cytoskeleton, MTOC,
+        centrosome, By similarity). In C. elegans the relevant structure is the
+        centriole-derived ciliary basal body, which is separately annotated; a distinct
+        centrosomal pool has not been demonstrated for worm BBS-4.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The basal body is centriole-derived, so a centrosomal assignment is not wrong, but
+        it is a non-specific/derived term for this organism where the experimentally
+        supported site is the ciliary basal body/base. Kept as non-core rather than removed.
+  - term:
+      id: GO:0005856
+      label: cytoskeleton
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        High-level cytoskeleton localization from the UniProt subcellular-location mapping.
+        This is a very general parent term encompassing the more specific ciliary/basal-body
+        localizations.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Not incorrect but uninformative relative to the specific ciliary basal body and
+        ciliary base terms. Retained as non-core.
+  - term:
+      id: GO:0000242
+      label: pericentriolar material
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Pericentriolar-material localization is transferred by similarity from human BBS4,
+        which has a mammalian pericentriolar/centriolar-satellite role. C. elegans BBS-4 has
+        been characterized only in the ciliary/BBSome context, and nematodes largely lack
+        the mammalian centriolar-satellite system; no worm experiment supports a
+        pericentriolar-material localization.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        This is a mammalian-derived ISS transfer with no experimental support in C. elegans
+        and is not part of the conserved core BBSome/ciliary function assayed in this
+        organism. Flagged as over-annotation for the worm rather than a core localization.
+  - term:
+      id: GO:0007098
+      label: centrosome cycle
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        The centrosome-cycle process is transferred by similarity from mammalian BBS4,
+        which has been implicated in microtubule anchoring and dynein-mediated
+        pericentriolar transport. There is no C. elegans evidence that BBS-4 participates in
+        the centrosome cycle; all worm phenotypes concern cilia and IFT.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Mammalian-derived ISS process transfer without worm support and outside the
+        conserved core ciliary role. Flagged as over-annotation for this organism.
+  - term:
+      id: GO:0097546
+      label: ciliary base
+    evidence_type: IDA
+    original_reference_id: PMID:22922713
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        BBS-4 and the other BBSome subunits concentrate at the ciliary base, where the
+        BBSome assembles IFT particles; when the BBSome is uncoupled from moving IFT the
+        proteins strongly accumulate there. This is a more precise localization than the
+        general &#39;cilium&#39; term and complements the ciliary basal body annotation.
+      action: NEW
+      reason: &gt;-
+        Ciliary base is the experimentally supported site of BBSome-mediated IFT assembly
+        in C. elegans and is included as a location in core_functions; added here as a
+        specific cellular-component annotation.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: all BBS proteins examined strongly accumulated around the
+            ciliary base
+  - term:
+      id: GO:0042073
+      label: intraciliary transport
+    evidence_type: IMP
+    original_reference_id: PMID:22922713
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        BBS-4, as a BBSome subunit, itself undergoes IFT movement along the ciliary axoneme
+        and is required for normal intraflagellar transport; loss of the BBSome (e.g. in
+        bbs-4; bbs-5 double mutants) uncouples IFT-A from IFT-B and disrupts IFT integrity.
+      action: NEW
+      reason: &gt;-
+        Intraciliary transport is a core biological process for the BBSome, captured in
+        core_functions; added here as a specific process annotation supported by BBS-protein
+        IFT movement and the IFT defects of bbs mutants.
+      supported_by:
+        - reference_id: PMID:22922713
+          supporting_text: all BBS proteins completely lost IFT movement
+        - reference_id: PMID:26150102
+          supporting_text: bbs-4; bbs-5 and bbs-7 share similar mutant phenotypes in that
+            CHE-11 is absent, but OSM-6 abnormally accumulates, in the distal segments of
+            plasmid cilia
+core_functions:
+  - description: &gt;-
+      BBS-4 acts as a TPR-repeat structural/adaptor subunit of the coat-like BBSome. Through
+      its C-terminal TPR region it binds BBS-5 and integrates into the complex, contributing
+      to BBSome-mediated assembly of IFT particles at the ciliary base and to the
+      IFT-coupled trafficking and degradative removal of ciliary membrane cargo. Its
+      molecular activity is best described as a protein-macromolecule adaptor within the
+      BBSome coat; no independent enzymatic activity is known.
+    molecular_function:
+      id: GO:0030674
+      label: protein-macromolecule adaptor activity
+    directly_involved_in:
+      - id: GO:0061512
+        label: protein localization to cilium
+      - id: GO:0060271
+        label: cilium assembly
+      - id: GO:0042073
+        label: intraciliary transport
+    locations:
+      - id: GO:0036064
+        label: ciliary basal body
+      - id: GO:0097546
+        label: ciliary base
+      - id: GO:0060170
+        label: ciliary membrane
+    in_complex:
+      id: GO:0034464
+      label: BBSome
+    supported_by:
+      - reference_id: PMID:22922713
+        supporting_text: the in vivo function for the BBSome is to regulate the assembly
+          of the IFT particles at the ciliary base
+      - reference_id: PMID:26150102
+        supporting_text: mapped down the binding region in BBS-4 to the C-terminal 193
+          amino acids (a.a. 270–462)
+knowledge_gaps:
+  - gap_statement: &gt;-
+      There is no GO molecular-function term that expresses the role of a BBSome coat/cargo-
+      adaptor subunit, and the specific cargo(es) that BBS-4&#39;s TPR array directly recognizes
+      within the BBSome are undefined. BBS-4 has no experimentally measured biochemical
+      activity of its own; its sole MF annotation (protein-macromolecule adaptor activity)
+      is a generic sequence-similarity transfer.
+    boundary: &gt;-
+      BBS-4 is an established BBSome subunit built from tetratricopeptide repeats; the BBSome
+      is explicitly coat-like (shares structural features with COPI, COPII and clathrin) and
+      is proposed to polymerize and recognize ciliary membrane proteins, and it can directly
+      recognize IFT cargo. What is missing is a molecular-function term (and the direct
+      cargo identity) for the coat subunit rather than the complex-level process.
+    gap_kind:
+      - ONTOLOGY
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      BBSome subunits illustrate the structural-subunit ontology gap: their function is &#39;be
+      part of the coat&#39;, which the GO molecular-function aspect cannot currently express, so
+      the gene reads as MF-dark despite a well-defined cellular role central to Bardet-Biedl
+      syndrome.
+    resolution: &gt;-
+      Ontology development of a BBSome coat/cargo-adaptor molecular-function term (analogous
+      to a vesicle-coat adaptor), plus proximity/affinity proteomics and structural work to
+      identify the membrane cargo directly contacted by the BBS-4 TPR surface.
+    provenance:
+      - reference_id: PMID:22922713
+        supporting_text: shares the common structural features with COPI, COPII, and
+          clathrin coats, and can directly recognize IFT cargos
+        reference_section_type: DISCUSSION
+      - reference_id: PMID:26150102
+        supporting_text: has been proposed to polymerize and recognize the ciliary membrane
+          proteins
+        reference_section_type: INTRODUCTION
+    proposed_terms:
+      - proposed_name: BBSome coat cargo-adaptor activity
+        proposed_definition: &gt;-
+          A protein-macromolecule adaptor activity of a subunit of the BBSome (a coat-like
+          complex structurally related to COPI/COPII/clathrin) that mediates recognition and
+          sorting of ciliary membrane cargo and its coupling to intraflagellar transport,
+          without the subunit independently catalyzing a biochemical reaction. Distinct from
+          the cellular component &#39;BBSome&#39; (GO:0034464) this term names the molecular
+          activity a coat subunit contributes to BBSome-mediated cargo sorting.
+        justification: &gt;-
+          BBSome subunits such as BBS-4 have no adequate GO molecular-function term; they are
+          annotatable only with the generic &#39;protein-macromolecule adaptor activity&#39; or the
+          uninformative &#39;protein binding&#39;, leaving them MF-dark despite a well-defined
+          coat-subunit role.
+        proposed_parent:
+          id: GO:0030674
+          label: protein-macromolecule adaptor activity
+  - gap_statement: &gt;-
+      The molecular mechanism by which the BBSome triggers degradative (lysosome-targeted)
+      removal of ciliary sensory receptors — the direct effectors linking the ciliary-base
+      BBSome to the endocytic/ubiquitin machinery — and the molecular basis of the
+      BBS-4/BBS-5 functional redundancy (two subunits with no shared domain, each dispensable
+      alone) are undetermined.
+    boundary: &gt;-
+      bbs-4 and bbs-5 single mutants have normal cilia; bbs-4; bbs-5 double mutants phenocopy
+      whole-BBSome loss, with IFT-A/IFT-B uncoupling and ~3–6-fold ciliary accumulation of
+      PKD-2, OSM-9 and ODR-10. RAB-5 overexpression rescues, and STAM-1 epistasis places the
+      BBSome upstream of the early endosome at the ciliary base for these non-IFT cargoes;
+      BBS-4 binds BBS-5 directly via its C-terminal TPR region. What remains unknown is the
+      biochemical output that couples the BBSome to receptor endocytosis/degradation.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      This receptor-downregulation activity is conserved to human BBS4/BBS5 and to
+      polycystin-2, directly relevant to Bardet-Biedl syndrome and polycystic kidney disease;
+      the missing effectors are the mechanistic link between the BBSome and ciliary signaling
+      homeostasis.
+    resolution: &gt;-
+      Proximity/affinity proteomics of the ciliary-base BBSome to identify the endocytic/
+      ubiquitin effectors; separation-of-function bbs-4 alleles that uncouple BBS-5 binding
+      from cargo removal; and structural definition of how BBS-4 and BBS-5 co-contribute to a
+      shared coat surface.
+    provenance:
+      - reference_id: PMID:26150102
+        supporting_text: the definite molecular activity of the BBSome in regulating the
+          homoeostasis of ciliary membrane proteins remain unclear
+        reference_section_type: INTRODUCTION
+      - reference_id: PMID:26150102
+        supporting_text: two BBSome components that share no similar protein domains
+        reference_section_type: RESULTS
+proposed_new_terms: []
+suggested_questions:
+  - question: Does BBS-4&#39;s TPR surface directly contact a specific ciliary membrane cargo
+      within the BBSome, or does it act purely as a scaffold linking BBS-5 into the coat?
+  - question: What endocytic/ubiquitin effectors at the ciliary base connect the BBSome to
+      lysosome-targeted degradation of sensory receptors?
+suggested_experiments:
+  - description: Proximity-dependent biotinylation (TurboID) or affinity proteomics of BBS-4
+      at the ciliary base in wild-type versus bbs-5 mutant worms to identify cargo and
+      endocytic/ubiquitin effectors.
+    hypothesis: BBS-4 within the BBSome physically links ciliary sensory receptors to the
+      early-endosome/lysosome sorting machinery at the ciliary base.
+    experiment_type: proteomics
+  - description: Structure-guided separation-of-function alleles of bbs-4 that abolish BBS-5
+      binding (C-terminal TPR) while preserving BBSome incorporation, scored for ciliogenesis,
+      IFT integrity, and receptor removal.
+    hypothesis: The BBS-4–BBS-5 interaction is specifically required for receptor
+      degradative sorting, separable from bulk IFT assembly.
+    experiment_type: genetics
+tags:
+  - caeel-ciliopathy
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

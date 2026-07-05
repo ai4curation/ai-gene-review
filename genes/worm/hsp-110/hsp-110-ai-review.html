@@ -1,0 +1,3489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hsp-110 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>hsp-110</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q05036" target="_blank" class="term-link">
+                        Q05036
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "hsp-110";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q05036" data-a="DESCRIPTION: hsp-110 (ORF C30C11.4) encodes the C. elegans memb..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>hsp-110 (ORF C30C11.4) encodes the C. elegans member of the HSP110/HSPH subfamily of the Hsp70 chaperone superfamily, orthologous to yeast Sse1/Sse2 and human HSPH1/HSPA4/ HSPA4L (apg-1). Like other HSP110 proteins it is a cytosolic, ATP-binding relative of Hsp70 that acts as a nucleotide-exchange factor (NEF) for canonical Hsp70 chaperones: its ATP-loaded nucleotide-binding domain, together with a three-helix-bundle domain, clamps the Hsp70 nucleotide-binding domain and drives ADP release, resetting the Hsp70 ATPase/folding cycle. Unlike canonical Hsp70s, HSP110 does not depend on its own ATP hydrolysis for this activity and can additionally bind non-native polypeptides directly (holdase activity). In C. elegans, HSP-110 operates within the cytosolic chaperone and disaggregation network together with Hsp70 and Hsp40/DnaJ partners to limit the accumulation of misfolded, aggregation-prone proteins; loss of HSP-110 increases aggregation of a misfolding-prone protein in neurons. As an HSF-1-regulated heat-shock protein it also contributes to stress resistance and to the extended lifespan of insulin/IGF-1-signaling mutants.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                                    GO:0000774
+                                </a>
+                            </span>
+                            <span class="term-label">adenyl-nucleotide exchange factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0000774" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. HSP-110 is the C. elegans HSP110-family nucleotide-exchange factor for Hsp70. This IBA is well grounded: the phylogenetic reference set includes yeast Sse1/Sse2 and human HSPH1, for which NEF activity is directly established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HSP110 proteins are the principal cytosolic NEFs for Hsp70; the ATP-loaded HSP110 NBD engages the Hsp70 NBD and drives ADP release. This is the defining, informative molecular function of the gene and should be retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                                        PMID:16688211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">acts as an efficient nucleotide exchange factor (NEF) for both yeast cytosolic Hsp70s, Ssa1p and Ssb1p. The mechanism involves formation of a stable nucleotide-sensitive complex, but does not require ATP hydrolysis by Sse1p</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                        PMID:18555782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces the NBD of Hsp70, inducing opening and the release of bound ADP from Hsp70. Mutations that abolish NEF activity are lethal, thus defining nucleotide exchange on Hsp70 as an essential function of Sse1p</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically propagated nuclear localization. HSP110-family proteins are primarily cytosolic; some mammalian HSPH1 can partition to the nucleus, but there is no direct C. elegans evidence for a nuclear pool of HSP-110.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a possible minor/shuttling location inherited from the family tree, but it is not the site of the core function; the cytosol is where HSP-110 acts on Hsp70.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0006457" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-110 participates in the cytosolic protein-folding process as the Hsp70 NEF; its NEF activity stimulates Hsp70-mediated refolding of denatured substrates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Valid and central biological process for an Hsp70 co-chaperone/NEF; consistent with the experimental IMP protein-folding annotation from the worm and with the conserved family mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                                        PMID:16688211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The NEF activity of Sse1p stimulates in vitro Ssa1p-mediated refolding of thermally denatured luciferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core location. HSP110 proteins are cytosolic Hsp70 relatives, and the worm HSP-110 acts on cytosolic Hsp70.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cytosol is the compartment where HSP-110 performs its NEF function; well supported at the family level and consistent with worm proteostasis assays in cytoplasm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                                        PMID:16688211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Hsp110 proteins, exclusively found in the eukaryotic cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HSP-110 retains the Hsp70-family nucleotide-binding domain and binds ATP; ATP loading of its NBD is functionally required for NEF activity (the ATP-bound NBD clamps the Hsp70 NBD to release ADP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP/adenyl-nucleotide binding is genuine and mechanistically essential for HSP-110 NEF function, not a spurious fold-based call.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                        PMID:18555782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces the NBD of Hsp70, inducing opening and the release of bound ADP from Hsp70</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006950" target="_blank" class="term-link">
+                                    GO:0006950
+                                </a>
+                            </span>
+                            <span class="term-label">response to stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0006950" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic stress-response term from ARBA. HSP-110 is a heat-shock protein and HSF-1 transcriptional target, so involvement in the stress response is correct but uninformatively broad relative to the specific proteostasis roles captured elsewhere.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but too general; the specific and better-supported terms (response to topologically incorrect protein, protein folding) convey the actual role. Keep as a broad, non-core annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Propagated from the generic Hsp70 ATPase fold. HSP110-family proteins have only weak, atypical ATPase activity, and their defining NEF mechanism explicitly does NOT require ATP hydrolysis by HSP110; HSP110 also does not use the canonical Hsp70 nucleotide-driven allosteric cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not categorically impossible (HSP110 binds and may slowly turn over ATP), but attributing a functional ATP hydrolysis activity over-states the biochemistry: it is an electronic call from the shared Hsp70 domain, whereas the characterized HSP110 role is NEF and holdase, with ATP binding (not hydrolysis) being the load-bearing property. Flag as likely over-annotation rather than remove outright.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                                        PMID:16688211
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mechanism involves formation of a stable nucleotide-sensitive complex, but does not require ATP hydrolysis by Sse1p</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                        PMID:18555782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">does not employ the nucleotide-dependent allostery and peptide-binding mode of canonical Hsp70s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                    GO:0006457
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22242008" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22242008
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A genetic screening strategy identifies novel regulators of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0006457" data-r="PMID:22242008" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental WormBase annotation. In a genome-wide RNAi screen, C30C11.4 (hsp-110) was one of six chaperone-class genes among the polyglutamine (Q35/Q37) aggregation modifiers (a Class A strong modifier), linking it to the muscle-cell protein-folding environment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IMP) annotation supported by the screen; consistent with HSP-110&#39;s role as an Hsp70 NEF in cytosolic protein folding. Deferred to the WormBase curator who assessed the full dataset.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22242008" target="_blank" class="term-link">
+                                        PMID:22242008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">F08H9.3; cyn-11; cyn-12; C30C11.4; dnj-22; phb-2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035966" target="_blank" class="term-link">
+                                    GO:0035966
+                                </a>
+                            </span>
+                            <span class="term-label">response to topologically incorrect protein</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19165329
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An ALS-linked mutant SOD1 produces a locomotor defect associ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0035966" data-r="PMID:19165329" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental WormBase annotation and a core biological role. RNAi and the gk533 loss-of-function allele of hsp-110/C30C11.4 strongly increase aggregation of neuronally expressed misfolding-prone mutant human SOD1(G85R); HSP-110 acts here with an Hsp70 (stc-1) and a DnaJ (dnj-19), i.e. the metazoan Hsp70-Hsp40-Hsp110 anti-aggregation machinery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported experimental annotation for this gene; captures HSP-110&#39;s in vivo function in handling misfolded (topologically incorrect) proteins.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" target="_blank" class="term-link">
+                                        PMID:19165329
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron specific Hsp16 (F08H9.4)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" target="_blank" class="term-link">
+                                        PMID:19165329
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Three of these were validated as strongly increasing aggregation when mutant alleles were crossed with G85R-YFP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                    GO:0008340
+                                </a>
+                            </span>
+                            <span class="term-label">determination of adult lifespan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14668486" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14668486
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of longevity in Caenorhabditis elegans by heat sh...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0008340" data-r="PMID:14668486" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental IGI annotation. HSF-1-target molecular chaperones, when down-regulated, shorten the extended lifespan of long-lived insulin/IGF-1-signaling mutants; the WormBase annotation records a genetic interaction of hsp-110 with age-1 (WBGene00000090). This is a pleiotropic, downstream organismal consequence of HSP-110&#39;s chaperone activity rather than its core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain as a genuine experimental (genetic-interaction) annotation - do not remove - but classify as non-core: lifespan determination reflects HSP-110&#39;s contribution to the proteostasis/stress network, not a distinct molecular activity. Cached reference is abstract-only; deferred to the WormBase curator who read the full text.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14668486" target="_blank" class="term-link">
+                                        PMID:14668486
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Down-regulation of individual molecular chaperones, transcriptional targets of HSF-1, also decreased longevity of long-lived mutant but not wild-type animals</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                                    GO:0051082
+                                </a>
+                            </span>
+                            <span class="term-label">unfolded protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18555782
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis for the cooperation of Hsp70 and Hsp110 cha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q05036" data-a="GO:0051082" data-r="PMID:18555782" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed molecular function not currently in GOA. In addition to nucleotide exchange, HSP110-family proteins bind non-native polypeptides directly (holdase activity), and in the worm HSP-110 loss increases aggregation of misfolding-prone SOD1 in neurons - consistent with a substrate-binding contribution to keeping clients soluble for Hsp70.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures HSP-110&#39;s substrate-binding/holdase arm, complementing its NEF activity; more informative than a generic protein-binding term and grounded in the family structure plus the in vivo anti-aggregation phenotype.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                        PMID:18555782
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">direct interactions of substrate with Sse1p may support Hsp70-assisted protein folding in a cooperative process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic HSP110-family nucleotide-exchange factor (NEF) for Hsp70. The ATP-loaded HSP-110 nucleotide-binding domain, together with its three-helix-bundle domain, clamps the Hsp70 nucleotide-binding domain and triggers ADP release, resetting the Hsp70 ATPase/folding cycle. This conserved HSP110 activity (yeast Sse1 to human HSPH1) is the defining molecular function of HSP-110 and drives Hsp70-dependent (re)folding in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q05036" data-a="FUNCTION: Cytosolic HSP110-family nucleotide-exchange factor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000774" target="_blank" class="term-link">
+                            adenyl-nucleotide exchange factor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006457" target="_blank" class="term-link">
+                                protein folding
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                                PMID:16688211
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">acts as an efficient nucleotide exchange factor (NEF) for both yeast cytosolic Hsp70s, Ssa1p and Ssb1p. The mechanism involves formation of a stable nucleotide-sensitive complex, but does not require ATP hydrolysis by Sse1p</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                PMID:18555782
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">nucleotide exchange factors (NEFs) that remove ADP from Hsp70</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Direct binding of non-native/unfolded polypeptides (holdase arm). Beyond nucleotide exchange, HSP-110 can engage substrate directly, cooperating with Hsp70 to keep aggregation-prone clients soluble; in the worm, loss of HSP-110 increases aggregation of misfolding-prone SOD1 in neurons, consistent with a substrate-holding/anti-aggregation contribution alongside its Hsp70 and Hsp40 partners.</h3>
+                <span class="vote-buttons" data-g="Q05036" data-a="FUNCTION: Direct binding of non-native/unfolded polypeptides..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051082" target="_blank" class="term-link">
+                            unfolded protein binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035966" target="_blank" class="term-link">
+                                response to topologically incorrect protein
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                                PMID:18555782
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">direct interactions of substrate with Sse1p may support Hsp70-assisted protein folding in a cooperative process</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" target="_blank" class="term-link">
+                                PMID:19165329
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron specific Hsp16 (F08H9.4)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14668486" target="_blank" class="term-link">
+                            PMID:14668486
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of longevity in Caenorhabditis elegans by heat shock factor and molecular chaperones.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" target="_blank" class="term-link">
+                            PMID:19165329
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An ALS-linked mutant SOD1 produces a locomotor defect associated with aggregation and synaptic dysfunction when expressed in neurons of Caenorhabditis elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22242008" target="_blank" class="term-link">
+                            PMID:22242008
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A genetic screening strategy identifies novel regulators of the proteostasis network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" target="_blank" class="term-link">
+                            PMID:16688211
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chaperone network in the yeast cytosol: Hsp110 is revealed as an Hsp70 nucleotide exchange factor.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" target="_blank" class="term-link">
+                            PMID:18555782
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for the cooperation of Hsp70 and Hsp110 chaperones in protein folding.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which C. elegans Hsp70 (HSP-1, STC-1, or HSP-70) and which J-domain/Hsp40 proteins form the physiological HSP-110-dependent disaggregation machine in each tissue?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: C. elegans proteostasis biologists, Hsp70/Hsp110 chaperone biochemists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05036" data-a="Q: Which C. elegans Hsp70 (HSP-1, STC-1, or HSP-70) a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is HSP-110 required to dissolve pre-formed aggregates, or only to prevent their formation, in worm neurons and muscle?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Protein-aggregation/disaggregase biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05036" data-a="Q: Is HSP-110 required to dissolve pre-formed aggrega..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify endogenously tagged HSP-110 from C. elegans lysate and identify Hsp70, Hsp40/J-protein, and client partners to define the worm disaggregation network and native substrates.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Affinity purification / mass spectrometry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05036" data-a="EXPERIMENT: Affinity-purify endogenously tagged HSP-110 from C..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Engineer NEF-dead, ATPase-dead, and substrate-binding-dead hsp-110 alleles and test each for rescue of aggregation/disaggregation and lifespan phenotypes to dissect which molecular property (nucleotide exchange, ATP hydrolysis, holdase) is required in vivo.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Separation-of-function genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05036" data-a="EXPERIMENT: Engineer NEF-dead, ATPase-dead, and substrate-bind..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute disaggregation of aggregated model substrates with purified worm HSP-110, Hsp70, and Hsp40 to test whether HSP-110 is required and rate-limiting for the reaction.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: In vitro disaggregation reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q05036" data-a="EXPERIMENT: Reconstitute disaggregation of aggregated model su..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether C. elegans HSP-110 is genetically and biochemically required for Hsp70/Hsp40-mediated protein DISAGGREGATION in vivo, and the identity of its physiological worm Hsp70 (HSP-1 vs STC-1 vs HSP-70) and J-protein/Hsp40 partners in that reaction, are undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that HSP-110 is an HSP110-family Hsp70 NEF (conserved from yeast Sse1 to human HSPH1) and that in neurons its loss (RNAi and the gk533 allele) increases aggregation of misfolding-prone SOD1 alongside an Hsp70 (stc-1) and a DnaJ (dnj-19). What is NOT established for the worm is a reconstituted or genetically defined Hsp70-Hsp40-Hsp110 disaggregase, its obligate partner set, and whether HSP-110 is required for active dissolution of pre-formed aggregates (as opposed to preventing their formation).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Metazoan protein disaggregation depends on a cooperative Hsp70-Hsp40-Hsp110 system. Defining the worm partners and the requirement for HSP-110 would connect its molecular NEF activity to organismal proteostasis and neuroprotection, and clarify which chaperone axis to target in C. elegans neurodegeneration models.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Tissue-specific hsp-110 loss-of-function combined with aggregation/disaggregation reporters and photoconvertible aggregation-clearance assays; affinity-purification/mass-spectrometry of tagged HSP-110 from worm lysate to define Hsp70/J-protein partners; in vitro reconstitution of a worm disaggregase.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron specific Hsp16 (F08H9.4)"</em> — PMID:19165329</li>
+
+                <li><em>"This is the first report of a nucleotide exchange activity for the Hsp110 class of proteins"</em> — PMID:16688211</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous C. elegans client repertoire of HSP-110 is undefined: which native metastable proteins depend on HSP-110 NEF/holdase activity, and in which tissues, is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> HSP-110 demonstrably modifies aggregation of heterologous, aggregation-prone reporters (polyglutamine and mutant human SOD1) and, at the family level, HSP110 NEF activity stimulates Hsp70-mediated refolding of denatured model substrates such as luciferase. No endogenous physiological worm client of HSP-110 has been mapped.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Client identity determines where HSP-110 activity is rate-limiting for proteostasis and which phenotypes (muscle, neuron, germline, aging) are mechanistically downstream of the NEF function.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Chaperone-client capture (e.g. interactomics of tagged HSP-110, or aggregate proteomics in hsp-110 loss-of-function) to enumerate native substrates.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"F08H9.3; cyn-11; cyn-12; C30C11.4; dnj-22; phb-2"</em> — PMID:22242008</li>
+
+                <li><em>"The NEF activity of Sse1p stimulates in vitro Ssa1p-mediated refolding of thermally denatured luciferase"</em> — PMID:16688211</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether HSP-110&#39;s own weak/atypical ATPase activity, and any Hsp70-independent holdase function, have a physiological role in C. elegans is untested.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The defining HSP110 NEF mechanism requires ATP BINDING but not ATP hydrolysis by HSP110, and HSP110 does not use the canonical Hsp70 nucleotide-driven allosteric peptide-binding cycle; direct substrate binding by Hsp110 has been observed in vitro. The in vivo relevance of HSP-110 ATP hydrolysis and of a standalone holdase mode in the worm has not been probed.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this would settle whether the IEA-propagated ATP hydrolysis activity is functionally meaningful for HSP-110 or a fold-based over-annotation, and whether HSP-110 contributes to proteostasis independently of Hsp70.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Structure-guided separation-of-function alleles (NEF-dead vs ATPase-dead vs substrate-binding-dead) tested for rescue of hsp-110 proteostasis phenotypes in vivo, plus in vitro ATPase and holdase assays on purified worm HSP-110.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"does not require ATP hydrolysis by Sse1p"</em> — PMID:16688211</li>
+
+                <li><em>"does not employ the nucleotide-dependent allostery and peptide-binding mode of canonical Hsp70s"</em> — PMID:18555782</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hsp-110-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q05036" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *C. elegans* hsp-110 (C30C11.4, UniProt Q05036)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">23 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T15:00:29.869511</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="hsp-110-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-c-elegans-hsp-110-c30c114-uniprot-q05036">Comprehensive Research Report: <em>C. elegans</em> hsp-110 (C30C11.4, UniProt Q05036)</h1>
+<h2 id="1-gene-identity-and-protein-classification">1. Gene Identity and Protein Classification</h2>
+<p>The <em>C. elegans</em> gene <strong>hsp-110</strong> (systematic name C30C11.4; UniProt accession Q05036) encodes <strong>Heat Shock Protein 110</strong>, a member of the HSP70 superfamily belonging to the HSP110/Grp170 subfamily. The <em>C. elegans</em> genome encodes three Hsp70-related putative nucleotide exchange factors (NEFs): two ER-localized Grp170 family members and a <strong>single cytosolic HSP110 member</strong>, which is C30C11.4/HSP-110 (rampelt2012metazoanhsp70machines pages 8-9, tittelmeier2020thehsp110hsp70disaggregation pages 2-4). This makes HSP-110 the sole cytosolic HSP110-type NEF in the nematode, underscoring its non-redundant importance in cytoplasmic protein quality control.</p>
+<h2 id="2-domain-architecture-and-structural-features">2. Domain Architecture and Structural Features</h2>
+<p>HSP-110 shares the core domain organization of canonical Hsp70 proteins but with distinguishing features. It contains an <strong>N-terminal nucleotide-binding domain (NBD)</strong>, a <strong>β-sandwich peptide-binding domain (PBD-β)</strong>, and an <strong>α-helical bundle domain (PBD-α)</strong>, along with longer insertions and C-terminal extensions relative to canonical Hsp70 (bracher2015thenucleotideexchange pages 2-4). A particularly notable structural feature is a <strong>negatively charged ~100-residue acidic insertion loop</strong> located between strands 7 and 8 of the β-sandwich subdomain, which is unique to the HSP110 family (sousa2014structuralmechanismsof pages 3-4). Additionally, the interdomain linker between the NBD and the substrate-binding domain is <strong>charged rather than hydrophobic</strong>, further distinguishing HSP-110 from canonical Hsp70 proteins (yakubu2018rolesofthe pages 1-3).</p>
+<h2 id="3-primary-molecular-function-nucleotide-exchange-factor-for-hsp70">3. Primary Molecular Function: Nucleotide Exchange Factor for Hsp70</h2>
+<p>The primary biochemical function of HSP-110 is to serve as a <strong>nucleotide exchange factor (NEF) for Hsp70/Hsc70 chaperones</strong>. HSP-110 catalyzes the release of ADP from Hsp70, allowing ATP to rebind and thereby triggering substrate release from the Hsp70 peptide-binding cleft (sousa2014structuralmechanismsof pages 3-4, rampelt2012metazoanhsp70machines pages 1-2). This NEF activity is the most potent among eukaryotic cytosolic Hsp70 NEFs, making HSP110 proteins the dominant regulators of the Hsp70 chaperone cycle in the cytosol (sousa2014structuralmechanismsof pages 3-4).</p>
+<h3 id="mechanism-of-nucleotide-exchange">Mechanism of Nucleotide Exchange</h3>
+<p>Structural studies of the yeast ortholog Sse1 (in complex with Ssa1/Hsp70) have revealed the molecular mechanism of HSP110-mediated nucleotide exchange. The NBDs of HSP110 and Hsp70 face each other asymmetrically, forming extensive contacts between opposite NBD lobes (andreasson2008insightsintothe pages 1-2). A critical second contact involves the protruding C-terminal β-helical subdomain of HSP110 interacting with the periphery of Hsp70 NBD lobe II. The α-helix bundle domain of HSP110 fixes the Hsp70 NBD in an open conformation through highly conserved contacts (bracher2015thenucleotideexchange pages 2-4). This causes <strong>lobe displacement or rotation in the Hsp70 NBD</strong>, reducing Hsp70's affinity for ADP and enabling nucleotide exchange (yakubu2018rolesofthe pages 3-4). Importantly, <strong>ATP binding to the HSP110 NBD is required for complex formation with Hsp70, but ATP hydrolysis by HSP110 is not essential</strong> for its NEF function—ATPase-deficient HSP110 mutants can still rescue lethality from HSP110 deletion (yakubu2018rolesofthe pages 1-3, bracher2015thenucleotideexchange pages 2-4).</p>
+<h3 id="additional-chaperone-activity">Additional Chaperone Activity</h3>
+<p>Beyond its NEF function, HSP-110 also acts as a <strong>passive chaperone ("holdase")</strong> capable of recognizing and binding unfolded or partially folded polypeptides to prevent their aggregation, without requiring energy input (yakubu2018rolesofthe pages 3-4). HSP110 displays faster binding kinetics and a preference for aromatic residue-rich peptides, in contrast to Hsp70's preference for aliphatic sequences (sousa2014structuralmechanismsof pages 3-4). However, in the context of protein disaggregation, the holdase function of HSP110 appears dispensable—studies using yeast Hsp110 mutants with partially inactivated substrate-binding domains showed no detrimental effect on disaggregation activity (yakubu2018rolesofthe pages 4-6).</p>
+<h2 id="4-role-in-the-metazoan-protein-disaggregation-pathway">4. Role in the Metazoan Protein Disaggregation Pathway</h2>
+<p>HSP-110's most critical physiological role is as an essential component of the <strong>metazoan Hsp70-based protein disaggregation machinery</strong>. Unlike bacteria, fungi, and plants, which employ dedicated AAA+ ATPase Hsp100/Hsp104 disaggregases, metazoan organisms (including <em>C. elegans</em>) lack cytosolic Hsp100 homologs and instead rely on a tripartite chaperone system comprising <strong>Hsp70 (HSC70), J-domain proteins (Hsp40s), and HSP110</strong> to solubilize protein aggregates (rampelt2012metazoanhsp70machines pages 1-2).</p>
+<h3 id="mechanistic-steps-in-disaggregation">Mechanistic Steps in Disaggregation</h3>
+<p>The disaggregation cycle operates as follows:</p>
+<ol>
+<li>
+<p><strong>Aggregate recognition and Hsp70 recruitment</strong>: J-domain proteins (JDPs) of class A and class B recognize and target aggregated protein substrates, recruiting Hsp70 to the aggregate surface (nillegoda2015metazoanhsp70basedprotein pages 2-4, kirstein2017invivoproperties pages 1-1).</p>
+</li>
+<li>
+<p><strong>Hsp70 activation</strong>: JDPs stimulate Hsp70 ATPase activity, locking Hsp70 in its ADP-bound, high-affinity substrate-binding state on the aggregate.</p>
+</li>
+<li>
+<p><strong>HSP110-mediated nucleotide exchange</strong>: HSP110 is recruited to Hsp70 at the aggregate surface and catalyzes ADP-to-ATP exchange, which triggers substrate release and resets Hsp70 for another binding cycle (sztangierska2024earlystepsof pages 1-2).</p>
+</li>
+<li>
+<p><strong>Aggregate remodeling</strong>: Repeated cycles of Hsp70 binding and release, powered by HSP110-mediated nucleotide exchange, generate mechanical forces that extract polypeptides from aggregates. This may operate through an <strong>entropic pulling</strong> mechanism, where the bulky HSP110–Hsp70 complex transiently increases the effective volume near the aggregate, amplifying the unfolding/pulling forces (rebeaud2025ishsp110boosting pages 1-4).</p>
+</li>
+<li>
+<p><strong>Substrate refolding or degradation</strong>: Released polypeptides are either refolded by the Hsp70 system or handed off to degradation pathways.</p>
+</li>
+</ol>
+<p>Recent work (2024) has demonstrated that HSP110 plays a <strong>major role at the initial stages of disaggregation</strong>, catalyzing the recruitment of thick Hsp70 assemblies onto aggregate surfaces, which converts large aggregates into smaller species more readily processed by chaperones (sztangierska2024earlystepsof pages 1-2). HSP110's stimulation of Hsp70 is substantially stronger when working with <strong>class B J-domain proteins</strong> compared to class A, and this interaction requires the Hsp70 EEVD motif. Notably, HSP110 can also <strong>disrupt JDP-Hsp70 interactions</strong>, which may improve disaggregation efficiency but can inhibit activity if HSP110 concentrations exceed optimal sub-stoichiometric levels (sztangierska2024earlystepsof pages 1-2). This finding highlights that balanced interplay between the co-chaperones and Hsp70 is critical for effective disaggregation.</p>
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>HSP-110 is identified as the <strong>sole cytosolic HSP110-type nucleotide exchange factor</strong> in <em>C. elegans</em> (tittelmeier2020thehsp110hsp70disaggregation pages 2-4). Its primary site of function is the <strong>cytoplasm</strong>, where it supports the Hsp70-based disaggregation machinery. Studies in yeast have demonstrated that the orthologous Hsp110 proteins (Sse1/Sse2) function in both the cytosol and nucleus, and that tethering Hsp110 away from either compartment impairs disaggregation in that location (kaimal2017coordinatedhsp110and pages 15-18). By analogy, <em>C. elegans</em> HSP-110 likely operates in both the cytoplasm and nucleus, though direct nuclear localization data in the worm are limited. The ER-localized Grp170 family members serve as the HSP70 NEFs in the endoplasmic reticulum, functionally complementing HSP-110 in that compartment (rampelt2012metazoanhsp70machines pages 8-9).</p>
+<h2 id="6-in-vivo-evidence-from-c-elegans">6. In Vivo Evidence from <em>C. elegans</em></h2>
+<h3 id="61-essentiality">6.1 Essentiality</h3>
+<p>Complete <strong>hsp-110 knockout is lethal</strong> in <em>C. elegans</em>, demonstrating its essential role in normal cellular function (tittelmeier2020thehsp110hsp70disaggregation pages 2-4). Systemic RNAi knockdown also affects growth, development, and fertility (tittelmeier2020thehsp110hsp70disaggregation pages 2-4).</p>
+<h3 id="62-protein-disaggregation-in-vivo">6.2 Protein Disaggregation In Vivo</h3>
+<p>The landmark study by Rampelt et al. (2012) provided direct in vivo evidence for HSP-110's role in protein disaggregation using transgenic <em>C. elegans</em> expressing luciferase-YFP in muscle cells as an aggregation sensor. After heat shock (1 hour at 35°C), luciferase-YFP formed aggregated foci. In control animals, these aggregates were completely resolved within 24 hours of recovery at 20°C. However, in animals where <strong>hsp-110 was knocked down by RNAi, the aggregated luciferase foci persisted and remained insoluble and immobile</strong> at both 12 and 24 hours post-heat shock (rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 8-9). Critically, knockdown of the alternative NEF <strong>bag-1</strong> did not impair aggregate solubilization, demonstrating the <strong>non-redundant, specialized role</strong> of HSP-110 in the disaggregation machinery (rampelt2012metazoanhsp70machines pages 10-11, rampelt2012metazoanhsp70machines pages 9-10).</p>
+<h3 id="63-lifespan-and-stress-recovery">6.3 Lifespan and Stress Recovery</h3>
+<p>Under normal growth conditions at 20°C, hsp-110 RNAi causes only a <strong>modest lifespan reduction of 1–2 days</strong>. However, following heat shock, hsp-110-depleted animals exhibit a <strong>dramatic lifespan reduction of approximately 4.5 days</strong> compared to controls (rampelt2012metazoanhsp70machines pages 9-10). This indicates that HSP-110 becomes especially critical under conditions of high protein aggregation load, consistent with its role in the disaggregation pathway (rampelt2012metazoanhsp70machines pages 9-10).</p>
+<h3 id="64-role-in-amyloid-processing-a-double-edged-sword">6.4 Role in Amyloid Processing: A Double-Edged Sword</h3>
+<p>A pivotal study by Tittelmeier et al. (2020) revealed that the HSP-110/HSP70 disaggregation system is a <strong>"double-edged sword"</strong> in the context of amyloid disease models. While HSP-110 depletion impaired general proteostasis (preventing resolubilization of amorphous aggregates and compromising cellular folding capacity), it paradoxically <strong>reduced α-synuclein foci formation, cell-to-cell transmission, and toxicity</strong> in <em>C. elegans</em> disease models (tittelmeier2020thehsp110hsp70disaggregation pages 1-2, tittelmeier2020thehsp110hsp70disaggregation pages 4-5). Specifically:</p>
+<ul>
+<li>HSP-110 knockdown significantly reduced cytosolic α-synuclein and polyQ (Q35) aggregate foci and correspondingly reduced toxicity as measured by motility assays (tittelmeier2020thehsp110hsp70disaggregation pages 4-5).</li>
+<li>Intercellular transmission of α-synuclein between muscle and hypodermal cells was impaired—protein transfer was detected in only <strong>50% of hsp-110 knockdown animals</strong> on days 5–6 compared to <strong>90% in wild-type</strong> animals (tittelmeier2020thehsp110hsp70disaggregation pages 4-5).</li>
+<li>The HSP-110 knockdown did not activate compensatory stress responses (HSF-1/DAF-16), and total substrate protein levels remained unchanged (tittelmeier2020thehsp110hsp70disaggregation pages 4-5).</li>
+</ul>
+<p>These findings demonstrate that the HSP70 disaggregation activity, while essential for maintaining cellular proteostasis, is also involved in generating <strong>toxic, spreading-competent amyloid species</strong> through fibril fragmentation, which can seed further polymerization and prion-like propagation (tittelmeier2020thehsp110hsp70disaggregation pages 6-9, tittelmeier2020thehsp110hsp70disaggregation pages 2-4).</p>
+<h3 id="65-age-dependent-effects">6.5 Age-Dependent Effects</h3>
+<p>HSP-110 knockdown shows complex age-dependent phenotypes. In young animals, HSP-110 depletion provides some tolerance to α-synuclein and polyQ toxicity. However, during aging, HSP-110-depleted animals show <strong>accelerated decline in motility</strong> compared to controls, likely due to progressive proteostasis collapse (tittelmeier2020thehsp110hsp70disaggregation pages 6-9). Age-dependent protein aggregation (measured by FlucSM foci) forms more rapidly in HSP-110 knockdown backgrounds, and the protective effects observed in younger animals are lost with age (tittelmeier2020thehsp110hsp70disaggregation pages 6-9).</p>
+<h2 id="7-cooperative-network-with-j-domain-proteins">7. Cooperative Network with J-Domain Proteins</h2>
+<p>In vivo studies in <em>C. elegans</em> have revealed that HSP-110 functions within a broader <strong>cooperative J-protein network</strong>. Class A and class B J-proteins (JDPs) form a flexible interactive network that relocalizes to protein aggregates upon heat shock and preferentially recruits constitutive Hsc70 for disaggregation (kirstein2017invivoproperties pages 1-1). This cooperation between J-protein classes is required for organismal health, promoting thermotolerance, maintenance of fecundity, and extended viability after heat stress (kirstein2017invivoproperties pages 7-8). Disruption of these cooperative interactions exacerbates age-dependent aggregation of polyQ proteins (kirstein2017invivoproperties pages 7-8).</p>
+<h2 id="8-evolutionary-context">8. Evolutionary Context</h2>
+<p>HSP-110 represents a distinct evolutionary branch of the Hsp70 superfamily that has acquired specialized NEF function. In metazoan lineages that lost cytosolic Hsp100/Hsp104 disaggregases, the Hsp70-JDP-Hsp110 system became the <strong>primary disaggregation machinery</strong> (rampelt2012metazoanhsp70machines pages 1-2). This evolutionary transition underscores the importance of HSP-110 as a critical adaptation enabling metazoan cells to maintain proteostasis without dedicated AAA+ disaggregases. The system achieves disaggregation through a fundamentally different mechanism—iterative Hsp70 cycling powered by HSP110 NEF activity—rather than the threading mechanism employed by Hsp104 ring hexamers (torrente2013themetazoanprotein pages 4-5).</p>
+<h2 id="9-summary">9. Summary</h2>
+<p>The following table provides a comprehensive overview of the key functional attributes of <em>C. elegans</em> hsp-110:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Detail</th>
+<th>Key Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identity</td>
+<td><strong>hsp-110</strong> corresponds to <strong>C30C11.4</strong> in <strong>Caenorhabditis elegans</strong> and encodes the organism’s <strong>single cytosolic HSP110-type nucleotide exchange factor (NEF)</strong> for HSP70; this matches the UniProt entry Q05036 and distinguishes it from two ER-localized Grp170 family members.</td>
+<td>(rampelt2012metazoanhsp70machines pages 8-9, tittelmeier2020thehsp110hsp70disaggregation pages 2-4)</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>HSP-110 belongs to the <strong>HSP70 superfamily / HSP110 subfamily</strong>. Like other HSP110 proteins, it contains an <strong>N-terminal nucleotide-binding domain</strong>, <strong>β-sandwich peptide-binding domain</strong>, and <strong>α-helical bundle</strong>, with characteristic insertions including an acidic loop that distinguishes HSP110 proteins from canonical HSP70s.</td>
+<td>(yakubu2018rolesofthe pages 1-3, bracher2015thenucleotideexchange pages 2-4, sousa2014structuralmechanismsof pages 3-4, yakubu2018rolesofthe pages 11-12)</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>The best-supported primary function is to act as a <strong>nucleotide exchange factor for HSP70/HSC70</strong>, promoting <strong>ADP release and ATP rebinding</strong> on HSP70 and thereby enabling substrate release and repeated chaperone cycles during protein quality control. In metazoan disaggregation, this NEF activity is the key catalytic contribution of HSP110.</td>
+<td>(sousa2014structuralmechanismsof pages 3-4, yakubu2018rolesofthe pages 1-3, yakubu2018rolesofthe pages 3-4, rampelt2012metazoanhsp70machines pages 1-2)</td>
+</tr>
+<tr>
+<td>Biochemical role in disaggregation</td>
+<td>HSP-110 is essential for the <strong>HSP70-HSP40-HSP110 disaggregase system</strong> that solubilizes and reactivates aggregated proteins after stress. Direct work in C. elegans showed that HSP-110 is required for clearing heat-induced luciferase aggregates in vivo.</td>
+<td>(rampelt2012metazoanhsp70machines pages 10-11, rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 8-9)</td>
+</tr>
+<tr>
+<td>ATP dependence / mechanism</td>
+<td>Structural and biochemical studies of the HSP110 family show that <strong>ATP binding to HSP110 is required for productive interaction with HSP70</strong>, whereas <strong>ATP hydrolysis by HSP110 is not essential</strong> for its NEF function. HSP110 opens the HSP70 NBD through extensive NBD-NBD contacts and associated conformational changes.</td>
+<td>(yakubu2018rolesofthe pages 1-3, bracher2015thenucleotideexchange pages 2-4, andreasson2008insightsintothe pages 1-2)</td>
+</tr>
+<tr>
+<td>Additional chaperone properties</td>
+<td>Beyond NEF activity, HSP110 family proteins can function as <strong>holdase chaperones</strong> that bind unfolded proteins and help prevent aggregation, though in disaggregation assays the central requirement is still the HSP70-directed NEF activity.</td>
+<td>(yakubu2018rolesofthe pages 3-4, sousa2014structuralmechanismsof pages 3-4, yakubu2018rolesofthe pages 4-6)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>In C. elegans, HSP-110 is identified as the <strong>sole cytosolic HSP110-type NEF</strong>. Available direct evidence supports <strong>cytosolic function</strong>, especially in muscle-cell proteostasis assays; by analogy with other eukaryotic HSP110 systems, related proteins can support disaggregation in both cytosol and nucleus, but C. elegans-specific nuclear localization evidence is limited.</td>
+<td>(tittelmeier2020thehsp110hsp70disaggregation pages 2-4, kaimal2017coordinatedhsp110and pages 15-18)</td>
+</tr>
+<tr>
+<td>Key interacting partners</td>
+<td>Core functional partners are <strong>HSP70/HSC70</strong> and <strong>J-domain proteins (HSP40s)</strong>. The disaggregation machinery depends on cooperation between HSP110 and HSP70, while class A and class B J-proteins target aggregates and help recruit/activate HSP70 for extraction and refolding cycles.</td>
+<td>(kirstein2017invivoproperties pages 1-1, rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 1-2, nillegoda2015metazoanhsp70basedprotein pages 2-4, sztangierska2024earlystepsof pages 1-2)</td>
+</tr>
+<tr>
+<td>Pathway involvement</td>
+<td>hsp-110 functions in the <strong>cytosolic proteostasis network</strong>, specifically the <strong>metazoan HSP70-based protein disaggregation pathway</strong> that responds to heat stress, age-associated aggregation, and misfolded proteins. It is part of stress-recovery and aggregate-clearance pathways rather than a classic signaling enzyme pathway.</td>
+<td>(kirstein2017invivoproperties pages 1-1, rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 1-2)</td>
+</tr>
+<tr>
+<td>Relationship to heat stress</td>
+<td>In worms subjected to heat shock, HSP-110 is required for efficient <strong>recovery from proteotoxic stress</strong>. Loss of HSP-110 leaves heat-induced aggregates persistent and insoluble, indicating failure of post-stress protein recovery.</td>
+<td>(rampelt2012metazoanhsp70machines pages 1-2, rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 8-9)</td>
+</tr>
+<tr>
+<td>Loss-of-function phenotype: viability</td>
+<td><strong>Complete hsp-110 knockout is lethal</strong>, indicating an essential housekeeping role in proteostasis. More moderate systemic RNAi knockdown also affects growth, development, and fertility.</td>
+<td>(tittelmeier2020thehsp110hsp70disaggregation pages 2-4)</td>
+</tr>
+<tr>
+<td>Loss-of-function phenotype: aggregate clearance</td>
+<td>RNAi depletion of hsp-110 causes a strong defect in <strong>resolubilization of heat-induced luciferase aggregates</strong> in vivo; aggregates persist at 12–24 h after heat shock instead of clearing during recovery.</td>
+<td>(rampelt2012metazoanhsp70machines pages 9-10, rampelt2012metazoanhsp70machines pages 8-9)</td>
+</tr>
+<tr>
+<td>Loss-of-function phenotype: lifespan after stress</td>
+<td>Under normal conditions, hsp-110 knockdown causes only a modest lifespan decrease, but after heat shock it causes a <strong>dramatic shortening of lifespan (~4.5 days)</strong>, indicating that HSP-110 becomes especially critical under high aggregation load.</td>
+<td>(rampelt2012metazoanhsp70machines pages 9-10)</td>
+</tr>
+<tr>
+<td>Loss-of-function phenotype: amyloid models</td>
+<td>In contrast to its protective role in general proteostasis, HSP-110 depletion can <strong>reduce α-synuclein and polyQ foci formation, spreading, and toxicity</strong> in worm disease models, showing that the disaggregase can be a <strong>double-edged sword</strong> by generating toxic amyloid-competent species while still supporting overall protein homeostasis.</td>
+<td>(tittelmeier2020thehsp110hsp70disaggregation pages 6-9, tittelmeier2020thehsp110hsp70disaggregation pages 4-5, tittelmeier2020thehsp110hsp70disaggregation pages 1-2)</td>
+</tr>
+<tr>
+<td>Expert interpretation</td>
+<td>Authoritative reviews and mechanistic papers converge on the view that HSP110 is the <strong>major metazoan HSP70 NEF</strong> and a central amplifier of disaggregation capacity, acting early in aggregate processing and enabling efficient HSP70 cycling on difficult aggregate substrates.</td>
+<td>(yakubu2018rolesofthe pages 4-6, nillegoda2015metazoanhsp70basedprotein pages 2-4, sztangierska2024earlystepsof pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core functional annotation of C. elegans hsp-110/C30C11.4, including identity, molecular role, localization, partners, phenotypes, and pathway context. It is useful as a concise evidence-backed overview for gene annotation and literature review.</em></p>
+<p>In conclusion, <em>C. elegans</em> HSP-110 (C30C11.4) is a cytosolic nucleotide exchange factor for Hsp70 that is essential for metazoan protein disaggregation. Its primary biochemical activity is catalyzing ADP release from Hsp70, enabling the iterative chaperone cycling required to extract and resolubilize aggregated proteins. HSP-110 is the sole cytosolic member of the HSP110 family in <em>C. elegans</em>, and its complete loss is lethal. Under proteotoxic stress conditions, HSP-110 is indispensable for aggregate clearance and organismal survival, while its activity in processing amyloid substrates represents a double-edged sword—essential for general proteostasis but also capable of generating toxic, spreading-competent amyloid species.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(rampelt2012metazoanhsp70machines pages 8-9): Heike Rampelt, Janine Kirstein-Miles, Nadinath B Nillegoda, Kang Chi, Sebastian R Scholz, Richard I Morimoto, and Bernd Bukau. Metazoan hsp70 machines use hsp110 to power protein disaggregation. The EMBO Journal, 31:4221-4235, Nov 2012. URL: https://doi.org/10.1038/emboj.2012.264, doi:10.1038/emboj.2012.264. This article has 383 citations.</p>
+</li>
+<li>
+<p>(tittelmeier2020thehsp110hsp70disaggregation pages 2-4): Jessica Tittelmeier, Carl Alexander Sandhof, Heidrun Maja Ries, Silke Druffel‐Augustin, Axel Mogk, Bernd Bukau, and Carmen Nussbaum‐Krammer. The hsp110/hsp70 disaggregation system generates spreading‐competent toxic α‐synuclein species. The EMBO Journal, May 2020. URL: https://doi.org/10.15252/embj.2019103954, doi:10.15252/embj.2019103954. This article has 119 citations.</p>
+</li>
+<li>
+<p>(bracher2015thenucleotideexchange pages 2-4): Andreas Bracher and Jacob Verghese. The nucleotide exchange factors of hsp70 molecular chaperones. Frontiers in Molecular Biosciences, Apr 2015. URL: https://doi.org/10.3389/fmolb.2015.00010, doi:10.3389/fmolb.2015.00010. This article has 299 citations.</p>
+</li>
+<li>
+<p>(sousa2014structuralmechanismsof pages 3-4): Rui Sousa. Structural mechanisms of chaperone mediated protein disaggregation. Frontiers in Molecular Biosciences, Sep 2014. URL: https://doi.org/10.3389/fmolb.2014.00012, doi:10.3389/fmolb.2014.00012. This article has 42 citations.</p>
+</li>
+<li>
+<p>(yakubu2018rolesofthe pages 1-3): Unekwu M. Yakubu and Kevin A. Morano. Roles of the nucleotide exchange factor and chaperone hsp110 in cellular proteostasis and diseases of protein misfolding. Biological Chemistry, 399:1215-1221, Sep 2018. URL: https://doi.org/10.1515/hsz-2018-0209, doi:10.1515/hsz-2018-0209. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rampelt2012metazoanhsp70machines pages 1-2): Heike Rampelt, Janine Kirstein-Miles, Nadinath B Nillegoda, Kang Chi, Sebastian R Scholz, Richard I Morimoto, and Bernd Bukau. Metazoan hsp70 machines use hsp110 to power protein disaggregation. The EMBO Journal, 31:4221-4235, Nov 2012. URL: https://doi.org/10.1038/emboj.2012.264, doi:10.1038/emboj.2012.264. This article has 383 citations.</p>
+</li>
+<li>
+<p>(andreasson2008insightsintothe pages 1-2): Claes Andréasson, Jocelyne Fiaux, Heike Rampelt, Silke Druffel-Augustin, and Bernd Bukau. Insights into the structural dynamics of the hsp110–hsp70 interaction reveal the mechanism for nucleotide exchange activity. Proceedings of the National Academy of Sciences, 105:16519-16524, Oct 2008. URL: https://doi.org/10.1073/pnas.0804187105, doi:10.1073/pnas.0804187105. This article has 107 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yakubu2018rolesofthe pages 3-4): Unekwu M. Yakubu and Kevin A. Morano. Roles of the nucleotide exchange factor and chaperone hsp110 in cellular proteostasis and diseases of protein misfolding. Biological Chemistry, 399:1215-1221, Sep 2018. URL: https://doi.org/10.1515/hsz-2018-0209, doi:10.1515/hsz-2018-0209. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yakubu2018rolesofthe pages 4-6): Unekwu M. Yakubu and Kevin A. Morano. Roles of the nucleotide exchange factor and chaperone hsp110 in cellular proteostasis and diseases of protein misfolding. Biological Chemistry, 399:1215-1221, Sep 2018. URL: https://doi.org/10.1515/hsz-2018-0209, doi:10.1515/hsz-2018-0209. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nillegoda2015metazoanhsp70basedprotein pages 2-4): Nadinath B. Nillegoda and Bernd Bukau. Metazoan hsp70-based protein disaggregases: emergence and mechanisms. Frontiers in Molecular Biosciences, Oct 2015. URL: https://doi.org/10.3389/fmolb.2015.00057, doi:10.3389/fmolb.2015.00057. This article has 149 citations.</p>
+</li>
+<li>
+<p>(kirstein2017invivoproperties pages 1-1): Janine Kirstein, Kristin Arnsburg, Annika Scior, Anna Szlachcic, D. Lys Guilbride, Richard I. Morimoto, Bernd Bukau, and Nadinath B. Nillegoda. In vivo properties of the disaggregase function of j‐proteins and hsc70 in caenorhabditis elegans stress and aging. Aging Cell, 16:1414-1424, Oct 2017. URL: https://doi.org/10.1111/acel.12686, doi:10.1111/acel.12686. This article has 87 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sztangierska2024earlystepsof pages 1-2): Wiktoria Sztangierska, Hubert Wyszkowski, Maria Pokornowska, Klaudia Kochanowicz, Michał Rychłowski, Krzysztof Liberek, and Agnieszka Kłosowska. Early steps of protein disaggregation by hsp70 chaperone and class b j-domain proteins are shaped by hsp110. Sep 2024. URL: https://doi.org/10.7554/elife.94795.2, doi:10.7554/elife.94795.2. This article has 24 citations.</p>
+</li>
+<li>
+<p>(rebeaud2025ishsp110boosting pages 1-4): Mathieu E. Rebeaud, Bruno Fauvet, Paolo De Los Rios, and Pierre Goloubinoff. Is hsp110 boosting the basal disaggregation activity hsp70 by enhanced entropic pulling strokes? bioRxiv, Apr 2025. URL: https://doi.org/10.1101/2025.04.01.646638, doi:10.1101/2025.04.01.646638. This article has 0 citations.</p>
+</li>
+<li>
+<p>(kaimal2017coordinatedhsp110and pages 15-18): Jayasankar Mohanakrishnan Kaimal, Ganapathi Kandasamy, Fabian Gasser, and Claes Andréasson. Coordinated hsp110 and hsp104 activities power protein disaggregation in <i>saccharomyces cerevisiae</i>. Molecular and Cellular Biology, Jun 2017. URL: https://doi.org/10.1128/mcb.00027-17, doi:10.1128/mcb.00027-17. This article has 95 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rampelt2012metazoanhsp70machines pages 9-10): Heike Rampelt, Janine Kirstein-Miles, Nadinath B Nillegoda, Kang Chi, Sebastian R Scholz, Richard I Morimoto, and Bernd Bukau. Metazoan hsp70 machines use hsp110 to power protein disaggregation. The EMBO Journal, 31:4221-4235, Nov 2012. URL: https://doi.org/10.1038/emboj.2012.264, doi:10.1038/emboj.2012.264. This article has 383 citations.</p>
+</li>
+<li>
+<p>(rampelt2012metazoanhsp70machines pages 10-11): Heike Rampelt, Janine Kirstein-Miles, Nadinath B Nillegoda, Kang Chi, Sebastian R Scholz, Richard I Morimoto, and Bernd Bukau. Metazoan hsp70 machines use hsp110 to power protein disaggregation. The EMBO Journal, 31:4221-4235, Nov 2012. URL: https://doi.org/10.1038/emboj.2012.264, doi:10.1038/emboj.2012.264. This article has 383 citations.</p>
+</li>
+<li>
+<p>(tittelmeier2020thehsp110hsp70disaggregation pages 1-2): Jessica Tittelmeier, Carl Alexander Sandhof, Heidrun Maja Ries, Silke Druffel‐Augustin, Axel Mogk, Bernd Bukau, and Carmen Nussbaum‐Krammer. The hsp110/hsp70 disaggregation system generates spreading‐competent toxic α‐synuclein species. The EMBO Journal, May 2020. URL: https://doi.org/10.15252/embj.2019103954, doi:10.15252/embj.2019103954. This article has 119 citations.</p>
+</li>
+<li>
+<p>(tittelmeier2020thehsp110hsp70disaggregation pages 4-5): Jessica Tittelmeier, Carl Alexander Sandhof, Heidrun Maja Ries, Silke Druffel‐Augustin, Axel Mogk, Bernd Bukau, and Carmen Nussbaum‐Krammer. The hsp110/hsp70 disaggregation system generates spreading‐competent toxic α‐synuclein species. The EMBO Journal, May 2020. URL: https://doi.org/10.15252/embj.2019103954, doi:10.15252/embj.2019103954. This article has 119 citations.</p>
+</li>
+<li>
+<p>(tittelmeier2020thehsp110hsp70disaggregation pages 6-9): Jessica Tittelmeier, Carl Alexander Sandhof, Heidrun Maja Ries, Silke Druffel‐Augustin, Axel Mogk, Bernd Bukau, and Carmen Nussbaum‐Krammer. The hsp110/hsp70 disaggregation system generates spreading‐competent toxic α‐synuclein species. The EMBO Journal, May 2020. URL: https://doi.org/10.15252/embj.2019103954, doi:10.15252/embj.2019103954. This article has 119 citations.</p>
+</li>
+<li>
+<p>(kirstein2017invivoproperties pages 7-8): Janine Kirstein, Kristin Arnsburg, Annika Scior, Anna Szlachcic, D. Lys Guilbride, Richard I. Morimoto, Bernd Bukau, and Nadinath B. Nillegoda. In vivo properties of the disaggregase function of j‐proteins and hsc70 in caenorhabditis elegans stress and aging. Aging Cell, 16:1414-1424, Oct 2017. URL: https://doi.org/10.1111/acel.12686, doi:10.1111/acel.12686. This article has 87 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(torrente2013themetazoanprotein pages 4-5): Mariana P Torrente and James Shorter. The metazoan protein disaggregase and amyloid depolymerase system. Prion, 7:457-463, Nov 2013. URL: https://doi.org/10.4161/pri.27531, doi:10.4161/pri.27531. This article has 92 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yakubu2018rolesofthe pages 11-12): Unekwu M. Yakubu and Kevin A. Morano. Roles of the nucleotide exchange factor and chaperone hsp110 in cellular proteostasis and diseases of protein misfolding. Biological Chemistry, 399:1215-1221, Sep 2018. URL: https://doi.org/10.1515/hsz-2018-0209, doi:10.1515/hsz-2018-0209. This article has 41 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="hsp-110-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bracher2015thenucleotideexchange pages 2-4</li>
+<li>sousa2014structuralmechanismsof pages 3-4</li>
+<li>yakubu2018rolesofthe pages 1-3</li>
+<li>andreasson2008insightsintothe pages 1-2</li>
+<li>yakubu2018rolesofthe pages 3-4</li>
+<li>yakubu2018rolesofthe pages 4-6</li>
+<li>sztangierska2024earlystepsof pages 1-2</li>
+<li>kirstein2017invivoproperties pages 1-1</li>
+<li>kirstein2017invivoproperties pages 7-8</li>
+<li>torrente2013themetazoanprotein pages 4-5</li>
+<li>yakubu2018rolesofthe pages 11-12</li>
+<li>https://doi.org/10.1038/emboj.2012.264,</li>
+<li>https://doi.org/10.15252/embj.2019103954,</li>
+<li>https://doi.org/10.3389/fmolb.2015.00010,</li>
+<li>https://doi.org/10.3389/fmolb.2014.00012,</li>
+<li>https://doi.org/10.1515/hsz-2018-0209,</li>
+<li>https://doi.org/10.1073/pnas.0804187105,</li>
+<li>https://doi.org/10.3389/fmolb.2015.00057,</li>
+<li>https://doi.org/10.1111/acel.12686,</li>
+<li>https://doi.org/10.7554/elife.94795.2,</li>
+<li>https://doi.org/10.1101/2025.04.01.646638,</li>
+<li>https://doi.org/10.1128/mcb.00027-17,</li>
+<li>https://doi.org/10.4161/pri.27531,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(hsp-110-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q05036" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hsp-110-c-elegans-research-notes">hsp-110 (C. elegans) — research notes</h1>
+<p>Gene: <strong>hsp-110</strong> / ORF <strong>C30C11.4</strong> / WormBase <strong>WBGene00016250</strong><br />
+UniProt: <strong>Q05036</strong> (HS110_CAEEL), 776 aa, chromosome III.<br />
+Product: Heat shock protein 110 (HSP110 / HSPH-family Hsp70 relative).</p>
+<h2 id="identity-family-known">Identity / family (KNOWN)</h2>
+<ul>
+<li>UniProt: "Belongs to the heat shock protein 70 family" (SIMILARITY, ECO:0000305). Domain<br />
+  architecture is the canonical Hsp70 fold: N-terminal actin-like ATPase nucleotide-binding<br />
+  domain (NBD; CDD cd10228 <code>ASKHA_NBD_HSP70_HSPA4_like</code>, InterPro IPR043129) + Hsp70<br />
+  substrate/peptide-binding-like domain (IPR029047) + Hsp70 C-terminal subdomain (IPR029048)<br />
+  [file:worm/hsp-110/hsp-110-uniprot.txt].</li>
+<li>This is the <strong>HSP110 / HSPA4 (HSPH) subfamily</strong>, not a canonical Hsp70. FunFam/Gene3D and<br />
+  PANTHER (PTHR45639) place it with "Heat shock 70 kDa protein 4" (HSPA4); the ALS paper<br />
+  identifies C30C11.4 as "homolog to human apg-1 (a heat shock 110 kDa protein)"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19165329" title="C30C11.4 ... homolog to human apg-1 (a heat shock 110 kDa protein)">PMID:19165329</a>.<br />
+  Human orthologs of the HSP110/HSPH class are HSPH1 (HSP105), HSPA4 (APG-2) and HSPA4L<br />
+  (APG-1/apg-1). The IBA reference set for the NEF activity includes yeast SSE1/SSE2<br />
+  (SGD:S000000373/S000006027) and human HSPH1 (UniProtKB:Q92598), confirming the orthology<br />
+  basis [file:worm/hsp-110/hsp-110-goa.tsv].</li>
+</ul>
+<h2 id="molecular-function-known-at-family-level-inferred-for-worm">Molecular function (KNOWN at family level; INFERRED for worm)</h2>
+<p>HSP110-family proteins are the principal <strong>cytosolic nucleotide-exchange factors (NEFs) for<br />
+Hsp70</strong>. Established biochemically/structurally in yeast (Sse1p) and conserved across<br />
+eukaryotes:</p>
+<ul>
+<li>Sse1p (yeast Hsp110) "acts as an efficient nucleotide exchange factor (NEF) for both yeast<br />
+  cytosolic Hsp70s, Ssa1p and Ssb1p. The mechanism involves formation of a stable<br />
+  nucleotide-sensitive complex, but does not require ATP hydrolysis by Sse1p" <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" title="acts as an efficient nucleotide exchange factor (NEF) for both yeast cytosolic Hsp70s, Ssa1p   and Ssb1p. The mechanism involves formation of a stable nucleotide-sensitive complex, but does   not require ATP hydrolysis by Sse1p">PMID:16688211</a>.</li>
+<li>Structurally, "the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces the NBD<br />
+  of Hsp70, inducing opening and the release of bound ADP from Hsp70. Mutations that abolish NEF<br />
+  activity are lethal, thus defining nucleotide exchange on Hsp70 as an essential function of<br />
+  Sse1p" <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" title="the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces   the NBD of Hsp70, inducing opening and the release of bound ADP from Hsp70. Mutations that   abolish NEF activity are lethal, thus defining nucleotide exchange on Hsp70 as an essential   function of Sse1p">PMID:18555782</a>.</li>
+</ul>
+<p>Implications for the GO annotations:<br />
+- <strong>ATP binding (GO:0005524)</strong> is genuine and functionally required: Hsp110's own NBD must be<br />
+  ATP-loaded to embrace and open the Hsp70 NBD <a href="https://pubmed.ncbi.nlm.nih.gov/18555782">PMID:18555782</a>.<br />
+- <strong>ATP hydrolysis (GO:0016887)</strong>, in contrast, is <strong>not required</strong> for the defining NEF<br />
+  activity, and Hsp110 "does not employ the nucleotide-dependent allostery and peptide-binding<br />
+  mode of canonical Hsp70s" <a href="https://pubmed.ncbi.nlm.nih.gov/18555782" title="Sse1p does not employ the nucleotide-dependent   allostery and peptide-binding mode of canonical Hsp70s, and that direct interactions of   substrate with Sse1p may support Hsp70-assisted protein folding in a cooperative process">PMID:18555782</a>.<br />
+  So the IEA <code>ATP hydrolysis activity</code> (propagated from the generic Hsp70 fold) is an<br />
+  over-annotation relative to the characterized mechanism (weak/atypical ATPase; hydrolysis<br />
+  dispensable).<br />
+- Beyond NEF, Hsp110 also has intrinsic <strong>holdase / substrate-binding</strong> activity ("direct<br />
+  interactions of substrate with Sse1p may support Hsp70-assisted protein folding"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/18555782">PMID:18555782</a>), and its NEF activity stimulates Hsp70-mediated <strong>refolding</strong> of denatured<br />
+  substrate ("The NEF activity of Sse1p stimulates in vitro Ssa1p-mediated refolding of<br />
+  thermally denatured luciferase" <a href="https://pubmed.ncbi.nlm.nih.gov/16688211">PMID:16688211</a>).</p>
+<h2 id="worm-specific-biological-role-known-experimental">Worm-specific biological role (KNOWN — experimental)</h2>
+<ol>
+<li>
+<p><strong>Prevents aggregation of a misfolding-prone protein in neurons in vivo (disaggregase/<br />
+   holdase partner of the Hsp70 machine).</strong> In a pan-neuronal mutant human SOD1(G85R) ALS model,<br />
+   an RNAi screen for modifiers of aggregation found that knockdown of a set of chaperones —<br />
+   "including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron specific<br />
+   Hsp16 (F08H9.4)" — <strong>strongly increased</strong> SOD1 inclusion formation <a href="https://pubmed.ncbi.nlm.nih.gov/19165329" title="including    an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron specific Hsp16    (F08H9.4)">PMID:19165329</a>. The effect was confirmed with the loss-of-function allele <strong>gk533</strong> (Table 2:<br />
+   "C30C11.4 ... homolog to human apg-1 (a heat shock 110 kDa protein) 3 gk533 ++", strong<br />
+   increase of inclusions). This co-set (Hsp110 + Hsp40/DnaJ + Hsp70) is exactly the metazoan<br />
+   Hsp70–Hsp40–Hsp110 disaggregation machinery, giving in vivo support for<br />
+   GO:0035966 (response to topologically incorrect protein). UniProt records the disruption<br />
+   phenotype: "RNAi-mediated knockdown in a sod-1 mutant background results in increased<br />
+   aggregation of denatured proteins in neurons" [file:worm/hsp-110/hsp-110-uniprot.txt].</p>
+</li>
+<li>
+<p><strong>Modifier of proteostasis / polyglutamine folding (protein folding, IMP).</strong> In a genome-wide<br />
+   RNAi screen in body-wall muscle, C30C11.4 was one of six chaperone-class genes among the polyQ<br />
+   (Q35/Q37) aggregation modifiers ("Protein Folding and transport ... Chaperone (6) F08H9.3;<br />
+   cyn-11; cyn-12; C30C11.4; dnj-22; phb-2") whose knockdown suppressed polyQ aggregation<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/22242008" title="F08H9.3; cyn-11; cyn-12; C30C11.4; dnj-22; phb-2">PMID:22242008</a>. It was a Class A (strong,<br />
+   Q35+Q37) modifier. This is the basis of the WormBase IMP GO:0006457 (protein folding)<br />
+   annotation. (Note the direction: here <em>knockdown</em> suppresses aggregation, whereas in the<br />
+   neuronal SOD1 model knockdown <em>increases</em> aggregation — i.e. the readout is model-dependent,<br />
+   but both link hsp-110 to the folding/aggregation environment.)</p>
+</li>
+<li>
+<p><strong>Contributes to longevity of insulin/IGF-1-signaling (ILS) mutants (determination of adult<br />
+   lifespan, IGI).</strong> Morley &amp; Morimoto showed that "Down-regulation of individual molecular<br />
+   chaperones, transcriptional targets of HSF-1, also decreased longevity of long-lived mutant<br />
+   but not wild-type animals" <a href="https://pubmed.ncbi.nlm.nih.gov/14668486" title="Down-regulation of individual molecular chaperones,    transcriptional targets of HSF-1, also decreased longevity of long-lived mutant but not    wild-type animals">PMID:14668486</a>. The WormBase IGI annotation records a genetic interaction with<br />
+   WB:WBGene00000090 = <strong>age-1</strong> (PI3K, an ILS long-lived mutant background). This paper is<br />
+   abstract-only in our cache (full_text_available: false); the specific hsp-110 result is in the<br />
+   full text the curator read. Treated as a real experimental annotation (do not remove); it is a<br />
+   pleiotropic/downstream organismal role, not the core molecular function → KEEP_AS_NON_CORE.</p>
+</li>
+</ol>
+<h2 id="localization-known-at-family-level">Localization (KNOWN at family level)</h2>
+<ul>
+<li>HSP110 proteins are "exclusively found in the eukaryotic cytosol" <a href="https://pubmed.ncbi.nlm.nih.gov/16688211" title="The Hsp110   proteins, exclusively found in the eukaryotic cytosol">PMID:16688211</a> → cytosol (GO:0005829) is the core<br />
+  site. The IBA <code>nucleus</code> (GO:0005634) is a phylogenetic propagation (mammalian HSPH1 can also be<br />
+  nuclear); no direct worm evidence → KEEP_AS_NON_CORE.</li>
+</ul>
+<h2 id="not-known-candidate-knowledge-gaps">NOT known (candidate knowledge gaps)</h2>
+<ul>
+<li><strong>Whether C. elegans HSP-110 is genetically required for Hsp70/Hsp40-dependent protein<br />
+  DISAGGREGATION in vivo, and the identity of its worm-specific Hsp70 (HSP-1 vs STC-1 vs HSP-70)<br />
+  and Hsp40/J-protein partners.</strong> PMID:19165329 shows hsp-110/dnj-19/stc-1 co-suppress SOD1<br />
+  aggregation, but the biochemical disaggregase reconstitution and the definitive partner set for<br />
+  the worm are not established.</li>
+<li><strong>The endogenous worm client repertoire of HSP-110</strong> (which native metastable proteins depend<br />
+  on HSP-110 NEF activity) is undefined; existing evidence is limited to heterologous<br />
+  aggregation-prone reporters (polyQ, mutant SOD1) and to family-level in vitro substrates.</li>
+<li><strong>Whether HSP-110's own weak/atypical ATPase activity has any in vivo role in the worm</strong>, given<br />
+  that the defining NEF mechanism does not require ATP hydrolysis [PMID:16688211; PMID:18555782].</li>
+<li><strong>Whether HSP-110 has an Hsp70-independent holdase function in the worm</strong> (direct substrate<br />
+  binding), as suggested at the family level <a href="https://pubmed.ncbi.nlm.nih.gov/18555782">PMID:18555782</a>.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<ul>
+<li>Falcon (Edison Scientific Literature) deep research completed after a ~29-min run<br />
+  (<code>hsp-110-deep-research-falcon.md</code>, 23 citations). It independently reaches the same<br />
+  conclusions used here: HSP-110 is the cytosolic HSP110-family <strong>NEF for Hsp70</strong> and a component<br />
+  of the <strong>metazoan Hsp70–Hsp40–Hsp110 protein-disaggregation machine</strong>. It surfaces two<br />
+  directly relevant papers for the knowledge gaps — Rampelt et al. 2012 EMBO J "Metazoan Hsp70<br />
+  machines use Hsp110 to power protein disaggregation" and, crucially for the worm, Kirstein et<br />
+  al. 2017 Aging Cell "In vivo properties of the disaggregase function of J-proteins and Hsc70 in<br />
+  Caenorhabditis elegans stress and aging" — that establish the C. elegans disaggregase context<br />
+  against which HSP-110's specific in-vivo requirement (knowledge gap #1) is defined.</li>
+<li>The falcon report uses DOI-keyed citations (no PMIDs); per repo experience the reference<br />
+  validator does not check <code>file:</code>/DOI quotes, so NONE of the falcon text is used verbatim in the<br />
+  review. All <code>supporting_text</code> in the review is PMID-anchored and verified against the cached<br />
+  publications (PMID:19165329, PMID:22242008, PMID:14668486, PMID:16688211, PMID:18555782).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q05036
+gene_symbol: hsp-110
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  hsp-110 (ORF C30C11.4) encodes the C. elegans member of the HSP110/HSPH subfamily of
+  the Hsp70 chaperone superfamily, orthologous to yeast Sse1/Sse2 and human HSPH1/HSPA4/
+  HSPA4L (apg-1). Like other HSP110 proteins it is a cytosolic, ATP-binding relative of
+  Hsp70 that acts as a nucleotide-exchange factor (NEF) for canonical Hsp70 chaperones:
+  its ATP-loaded nucleotide-binding domain, together with a three-helix-bundle domain,
+  clamps the Hsp70 nucleotide-binding domain and drives ADP release, resetting the Hsp70
+  ATPase/folding cycle. Unlike canonical Hsp70s, HSP110 does not depend on its own ATP
+  hydrolysis for this activity and can additionally bind non-native polypeptides directly
+  (holdase activity). In C. elegans, HSP-110 operates within the cytosolic chaperone and
+  disaggregation network together with Hsp70 and Hsp40/DnaJ partners to limit the
+  accumulation of misfolded, aggregation-prone proteins; loss of HSP-110 increases
+  aggregation of a misfolding-prone protein in neurons. As an HSF-1-regulated heat-shock
+  protein it also contributes to stress resistance and to the extended lifespan of
+  insulin/IGF-1-signaling mutants.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:14668486
+  title: Regulation of longevity in Caenorhabditis elegans by heat shock factor and
+    molecular chaperones.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Abstract-only in our cache (full_text_available: false). Supports
+      that HSF-1-target molecular chaperones are required for the extended lifespan of
+      long-lived (ILS-pathway) mutants; the WormBase IGI annotation records a genetic
+      interaction of hsp-110 with age-1 (WBGene00000090). The gene-specific hsp-110 result
+      is in the full text read by the curator, not the abstract.
+- id: PMID:19165329
+  title: An ALS-linked mutant SOD1 produces a locomotor defect associated with aggregation
+    and synaptic dysfunction when expressed in neurons of Caenorhabditis elegans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, full text available. Directly assays hsp-110/C30C11.4: RNAi and the
+      gk533 loss-of-function allele strongly increase aggregation of neuronally expressed
+      mutant human SOD1(G85R), placing HSP-110 with an Hsp70 (stc-1) and a DnaJ (dnj-19) in
+      the chaperone network that prevents misfolded-protein aggregation in vivo.
+- id: PMID:22242008
+  title: A genetic screening strategy identifies novel regulators of the proteostasis
+    network.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, full text available. C30C11.4 (hsp-110) is one of six chaperone-class
+      genes among the polyQ (Q35/Q37) aggregation modifiers (Class A, strong); basis of the
+      WormBase IMP protein-folding annotation.
+- id: PMID:16688211
+  title: &#39;Chaperone network in the yeast cytosol: Hsp110 is revealed as an Hsp70 nucleotide
+    exchange factor.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, abstract-only. Family-level (yeast Sse1p) mechanistic reference
+      establishing HSP110 as an Hsp70 nucleotide-exchange factor whose activity does not
+      require its own ATP hydrolysis; used as conserved-mechanism support for the worm
+      ortholog&#39;s NEF core function, not as direct worm evidence.
+- id: PMID:18555782
+  title: Structural basis for the cooperation of Hsp70 and Hsp110 chaperones in protein
+    folding.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified, abstract-only. Crystal structure of yeast Sse1p (Hsp110) bound to the
+      Hsp70 NBD; ATP-bound HSP110 NBD embraces the Hsp70 NBD to release ADP, and NEF activity
+      is essential. Conserved-mechanism support for the worm ortholog; also documents direct
+      substrate binding by Hsp110.
+existing_annotations:
+- term:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. HSP-110 is the C. elegans HSP110-family nucleotide-exchange
+      factor for Hsp70. This IBA is well grounded: the phylogenetic reference set includes
+      yeast Sse1/Sse2 and human HSPH1, for which NEF activity is directly established.
+    action: ACCEPT
+    reason: &gt;-
+      HSP110 proteins are the principal cytosolic NEFs for Hsp70; the ATP-loaded HSP110 NBD
+      engages the Hsp70 NBD and drives ADP release. This is the defining, informative
+      molecular function of the gene and should be retained as core.
+    supported_by:
+    - reference_id: PMID:16688211
+      supporting_text: &gt;-
+        acts as an efficient nucleotide exchange factor (NEF) for both yeast cytosolic
+        Hsp70s, Ssa1p and Ssb1p. The mechanism involves formation of a stable
+        nucleotide-sensitive complex, but does not require ATP hydrolysis by Sse1p
+    - reference_id: PMID:18555782
+      supporting_text: &gt;-
+        the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces the NBD of
+        Hsp70, inducing opening and the release of bound ADP from Hsp70. Mutations that
+        abolish NEF activity are lethal, thus defining nucleotide exchange on Hsp70 as an
+        essential function of Sse1p
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically propagated nuclear localization. HSP110-family proteins are primarily
+      cytosolic; some mammalian HSPH1 can partition to the nucleus, but there is no direct
+      C. elegans evidence for a nuclear pool of HSP-110.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as a possible minor/shuttling location inherited from the family tree, but it is
+      not the site of the core function; the cytosol is where HSP-110 acts on Hsp70.
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HSP-110 participates in the cytosolic protein-folding process as the Hsp70 NEF; its NEF
+      activity stimulates Hsp70-mediated refolding of denatured substrates.
+    action: ACCEPT
+    reason: &gt;-
+      Valid and central biological process for an Hsp70 co-chaperone/NEF; consistent with the
+      experimental IMP protein-folding annotation from the worm and with the conserved family
+      mechanism.
+    supported_by:
+    - reference_id: PMID:16688211
+      supporting_text: &gt;-
+        The NEF activity of Sse1p stimulates in vitro Ssa1p-mediated refolding of thermally
+        denatured luciferase
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Core location. HSP110 proteins are cytosolic Hsp70 relatives, and the worm HSP-110 acts
+      on cytosolic Hsp70.
+    action: ACCEPT
+    reason: &gt;-
+      The cytosol is the compartment where HSP-110 performs its NEF function; well supported
+      at the family level and consistent with worm proteostasis assays in cytoplasm.
+    supported_by:
+    - reference_id: PMID:16688211
+      supporting_text: The Hsp110 proteins, exclusively found in the eukaryotic cytosol
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      HSP-110 retains the Hsp70-family nucleotide-binding domain and binds ATP; ATP loading of
+      its NBD is functionally required for NEF activity (the ATP-bound NBD clamps the Hsp70
+      NBD to release ADP).
+    action: ACCEPT
+    reason: &gt;-
+      ATP/adenyl-nucleotide binding is genuine and mechanistically essential for HSP-110 NEF
+      function, not a spurious fold-based call.
+    supported_by:
+    - reference_id: PMID:18555782
+      supporting_text: &gt;-
+        the NBD of Sse1p is ATP bound, and together with the 3HBD it embraces the NBD of
+        Hsp70, inducing opening and the release of bound ADP from Hsp70
+- term:
+    id: GO:0006950
+    label: response to stress
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic stress-response term from ARBA. HSP-110 is a heat-shock protein and HSF-1
+      transcriptional target, so involvement in the stress response is correct but
+      uninformatively broad relative to the specific proteostasis roles captured elsewhere.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but too general; the specific and better-supported terms (response to
+      topologically incorrect protein, protein folding) convey the actual role. Keep as a
+      broad, non-core annotation.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Propagated from the generic Hsp70 ATPase fold. HSP110-family proteins have only weak,
+      atypical ATPase activity, and their defining NEF mechanism explicitly does NOT require
+      ATP hydrolysis by HSP110; HSP110 also does not use the canonical Hsp70 nucleotide-driven
+      allosteric cycle.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The term is not categorically impossible (HSP110 binds and may slowly turn over ATP),
+      but attributing a functional ATP hydrolysis activity over-states the biochemistry: it is
+      an electronic call from the shared Hsp70 domain, whereas the characterized HSP110 role is
+      NEF and holdase, with ATP binding (not hydrolysis) being the load-bearing property. Flag
+      as likely over-annotation rather than remove outright.
+    supported_by:
+    - reference_id: PMID:16688211
+      supporting_text: &gt;-
+        The mechanism involves formation of a stable nucleotide-sensitive complex, but does
+        not require ATP hydrolysis by Sse1p
+    - reference_id: PMID:18555782
+      supporting_text: &gt;-
+        does not employ the nucleotide-dependent allostery and peptide-binding mode of
+        canonical Hsp70s
+- term:
+    id: GO:0006457
+    label: protein folding
+  evidence_type: IMP
+  original_reference_id: PMID:22242008
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental WormBase annotation. In a genome-wide RNAi screen, C30C11.4 (hsp-110) was
+      one of six chaperone-class genes among the polyglutamine (Q35/Q37) aggregation modifiers
+      (a Class A strong modifier), linking it to the muscle-cell protein-folding environment.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IMP) annotation supported by the screen; consistent with HSP-110&#39;s role as
+      an Hsp70 NEF in cytosolic protein folding. Deferred to the WormBase curator who assessed
+      the full dataset.
+    supported_by:
+    - reference_id: PMID:22242008
+      supporting_text: &#39;F08H9.3; cyn-11; cyn-12; C30C11.4; dnj-22; phb-2&#39;
+- term:
+    id: GO:0035966
+    label: response to topologically incorrect protein
+  evidence_type: IMP
+  original_reference_id: PMID:19165329
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental WormBase annotation and a core biological role. RNAi and the gk533
+      loss-of-function allele of hsp-110/C30C11.4 strongly increase aggregation of neuronally
+      expressed misfolding-prone mutant human SOD1(G85R); HSP-110 acts here with an Hsp70
+      (stc-1) and a DnaJ (dnj-19), i.e. the metazoan Hsp70-Hsp40-Hsp110 anti-aggregation
+      machinery.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported experimental annotation for this gene; captures HSP-110&#39;s in vivo
+      function in handling misfolded (topologically incorrect) proteins.
+    supported_by:
+    - reference_id: PMID:19165329
+      supporting_text: &gt;-
+        including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron
+        specific Hsp16 (F08H9.4)
+    - reference_id: PMID:19165329
+      supporting_text: &gt;-
+        Three of these were validated as strongly increasing aggregation when mutant alleles
+        were crossed with G85R-YFP
+- term:
+    id: GO:0008340
+    label: determination of adult lifespan
+  evidence_type: IGI
+  original_reference_id: PMID:14668486
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental IGI annotation. HSF-1-target molecular chaperones, when down-regulated,
+      shorten the extended lifespan of long-lived insulin/IGF-1-signaling mutants; the
+      WormBase annotation records a genetic interaction of hsp-110 with age-1
+      (WBGene00000090). This is a pleiotropic, downstream organismal consequence of HSP-110&#39;s
+      chaperone activity rather than its core molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Retain as a genuine experimental (genetic-interaction) annotation - do not remove - but
+      classify as non-core: lifespan determination reflects HSP-110&#39;s contribution to the
+      proteostasis/stress network, not a distinct molecular activity. Cached reference is
+      abstract-only; deferred to the WormBase curator who read the full text.
+    supported_by:
+    - reference_id: PMID:14668486
+      supporting_text: &gt;-
+        Down-regulation of individual molecular chaperones, transcriptional targets of HSF-1,
+        also decreased longevity of long-lived mutant but not wild-type animals
+- term:
+    id: GO:0051082
+    label: unfolded protein binding
+  evidence_type: ISS
+  original_reference_id: PMID:18555782
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed molecular function not currently in GOA. In addition to nucleotide exchange,
+      HSP110-family proteins bind non-native polypeptides directly (holdase activity), and in
+      the worm HSP-110 loss increases aggregation of misfolding-prone SOD1 in neurons -
+      consistent with a substrate-binding contribution to keeping clients soluble for Hsp70.
+    action: NEW
+    reason: &gt;-
+      Captures HSP-110&#39;s substrate-binding/holdase arm, complementing its NEF activity; more
+      informative than a generic protein-binding term and grounded in the family structure plus
+      the in vivo anti-aggregation phenotype.
+    supported_by:
+    - reference_id: PMID:18555782
+      supporting_text: &gt;-
+        direct interactions of substrate with Sse1p may support Hsp70-assisted protein folding
+        in a cooperative process
+core_functions:
+- description: &gt;-
+    Cytosolic HSP110-family nucleotide-exchange factor (NEF) for Hsp70. The ATP-loaded HSP-110
+    nucleotide-binding domain, together with its three-helix-bundle domain, clamps the Hsp70
+    nucleotide-binding domain and triggers ADP release, resetting the Hsp70 ATPase/folding
+    cycle. This conserved HSP110 activity (yeast Sse1 to human HSPH1) is the defining molecular
+    function of HSP-110 and drives Hsp70-dependent (re)folding in the cytosol.
+  molecular_function:
+    id: GO:0000774
+    label: adenyl-nucleotide exchange factor activity
+  directly_involved_in:
+  - id: GO:0006457
+    label: protein folding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:16688211
+    supporting_text: &gt;-
+      acts as an efficient nucleotide exchange factor (NEF) for both yeast cytosolic Hsp70s,
+      Ssa1p and Ssb1p. The mechanism involves formation of a stable nucleotide-sensitive
+      complex, but does not require ATP hydrolysis by Sse1p
+  - reference_id: PMID:18555782
+    supporting_text: &gt;-
+      nucleotide exchange factors (NEFs) that remove ADP from Hsp70
+- description: &gt;-
+    Direct binding of non-native/unfolded polypeptides (holdase arm). Beyond nucleotide
+    exchange, HSP-110 can engage substrate directly, cooperating with Hsp70 to keep
+    aggregation-prone clients soluble; in the worm, loss of HSP-110 increases aggregation of
+    misfolding-prone SOD1 in neurons, consistent with a substrate-holding/anti-aggregation
+    contribution alongside its Hsp70 and Hsp40 partners.
+  molecular_function:
+    id: GO:0051082
+    label: unfolded protein binding
+  directly_involved_in:
+  - id: GO:0035966
+    label: response to topologically incorrect protein
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:18555782
+    supporting_text: &gt;-
+      direct interactions of substrate with Sse1p may support Hsp70-assisted protein folding
+      in a cooperative process
+  - reference_id: PMID:19165329
+    supporting_text: &gt;-
+      including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron
+      specific Hsp16 (F08H9.4)
+proposed_new_terms: []
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether C. elegans HSP-110 is genetically and biochemically required for
+    Hsp70/Hsp40-mediated protein DISAGGREGATION in vivo, and the identity of its physiological
+    worm Hsp70 (HSP-1 vs STC-1 vs HSP-70) and J-protein/Hsp40 partners in that reaction, are
+    undetermined.
+  boundary: &gt;-
+    It is established that HSP-110 is an HSP110-family Hsp70 NEF (conserved from yeast Sse1 to
+    human HSPH1) and that in neurons its loss (RNAi and the gk533 allele) increases aggregation
+    of misfolding-prone SOD1 alongside an Hsp70 (stc-1) and a DnaJ (dnj-19). What is NOT
+    established for the worm is a reconstituted or genetically defined Hsp70-Hsp40-Hsp110
+    disaggregase, its obligate partner set, and whether HSP-110 is required for active
+    dissolution of pre-formed aggregates (as opposed to preventing their formation).
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Metazoan protein disaggregation depends on a cooperative Hsp70-Hsp40-Hsp110 system.
+    Defining the worm partners and the requirement for HSP-110 would connect its molecular NEF
+    activity to organismal proteostasis and neuroprotection, and clarify which chaperone axis
+    to target in C. elegans neurodegeneration models.
+  resolution: &gt;-
+    Tissue-specific hsp-110 loss-of-function combined with aggregation/disaggregation reporters
+    and photoconvertible aggregation-clearance assays; affinity-purification/mass-spectrometry
+    of tagged HSP-110 from worm lysate to define Hsp70/J-protein partners; in vitro
+    reconstitution of a worm disaggregase.
+  provenance:
+  - reference_id: PMID:19165329
+    supporting_text: &gt;-
+      including an Hsp110 (C30C11.4), a DnaJ (A2) (dnj-19), an Hsp70 (stc-1), and a neuron
+      specific Hsp16 (F08H9.4)
+  - reference_id: PMID:16688211
+    supporting_text: &gt;-
+      This is the first report of a nucleotide exchange activity for the Hsp110 class of
+      proteins
+- gap_statement: &gt;-
+    The endogenous C. elegans client repertoire of HSP-110 is undefined: which native
+    metastable proteins depend on HSP-110 NEF/holdase activity, and in which tissues, is
+    unknown.
+  boundary: &gt;-
+    HSP-110 demonstrably modifies aggregation of heterologous, aggregation-prone reporters
+    (polyglutamine and mutant human SOD1) and, at the family level, HSP110 NEF activity
+    stimulates Hsp70-mediated refolding of denatured model substrates such as luciferase. No
+    endogenous physiological worm client of HSP-110 has been mapped.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Client identity determines where HSP-110 activity is rate-limiting for proteostasis and
+    which phenotypes (muscle, neuron, germline, aging) are mechanistically downstream of the
+    NEF function.
+  resolution: &gt;-
+    Chaperone-client capture (e.g. interactomics of tagged HSP-110, or aggregate proteomics in
+    hsp-110 loss-of-function) to enumerate native substrates.
+  provenance:
+  - reference_id: PMID:22242008
+    supporting_text: &#39;F08H9.3; cyn-11; cyn-12; C30C11.4; dnj-22; phb-2&#39;
+  - reference_id: PMID:16688211
+    supporting_text: &gt;-
+      The NEF activity of Sse1p stimulates in vitro Ssa1p-mediated refolding of thermally
+      denatured luciferase
+- gap_statement: &gt;-
+    Whether HSP-110&#39;s own weak/atypical ATPase activity, and any Hsp70-independent holdase
+    function, have a physiological role in C. elegans is untested.
+  boundary: &gt;-
+    The defining HSP110 NEF mechanism requires ATP BINDING but not ATP hydrolysis by HSP110,
+    and HSP110 does not use the canonical Hsp70 nucleotide-driven allosteric peptide-binding
+    cycle; direct substrate binding by Hsp110 has been observed in vitro. The in vivo relevance
+    of HSP-110 ATP hydrolysis and of a standalone holdase mode in the worm has not been probed.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving this would settle whether the IEA-propagated ATP hydrolysis activity is
+    functionally meaningful for HSP-110 or a fold-based over-annotation, and whether HSP-110
+    contributes to proteostasis independently of Hsp70.
+  resolution: &gt;-
+    Structure-guided separation-of-function alleles (NEF-dead vs ATPase-dead vs
+    substrate-binding-dead) tested for rescue of hsp-110 proteostasis phenotypes in vivo, plus
+    in vitro ATPase and holdase assays on purified worm HSP-110.
+  provenance:
+  - reference_id: PMID:16688211
+    supporting_text: &gt;-
+      does not require ATP hydrolysis by Sse1p
+  - reference_id: PMID:18555782
+    supporting_text: &gt;-
+      does not employ the nucleotide-dependent allostery and peptide-binding mode of canonical
+      Hsp70s
+suggested_questions:
+- question: &gt;-
+    Which C. elegans Hsp70 (HSP-1, STC-1, or HSP-70) and which J-domain/Hsp40 proteins form
+    the physiological HSP-110-dependent disaggregation machine in each tissue?
+  experts:
+  - C. elegans proteostasis biologists
+  - Hsp70/Hsp110 chaperone biochemists
+- question: &gt;-
+    Is HSP-110 required to dissolve pre-formed aggregates, or only to prevent their formation,
+    in worm neurons and muscle?
+  experts:
+  - Protein-aggregation/disaggregase biologists
+suggested_experiments:
+- experiment_type: Affinity purification / mass spectrometry
+  description: &gt;-
+    Affinity-purify endogenously tagged HSP-110 from C. elegans lysate and identify Hsp70,
+    Hsp40/J-protein, and client partners to define the worm disaggregation network and native
+    substrates.
+- experiment_type: Separation-of-function genetics
+  description: &gt;-
+    Engineer NEF-dead, ATPase-dead, and substrate-binding-dead hsp-110 alleles and test each
+    for rescue of aggregation/disaggregation and lifespan phenotypes to dissect which molecular
+    property (nucleotide exchange, ATP hydrolysis, holdase) is required in vivo.
+- experiment_type: In vitro disaggregation reconstitution
+  description: &gt;-
+    Reconstitute disaggregation of aggregated model substrates with purified worm HSP-110,
+    Hsp70, and Hsp40 to test whether HSP-110 is required and rate-limiting for the reaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
