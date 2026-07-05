@@ -149,6 +149,14 @@ the GOA table, the PANTHER family data (PTHR45658 vs PTHR10071), the two cached 
 publications (PMID:10392447, PMID:30358795), the SGD locus summary (S000004744), and
 the reproducible in-repo bioinformatics analysis (`GAT2-bioinformatics/RESULTS.md`).
 
+## Review outcome (PR #1770)
+
+Submitted as PR #1770. CI: check-mention SUCCESS, test (3.12) SUCCESS, claude-review
+SUCCESS; ai4c-agent formal review = APPROVED (substantive, verified PMIDs/quotes/GO
+terms; no CRITICAL/IMPORTANT issues, 3 non-blocking suggestions). Two of the
+non-blocking suggestions were addressed (tightened description; clarified why
+GO:0000976 and GO:0043565 are complementary MF terms).
+
 ## Provenance index
 - Domain/sequence: `genes/yeast/GAT2/GAT2-uniprot.txt` (UniProt P40209).
 - PANTHER family: `interpro/panther/PTHR45658/PTHR45658-metadata.yaml` and
