@@ -1,0 +1,3280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sod-3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sod-3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P41977" target="_blank" class="term-link">
+                        P41977
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sod-3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P41977" data-a="DESCRIPTION: sod-3 encodes a mitochondrial matrix manganese sup..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sod-3 encodes a mitochondrial matrix manganese superoxide dismutase (MnSOD) of Caenorhabditis elegans. The nuclear-encoded 218-residue precursor carries an N-terminal mitochondrial transit peptide that directs import into the mitochondrial matrix, where the mature chain adopts the characteristic iron/manganese superoxide dismutase fold and binds one catalytic Mn(2+) ion per subunit. The enzyme dismutates the superoxide anion radical, a by-product of the respiratory electron transport chain, into hydrogen peroxide and molecular oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), providing antioxidant defense within the organelle. SOD-3 is the paralog of the constitutive, quantitatively dominant mitochondrial MnSOD SOD-2, to which it is ~86% identical; unlike sod-2, sod-3 is expressed at very low basal levels and is strongly induced by the DAF-16/FOXO branch of insulin/IGF-1 signalling, making it a canonical DAF-16 target gene and a widely used transcriptional reporter of insulin/IGF-1 pathway activity and stress. Basal expression is seen in the pharynx and rectum, expanding to vulva, body-wall muscle and hypodermis upon thermal stress. Like SOD-2, SOD-3 physically associates with the mitochondrial respiratory supercomplex I:III:IV, positioning it to scavenge superoxide near its site of production, and it may help stabilize or locally protect the supercomplex, particularly when SOD-2 is absent. Loss of sod-3 alone does not alter lifespan or the activity of the respiratory complexes, but sod-3 shows distinct, non-redundant genetic interactions with electron-transport-chain mutants compared with sod-2.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that SOD-3 is active in the mitochondrion. Correct but less specific than the mitochondrial matrix, where this MnSOD acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the N-terminal mitochondrial transit peptide and with experimental localization, but generic relative to mitochondrial matrix (GO:0005759), which is retained as the core location. Kept as a correct, less-specific companion term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0004784" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of superoxide dismutase activity. This is the core molecular function of SOD-3 and is directly confirmed experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SOD-3 is an experimentally validated manganese superoxide dismutase; the IBA call is fully concordant with the IDA evidence (PMID:9353332, in which the SOD-3 protein was expressed and assayed) and with the Fe/Mn-SOD family assignment. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0030145" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of manganese ion binding, the catalytic cofactor of this MnSOD. Concordant with the UniProt Mn(2+) cofactor and Mn-ligand residues (His50, His98, Asp179, His183) and with the enzyme&#39;s Mn-type biochemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific metal-binding function: this is a Mn-type (not Fe- or Cu/Zn-type) SOD, insensitive to hydrogen peroxide and cyanide, binding one Mn(2+) per subunit. Core cofactor-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0004784" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of superoxide dismutase activity from combined automated methods (ARBA/InterPro/EC/RHEA mapping). Redundant with the experimental IDA and phylogenetic IBA calls for the same core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same core molecular function as the IDA/IBA annotations; the EC 1.15.1.1 / RHEA:20696 mapping is correct for this enzyme. Retained as concordant supporting evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell) mitochondrial localization, matching the UniProt subcellular location and the N-terminal mitochondrial transit peptide. Correct but generic relative to the mitochondrial matrix, the specific site of action.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization but less specific than mitochondrial matrix (GO:0005759), which is retained as the core location for this matrix MnSOD. Kept as a correct, less-specific companion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both deduced protein sequences contain the expected N-terminal mitochondrial transit peptides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006801" target="_blank" class="term-link">
+                                    GO:0006801
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0006801" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) assignment to the general superoxide metabolic process. Correct but less specific than removal of superoxide radicals (GO:0019430), which is the experimentally supported process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate parent process, but subsumed by the more specific removal of superoxide radicals term retained as core. Kept as a correct, less-informative companion.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) generic metal-ion-binding annotation. Subsumed by the specific manganese ion binding (GO:0030145) term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformative parent of manganese ion binding; the specific Mn(2+) term is retained as core. Kept as a non-core, less-specific companion.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0098803" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) assertion that SOD-3 is part_of the respiratory chain complex. SOD-3 is a soluble matrix MnSOD that physically associates with supercomplex I:III:IV (see the experimental located_in annotation), but it is not a canonical structural subunit of an electron-transport complex, so the part_of qualifier overstates the relationship.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimentally supported relationship is association/co-localization with the I:III:IV supercomplex (PMID:23895727, located_in), consistent with local superoxide scavenging and possible supercomplex stabilization; SOD-3 does not carry out or structurally constitute electron transport. The automated part_of qualifier is an over-generalization, so this is retained only as a non-core companion to the experimental located_in annotation rather than as evidence of structural subunit membership.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                                        PMID:23895727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In addition, the results show that SOD-3 is also localized to the I:III:IV supercomplex.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23895727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel interactions between mitochondrial superoxide dismutas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0098803" data-r="PMID:23895727" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) showing SOD-3 co-localizes with the mitochondrial supercomplex I:III:IV by blue-native gel Western blotting. A genuine, sod-3-specific localization finding, but a peripheral association rather than the enzyme&#39;s core identity; the part_of qualifier overstates it (SOD-3 is not a structural ETC subunit).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported association of SOD-3 with the I:III:IV supercomplex, consistent with local scavenging of superoxide at its site of production and a possible supercomplex-stabilizing role (the authors note SOD-3 may substitute for this SOD-2 function when SOD-2 is absent). Retained as a real but non-core localization; SOD-3&#39;s core identity is a matrix MnSOD, not a structural ETC subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                                        PMID:23895727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In addition, the results show that SOD-3 is also localized to the I:III:IV supercomplex.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9353332
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, expression, and characterization of two manganese s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0004784" data-r="PMID:9353332" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of superoxide dismutase activity: the mature SOD-3 protein was expressed in SOD-deficient E. coli and shown to be an active, Mn-type dismutase. This is the primary experimental evidence for the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard experimental support for the defining molecular function. Insensitivity to hydrogen peroxide and cyanide confirms the Mn-type (not Fe- or Cu/Zn-type) mechanism. Both worm MnSODs were expressed and assayed in this study. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019430" target="_blank" class="term-link">
+                                    GO:0019430
+                                </a>
+                            </span>
+                            <span class="term-label">removal of superoxide radicals</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9353332
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, expression, and characterization of two manganese s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0019430" data-r="PMID:9353332" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SOD-3 removes superoxide radicals: heterologous expression of the worm enzyme rescued SOD-deficient E. coli from methyl-viologen (paraquat) oxidative stress. This is the core biological process the enzyme serves.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functionally correct core process. The evidence is heterologous complementation (protection of SOD-null E. coli against a superoxide generator) rather than a worm sod-3 loss-of-function phenotype, but it directly demonstrates superoxide-radical removal by the SOD-3 protein. Core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both proteins were shown to be active in E. coli, providing similar protection against methyl viologen-induced oxidative stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17894411" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17894411
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The MAP kinase JNK-1 of Caenorhabditis elegans: location, ac...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0005739" data-r="PMID:17894411" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay (IDA) mitochondrial localization of SOD-3 (WormBase, from the full text of Wolf et al. 2008, the paper UniProt cites for the SUBCELLULAR LOCATION). Correct but generic relative to the mitochondrial matrix term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization of this MnSOD is biologically unambiguous and concordant with the transit peptide and matrix localization; retained as a correct, less-specific companion to mitochondrial matrix (GO:0005759). The cached abstract of PMID:17894411 concerns JNK-1/DAF-16 signalling and does not itself state the mitochondrial localization (it is in the full text), so no sod-3-specific verbatim localization quote is available.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9353332
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, expression, and characterization of two manganese s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P41977" data-a="GO:0005759" data-r="PMID:9353332" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed more-specific localization: as a nuclear-encoded manganese superoxide dismutase bearing an N-terminal mitochondrial transit peptide, SOD-3 is imported into and acts within the mitochondrial matrix, the compartment where Fe/Mn-SOD family MnSODs reside. This refines the generic mitochondrion annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The existing localization annotations (IBA, SubCell IEA, IDA) all use the generic GO:0005739 mitochondrion. The transit peptide and Mn-SOD family assignment place SOD-3 specifically in the mitochondrial matrix, which is retained as the core location. Added as a NEW, more-specific companion inferred from sequence features (ISS) rather than by rewriting the trusted GOA ids.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both deduced protein sequences contain the expected N-terminal mitochondrial transit peptides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SOD-3 is a mitochondrial matrix manganese superoxide dismutase that catalyzes the dismutation of the superoxide anion radical to hydrogen peroxide and molecular oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), a DAF-16/FOXO-inducible antioxidant defense of the mitochondrial matrix that complements the constitutive SOD-2.</h3>
+                <span class="vote-buttons" data-g="P41977" data-a="FUNCTION: SOD-3 is a mitochondrial matrix manganese superoxi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                            superoxide dismutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019430" target="_blank" class="term-link">
+                                removal of superoxide radicals
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both proteins were shown to be active in E. coli, providing similar protection against methyl viologen-induced oxidative stress.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SOD-3 binds one catalytic manganese (Mn2+) ion per subunit, the redox-active cofactor required for the dismutase mechanism. Its Mn-type identity is established by insensitivity to hydrogen peroxide and cyanide, which inhibit Fe-type and Cu/Zn-type SODs respectively.</h3>
+                <span class="vote-buttons" data-g="P41977" data-a="FUNCTION: SOD-3 binds one catalytic manganese (Mn2+) ion per..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                            manganese ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                            PMID:9353332
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning, expression, and characterization of two manganese superoxide dismutases from Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned sod-2 and sod-3, showed both encode mitochondrial (transit-peptide bearing) manganese-type superoxide dismutases (~86% identical proteins), and directly measured their enzymatic activity after heterologous expression of the mature chains in SOD-deficient E. coli (Mn-type: insensitive to hydrogen peroxide and cyanide; dimeric; protective against methyl-viologen/paraquat oxidative stress). Both proteins were assayed, so the biochemical evidence is sod-3-specific as well as sod-2-specific.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                            PMID:23895727
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Novel interactions between mitochondrial superoxide dismutases and the electron transport chain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SOD-3 (like SOD-2) localizes to the mitochondrial respiratory supercomplex I:III:IV by blue-native gel Western. In contrast to sod-2, loss of sod-3 does not decrease complex I-dependent respiration and sod-3 BNGs are normal; sod-3 single-mutant lifespan equals wild type, but sod-3 has distinct, non-redundant genetic interactions with the ETC mutants gas-1, mev-1 and isp-1. sod-3 is an mtSOD normally expressed at very low levels and induced by DAF-16.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17894411" target="_blank" class="term-link">
+                            PMID:17894411
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The MAP kinase JNK-1 of Caenorhabditis elegans: location, activation, and influences over temperature-dependent insulin-like signaling, stress responses, and fitness.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes sod-3 as a DAF-16 target gene whose peripheral, non-neuronal expression is promoted by JNK-1-driven nuclear translocation of DAF-16. UniProt cites this paper for the SUBCELLULAR LOCATION (mitochondrion), TISSUE SPECIFICITY (pharynx/rectum basally; vulva, body-wall muscle, hypodermis on thermal stress), and heat INDUCTION of SOD-3.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the very low basal level of SOD-3 make a material contribution to superoxide scavenging in the wild-type mitochondrial matrix, or is SOD-3 essentially a stress- and DAF-16-inducible reserve isoform that matters mainly when SOD-2 is limiting?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="Q: Does the very low basal level of SOD-3 make a mate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the mechanistic basis of the division of labour between the two nearly identical mitochondrial MnSODs, SOD-2 (constitutive, dominant) and SOD-3 (DAF-16-inducible, low basal), given their distinct and sometimes opposite genetic interactions with electron-transport-chain mutants?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="Q: What is the mechanistic basis of the division of l..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the DAF-16-driven induction of sod-3 causally protective (extending lifespan or raising stress resistance), or is it primarily a transcriptional marker of DAF-16 activity, given that eliminating both mitochondrial SODs does not suppress daf-2 longevity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="Q: Is the DAF-16-driven induction of sod-3 causally p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Isoform-resolved, tagged-allele quantification and localization of SOD-3 versus SOD-2 across tissues, developmental stages and stress/DAF-16-active conditions, to define SOD-3&#39;s basal contribution and its supercomplex occupancy relative to SOD-2.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="EXPERIMENT: Isoform-resolved, tagged-allele quantification and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Catalytically-dead (Mn-ligand mutant) versus wild-type sod-3 rescue in sod-3 and sod-2;sod-3 backgrounds, scoring supercomplex I:III:IV formation, complex I/II activity and ROS damage, to test whether SOD-3 acts by scavenging or as a catalysis-independent supercomplex stabilizer.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="EXPERIMENT: Catalytically-dead (Mn-ligand mutant) versus wild-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Redox-biosensor (mitochondrial roGFP/HyPer) measurement of matrix superoxide/H2O2 in wild type, sod-2, sod-3 and sod-2;sod-3 under DAF-16-activating conditions to resolve whether sod-3 induction lowers matrix superoxide and whether that change is required for the associated stress-resistance/longevity phenotypes.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P41977" data-a="EXPERIMENT: Redox-biosensor (mitochondrial roGFP/HyPer) measur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The functional division of labour between the two nearly identical mitochondrial manganese superoxide dismutases, SOD-3 and SOD-2, is undefined. It is unknown why C. elegans maintains a low-basal, DAF-16-inducible MnSOD (sod-3) alongside a constitutive, dominant one (sod-2), what distinguishes their substrates or sub-mitochondrial contexts, and why loss of sod-3 versus sod-2 produces different (sometimes opposite) genetic interactions with electron-transport-chain mutants.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that sod-2 and sod-3 are ~86% identical mitochondrial MnSODs, that sod-3 is normally expressed at very low levels and induced by DAF-16/insulin signalling whereas sod-2 is constitutive and dominant, that both localize to supercomplex I:III:IV, that loss of sod-3 (unlike sod-2) does not decrease complex I respiration and leaves blue-native supercomplex profiles normal, and that sod-3 has distinct genetic interactions with gas-1, mev-1 and isp-1. What is not established is the mechanistic basis of the non-redundancy at the level of substrate, sub-mitochondrial context, or partner; the authors of the key ETC study explicitly state that the sod-3/supercomplex interaction was still under investigation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Two paralogous mitochondrial MnSODs with divergent, non-redundant phenotypes are a clean model for how gene duplication partitions an antioxidant function, and the division of labour determines which isoform is limiting under which stress or signalling state.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"However, the mutation sod-3 differed from sod-2 in its interactions with gas-1, mev-1 and isp-1."</em> — PMID:23895727</li>
+
+                <li><em>"Studies are now being undertaken to characterize the interaction of sod3 with supercomplex I:III:IV formation."</em> — PMID:23895727</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether the DAF-16-driven induction of sod-3 is causally protective (increasing oxidative-stress resistance or extending lifespan) or is primarily a transcriptional readout of DAF-16 activity is unresolved. It is also unknown whether the very low basal SOD-3 level makes a material contribution to matrix superoxide scavenging in otherwise wild-type animals.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that sod-3 is a canonical DAF-16 target gene, expressed at very low basal levels and strongly induced upon DAF-16 nuclear translocation (including JNK-1-promoted translocation under thermal stress), and that its induction correlates with stress-resistant, long-lived states. However, simultaneous elimination of both mitochondrial SODs (sod-2 and sod-3) does not suppress the long lifespan of daf-2, arguing that sod-3 induction is not required for insulin/IGF-1-pathway longevity. What is not established is whether sod-3 induction confers a measurable protective benefit on its own, or whether it is chiefly a marker of the DAF-16 program.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> sod-3 is one of the most widely used transcriptional reporters of DAF-16/FOXO activity in aging and stress research; establishing whether its induction is protective or merely a marker directly affects how thousands of studies interpret sod-3 reporter readouts.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The activation of daf-16 increased expression of sod-3, an mtSOD normally expressed in very low levels in wild type worms"</em> — PMID:23895727</li>
+
+                <li><em>"elimination of both mitochondrial sod-2 and sod-3 failed to suppress the long life span of daf-2"</em> — PMID:23895727</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether SOD-3&#39;s association with the respiratory supercomplex I:III:IV reflects only local superoxide scavenging at the site of ROS production, or whether SOD-3 can also act as a catalysis-independent structural stabilizer of the supercomplex (a role proposed for the mitochondrial SODs, and one SOD-3 may assume when SOD-2 is absent), is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that SOD-3 co-localizes with the I:III:IV supercomplex by blue-native gel and that, unlike sod-2 loss, sod-3 loss does not by itself decrease complex I respiration or perturb the supercomplex profile. The open question is causality/mechanism: the mtSODs are proposed to stabilize the supercomplex, and the limited rise in supercomplex ROS damage in sod-2 animals suggests SOD-3 may perform this function when supercomplex levels fall, but a catalysis-independent structural role for SOD-3 remains unproven.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing a scavenging role from a structural role would determine whether SOD-3 is a modular antioxidant or an integral stabilizer of the electron transport chain, with implications for how supercomplex integrity is maintained when the dominant SOD-2 is lost.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"it is also possible that the mtSODs may directly serve as stabilizing factors in the I:III:IV supercomplex"</em> — PMID:23895727</li>
+
+                <li><em>"the lack of a large increase in ROS damage to supercomplexes in a sod-2 animal may indicate that SOD-3 is also capable of performing this function, especially when the amount of supercomplex I:III:IV is reduced."</em> — PMID:23895727</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sod-3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P41977" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sod-3-c-elegans-curation-notes">sod-3 (C. elegans) — curation notes</h1>
+<p>UniProt: <strong>P41977</strong> (SODM2_CAEEL). WormBase: WBGene00004932 / C08A9.1. Chromosome X.<br />
+EC 1.15.1.1. 218 aa precursor with N-terminal mitochondrial transit peptide (1–24),<br />
+mature chain 25–218. Mn(2+) ligand residues 50, 98, 179, 183 (UniProt, by similarity).<br />
+7 PDB structures (e.g. 6S0D at 1.52 Å). PANTHER PTHR11404:SF6.</p>
+<h2 id="one-line-identity">One-line identity</h2>
+<p>sod-3 encodes the <strong>DAF-16/FOXO-inducible, low-basal mitochondrial matrix manganese<br />
+superoxide dismutase (MnSOD)</strong> of C. elegans; paralog of the constitutive, dominant<br />
+sod-2 (~86% identical protein). Classic DAF-16/insulin-signalling target gene and<br />
+widely used longevity reporter.</p>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<ul>
+<li><strong>Mn-type superoxide dismutase activity</strong> (EC 1.15.1.1). Mature SOD-3 protein<br />
+  expressed in SOD-deficient E. coli is an active dismutase; Mn-type identity shown<br />
+  by insensitivity to H2O2 and cyanide; dimeric. <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="The expressed enzymes,   which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite   different electrophoretic mobilities and isoelectric points, but exhibit comparable   specific activities.">PMID:9353332</a> — NOTE: this paper cloned and assayed BOTH sod-2 and sod-3;<br />
+  the quote refers to both expressed enzymes, so it is genuinely sod-3-specific.</li>
+<li><strong>Removal of superoxide radicals</strong> (protective against superoxide stress). Both<br />
+  MnSODs rescued paraquat/methyl-viologen sensitivity of SOD-null E. coli.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="Both proteins were shown to be active in E. coli, providing similar   protection against methyl viologen-induced oxidative stress.">PMID:9353332</a> — evidence is<br />
+  heterologous complementation, not a worm sod-3 loss-of-function phenotype.</li>
+<li><strong>Mitochondrial localization.</strong> UniProt subcellular location = Mitochondrion,<br />
+  ECO:0000269|PubMed:17894411 (Wolf et al. 2008); N-terminal mitochondrial transit<br />
+  peptide present in the deduced sequence. <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="Both deduced protein   sequences contain the expected N-terminal mitochondrial transit peptides.">PMID:9353332</a> The<br />
+  17894411 abstract itself does not state the mitochondrial localization (it is in the<br />
+  full text; abstract-only in cache), but UniProt cites it for SUBCELLULAR LOCATION.</li>
+<li><strong>Localizes to respiratory supercomplex I:III:IV.</strong> By blue-native gel Western,<br />
+  SOD-3 co-migrates with the I:III:IV supercomplex. <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="In addition, the   results show that SOD-3 is also localized to the I:III:IV supercomplex.">PMID:23895727</a> This is the<br />
+  source of the WormBase IDA GO:0098803 (respiratory chain complex) annotation.<br />
+  Caveat: the anti-SOD-2 antibody cross-reacts with SOD-3 (Figure S2); the authors<br />
+  nonetheless conclude SOD-3 localizes to the supercomplex.</li>
+<li><strong>DAF-16/FOXO-inducible, low basal expression.</strong> sod-3 is normally expressed at very<br />
+  low levels and is induced by DAF-16 (insulin/IGF-1 signalling). <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="The   activation of daf-16 increased expression of sod-3, an mtSOD normally expressed in   very low levels in wild type worms">PMID:23895727</a>. JNK-1 promotes DAF-16 nuclear translocation and<br />
+  sod-3 target-gene expression in peripheral tissue. <a href="https://pubmed.ncbi.nlm.nih.gov/17894411" title="a promoting   influence of JNK-1 on both nuclear DAF-16 translocations and DAF-16 target gene   (superoxide dismutase 3, sod-3) expressions within peripheral, non-neuronal tissue">PMID:17894411</a>.</li>
+<li><strong>Tissue expression (UniProt, from PMID:17894411 full text):</strong> pharynx and rectum<br />
+  basally; on thermal stress also vulva, body-wall muscle, hypodermis. Induced by heat.</li>
+<li><strong>sod-3 single mutant lifespan = wild type.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="the lifespan of sod-3   was not different from N2 (Figure S1)">PMID:23895727</a>.</li>
+<li><strong>Non-redundant with sod-2 in ETC-mutant interactions.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="the mutation   sod-3 differed from sod-2 in its interactions with gas-1, mev-1 and isp-1.">PMID:23895727</a><br />
+  Specifically: gas-1;sod-3 ≈ gas-1; mev-1;sod-3 shorter than mev-1; isp-1;sod-3 longer<br />
+  than isp-1. Complex I-dependent respiration decreased in sod-2 but NOT sod-3; sod-3<br />
+  BNGs normal. <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="sod-3 BNGs were normal (Figure 5E).">PMID:23895727</a></li>
+</ul>
+<h2 id="sod-3-vs-sod-2-attribution-important">sod-3 vs sod-2 attribution (important)</h2>
+<ul>
+<li>sod-2 (P31161): constitutive, quantitatively dominant mitochondrial MnSOD; loss lowers<br />
+  complex I/II activity, destabilizes supercomplex, and (counterintuitively) does not<br />
+  shorten / can extend lifespan.</li>
+<li>sod-3 (P41977): low-basal, DAF-16-inducible paralog; single-mutant lifespan normal;<br />
+  does not by itself decrease complex I respiration; also localizes to supercomplex and<br />
+  may be able to substitute for SOD-2's supercomplex-protective function when SOD-2 is<br />
+  absent. <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="the lack of a large increase in ROS damage to supercomplexes   in a sod-2 animal may indicate that SOD-3 is also capable of performing this function,   especially when the amount of supercomplex I:III:IV is reduced.">PMID:23895727</a></li>
+<li>PMID:9353332 assayed BOTH proteins → its enzymatic/complementation quotes apply to<br />
+  sod-3 as well as sod-2. PMID:23895727 has explicit sod-3-specific statements.</li>
+</ul>
+<h2 id="not-known-open">NOT known / open</h2>
+<ul>
+<li>Whether basal sod-3 (very low) contributes materially to matrix superoxide scavenging<br />
+  in the wild type, or whether it is essentially a stress-inducible reserve isoform.</li>
+<li>The mechanistic basis of the sod-2/sod-3 division of labour (substrate, sub-mito<br />
+  context, partner). Authors explicitly state this is under investigation.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="Studies are now being undertaken to characterize the interaction of   sod3 with supercomplex I:III:IV formation.">PMID:23895727</a></li>
+<li>Whether DAF-16-driven sod-3 induction is causally protective (extends life / raises<br />
+  stress resistance) or is chiefly a transcriptional MARKER of DAF-16 activity. In daf-2<br />
+  longevity, eliminating both mtSODs did not suppress the long lifespan, arguing sod-3<br />
+  induction is not required for daf-2 longevity <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="elimination of both   mitochondrial sod-2 and sod-3 failed to suppress the long life span of daf-2">PMID:23895727</a>.</li>
+<li>Whether SOD-3 is a catalytic scavenger or also a structural stabilizer of the<br />
+  supercomplex (catalysis-independent role), as proposed for the mtSODs generally<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="it is also possible that the mtSODs may directly serve as stabilizing   factors in the I:III:IV supercomplex">PMID:23895727</a>.</li>
+</ul>
+<h2 id="goa-annotation-inventory-12">GOA annotation inventory (12)</h2>
+<ol>
+<li>GO:0005739 mitochondrion — IBA — GO_REF:0000033 — is_active_in</li>
+<li>GO:0004784 superoxide dismutase activity — IBA — GO_REF:0000033 — enables</li>
+<li>GO:0030145 manganese ion binding — IBA — GO_REF:0000033 — enables</li>
+<li>GO:0004784 superoxide dismutase activity — IEA — GO_REF:0000120 — enables</li>
+<li>GO:0005739 mitochondrion — IEA — GO_REF:0000044 (SubCell) — located_in</li>
+<li>GO:0006801 superoxide metabolic process — IEA — GO_REF:0000002 (InterPro2GO) — involved_in</li>
+<li>GO:0046872 metal ion binding — IEA — GO_REF:0000002 (InterPro2GO) — enables</li>
+<li>GO:0098803 respiratory chain complex — IEA — GO_REF:0000117 (ARBA) — part_of</li>
+<li>GO:0098803 respiratory chain complex — IDA — PMID:23895727 — part_of</li>
+<li>GO:0004784 superoxide dismutase activity — IDA — PMID:9353332 — enables</li>
+<li>GO:0019430 removal of superoxide radicals — IMP — PMID:9353332 — involved_in</li>
+<li>GO:0005739 mitochondrion — IDA — PMID:17894411 — located_in</li>
+</ol>
+<h2 id="planned-actions-mirrors-sod-2-modeling-pr-1711">Planned actions (mirrors sod-2 modeling; PR #1711)</h2>
+<ul>
+<li>SOD activity (IBA/IEA/IDA), manganese ion binding (IBA), mitochondrial matrix,<br />
+  removal of superoxide radicals = CORE. ACCEPT the experimental/phylogenetic calls.</li>
+<li>mitochondrion (generic) IBA/IEA/IDA → KEEP_AS_NON_CORE (matrix is the specific core CC).</li>
+<li>superoxide metabolic process (IEA) → KEEP_AS_NON_CORE (parent of removal of superoxide).</li>
+<li>metal ion binding (IEA) → KEEP_AS_NON_CORE (parent of manganese ion binding).</li>
+<li>respiratory chain complex part_of IEA (ARBA) → KEEP_AS_NON_CORE (over-generalized;<br />
+  SOD-3 associates with, not structural subunit of, the supercomplex).</li>
+<li>respiratory chain complex located_in IDA (PMID:23895727) → KEEP_AS_NON_CORE<br />
+  (real sod-3-specific supercomplex co-localization; peripheral association not core identity).</li>
+</ul>
+<h2 id="project-note-not-for-the-review-file">Project note (not for the review file)</h2>
+<p>projects/CAEEL_MITOPHAGY.md line 76 mislabels sod-3 as "Fe-SOD"; it is a Mn-SOD<br />
+(UniProt "Superoxide dismutase [Mn] 2"; PMID:9353332). Out of scope for this PR.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P41977
+gene_symbol: sod-3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  sod-3 encodes a mitochondrial matrix manganese superoxide dismutase (MnSOD) of
+  Caenorhabditis elegans. The nuclear-encoded 218-residue precursor carries an
+  N-terminal mitochondrial transit peptide that directs import into the
+  mitochondrial matrix, where the mature chain adopts the characteristic
+  iron/manganese superoxide dismutase fold and binds one catalytic Mn(2+) ion per
+  subunit. The enzyme dismutates the superoxide anion radical, a by-product of the
+  respiratory electron transport chain, into hydrogen peroxide and molecular oxygen
+  (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), providing antioxidant defense
+  within the organelle. SOD-3 is the paralog of the constitutive, quantitatively
+  dominant mitochondrial MnSOD SOD-2, to which it is ~86% identical; unlike sod-2,
+  sod-3 is expressed at very low basal levels and is strongly induced by the
+  DAF-16/FOXO branch of insulin/IGF-1 signalling, making it a canonical DAF-16 target
+  gene and a widely used transcriptional reporter of insulin/IGF-1 pathway activity
+  and stress. Basal expression is seen in the pharynx and rectum, expanding to vulva,
+  body-wall muscle and hypodermis upon thermal stress. Like SOD-2, SOD-3 physically
+  associates with the mitochondrial respiratory supercomplex I:III:IV, positioning it
+  to scavenge superoxide near its site of production, and it may help stabilize or
+  locally protect the supercomplex, particularly when SOD-2 is absent. Loss of sod-3
+  alone does not alter lifespan or the activity of the respiratory complexes, but
+  sod-3 shows distinct, non-redundant genetic interactions with electron-transport-chain
+  mutants compared with sod-2.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9353332
+  title: Cloning, expression, and characterization of two manganese superoxide dismutases
+    from Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      Cloned sod-2 and sod-3, showed both encode mitochondrial (transit-peptide
+      bearing) manganese-type superoxide dismutases (~86% identical proteins), and
+      directly measured their enzymatic activity after heterologous expression of the
+      mature chains in SOD-deficient E. coli (Mn-type: insensitive to hydrogen
+      peroxide and cyanide; dimeric; protective against methyl-viologen/paraquat
+      oxidative stress). Both proteins were assayed, so the biochemical evidence is
+      sod-3-specific as well as sod-2-specific.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache (full_text_available: false), but the abstract explicitly
+      reports the direct biochemical characterization of BOTH MnSODs, underlying the
+      WormBase IDA (superoxide dismutase activity) and IMP (removal of superoxide
+      radicals) annotations for sod-3. The IMP is heterologous E. coli complementation,
+      not a worm sod-3 mutant phenotype.
+- id: PMID:23895727
+  title: Novel interactions between mitochondrial superoxide dismutases and the electron
+    transport chain.
+  findings:
+  - statement: &gt;-
+      SOD-3 (like SOD-2) localizes to the mitochondrial respiratory supercomplex
+      I:III:IV by blue-native gel Western. In contrast to sod-2, loss of sod-3 does
+      not decrease complex I-dependent respiration and sod-3 BNGs are normal; sod-3
+      single-mutant lifespan equals wild type, but sod-3 has distinct, non-redundant
+      genetic interactions with the ETC mutants gas-1, mev-1 and isp-1. sod-3 is an
+      mtSOD normally expressed at very low levels and induced by DAF-16.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text cached (PMC3838459). The richest sod-3-specific source: directly
+      supports the IDA supercomplex localization, the low-basal/DAF-16-inducible
+      expression framing, the normal single-mutant lifespan, and the sod-2/sod-3
+      non-redundancy. The anti-SOD-2 antibody cross-reacts with SOD-3 (Figure S2), but
+      the authors explicitly conclude SOD-3 is localized to the supercomplex.
+- id: PMID:17894411
+  title: &#39;The MAP kinase JNK-1 of Caenorhabditis elegans: location, activation, and
+    influences over temperature-dependent insulin-like signaling, stress responses,
+    and fitness.&#39;
+  findings:
+  - statement: &gt;-
+      Establishes sod-3 as a DAF-16 target gene whose peripheral, non-neuronal
+      expression is promoted by JNK-1-driven nuclear translocation of DAF-16. UniProt
+      cites this paper for the SUBCELLULAR LOCATION (mitochondrion), TISSUE
+      SPECIFICITY (pharynx/rectum basally; vulva, body-wall muscle, hypodermis on
+      thermal stress), and heat INDUCTION of SOD-3.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; the abstract supports the DAF-16-target/sod-3-reporter
+      role verbatim. The mitochondrial localization it is cited for by UniProt is in
+      the full text (not the abstract), so no verbatim mitochondrial-localization quote
+      is available here; mitochondrial localization of this MnSOD is biologically
+      unambiguous and concordant with the transit peptide.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that SOD-3 is active in the mitochondrion. Correct
+      but less specific than the mitochondrial matrix, where this MnSOD acts.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the N-terminal mitochondrial transit peptide and with
+      experimental localization, but generic relative to mitochondrial matrix
+      (GO:0005759), which is retained as the core location. Kept as a correct,
+      less-specific companion term.
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of superoxide dismutase activity. This is the core
+      molecular function of SOD-3 and is directly confirmed experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      SOD-3 is an experimentally validated manganese superoxide dismutase; the IBA
+      call is fully concordant with the IDA evidence (PMID:9353332, in which the SOD-3
+      protein was expressed and assayed) and with the Fe/Mn-SOD family assignment.
+      Core function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of manganese ion binding, the catalytic cofactor of
+      this MnSOD. Concordant with the UniProt Mn(2+) cofactor and Mn-ligand residues
+      (His50, His98, Asp179, His183) and with the enzyme&#39;s Mn-type biochemistry.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific metal-binding function: this is a Mn-type (not Fe- or
+      Cu/Zn-type) SOD, insensitive to hydrogen peroxide and cyanide, binding one Mn(2+)
+      per subunit. Core cofactor-binding function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of superoxide dismutase activity from combined
+      automated methods (ARBA/InterPro/EC/RHEA mapping). Redundant with the
+      experimental IDA and phylogenetic IBA calls for the same core function.
+    action: ACCEPT
+    reason: &gt;-
+      Same core molecular function as the IDA/IBA annotations; the EC 1.15.1.1 /
+      RHEA:20696 mapping is correct for this enzyme. Retained as concordant supporting
+      evidence.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell) mitochondrial localization, matching the UniProt
+      subcellular location and the N-terminal mitochondrial transit peptide. Correct
+      but generic relative to the mitochondrial matrix, the specific site of action.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct localization but less specific than mitochondrial matrix (GO:0005759),
+      which is retained as the core location for this matrix MnSOD. Kept as a correct,
+      less-specific companion.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        Both deduced protein sequences contain the expected N-terminal mitochondrial
+        transit peptides.
+- term:
+    id: GO:0006801
+    label: superoxide metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) assignment to the general superoxide metabolic process.
+      Correct but less specific than removal of superoxide radicals (GO:0019430), which
+      is the experimentally supported process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate parent process, but subsumed by the more specific removal of superoxide
+      radicals term retained as core. Kept as a correct, less-informative companion.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) generic metal-ion-binding annotation. Subsumed by the
+      specific manganese ion binding (GO:0030145) term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but uninformative parent of manganese ion binding; the specific Mn(2+)
+      term is retained as core. Kept as a non-core, less-specific companion.
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Electronic (ARBA) assertion that SOD-3 is part_of the respiratory chain complex.
+      SOD-3 is a soluble matrix MnSOD that physically associates with supercomplex
+      I:III:IV (see the experimental located_in annotation), but it is not a canonical
+      structural subunit of an electron-transport complex, so the part_of qualifier
+      overstates the relationship.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimentally supported relationship is association/co-localization with the
+      I:III:IV supercomplex (PMID:23895727, located_in), consistent with local
+      superoxide scavenging and possible supercomplex stabilization; SOD-3 does not
+      carry out or structurally constitute electron transport. The automated part_of
+      qualifier is an over-generalization, so this is retained only as a non-core
+      companion to the experimental located_in annotation rather than as evidence of
+      structural subunit membership.
+    supported_by:
+    - reference_id: PMID:23895727
+      supporting_text: &gt;-
+        In addition, the results show that SOD-3 is also localized to the I:III:IV
+        supercomplex.
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: IDA
+  original_reference_id: PMID:23895727
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Direct assay (IDA) showing SOD-3 co-localizes with the mitochondrial supercomplex
+      I:III:IV by blue-native gel Western blotting. A genuine, sod-3-specific
+      localization finding, but a peripheral association rather than the enzyme&#39;s core
+      identity; the part_of qualifier overstates it (SOD-3 is not a structural ETC
+      subunit).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported association of SOD-3 with the I:III:IV supercomplex,
+      consistent with local scavenging of superoxide at its site of production and a
+      possible supercomplex-stabilizing role (the authors note SOD-3 may substitute for
+      this SOD-2 function when SOD-2 is absent). Retained as a real but non-core
+      localization; SOD-3&#39;s core identity is a matrix MnSOD, not a structural ETC
+      subunit.
+    supported_by:
+    - reference_id: PMID:23895727
+      supporting_text: &gt;-
+        In addition, the results show that SOD-3 is also localized to the I:III:IV
+        supercomplex.
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9353332
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of superoxide dismutase activity: the mature SOD-3 protein was
+      expressed in SOD-deficient E. coli and shown to be an active, Mn-type dismutase.
+      This is the primary experimental evidence for the core function.
+    action: ACCEPT
+    reason: &gt;-
+      Gold-standard experimental support for the defining molecular function.
+      Insensitivity to hydrogen peroxide and cyanide confirms the Mn-type (not Fe- or
+      Cu/Zn-type) mechanism. Both worm MnSODs were expressed and assayed in this study.
+      Core function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+- term:
+    id: GO:0019430
+    label: removal of superoxide radicals
+  evidence_type: IMP
+  original_reference_id: PMID:9353332
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SOD-3 removes superoxide radicals: heterologous expression of the worm enzyme
+      rescued SOD-deficient E. coli from methyl-viologen (paraquat) oxidative stress.
+      This is the core biological process the enzyme serves.
+    action: ACCEPT
+    reason: &gt;-
+      Functionally correct core process. The evidence is heterologous complementation
+      (protection of SOD-null E. coli against a superoxide generator) rather than a worm
+      sod-3 loss-of-function phenotype, but it directly demonstrates superoxide-radical
+      removal by the SOD-3 protein. Core process.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        Both proteins were shown to be active in E. coli, providing similar protection
+        against methyl viologen-induced oxidative stress.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:17894411
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct-assay (IDA) mitochondrial localization of SOD-3 (WormBase, from the full
+      text of Wolf et al. 2008, the paper UniProt cites for the SUBCELLULAR LOCATION).
+      Correct but generic relative to the mitochondrial matrix term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mitochondrial localization of this MnSOD is biologically unambiguous and
+      concordant with the transit peptide and matrix localization; retained as a
+      correct, less-specific companion to mitochondrial matrix (GO:0005759). The cached
+      abstract of PMID:17894411 concerns JNK-1/DAF-16 signalling and does not itself
+      state the mitochondrial localization (it is in the full text), so no
+      sod-3-specific verbatim localization quote is available.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: ISS
+  original_reference_id: PMID:9353332
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed more-specific localization: as a nuclear-encoded manganese superoxide
+      dismutase bearing an N-terminal mitochondrial transit peptide, SOD-3 is imported
+      into and acts within the mitochondrial matrix, the compartment where Fe/Mn-SOD
+      family MnSODs reside. This refines the generic mitochondrion annotations.
+    action: NEW
+    reason: &gt;-
+      The existing localization annotations (IBA, SubCell IEA, IDA) all use the generic
+      GO:0005739 mitochondrion. The transit peptide and Mn-SOD family assignment place
+      SOD-3 specifically in the mitochondrial matrix, which is retained as the core
+      location. Added as a NEW, more-specific companion inferred from sequence features
+      (ISS) rather than by rewriting the trusted GOA ids.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        Both deduced protein sequences contain the expected N-terminal mitochondrial
+        transit peptides.
+core_functions:
+- description: &gt;-
+    SOD-3 is a mitochondrial matrix manganese superoxide dismutase that catalyzes the
+    dismutation of the superoxide anion radical to hydrogen peroxide and molecular
+    oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), a DAF-16/FOXO-inducible
+    antioxidant defense of the mitochondrial matrix that complements the constitutive
+    SOD-2.
+  molecular_function:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  directly_involved_in:
+  - id: GO:0019430
+    label: removal of superoxide radicals
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide,
+      are dimeric, show quite different electrophoretic mobilities and isoelectric
+      points, but exhibit comparable specific activities.
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      Both proteins were shown to be active in E. coli, providing similar protection
+      against methyl viologen-induced oxidative stress.
+- description: &gt;-
+    SOD-3 binds one catalytic manganese (Mn2+) ion per subunit, the redox-active
+    cofactor required for the dismutase mechanism. Its Mn-type identity is established
+    by insensitivity to hydrogen peroxide and cyanide, which inhibit Fe-type and
+    Cu/Zn-type SODs respectively.
+  molecular_function:
+    id: GO:0030145
+    label: manganese ion binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide,
+      are dimeric, show quite different electrophoretic mobilities and isoelectric
+      points, but exhibit comparable specific activities.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does the very low basal level of SOD-3 make a material contribution to superoxide
+    scavenging in the wild-type mitochondrial matrix, or is SOD-3 essentially a
+    stress- and DAF-16-inducible reserve isoform that matters mainly when SOD-2 is
+    limiting?
+- question: &gt;-
+    What is the mechanistic basis of the division of labour between the two nearly
+    identical mitochondrial MnSODs, SOD-2 (constitutive, dominant) and SOD-3
+    (DAF-16-inducible, low basal), given their distinct and sometimes opposite genetic
+    interactions with electron-transport-chain mutants?
+- question: &gt;-
+    Is the DAF-16-driven induction of sod-3 causally protective (extending lifespan or
+    raising stress resistance), or is it primarily a transcriptional marker of DAF-16
+    activity, given that eliminating both mitochondrial SODs does not suppress daf-2
+    longevity?
+suggested_experiments:
+- description: &gt;-
+    Isoform-resolved, tagged-allele quantification and localization of SOD-3 versus
+    SOD-2 across tissues, developmental stages and stress/DAF-16-active conditions, to
+    define SOD-3&#39;s basal contribution and its supercomplex occupancy relative to SOD-2.
+- description: &gt;-
+    Catalytically-dead (Mn-ligand mutant) versus wild-type sod-3 rescue in sod-3 and
+    sod-2;sod-3 backgrounds, scoring supercomplex I:III:IV formation, complex I/II
+    activity and ROS damage, to test whether SOD-3 acts by scavenging or as a
+    catalysis-independent supercomplex stabilizer.
+- description: &gt;-
+    Redox-biosensor (mitochondrial roGFP/HyPer) measurement of matrix superoxide/H2O2
+    in wild type, sod-2, sod-3 and sod-2;sod-3 under DAF-16-activating conditions to
+    resolve whether sod-3 induction lowers matrix superoxide and whether that change is
+    required for the associated stress-resistance/longevity phenotypes.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The functional division of labour between the two nearly identical mitochondrial
+    manganese superoxide dismutases, SOD-3 and SOD-2, is undefined. It is unknown why
+    C. elegans maintains a low-basal, DAF-16-inducible MnSOD (sod-3) alongside a
+    constitutive, dominant one (sod-2), what distinguishes their substrates or
+    sub-mitochondrial contexts, and why loss of sod-3 versus sod-2 produces different
+    (sometimes opposite) genetic interactions with electron-transport-chain mutants.
+  boundary: &gt;-
+    It is established that sod-2 and sod-3 are ~86% identical mitochondrial MnSODs, that
+    sod-3 is normally expressed at very low levels and induced by DAF-16/insulin
+    signalling whereas sod-2 is constitutive and dominant, that both localize to
+    supercomplex I:III:IV, that loss of sod-3 (unlike sod-2) does not decrease complex I
+    respiration and leaves blue-native supercomplex profiles normal, and that sod-3 has
+    distinct genetic interactions with gas-1, mev-1 and isp-1. What is not established is
+    the mechanistic basis of the non-redundancy at the level of substrate,
+    sub-mitochondrial context, or partner; the authors of the key ETC study explicitly
+    state that the sod-3/supercomplex interaction was still under investigation.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Two paralogous mitochondrial MnSODs with divergent, non-redundant phenotypes are a
+    clean model for how gene duplication partitions an antioxidant function, and the
+    division of labour determines which isoform is limiting under which stress or
+    signalling state.
+  provenance:
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      However, the mutation sod-3 differed from sod-2 in its interactions with gas-1,
+      mev-1 and isp-1.
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      Studies are now being undertaken to characterize the interaction of sod3 with
+      supercomplex I:III:IV formation.
+- gap_statement: &gt;-
+    Whether the DAF-16-driven induction of sod-3 is causally protective (increasing
+    oxidative-stress resistance or extending lifespan) or is primarily a transcriptional
+    readout of DAF-16 activity is unresolved. It is also unknown whether the very low
+    basal SOD-3 level makes a material contribution to matrix superoxide scavenging in
+    otherwise wild-type animals.
+  boundary: &gt;-
+    It is established that sod-3 is a canonical DAF-16 target gene, expressed at very low
+    basal levels and strongly induced upon DAF-16 nuclear translocation (including
+    JNK-1-promoted translocation under thermal stress), and that its induction correlates
+    with stress-resistant, long-lived states. However, simultaneous elimination of both
+    mitochondrial SODs (sod-2 and sod-3) does not suppress the long lifespan of daf-2,
+    arguing that sod-3 induction is not required for insulin/IGF-1-pathway longevity.
+    What is not established is whether sod-3 induction confers a measurable protective
+    benefit on its own, or whether it is chiefly a marker of the DAF-16 program.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    sod-3 is one of the most widely used transcriptional reporters of DAF-16/FOXO
+    activity in aging and stress research; establishing whether its induction is
+    protective or merely a marker directly affects how thousands of studies interpret
+    sod-3 reporter readouts.
+  provenance:
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      The activation of daf-16 increased expression of sod-3, an mtSOD normally
+      expressed in very low levels in wild type worms
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      elimination of both mitochondrial sod-2 and sod-3 failed to suppress the long life
+      span of daf-2
+- gap_statement: &gt;-
+    Whether SOD-3&#39;s association with the respiratory supercomplex I:III:IV reflects only
+    local superoxide scavenging at the site of ROS production, or whether SOD-3 can also
+    act as a catalysis-independent structural stabilizer of the supercomplex (a role
+    proposed for the mitochondrial SODs, and one SOD-3 may assume when SOD-2 is absent),
+    is undetermined.
+  boundary: &gt;-
+    It is established that SOD-3 co-localizes with the I:III:IV supercomplex by
+    blue-native gel and that, unlike sod-2 loss, sod-3 loss does not by itself decrease
+    complex I respiration or perturb the supercomplex profile. The open question is
+    causality/mechanism: the mtSODs are proposed to stabilize the supercomplex, and the
+    limited rise in supercomplex ROS damage in sod-2 animals suggests SOD-3 may perform
+    this function when supercomplex levels fall, but a catalysis-independent structural
+    role for SOD-3 remains unproven.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Distinguishing a scavenging role from a structural role would determine whether SOD-3
+    is a modular antioxidant or an integral stabilizer of the electron transport chain,
+    with implications for how supercomplex integrity is maintained when the dominant
+    SOD-2 is lost.
+  provenance:
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      it is also possible that the mtSODs may directly serve as stabilizing factors in
+      the I:III:IV supercomplex
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      the lack of a large increase in ROS damage to supercomplexes in a sod-2 animal may
+      indicate that SOD-3 is also capable of performing this function, especially when
+      the amount of supercomplex I:III:IV is reduced.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sod-2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sod-2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P31161" target="_blank" class="term-link">
+                        P31161
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sod-2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P31161" data-a="DESCRIPTION: sod-2 encodes the principal manganese-dependent su..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sod-2 encodes the principal manganese-dependent superoxide dismutase (MnSOD) of the Caenorhabditis elegans mitochondrion. The nuclear-encoded precursor carries an N-terminal mitochondrial transit peptide that directs import into the mitochondrial matrix, where the mature chain assembles into the characteristic iron/manganese superoxide dismutase fold and binds one catalytic Mn(2+) ion per subunit. The enzyme dismutates the superoxide anion radical, a by-product of the respiratory electron transport chain, into hydrogen peroxide and molecular oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), providing a first line of antioxidant defense within the organelle. C. elegans has a second, closely related mitochondrial MnSOD, sod-3 (~86% identical), which is expressed at low basal levels and is strongly induced by the DAF-16/FOXO branch of insulin/IGF-1 signalling; sod-2 is the constitutively expressed and quantitatively dominant mitochondrial isoform. Beyond bulk matrix scavenging, SOD-2 physically associates with the respiratory-chain supercomplex I:III:IV, positioning it to detoxify superoxide at its site of production and potentially to influence supercomplex stability and complex I/II activity. Counterintuitively for a core antioxidant enzyme, loss of sod-2 does not shorten and in several mitochondrial-mutant backgrounds can extend C. elegans lifespan, a finding central to debates over the role of reactive oxygen species in aging. The enzyme&#39;s hydrogen peroxide product also serves as a signalling molecule: it contributes to a RAS-dependent ROS-signalling program linked to longevity and is required for sperm pseudopod extension during sperm activation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that SOD-2 is active in the mitochondrion. Correct but less specific than the mitochondrial matrix, which is where this MnSOD acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the mitochondrial transit peptide and with experimental localization, but generic relative to mitochondrial matrix (GO:0005759), which is retained as the core location. Kept as a correct, less-specific companion term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0004784" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of superoxide dismutase activity. This is the core molecular function of SOD-2 and is directly confirmed experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SOD-2 is an experimentally validated manganese superoxide dismutase; the IBA call is fully concordant with the IDA evidence (PMID:9353332) and with the Fe/Mn-SOD family assignment. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                                    GO:0030145
+                                </a>
+                            </span>
+                            <span class="term-label">manganese ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0030145" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of manganese ion binding, the catalytic cofactor of this MnSOD. Concordant with the UniProt Mn(2+) cofactor and Mn-ligand residues, and with the enzyme&#39;s Mn-type biochemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific metal-binding function: this is a Mn-type (not Fe- or Cu/Zn-type) SOD, insensitive to hydrogen peroxide and cyanide, binding one Mn(2+) per subunit. Core cofactor-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0004784" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) assignment of superoxide dismutase activity from combined automated methods (ARBA/InterPro/EC/RHEA mapping). Redundant with the experimental IDA and phylogenetic IBA calls for the same core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same core molecular function as the IDA/IBA annotations; the EC 1.15.1.1 / RHEA:20696 mapping is correct for this enzyme. Retained as concordant supporting evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0005759" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (SubCell) localization to the mitochondrial matrix, matching the UniProt subcellular location and the N-terminal mitochondrial transit peptide. This is the core site of SOD-2 action.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific localization for a matrix MnSOD; supported by the transit peptide and by the primary-mtSOD role. Core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both deduced protein sequences contain the expected N-terminal mitochondrial transit peptides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006801" target="_blank" class="term-link">
+                                    GO:0006801
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0006801" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) assignment to the general superoxide metabolic process. Correct but less specific than removal of superoxide radicals (GO:0019430), which is the experimentally supported process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate parent process, but subsumed by the more specific removal of superoxide radicals term retained as core. Kept as a correct, less-informative companion.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0046872" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro2GO) generic metal-ion-binding annotation. Subsumed by the specific manganese ion binding (GO:0030145) term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformative parent of manganese ion binding; the specific Mn(2+) term is retained as core. Kept as a non-core, less-specific companion.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0098803" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) assertion that SOD-2 is part_of the respiratory chain complex. SOD-2 is a soluble matrix MnSOD that physically associates with supercomplex I:III:IV (see the experimental located_in annotation), but it is not a canonical structural subunit of an electron-transport complex, so the part_of qualifier overstates the relationship.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The experimentally supported relationship is association/co-localization with the I:III:IV supercomplex (PMID:23895727, located_in), consistent with local superoxide scavenging and possible supercomplex stabilization; SOD-2 does not carry out or structurally constitute electron transport. The automated part_of qualifier is an over-generalization, so this is retained only as a non-core companion to the experimental located_in annotation rather than as evidence of structural subunit membership.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                                        PMID:23895727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Western blots of BNGs indicated that SOD-2 co-localized with the I:III:IV supercomplex (Figure 4D).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                                    GO:0004784
+                                </a>
+                            </span>
+                            <span class="term-label">superoxide dismutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9353332
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, expression, and characterization of two manganese s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0004784" data-r="PMID:9353332" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of superoxide dismutase activity: the mature SOD-2 protein was expressed in SOD-deficient E. coli and shown to be an active, Mn-type dismutase. This is the primary experimental evidence for the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard experimental support for the defining molecular function. Insensitivity to hydrogen peroxide and cyanide confirms the Mn-type (not Fe- or Cu/Zn-type) mechanism. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:worm/sod-2/sod-2-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">Primary mitochondrial Mn-superoxide dismutase that converts superoxide to hydrogen peroxide and oxygen</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019430" target="_blank" class="term-link">
+                                    GO:0019430
+                                </a>
+                            </span>
+                            <span class="term-label">removal of superoxide radicals</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9353332
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning, expression, and characterization of two manganese s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0019430" data-r="PMID:9353332" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SOD-2 removes superoxide radicals: heterologous expression of the worm enzyme rescued SOD-deficient E. coli from methyl-viologen (paraquat) oxidative stress. This is the core biological process the enzyme serves.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functionally correct core process. The evidence is heterologous complementation (protection of SOD-null E. coli against a superoxide generator) rather than a worm loss-of-function phenotype, but it directly demonstrates superoxide-radical removal by the SOD-2 protein. Core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                        PMID:9353332
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both proteins were shown to be active in E. coli, providing similar protection against methyl viologen-induced oxidative stress.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23895727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Novel interactions between mitochondrial superoxide dismutas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0098803" data-r="PMID:23895727" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) showing SOD-2 co-localizes with mitochondrial supercomplex I:III:IV by blue-native gel Western blotting. A genuine, sod-2-specific localization finding, but a peripheral association rather than the enzyme&#39;s core identity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported association of SOD-2 with the I:III:IV supercomplex, consistent with local scavenging of superoxide at its site of production and a possible supercomplex-stabilizing role. Retained with the located_in qualifier as a real but non-core localization (SOD-2&#39;s core identity is a matrix MnSOD, not a structural ETC subunit).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                                        PMID:23895727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Western blots of BNGs indicated that SOD-2 co-localized with the I:III:IV supercomplex (Figure 4D).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20188671" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20188671
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The matrix peptide exporter HAF-1 signals a mitochondrial UP...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P31161" data-a="GO:0005739" data-r="PMID:20188671" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct-assay (HDA) mitochondrial-proteome localization of SOD-2. Correct but generic relative to the mitochondrial matrix term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization of this MnSOD is biologically unambiguous and concordant with the transit peptide and matrix localization; retained as a correct, less-specific companion to mitochondrial matrix (GO:0005759). The cited abstract concerns the mtUPR and does not mention sod-2, so no sod-2-specific verbatim quote is available for the HDA dataset.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SOD-2 is a mitochondrial matrix manganese superoxide dismutase that catalyzes the dismutation of the superoxide anion radical to hydrogen peroxide and molecular oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), the core antioxidant defense of the mitochondrial matrix and the primary constitutively expressed mtSOD of C. elegans.</h3>
+                <span class="vote-buttons" data-g="P31161" data-a="FUNCTION: SOD-2 is a mitochondrial matrix manganese superoxi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004784" target="_blank" class="term-link">
+                            superoxide dismutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019430" target="_blank" class="term-link">
+                                removal of superoxide radicals
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both proteins were shown to be active in E. coli, providing similar protection against methyl viologen-induced oxidative stress.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SOD-2 binds one catalytic manganese (Mn2+) ion per subunit, the redox-active cofactor required for the dismutase mechanism. Its Mn-type identity is established by insensitivity to hydrogen peroxide and cyanide, which inhibit Fe-type and Cu/Zn-type SODs respectively.</h3>
+                <span class="vote-buttons" data-g="P31161" data-a="FUNCTION: SOD-2 binds one catalytic manganese (Mn2+) ion per..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030145" target="_blank" class="term-link">
+                            manganese ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                                PMID:9353332
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The expressed enzymes, which were not inhibited by hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic mobilities and isoelectric points, but exhibit comparable specific activities.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19197346" target="_blank" class="term-link">
+                            PMID:19197346
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Seminal demonstration that deleting the primary mitochondrial MnSOD sod-2 extends C. elegans lifespan despite increased protein oxidative damage and heightened sensitivity to oxidative stress, directly challenging the oxidative-damage theory of aging. sod-2 mutants phenocopy long-lived mitochondrial mutants (slow development, small brood, reduced respiration).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28724632" target="_blank" class="term-link">
+                            PMID:28724632
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hydrogen peroxide produced by superoxide dismutase SOD-2 activates sperm in Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SOD-2-generated hydrogen peroxide acts as a positive signaling molecule required for sperm pseudopod extension during activation; sod-2 (not sod-1) is the specific SOD required, linking SOD-2 enzymatic output to fertility.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36449615" target="_blank" class="term-link">
+                            PMID:36449615
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Stimulation of RAS-dependent ROS signaling extends longevity by modulating a developmental program of global gene expression.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Proposes the RAS-dependent ROS signaling (RDRS) mechanism for sod-2 longevity: loss of SOD-2 raises mitochondrial superoxide, which is converted by cytosolic SOD-1 to hydrogen peroxide that oxidizes a redox-sensitive cysteine of LET-60/RAS, driving a global developmental gene-expression program; the lifespan extension requires SOD-1.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20188671" target="_blank" class="term-link">
+                            PMID:20188671
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The matrix peptide exporter HAF-1 signals a mitochondrial UPR by activating the transcription factor ZC376.7 in C. elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High-throughput direct-assay (mass-spectrometry) source underlying the GOA mitochondrion localization annotation for SOD-2. The cached abstract concerns HAF-1/ClpP-mediated mitochondrial unfolded protein response signalling and does not itself discuss sod-2; the annotation reflects detection of SOD-2 in a mitochondrial proteome dataset.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" target="_blank" class="term-link">
+                            PMID:23895727
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Novel interactions between mitochondrial superoxide dismutases and the electron transport chain.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SOD-2 is the primary mitochondrial superoxide dismutase and co-localizes by blue-native gel with the respiratory supercomplex I:III:IV; loss of SOD-2 specifically lowers complex I and II activity and destabilizes supercomplex formation. sod-2 single mutants have a normal lifespan, but loss of sod-2 can extend the lifespan of some electron-transport-chain mutants.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" target="_blank" class="term-link">
+                            PMID:9353332
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning, expression, and characterization of two manganese superoxide dismutases from Caenorhabditis elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloned sod-2 and sod-3, showed both encode mitochondrial (transit-peptide bearing) manganese-type superoxide dismutases, and directly measured their enzymatic activity after heterologous expression in SOD-deficient E. coli (Mn-type: insensitive to hydrogen peroxide and cyanide; dimeric; protective against paraquat/methyl-viologen oxidative stress).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> By what mechanism does loss of the primary mitochondrial antioxidant SOD-2 fail to shorten, and in some backgrounds extend, C. elegans lifespan — is superoxide acting as a pro-longevity signal (mitohormesis), or is the effect mediated by metabolic slowing and supercomplex remodeling?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="Q: By what mechanism does loss of the primary mitocho..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional division of labour between the two nearly identical mitochondrial MnSODs, SOD-2 (constitutive, dominant) and SOD-3 (DAF-16-inducible, low basal), given their non-redundant and sometimes opposite genetic interactions with electron-transport-chain mutants?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="Q: What is the functional division of labour between ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SOD-2&#39;s association with respiratory supercomplex I:III:IV purely a positioning device for local superoxide scavenging, or does SOD-2 also act as a structural stabilizer of the supercomplex independent of its catalytic activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="Q: Is SOD-2&#39;s association with respiratory supercompl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Catalytically-dead (metal-ligand mutant) versus wild-type sod-2 rescue in a sod-2 null, scoring lifespan, complex I/II activity, and supercomplex formation, to separate the scavenging function from a possible structural role.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="EXPERIMENT: Catalytically-dead (metal-ligand mutant) versus wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative, isoform-resolved proteomics and tagged-allele localization of SOD-2 versus SOD-3 across tissues and stress conditions to define their non-redundant contributions and supercomplex occupancy.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="EXPERIMENT: Quantitative, isoform-resolved proteomics and tagg..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Genetic-epistasis and redox-biosensor (e.g. mitochondrial roGFP/HyPer) analysis of sod-2 loss in long-lived ETC mutants to test whether a superoxide/ROS signal, rather than bulk oxidative damage, mediates the lifespan extension.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P31161" data-a="EXPERIMENT: Genetic-epistasis and redox-biosensor (e.g. mitoch..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> How loss of the primary mitochondrial superoxide dismutase SOD-2 extends C. elegans lifespan is only partly resolved. A specific mechanism has been proposed — a RAS-dependent ROS-signalling (RDRS) pathway in which elevated mitochondrial superoxide is converted by cytosolic SOD-1 to hydrogen peroxide that oxidizes a redox-sensitive cysteine of LET-60/RAS — but how much of the longevity effect is attributable to this ROS signal versus to the concurrent reduction in respiration, altered mitochondrial supercomplex stability, and developmental/metabolic slowing remains undetermined, as does why the same loss shortens lifespan once mitochondrial dysfunction exceeds a threshold.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">NARROWING</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is firmly established that SOD-2 is an active mitochondrial MnSOD and the primary mitochondrial superoxide scavenger, that sod-2 single mutants are not short-lived and are in fact long-lived despite increased protein oxidative damage, that deletion of sod-2 markedly increases lifespan in clk-1 but decreases it in isp-1 backgrounds, that loss of sod-2 lowers complex I/II activity and supercomplex formation, and that a RDRS mechanism requiring SOD-1 can account for part of the extension. What is not established is the causal weighting of the signalling versus metabolic contributions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> This is a central, counterintuitive case in the debate over the free-radical / oxidative-damage theory of aging: a core antioxidant enzyme whose removal does not shorten and can extend life. Resolving the causal weighting would clarify when mitochondrial superoxide acts as a damaging agent versus a pro-longevity signal.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"we find that sod-2 mutants are long-lived despite a significant increase in oxidatively damaged proteins"</em> — PMID:19197346</li>
+
+                <li><em>"deletion of sod-2 extends worm lifespan by altering mitochondrial function"</em> — PMID:19197346</li>
+
+                <li><em>"RDRS is regulated by negative feedback from the superoxide dismutase 1 (SOD-1)-dependent conversion of superoxide into cytoplasmic hydrogen peroxide, which, in turn, acts on a redox-sensitive cysteine (C118) of RAS"</em> — PMID:36449615</li>
+
+                <li><em>"no single component of mitochondrial physiology that we studied correlates simply with lifespan"</em> — PMID:23895727</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The functional division of labour between the two nearly identical mitochondrial manganese superoxide dismutases, SOD-2 and SOD-3, is undefined. It is unknown why C. elegans maintains both, what distinguishes their substrates or sub-mitochondrial contexts, and why loss of sod-2 versus sod-3 produces different (sometimes opposite) genetic interactions with electron-transport-chain mutants.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that sod-2 and sod-3 are ~86% identical mitochondrial MnSODs, that sod-2 is constitutively expressed and dominant while sod-3 is expressed at low basal levels and induced by DAF-16/insulin signalling, that both associate with supercomplex I:III:IV, and that they are functionally non-redundant (loss of sod-2 versus sod-3 produces different genetic interactions with ETC mutants, and sod-2 but not sod-1 is specifically required for H2O2-dependent sperm activation). What is not established is the mechanistic basis of the non-redundancy at the level of substrate, sub-mitochondrial context, or partner; the authors of the key ETC study explicitly state that the sod-3/supercomplex relationship was still under investigation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Two paralogous mitochondrial MnSODs with divergent, non-redundant phenotypes are a clean model for how gene duplication partitions an antioxidant function; the division of labour also determines which isoform is limiting under which stress.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Studies are now being undertaken to characterize the interaction of sod3 with supercomplex I:III:IV formation"</em> — PMID:23895727</li>
+
+                <li><em>"sod-2 is required for pseudopod extension"</em> — PMID:28724632</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether SOD-2&#39;s association with respiratory supercomplex I:III:IV reflects only local superoxide scavenging at the site of ROS production, or whether SOD-2 also acts as a direct structural stabilizer of the supercomplex independent of its catalytic activity, is undetermined.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that SOD-2 co-localizes with the I:III:IV supercomplex by blue-native gel and that sod-2 loss reduces supercomplex formation and complex I activity. The open question is causality/mechanism: complex I function falls out of proportion to the measured ROS damage, so a catalysis-independent structural role remains possible but unproven.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing a scavenging role from a structural role would determine whether MnSOD is a modular antioxidant or an integral stabilizer of the electron transport chain, with implications for how supercomplex integrity is maintained.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"it is also possible that the mtSODs may directly serve as stabilizing factors in the I:III:IV supercomplex"</em> — PMID:23895727</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sod-2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P31161" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *C. elegans* sod-2 (MnSOD-2, UniProt P31161)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">33 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T15:38:25.554496</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sod-2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="sod-2-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-c-elegans-sod-2-mnsod-2-uniprot-p31161">Comprehensive Research Report: <em>C. elegans</em> sod-2 (MnSOD-2, UniProt P31161)</h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>The gene <strong>sod-2</strong> (synonym: <strong>sdm-1</strong>; ORF name: <strong>F10D11.1</strong>) in <em>Caenorhabditis elegans</em> encodes <strong>Superoxide dismutase [Mn] 1, mitochondrial</strong> (EC 1.15.1.1), a member of the iron/manganese superoxide dismutase family. The gene is located on <strong>chromosome I</strong> and produces a precursor protein that is processed upon mitochondrial import (hunter1997cloningexpressionand pages 1-1). <em>C. elegans</em> possesses five superoxide dismutase genes: the cytoplasmic Cu/ZnSODs sod-1 and sod-5, the mitochondrial MnSODs sod-2 and sod-3, and the extracellular Cu/ZnSOD sod-4 (braeckman2016invivodetection pages 2-3). SOD-2 and SOD-3 are the products of a relatively recent gene duplication event, sharing 86.3% sequence identity (91.8% conservative identity), though their cDNAs are only 75.2% identical and the two proteins display distinct electrophoretic mobilities and isoelectric points (hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 4-5).</p>
+<p>The following table summarizes the key biochemical and functional properties of SOD-2:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>SOD-2 summary</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>sod-2</strong>; historical synonym <strong>sdm-1</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-2)</td>
+</tr>
+<tr>
+<td>Protein name</td>
+<td><strong>Manganese superoxide dismutase / mitochondrial superoxide dismutase (MnSOD)</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td><strong>P31161</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><strong>Caenorhabditis elegans</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-2)</td>
+</tr>
+<tr>
+<td>Enzyme class</td>
+<td><strong>Superoxide dismutase, EC 1.15.1.1</strong></td>
+<td>(hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 1-2)</td>
+</tr>
+<tr>
+<td>Catalytic reaction</td>
+<td>Catalyzes dismutation of <strong>superoxide anion (O2•−)</strong> to <strong>hydrogen peroxide (H2O2)</strong> and <strong>oxygen (O2)</strong></td>
+<td>(hunter1997cloningexpressionand pages 1-1, sakamoto2017hydrogenperoxideproduced pages 1-2)</td>
+</tr>
+<tr>
+<td>Physiologic substrate specificity</td>
+<td>Primary substrate is <strong>superoxide radical</strong> generated in mitochondria; product H2O2 can serve signaling roles</td>
+<td>(raamsdonk2009deletionofthe pages 2-3, sakamoto2017hydrogenperoxideproduced pages 10-11, branicky2022stimulationofrasdependent pages 2-3)</td>
+</tr>
+<tr>
+<td>Metal cofactor</td>
+<td><strong>Manganese (Mn)</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Molecular mass, monomer</td>
+<td><strong>21,986 Da</strong>, 192 aa mature protein</td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 5-6)</td>
+</tr>
+<tr>
+<td>Oligomeric state / dimer mass</td>
+<td>Functions as an <strong>active dimer</strong>; measured mass <strong>44,961 Da</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 5-6)</td>
+</tr>
+<tr>
+<td>Specific activity</td>
+<td><strong>2516 units/mg protein</strong> when expressed in <em>E. coli</em></td>
+<td>(hunter1997cloningexpressionand pages 6-7)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Mitochondrial</strong>, specifically consistent with the <strong>mitochondrial matrix</strong></td>
+<td>(hunter1997cloningexpressionand pages 1-1, raamsdonk2009deletionofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>N-terminal transit peptide</td>
+<td>Contains an <strong>N-terminal mitochondrial transit peptide</strong>; mature enzyme generated after targeting/processing</td>
+<td>(hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 4-5)</td>
+</tr>
+<tr>
+<td>Physical mitochondrial association</td>
+<td>Reported as physically associated with the <strong>I:III:IV respiratory supercomplex</strong> in the inner mitochondrial membrane context</td>
+<td>(braeckman2016invivodetection pages 2-3)</td>
+</tr>
+<tr>
+<td>Isoelectric point (pI)</td>
+<td><strong>6.5</strong></td>
+<td>(hunter1997cloningexpressionand pages 6-7)</td>
+</tr>
+<tr>
+<td>Chromosome location</td>
+<td><strong>Chromosome I</strong></td>
+<td>(hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Key domains / family</td>
+<td>Member of the <strong>iron/manganese superoxide dismutase family</strong>; Mn/Fe SOD-type enzyme</td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Inhibitor sensitivity</td>
+<td><strong>Not inhibited by hydrogen peroxide or potassium cyanide</strong>, consistent with MnSOD rather than Cu/ZnSOD</td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Functional complementation</td>
+<td>Expressed SOD-2 protects <strong>SOD-deficient <em>E. coli</em></strong> from methyl viologen-induced oxidative stress</td>
+<td>(hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Core biological role in worm</td>
+<td>Major mitochondrial superoxide detox enzyme; also shapes redox signaling by controlling conversion of mitochondrial superoxide into signaling-competent peroxide</td>
+<td>(raamsdonk2009deletionofthe pages 2-3, branicky2022stimulationofrasdependent pages 2-3, onukwufor2022areversiblemitochondrial pages 8-9)</td>
+</tr>
+<tr>
+<td>Lifespan phenotype of loss</td>
+<td><strong>Deletion of sod-2 extends lifespan</strong> in <em>C. elegans</em> despite increased oxidative stress sensitivity and oxidative damage</td>
+<td>(raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 6-8, raamsdonk2009deletionofthe pages 3-5)</td>
+</tr>
+<tr>
+<td>Mitochondrial-function phenotype of loss</td>
+<td>sod-2 mutants show <strong>decreased oxygen consumption</strong>, slow development, low brood size, and slow defecation, resembling long-lived mitochondrial mutants</td>
+<td>(raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 9-10, raamsdonk2009deletionofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>Interaction with mitochondrial mutants</td>
+<td><strong>Extends lifespan in clk-1</strong>, but <strong>shortens lifespan in isp-1</strong> backgrounds; supports a mitochondrial threshold model</td>
+<td>(raamsdonk2009deletionofthe pages 8-9, raamsdonk2009deletionofthe pages 10-11, raamsdonk2009deletionofthe pages 9-10)</td>
+</tr>
+<tr>
+<td>Role in ROS signaling</td>
+<td>Loss of SOD-2 elevates mitochondrial superoxide; longevity signaling requires downstream conversion involving <strong>SOD-1</strong> and <strong>LET-60/RAS</strong> redox signaling</td>
+<td>(branicky2022stimulationofrasdependent pages 2-3, raamsdonk2009deletionofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>Role in reproduction</td>
+<td>SOD-2-generated <strong>H2O2 activates sperm pseudopod extension</strong> and is required for normal sperm activation</td>
+<td>(sakamoto2017hydrogenperoxideproduced pages 10-11, sakamoto2017hydrogenperoxideproduced pages 1-2)</td>
+</tr>
+<tr>
+<td>Comparison with SOD-3: localization/class</td>
+<td>Both <strong>SOD-2 and SOD-3 are mitochondrial MnSODs</strong> with transit peptides and comparable specific activities</td>
+<td>(hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 4-5)</td>
+</tr>
+<tr>
+<td>Comparison with SOD-3: biochemical differences</td>
+<td>Both are dimers and active MnSODs, but show <strong>different electrophoretic mobilities and isoelectric points</strong></td>
+<td>(hunter1997cloningexpressionand pages 1-1)</td>
+</tr>
+<tr>
+<td>Comparison with SOD-3: expression/regulation</td>
+<td><strong>sod-2</strong> is relatively constitutive and similar in adult/dauer, whereas <strong>sod-3</strong> is more <strong>dauer-associated</strong> and strongly induced in <strong>daf-2</strong> mutants; sod-2 is more linked to <strong>SKN-1/p38 MAPK</strong> regulation, sod-3 to <strong>DAF-16/IIS</strong></td>
+<td>(honda1999thedaf‐2gene pages 6-7, yanase2020interactionbetweenthe pages 4-5, honda1999thedaf‐2gene pages 3-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main biochemical, localization, and functional properties of C. elegans SOD-2, including direct comparisons with the paralog SOD-3. It is useful as a compact reference for annotation of sod-2/MnSOD in mitochondrial redox biology and lifespan signaling.</em></p>
+<h2 id="2-enzymatic-function-and-reaction">2. Enzymatic Function and Reaction</h2>
+<p>SOD-2 catalyzes the dismutation of the superoxide radical anion (O₂•⁻) into hydrogen peroxide (H₂O₂) and molecular oxygen (O₂), using a manganese cofactor at its active site (hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 1-2). The reaction is:</p>
+<p><strong>2 O₂•⁻ + 2 H⁺ → H₂O₂ + O₂</strong></p>
+<p>Recombinant SOD-2 expressed in <em>E. coli</em> deficient in endogenous SODs exhibits a specific activity of <strong>2,516 units/mg protein</strong>, comparable to that of its paralog SOD-3 (hunter1997cloningexpressionand pages 6-7). The mature SOD-2 monomer has a calculated molecular mass of <strong>21,986 Da</strong> (192 amino acids) and functions as an <strong>active homodimer</strong> with a measured dimer mass of <strong>44,961 Da</strong> (hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 5-6). Consistent with its identity as an MnSOD, SOD-2 is <strong>not inhibited by hydrogen peroxide or potassium cyanide</strong>, distinguishing it biochemically from the Cu/Zn class of superoxide dismutases (hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1). Both recombinant SOD-2 and SOD-3 conferred comparable protection against methyl viologen (paraquat)-induced oxidative stress when expressed in SOD-deficient <em>E. coli</em> (hunter1997cloningexpressionand pages 1-1).</p>
+<p>A critical insight from recent work is that the product of the SOD-2 catalyzed reaction—H₂O₂—is not merely a detoxified by-product but serves as a <strong>biologically active signaling molecule</strong> in multiple physiological contexts (sakamoto2017hydrogenperoxideproduced pages 10-11, branicky2022stimulationofrasdependent pages 2-3).</p>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<p>SOD-2 contains an <strong>N-terminal mitochondrial transit peptide</strong> that targets the protein to the <strong>mitochondrial matrix</strong>, where the transit peptide is cleaved to generate the mature enzyme (hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 4-5). The positively charged residues in the transit peptide and at the beginning of the mature peptide are characteristic of mitochondrially targeted MnSODs across species (hunter1997cloningexpressionand pages 4-5). Within the mitochondria, SOD-2 has been reported to be <strong>physically associated with the I:III:IV respiratory supercomplex</strong> of the inner mitochondrial membrane (braeckman2016invivodetection pages 2-3), placing it in close proximity to the major sites of superoxide generation—particularly Complex I and Complex III of the electron transport chain (raamsdonk2009deletionofthe pages 2-3). This localization is functionally significant, as the mitochondrial matrix is the primary intracellular compartment where superoxide is actively produced during oxidative phosphorylation (raamsdonk2009deletionofthe pages 2-3, honda1999thedaf‐2gene pages 2-3).</p>
+<h2 id="4-transcriptional-regulation-and-expression-pattern">4. Transcriptional Regulation and Expression Pattern</h2>
+<p>SOD-2 is expressed under <strong>normal growth conditions</strong> in <em>C. elegans</em>, and its transcripts are trans-spliced to the SL-1 leader sequence, indicating mono-cistronic transcription (hunter1997cloningexpressionand pages 1-1, hunter1997cloningexpressionand pages 5-6). Northern blot analysis confirms a single transcript of approximately 800 nucleotides (hunter1997cloningexpressionand pages 5-6).</p>
+<p>A key distinction between the two mitochondrial MnSODs involves their transcriptional regulation. <strong>sod-2</strong> is expressed at relatively <strong>constitutive levels</strong> across developmental stages, including both adult and dauer stages, whereas <strong>sod-3</strong> is more specifically induced during the dauer stage and in <strong>daf-2</strong> (insulin receptor) mutants (honda1999thedaf‐2gene pages 6-7, honda1999thedaf‐2gene pages 3-5). Importantly, sod-2 mRNA levels in <em>daf-2</em> mutants are comparable to wild-type, while sod-3 mRNA is markedly elevated (honda1999thedaf‐2gene pages 3-5). This indicates that sod-2 and sod-3 are regulated through <strong>distinct transcriptional programs</strong>: sod-2 is predominantly regulated by the <strong>SKN-1/Nrf2</strong> transcription factor acting downstream of the <strong>p38 MAPK signaling pathway</strong>, whereas sod-3 is primarily a target of <strong>DAF-16/FOXO</strong> within the insulin/IGF-1 signaling (IIS) pathway (yanase2020interactionbetweenthe pages 4-5). Although putative DAF-16 binding elements (DBEs) exist in the sod-2 promoter, functional studies in <em>daf-16</em> null mutants suggest these sites are non-functional for sod-2 regulation (yanase2020interactionbetweenthe pages 4-5).</p>
+<h2 id="5-role-in-aging-lifespan-and-mitochondrial-function">5. Role in Aging, Lifespan, and Mitochondrial Function</h2>
+<p>One of the most striking and paradigm-challenging findings regarding sod-2 is that its <strong>deletion extends lifespan</strong> in <em>C. elegans</em>, in stark contrast to yeast, flies, and mice where SOD2 loss shortens lifespan (raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 2-3). Van Raamsdonk and Hekimi (2009) demonstrated that <em>sod-2</em> deletion mutants live significantly longer than wild-type worms, despite exhibiting <strong>increased oxidative damage</strong> (measured as oxidatively modified proteins) and <strong>increased sensitivity</strong> to paraquat- and juglone-induced oxidative stress (raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 3-5). This paradox fundamentally challenged the oxidative stress theory of aging.</p>
+<p>The mechanism underlying this lifespan extension appears to involve <strong>altered mitochondrial function</strong> rather than changes in oxidative stress per se. <em>sod-2</em> mutant worms display a suite of phenotypes characteristic of long-lived mitochondrial mutants: <strong>slow post-embryonic development</strong>, <strong>reduced brood size</strong>, <strong>slow defecation cycle rate</strong>, and critically, <strong>decreased whole-worm oxygen consumption</strong> (raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 5-6, raamsdonk2009deletionofthe pages 6-8). Genetic interaction studies revealed that sod-2 deletion <strong>markedly extends lifespan</strong> (by ~15 days) in <em>clk-1</em> mutant backgrounds (which have mildly impaired mitochondrial function), but <strong>decreases lifespan</strong> (by ~25 days) in <em>isp-1</em> mutant backgrounds (which already have &gt;50% reduced respiration) (raamsdonk2009deletionofthe pages 8-9, raamsdonk2009deletionofthe pages 9-10, raamsdonk2009deletionofthe pages 6-8). This led to a <strong>mitochondrial threshold model</strong>: moderate reductions in mitochondrial function can activate compensatory longevity-promoting programs, but when dysfunction exceeds a critical threshold, the organism can no longer compensate and lifespan shortens (raamsdonk2009deletionofthe pages 10-11, raamsdonk2009deletionofthe pages 9-10).</p>
+<h2 id="6-role-in-ros-signaling-pathways">6. Role in ROS Signaling Pathways</h2>
+<h3 id="61-ras-dependent-ros-signaling-rdrs">6.1 RAS-Dependent ROS Signaling (RDRS)</h3>
+<p>Recent work by Branicky et al. (2022) has elucidated a mechanistic pathway explaining how loss of SOD-2 extends lifespan through a <strong>RAS-dependent ROS signaling (RDRS)</strong> pathway. Loss of SOD-2 elevates mitochondrial superoxide levels. This superoxide exits the mitochondria and is converted to <strong>hydrogen peroxide</strong> by cytoplasmic <strong>SOD-1</strong> (Cu/ZnSOD). The H₂O₂ then acts on a <strong>redox-sensitive cysteine residue (C118)</strong> of <strong>LET-60/RAS</strong>, modulating its activity and triggering a global program of gene expression that affects approximately half of the genome (branicky2022stimulationofrasdependent pages 2-3). Critically, the longevity benefit of sod-2 loss <strong>requires SOD-1</strong>: when SOD-1 is also deleted, the lifespan extension of sod-2 mutants is completely suppressed, demonstrating that the longevity signal is not from superoxide itself but from the SOD-1-generated H₂O₂ acting through cytoplasmic RAS signaling (branicky2022stimulationofrasdependent pages 2-3).</p>
+<h3 id="62-complex-i-ros-and-behavioral-signaling">6.2 Complex I ROS and Behavioral Signaling</h3>
+<p>Onukwufor et al. (2022) demonstrated that SOD-2 is required for <strong>Complex I-derived ROS to drive behavioral responses</strong> in <em>C. elegans</em>. Using optogenetic tools to generate site-specific mitochondrial ROS, they showed that SOD-2/SOD-3-dependent conversion of superoxide to H₂O₂ is necessary for ROS-induced locomotory remodeling, specifically hypoxic avoidance behavior. In the absence of SOD-2, the behavioral response to Complex I ROS is abolished, though it can be rescued by a SOD mimetic compound (MnPyP) (onukwufor2022areversiblemitochondrial pages 8-9, onukwufor2022areversiblemitochondrial pages 6-8). This establishes SOD-2 as a critical mediator linking mitochondrial ROS production to acute behavioral outputs.</p>
+<h3 id="63-daf-16foxo-activation">6.3 DAF-16/FOXO Activation</h3>
+<p>Senchuk et al. (2018) showed that elevated ROS in <em>sod-2</em> mutants contributes to <strong>DAF-16/FOXO activation</strong>, which is required for the full longevity of long-lived mitochondrial mutants. The transcriptional changes in mitochondrial mutants overlap significantly with those in long-lived <em>daf-2</em> (insulin/IGF-1 receptor) mutants, and DAF-16 along with multiple DAF-16-interacting proteins are required for full lifespan extension (prasad2013evaluationofrole pages 3-4). Overexpression of SOD-2 has also been shown to extend lifespan in a <strong>daf-16-dependent</strong> manner, indicating that both gain and loss of SOD-2 function can modulate longevity signaling through DAF-16, albeit through distinct mechanisms (prasad2013evaluationofrole pages 3-4).</p>
+<h2 id="7-role-in-sperm-activation">7. Role in Sperm Activation</h2>
+<p>Sakamoto and Imai (2017) discovered a surprising role for SOD-2 in <strong>sperm activation</strong> in <em>C. elegans</em>. The H₂O₂ produced by SOD-2's catalytic activity acts as a <strong>positive signaling molecule</strong> required for <strong>pseudopod extension</strong> during sperm activation. In <em>sod-1;sod-2</em> double mutant sperm, pseudopod extension is defective, leading to significantly reduced brood size (sakamoto2017hydrogenperoxideproduced pages 10-11, sakamoto2017hydrogenperoxideproduced pages 1-2). Exogenous application of H₂O₂ rescues the activation defects of double mutant sperm, while the H₂O₂ scavenger ebselen completely inhibits pseudopod extension in wild-type sperm (sakamoto2017hydrogenperoxideproduced pages 10-11). Analysis of single mutants demonstrated that <strong>sod-2, rather than sod-1, is the specific SOD gene required</strong> for proper pseudopod extension during sperm activation (sakamoto2017hydrogenperoxideproduced pages 10-11, sakamoto2017hydrogenperoxideproduced pages 1-2).</p>
+<h2 id="8-role-in-mitochondrial-integrity-and-stress-responses">8. Role in Mitochondrial Integrity and Stress Responses</h2>
+<p>SOD-2 plays a critical protective role in contexts of compromised mitochondrial morphology. Kanazawa et al. (2008) demonstrated that <em>eat-3</em> mutants (defective in mitochondrial inner membrane fusion, homologous to human OPA1) are <strong>highly sensitive to loss of sod-2</strong>. The <em>eat-3</em> mutants upregulate SOD-2 protein levels more than two-fold as a compensatory response, and depletion of sod-2 by RNAi or genetic mutation causes a strong negative effect on survival and growth in the <em>eat-3</em> background (kanazawa2008thec.elegans pages 8-9, kanazawa2008thec.elegans pages 1-2). This effect is specific to sod-2, as loss of other SOD genes (sod-1, sod-3, sod-5) has only modest effects in <em>eat-3</em> animals (kanazawa2008thec.elegans pages 9-10). The selective dependency on SOD-2 is consistent with its mitochondrial matrix localization, where disrupted cristae morphology in <em>eat-3</em> mutants leads to increased free radical production that must be managed locally (kanazawa2008thec.elegans pages 9-10).</p>
+<h2 id="9-summary-of-signaling-and-biochemical-pathways">9. Summary of Signaling and Biochemical Pathways</h2>
+<p>The following table summarizes the key pathways in which SOD-2 participates:</p>
+<table>
+<thead>
+<tr>
+<th>Pathway</th>
+<th>Key components</th>
+<th>Role of SOD-2</th>
+<th>Biological outcome</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mitochondrial superoxide detoxification</td>
+<td>Mitochondrial electron transport chain; superoxide (O2•−); Mn cofactor; SOD-2 in mitochondrial matrix; H2O2/O2 products</td>
+<td>Primary mitochondrial Mn-superoxide dismutase that converts superoxide to hydrogen peroxide and oxygen; active dimeric enzyme with mitochondrial transit peptide and matrix localization</td>
+<td>Limits mitochondrial superoxide burden and contributes to basal antioxidant defense; loss increases oxidative stress sensitivity and oxidative damage even when lifespan is not shortened</td>
+<td>(hunter1997cloningexpressionand pages 6-7, hunter1997cloningexpressionand pages 1-1, raamsdonk2009deletionofthe pages 2-3, raamsdonk2009deletionofthe pages 3-5)</td>
+</tr>
+<tr>
+<td>RAS-dependent ROS signaling (RDRS)</td>
+<td>Mitochondrial superoxide; SOD-2; cytosolic SOD-1; H2O2; LET-60/RAS C118 redox switch</td>
+<td>Loss of SOD-2 raises mitochondrial superoxide; longevity signal requires downstream conversion by SOD-1 to H2O2, which oxidizes LET-60/RAS and activates RDRS</td>
+<td>Global transcriptional remodeling and lifespan extension from mitochondrial ROS signaling rather than simple detoxification</td>
+<td>(branicky2022stimulationofrasdependent pages 2-3, raamsdonk2009deletionofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>p38 MAPK/SKN-1/Nrf2 regulation of sod-2</td>
+<td>p38 MAPK pathway; SKN-1/Nrf2; sod-2 promoter</td>
+<td>sod-2 is regulated predominantly by SKN-1 rather than DAF-16 under stress-responsive conditions, especially in molecular compensation among sod mutants</td>
+<td>Supports stress adaptation and longevity-associated redox homeostasis under intracellular oxidative stress</td>
+<td>(yanase2020interactionbetweenthe pages 4-5)</td>
+</tr>
+<tr>
+<td>Insulin/IGF-1 signaling (IIS) via DAF-2/DAF-16</td>
+<td>DAF-2 insulin/IGF-1 receptor; DAF-16/FoxO; MnSOD genes sod-2 and sod-3</td>
+<td>sod-2 is part of the MnSOD antioxidant network linked to longevity signaling, but unlike sod-3 it is not strongly induced in daf-2 mutants and appears less directly controlled by DAF-16</td>
+<td>Contributes to oxidative stress resistance framework of IIS, while sod-3 is the more prominent dauer/DAF-16-responsive MnSOD output</td>
+<td>(honda1999thedaf‐2gene pages 2-3, honda1999thedaf‐2gene pages 6-7, honda1999thedaf‐2gene pages 3-5)</td>
+</tr>
+<tr>
+<td>Mitochondrial unfolded protein response (UPRmt) / mitochondrial dysfunction programs</td>
+<td>Mitochondrial stress; mitochondrial proteostasis pathways; respiratory dysfunction; stress-response genes including SOD enzymes</td>
+<td>SOD-2 is repeatedly discussed as part of mitochondrial stress-response programs and as a mitochondrial redox effector whose loss phenocopies long-lived mitochondrial mutants with reduced respiration</td>
+<td>Links mitochondrial dysfunction to compensatory stress programs and altered lifespan trajectories</td>
+<td>(raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 5-6)</td>
+</tr>
+<tr>
+<td>Complex I ROS signaling and hypoxic avoidance behavior</td>
+<td>Complex I-derived ROS; SOD-2/SOD-3; H2O2; redox-sensitive thiol switch on NDUF-2.1-related pathway; locomotory/hypoxia avoidance circuitry</td>
+<td>SOD-2 is required to convert complex I-derived superoxide into H2O2 that mediates behavioral signaling; loss of sod-2 abolishes ROS-triggered avoidance/photolocomotory responses</td>
+<td>Enables mitochondrial ROS to function as a signal for hypoxic avoidance and acute behavioral adaptation</td>
+<td>(onukwufor2022areversiblemitochondrial pages 8-9, onukwufor2022areversiblemitochondrial pages 6-8)</td>
+</tr>
+<tr>
+<td>Sperm activation via H2O2 signaling</td>
+<td>SOD-2; SOD-1; H2O2; Pronase-responsive sperm activation; pseudopod extension machinery</td>
+<td>SOD-2-generated H2O2 acts as a positive signaling molecule required for sperm activation and pseudopod extension; exogenous H2O2 rescues activation defects in sod-1;sod-2 mutants</td>
+<td>Promotes normal sperm motility/activation and supports fertility/brood size</td>
+<td>(sakamoto2017hydrogenperoxideproduced pages 10-11, sakamoto2017hydrogenperoxideproduced pages 1-2, sakamoto2017hydrogenperoxideproduced pages 8-10)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main signaling and biochemical pathways involving C. elegans SOD-2, emphasizing where it acts as a detoxifying enzyme versus a redox-signaling mediator. It is useful for functional annotation because it connects SOD-2 to localization, pathway context, and experimentally observed organismal outcomes.</em></p>
+<h2 id="10-conclusions">10. Conclusions</h2>
+<p><em>C. elegans</em> SOD-2 is a mitochondrial matrix-localized manganese superoxide dismutase that catalyzes the dismutation of superoxide radicals to hydrogen peroxide and oxygen. Beyond its canonical antioxidant function, SOD-2 has emerged as a <strong>critical node in mitochondrial redox signaling</strong>. Its enzymatic product, H₂O₂, serves as a signaling molecule in at least three distinct biological contexts: (1) RAS-dependent longevity signaling, where mitochondrial superoxide escaping from the matrix is converted to cytoplasmic H₂O₂ by SOD-1 to activate LET-60/RAS (branicky2022stimulationofrasdependent pages 2-3); (2) sperm activation, where SOD-2-derived H₂O₂ directly drives pseudopod extension (sakamoto2017hydrogenperoxideproduced pages 10-11, sakamoto2017hydrogenperoxideproduced pages 1-2); and (3) behavioral responses, where SOD-2-dependent H₂O₂ production mediates Complex I ROS-triggered locomotory adaptation (onukwufor2022areversiblemitochondrial pages 8-9, onukwufor2022areversiblemitochondrial pages 6-8). The paradoxical lifespan extension upon <em>sod-2</em> deletion reflects altered mitochondrial function and activation of compensatory longevity programs, rather than a simple reduction in oxidative damage (raamsdonk2009deletionofthe pages 1-2, raamsdonk2009deletionofthe pages 5-6). Transcriptionally, sod-2 is regulated predominantly by the SKN-1/Nrf2 pathway through p38 MAPK signaling, distinguishing it from its paralog sod-3, which is a primary target of DAF-16/FOXO in the insulin/IGF-1 signaling pathway (yanase2020interactionbetweenthe pages 4-5). Together, these findings position SOD-2 as both a protective antioxidant enzyme and a redox-signaling mediator at the interface of mitochondrial function, aging, reproduction, and behavior.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(hunter1997cloningexpressionand pages 1-1): Thérèse Hunter, William H. Bannister, and Gary J. Hunter. Cloning, expression, and characterization of two manganese superoxide dismutases from caenorhabditis elegans *. The Journal of Biological Chemistry, 272:28652-28659, Nov 1997. URL: https://doi.org/10.1074/jbc.272.45.28652, doi:10.1074/jbc.272.45.28652. This article has 183 citations.</p>
+</li>
+<li>
+<p>(braeckman2016invivodetection pages 2-3): Bart P. Braeckman, Arne Smolders, Patricia Back, and Sasha De Henau. In vivo detection of reactive oxygen species and redox status in caenorhabditis elegans. Antioxidants &amp; redox signaling, 25 10:577-92, Oct 2016. URL: https://doi.org/10.1089/ars.2016.6751, doi:10.1089/ars.2016.6751. This article has 64 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hunter1997cloningexpressionand pages 4-5): Thérèse Hunter, William H. Bannister, and Gary J. Hunter. Cloning, expression, and characterization of two manganese superoxide dismutases from caenorhabditis elegans *. The Journal of Biological Chemistry, 272:28652-28659, Nov 1997. URL: https://doi.org/10.1074/jbc.272.45.28652, doi:10.1074/jbc.272.45.28652. This article has 183 citations.</p>
+</li>
+<li>
+<p>(hunter1997cloningexpressionand pages 6-7): Thérèse Hunter, William H. Bannister, and Gary J. Hunter. Cloning, expression, and characterization of two manganese superoxide dismutases from caenorhabditis elegans *. The Journal of Biological Chemistry, 272:28652-28659, Nov 1997. URL: https://doi.org/10.1074/jbc.272.45.28652, doi:10.1074/jbc.272.45.28652. This article has 183 citations.</p>
+</li>
+<li>
+<p>(hunter1997cloningexpressionand pages 1-2): Thérèse Hunter, William H. Bannister, and Gary J. Hunter. Cloning, expression, and characterization of two manganese superoxide dismutases from caenorhabditis elegans *. The Journal of Biological Chemistry, 272:28652-28659, Nov 1997. URL: https://doi.org/10.1074/jbc.272.45.28652, doi:10.1074/jbc.272.45.28652. This article has 183 citations.</p>
+</li>
+<li>
+<p>(sakamoto2017hydrogenperoxideproduced pages 1-2): Taro Sakamoto and Hirotaka Imai. Hydrogen peroxide produced by superoxide dismutase sod-2 activates sperm in caenorhabditis elegans. Journal of Biological Chemistry, 292:14804-14813, Sep 2017. URL: https://doi.org/10.1074/jbc.m117.788901, doi:10.1074/jbc.m117.788901. This article has 105 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 2-3): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sakamoto2017hydrogenperoxideproduced pages 10-11): Taro Sakamoto and Hirotaka Imai. Hydrogen peroxide produced by superoxide dismutase sod-2 activates sperm in caenorhabditis elegans. Journal of Biological Chemistry, 292:14804-14813, Sep 2017. URL: https://doi.org/10.1074/jbc.m117.788901, doi:10.1074/jbc.m117.788901. This article has 105 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(branicky2022stimulationofrasdependent pages 2-3): Robyn Branicky, Ying Wang, Arman Khaki, Ju-Ling Liu, Maximilian Kramer-Drauberg, and Siegfried Hekimi. Stimulation of ras-dependent ros signaling extends longevity by modulating a developmental program of global gene expression. Dec 2022. URL: https://doi.org/10.1126/sciadv.adc9851, doi:10.1126/sciadv.adc9851. This article has 17 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hunter1997cloningexpressionand pages 5-6): Thérèse Hunter, William H. Bannister, and Gary J. Hunter. Cloning, expression, and characterization of two manganese superoxide dismutases from caenorhabditis elegans *. The Journal of Biological Chemistry, 272:28652-28659, Nov 1997. URL: https://doi.org/10.1074/jbc.272.45.28652, doi:10.1074/jbc.272.45.28652. This article has 183 citations.</p>
+</li>
+<li>
+<p>(onukwufor2022areversiblemitochondrial pages 8-9): John O. Onukwufor, M. Arsalan Farooqi, Anežka Vodičková, Shon A. Koren, Aksana Baldzizhar, Brandon J. Berry, Gisela Beutner, George A. Porter, Vsevolod Belousov, Alan Grossfield, and Andrew P. Wojtovich. A reversible mitochondrial complex i thiol switch mediates hypoxic avoidance behavior in c. elegans. Nature Communications, May 2022. URL: https://doi.org/10.1038/s41467-022-30169-y, doi:10.1038/s41467-022-30169-y. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 1-2): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 6-8): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 3-5): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 9-10): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 5-6): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 8-9): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raamsdonk2009deletionofthe pages 10-11): Jeremy M. Van Raamsdonk and Siegfried Hekimi. Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan in caenorhabditis elegans. PLoS Genetics, 5:e1000361, Feb 2009. URL: https://doi.org/10.1371/journal.pgen.1000361, doi:10.1371/journal.pgen.1000361. This article has 699 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(honda1999thedaf‐2gene pages 6-7): Yoko Honda and Shuji Honda. The daf‐2 gene network for longevity regulates oxidative stress resistance and mn‐superoxide dismutase gene expression in caenorhabditis elegans. The FASEB Journal, 13:1385-1393, Aug 1999. URL: https://doi.org/10.1096/fasebj.13.11.1385, doi:10.1096/fasebj.13.11.1385. This article has 968 citations.</p>
+</li>
+<li>
+<p>(yanase2020interactionbetweenthe pages 4-5): Sumino Yanase, Kayo Yasuda, and Naoaki Ishii. Interaction between the ins/igf-1 and p38 mapk signaling pathways in molecular compensation of sod genes and modulation related to intracellular ros levels in c. elegans. Sep 2020. URL: https://doi.org/10.1016/j.bbrep.2020.100796, doi:10.1016/j.bbrep.2020.100796. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(honda1999thedaf‐2gene pages 3-5): Yoko Honda and Shuji Honda. The daf‐2 gene network for longevity regulates oxidative stress resistance and mn‐superoxide dismutase gene expression in caenorhabditis elegans. The FASEB Journal, 13:1385-1393, Aug 1999. URL: https://doi.org/10.1096/fasebj.13.11.1385, doi:10.1096/fasebj.13.11.1385. This article has 968 citations.</p>
+</li>
+<li>
+<p>(honda1999thedaf‐2gene pages 2-3): Yoko Honda and Shuji Honda. The daf‐2 gene network for longevity regulates oxidative stress resistance and mn‐superoxide dismutase gene expression in caenorhabditis elegans. The FASEB Journal, 13:1385-1393, Aug 1999. URL: https://doi.org/10.1096/fasebj.13.11.1385, doi:10.1096/fasebj.13.11.1385. This article has 968 citations.</p>
+</li>
+<li>
+<p>(onukwufor2022areversiblemitochondrial pages 6-8): John O. Onukwufor, M. Arsalan Farooqi, Anežka Vodičková, Shon A. Koren, Aksana Baldzizhar, Brandon J. Berry, Gisela Beutner, George A. Porter, Vsevolod Belousov, Alan Grossfield, and Andrew P. Wojtovich. A reversible mitochondrial complex i thiol switch mediates hypoxic avoidance behavior in c. elegans. Nature Communications, May 2022. URL: https://doi.org/10.1038/s41467-022-30169-y, doi:10.1038/s41467-022-30169-y. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(prasad2013evaluationofrole pages 3-4): Kedar Prasad and Stephen Bondy. Evaluation of role of oxidative stress on aging in caenorhabditis elegans: a brief review. Current Aging Science, 6:215-219, Dec 2013. URL: https://doi.org/10.2174/18746098112059990031, doi:10.2174/18746098112059990031. This article has 13 citations.</p>
+</li>
+<li>
+<p>(kanazawa2008thec.elegans pages 8-9): Takayuki Kanazawa, Mauro Zappaterra, Ayako Hasegawa, Ashley P Wright, Erin D Newman-Smith, Karolyn F Buttle, Kent L McDonald, Carmen Mannella, and Alex van der Bliek. The c. elegans opa1 homologue eat-3 is essential for resistance to free radicals. PLoS Genetics, 4:e39, Feb 2008. URL: https://doi.org/10.1371/journal.pgen.1000022, doi:10.1371/journal.pgen.1000022. This article has 198 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanazawa2008thec.elegans pages 1-2): Takayuki Kanazawa, Mauro Zappaterra, Ayako Hasegawa, Ashley P Wright, Erin D Newman-Smith, Karolyn F Buttle, Kent L McDonald, Carmen Mannella, and Alex van der Bliek. The c. elegans opa1 homologue eat-3 is essential for resistance to free radicals. PLoS Genetics, 4:e39, Feb 2008. URL: https://doi.org/10.1371/journal.pgen.1000022, doi:10.1371/journal.pgen.1000022. This article has 198 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kanazawa2008thec.elegans pages 9-10): Takayuki Kanazawa, Mauro Zappaterra, Ayako Hasegawa, Ashley P Wright, Erin D Newman-Smith, Karolyn F Buttle, Kent L McDonald, Carmen Mannella, and Alex van der Bliek. The c. elegans opa1 homologue eat-3 is essential for resistance to free radicals. PLoS Genetics, 4:e39, Feb 2008. URL: https://doi.org/10.1371/journal.pgen.1000022, doi:10.1371/journal.pgen.1000022. This article has 198 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sakamoto2017hydrogenperoxideproduced pages 8-10): Taro Sakamoto and Hirotaka Imai. Hydrogen peroxide produced by superoxide dismutase sod-2 activates sperm in caenorhabditis elegans. Journal of Biological Chemistry, 292:14804-14813, Sep 2017. URL: https://doi.org/10.1074/jbc.m117.788901, doi:10.1074/jbc.m117.788901. This article has 105 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sod-2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="sod-2-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hunter1997cloningexpressionand pages 1-1</li>
+<li>braeckman2016invivodetection pages 2-3</li>
+<li>hunter1997cloningexpressionand pages 6-7</li>
+<li>hunter1997cloningexpressionand pages 4-5</li>
+<li>raamsdonk2009deletionofthe pages 2-3</li>
+<li>hunter1997cloningexpressionand pages 5-6</li>
+<li>yanase2020interactionbetweenthe pages 4-5</li>
+<li>branicky2022stimulationofrasdependent pages 2-3</li>
+<li>prasad2013evaluationofrole pages 3-4</li>
+<li>sakamoto2017hydrogenperoxideproduced pages 10-11</li>
+<li>hunter1997cloningexpressionand pages 1-2</li>
+<li>sakamoto2017hydrogenperoxideproduced pages 1-2</li>
+<li>onukwufor2022areversiblemitochondrial pages 8-9</li>
+<li>raamsdonk2009deletionofthe pages 1-2</li>
+<li>raamsdonk2009deletionofthe pages 6-8</li>
+<li>raamsdonk2009deletionofthe pages 3-5</li>
+<li>raamsdonk2009deletionofthe pages 9-10</li>
+<li>raamsdonk2009deletionofthe pages 5-6</li>
+<li>raamsdonk2009deletionofthe pages 8-9</li>
+<li>raamsdonk2009deletionofthe pages 10-11</li>
+<li>onukwufor2022areversiblemitochondrial pages 6-8</li>
+<li>sakamoto2017hydrogenperoxideproduced pages 8-10</li>
+<li>Mn</li>
+<li>https://doi.org/10.1074/jbc.272.45.28652,</li>
+<li>https://doi.org/10.1089/ars.2016.6751,</li>
+<li>https://doi.org/10.1074/jbc.m117.788901,</li>
+<li>https://doi.org/10.1371/journal.pgen.1000361,</li>
+<li>https://doi.org/10.1126/sciadv.adc9851,</li>
+<li>https://doi.org/10.1038/s41467-022-30169-y,</li>
+<li>https://doi.org/10.1096/fasebj.13.11.1385,</li>
+<li>https://doi.org/10.1016/j.bbrep.2020.100796,</li>
+<li>https://doi.org/10.2174/18746098112059990031,</li>
+<li>https://doi.org/10.1371/journal.pgen.1000022,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sod-2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P31161" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sod-2-c-elegans-research-notes">sod-2 (C. elegans) — research notes</h1>
+<p>UniProt: P31161 (SODM1_CAEEL). Gene: sod-2; synonym sdm-1; ORF F10D11.1;<br />
+WormBase WBGene00004931. Chromosome I. 221 aa precursor (24-aa mitochondrial<br />
+transit peptide, mature chain 25-221). EC 1.15.1.1. PDB: 3DC6 (1.80 Å).</p>
+<p>This is the primary/constitutive mitochondrial manganese superoxide dismutase<br />
+(MnSOD) of C. elegans. It is one of two mitochondrial MnSODs — the paralog<br />
+<strong>sod-3</strong> is on chromosome X and is the DAF-16/insulin-signalling-INDUCIBLE<br />
+mtSOD normally expressed at very low basal levels. The two proteins are ~86%<br />
+identical, so evidence must be attributed carefully (see paralog section below).<br />
+C. elegans has five SOD genes total: sod-1 (major cytosolic Cu/Zn), sod-2 and<br />
+sod-3 (mitochondrial MnSOD), sod-4 (extracellular Cu/Zn), sod-5 (cytosolic<br />
+Cu/Zn).</p>
+<h2 id="known-sod-2-specific">KNOWN — sod-2 specific</h2>
+<h3 id="molecular-function-mn-dependent-superoxide-dismutase">Molecular function: Mn-dependent superoxide dismutase</h3>
+<ul>
+<li>Catalyzes 2 superoxide + 2 H+ = H2O2 + O2 (EC 1.15.1.1; RHEA:20696). Binds<br />
+  1 Mn(2+) per subunit (UniProt COFACTOR; metal-ligand residues His50, His98,<br />
+  Asp182, His186 by similarity). Belongs to the Fe/Mn SOD family.</li>
+<li>Hunter et al. 1997 cloned sod-2 and sod-3, expressed the mature proteins in<br />
+  E. coli deficient in cytosolic SODs, and directly measured SOD activity: the<br />
+  enzymes are Mn-type (not inhibited by H2O2 or cyanide, which distinguishes<br />
+  Mn-SOD from Fe-SOD and Cu/Zn-SOD), dimeric, and have comparable specific<br />
+  activities <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="The expressed enzymes, which were not inhibited by   hydrogen peroxide or cyanide, are dimeric, show quite different electrophoretic   mobilities and isoelectric points, but exhibit comparable specific activities.">PMID:9353332</a>.<br />
+  This is the basis of the WormBase IDA annotation to GO:0004784 (superoxide<br />
+  dismutase activity).</li>
+<li>Functional (heterologous) evidence for superoxide removal: the worm enzymes<br />
+  protected SOD-deficient E. coli against methyl-viologen (paraquat) oxidative<br />
+  stress <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="Both proteins were shown to be active in E. coli,   providing similar protection against methyl viologen-induced oxidative stress.">PMID:9353332</a>.<br />
+  Basis of the WormBase IMP annotation to GO:0019430 (removal of superoxide<br />
+  radicals). NOTE: this is a heterologous E. coli complementation assay, not a<br />
+  worm mutant phenotype; the annotation is nonetheless functionally sound.</li>
+</ul>
+<h3 id="localization-mitochondrion-mitochondrial-matrix-and-etc-supercomplex">Localization: mitochondrion / mitochondrial matrix, and ETC supercomplex</h3>
+<ul>
+<li>N-terminal mitochondrial transit peptide (residues 1-24); UniProt subcellular<br />
+  location = mitochondrion matrix <a href="https://pubmed.ncbi.nlm.nih.gov/9353332" title="Both deduced protein sequences   contain the expected N-terminal mitochondrial transit peptides.">PMID:9353332</a>.</li>
+<li>SOD-2 is the primary mitochondrial SOD: "sod-2 encodes the primary SOD found<br />
+  in the mitochondrion" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>.</li>
+<li>SOD-2 physically co-localizes with the mitochondrial respiratory<br />
+  supercomplex I:III:IV by blue-native gel Western blotting (Fig 4D)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="Western blots of BNGs indicated that SOD-2 co-localized with   the I:III:IV supercomplex (Figure 4D).">PMID:23895727</a>. Basis of the WormBase IDA<br />
+  annotation to GO:0098803 (respiratory chain complex, located_in). SOD-3 also<br />
+  localizes there. This is an association/embedding, not classical structural<br />
+  subunit membership; the authors conclude "mtSODs are embedded within the<br />
+  supercomplex I:III:IV and stabilize or locally protect it from reactive<br />
+  oxygen species (ROS) damage" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>.</li>
+<li>HDA mitochondrial-proteome localization (GO:0005739) is attributed to<br />
+  PMID:20188671 (Haynes et al. 2010). That paper's abstract is about HAF-1/ClpP<br />
+  and the mitochondrial UPR (mtUPR) and does not mention sod-2; the annotation<br />
+  is a high-throughput direct-assay (mass-spec) mitochondrial localization.<br />
+  Localization of a MnSOD to the mitochondrion is biologically unambiguous, so<br />
+  this is accepted (as a general, less-specific companion to matrix).</li>
+</ul>
+<h3 id="effect-of-loss-of-sod-2-on-the-etc-sod-2-specific-from-pmid23895727">Effect of loss of SOD-2 on the ETC (sod-2-specific, from PMID:23895727)</h3>
+<ul>
+<li>Loss of SOD-2 specifically decreases complex I and complex II activities;<br />
+  complexes III and IV remain normal <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="Loss of SOD-2 specifically   (i) decreases the activities of complexes I and II, complexes III and IV   remain normal">PMID:23895727</a>.</li>
+<li>sod-2(0) reduces formation of I:III and I:III:IV supercomplexes (~28%),<br />
+  implying SOD-2 stabilizes or protects the supercomplex.</li>
+<li>Complex I function decreases out of proportion to ROS damage, suggesting a<br />
+  possible direct structural/stabilizing role in addition to local scavenging.</li>
+</ul>
+<h2 id="known-paralog-sod-3-attribution-notes">KNOWN — paralog (sod-3) attribution notes</h2>
+<ul>
+<li>sod-2 and sod-3 are 86.3% identical MnSODs, both mitochondrial, both with<br />
+  transit peptides, both trans-spliced to SL-1, both catalytically active<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9353332">PMID:9353332</a>. sod-3 is on chromosome X; sod-2 on chromosome I.</li>
+<li>sod-3 is the DAF-16 (FOXO)/insulin-IGF-inducible mtSOD, "normally expressed in<br />
+  very low levels in wild type worms" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>; sod-2 is constitutive and<br />
+  quantitatively dominant. daf-2 longevity increases sod-3, but eliminating both<br />
+  sod-2 and sod-3 does not suppress daf-2 long life.</li>
+<li>Antibody cross-reactivity: the anti-SOD-2 antibody used in PMID:23895727 also<br />
+  detected SOD-3 (residual signal in sod-2 single mutant was lost in the<br />
+  sod-2;sod-3 double), so the supercomplex-localization result reports both<br />
+  mtSODs; the sod-2-specific signal is real (dominant band lost in sod-2 mutant).</li>
+<li>Phenotypic divergence: loss of sod-2 vs sod-3 have DIFFERENT genetic<br />
+  interactions with ETC mutants (gas-1/complex I, mev-1/complex II,<br />
+  isp-1/complex III). E.g. sod-2;gas-1 lives longer than gas-1; sod-3 does not<br />
+  change gas-1 lifespan <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>. So they are NOT functionally redundant.</li>
+</ul>
+<h2 id="not-known-knowledge-gaps">NOT known / knowledge gaps</h2>
+<ol>
+<li><strong>Counterintuitive longevity of sod-2 loss.</strong> Deleting the <em>primary</em><br />
+   mitochondrial antioxidant does not shorten, and can EXTEND, lifespan —<br />
+   contrary to the oxidative-damage theory of aging. Suthammarak et al. quote<br />
+   the prior finding directly: "Hekimi reported that a deletion of sod-2<br />
+   lengthened lifespan, and that clk-1;sod-2 lived longer than the long-lived<br />
+   clk-1, despite increased oxidative damage in mitochondrial protein"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>; and note that all five SODs could be eliminated without<br />
+   shortening lifespan <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="Van Raamsdonk eliminated all of the    superoxide dismutases in C. elegans without shortening lifespan">PMID:23895727</a>. Yet<br />
+   sod-2(gk257) on its own has a normal lifespan <a href="https://pubmed.ncbi.nlm.nih.gov/23895727" title="sod-2(gk257)    had a normal lifespan in agreement with Gems and colleagues">PMID:23895727</a>. The mechanism<br />
+   (mitohormesis / superoxide as a pro-longevity signal vs. metabolic slowing)<br />
+   is unresolved: "no single component of mitochondrial physiology that we<br />
+   studied correlates simply with lifespan" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>.</li>
+<li><strong>Functional division of labour between sod-2 and sod-3.</strong> Why two nearly<br />
+   identical mitochondrial MnSODs? Their non-redundant, opposite genetic<br />
+   interactions with ETC mutants are unexplained, and the interaction of sod-3<br />
+   with the supercomplex was, at time of writing, still being investigated:<br />
+   "Studies are now being undertaken to characterize the interaction of sod3<br />
+   with supercomplex I:III:IV formation" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>.</li>
+<li><strong>Scavenger vs. structural role in the supercomplex.</strong> Whether SOD-2 acts<br />
+   only as a local superoxide scavenger at the site of ROS production or also<br />
+   as a direct structural stabilizer of supercomplex I:III:IV is undetermined:<br />
+   complex I function falls "out of proportion to the amount of ROS damage",<br />
+   so "it is also possible that the mtSODs may directly serve as stabilizing<br />
+   factors in the I:III:IV supercomplex" <a href="https://pubmed.ncbi.nlm.nih.gov/23895727">PMID:23895727</a>.</li>
+</ol>
+<h2 id="annotation-review-plan-goa-has-12-rows">Annotation review plan (GOA has 12 rows)</h2>
+<ul>
+<li>GO:0004784 superoxide dismutase activity — IDA (PMID:9353332) → ACCEPT, CORE.<br />
+  Same term IBA (GO_REF:0000033) and IEA (GO_REF:0000120) → ACCEPT (redundant<br />
+  support, non-core duplicates).</li>
+<li>GO:0030145 manganese ion binding — IBA (GO_REF:0000033) → ACCEPT, CORE<br />
+  (matches UniProt Mn cofactor; the correct specific metal term).</li>
+<li>GO:0046872 metal ion binding — IEA (InterPro) → generalization of manganese<br />
+  ion binding; KEEP_AS_NON_CORE (less informative parent).</li>
+<li>GO:0005759 mitochondrial matrix — IEA (SubCell) → ACCEPT, CORE location.</li>
+<li>GO:0005739 mitochondrion — IBA (is_active_in) and HDA (PMID:20188671) →<br />
+  ACCEPT as non-core (less specific than matrix).</li>
+<li>GO:0098803 respiratory chain complex — IDA (PMID:23895727) and IEA (ARBA) →<br />
+  the IDA reflects real BNG co-localization; KEEP_AS_NON_CORE (association, not<br />
+  a core catalytic/structural identity). The IEA(ARBA) part_of duplicate: keep<br />
+  non-core.</li>
+<li>GO:0019430 removal of superoxide radicals — IMP (PMID:9353332) → ACCEPT, CORE<br />
+  process (heterologous complementation; functionally correct).</li>
+<li>GO:0006801 superoxide metabolic process — IEA (InterPro) → parent BP; ACCEPT<br />
+  as non-core (removal of superoxide radicals is more specific).</li>
+<li>GO:0042803 protein homodimerization activity (in UniProt DR as ARBA IEA) — not<br />
+  present in GOA TSV rows; the mature enzyme is dimeric <a href="https://pubmed.ncbi.nlm.nih.gov/9353332">PMID:9353332</a>, but this<br />
+  is a structural property, not a core informative function; not added.</li>
+</ul>
+<h2 id="update-from-falcon-deep-research-sod-2-deep-research-falconmd-edison-33-cites">Update from falcon deep research (sod-2-deep-research-falcon.md, Edison, 33 cites)</h2>
+<p>Additional sod-2-specific literature retrieved (PMIDs then cached and cited in the<br />
+review):<br />
+- <strong>Lifespan extension (seminal).</strong> Van Raamsdonk &amp; Hekimi 2009 deleted each of the<br />
+  five worm sod genes; none shortens lifespan and sod-2 loss extends it<br />
+  [PMID:19197346 "we find that sod-2 mutants are long-lived despite a significant<br />
+  increase in oxidatively damaged proteins"; "deletion of sod-2 extends worm lifespan<br />
+  by altering mitochondrial function"]. Threshold model: sod-2 deletion increases<br />
+  lifespan in clk-1 (mild mito dysfunction) but decreases it in isp-1 (severe)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/19197346" title="sod-2 deletion markedly increases lifespan in clk-1 worms while   clearly decreasing the lifespan of isp-1 worms">PMID:19197346</a>.<br />
+- <strong>Mechanism (RDRS).</strong> Branicky et al. 2022 Sci Adv: loss of SOD-2 raises<br />
+  mitochondrial superoxide; cytosolic SOD-1 converts it to H2O2 that oxidizes<br />
+  LET-60/RAS Cys118, driving a genome-wide developmental program; requires SOD-1<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36449615" title="RDRS is regulated by negative feedback from the superoxide   dismutase 1 (SOD-1)-dependent conversion of superoxide into cytoplasmic hydrogen   peroxide, which, in turn, acts on a redox-sensitive cysteine (C118) of RAS">PMID:36449615</a>. This<br />
+  substantially NARROWS knowledge gap 1 (mechanism of longevity).<br />
+- <strong>Sperm activation (sod-2-specific).</strong> Sakamoto &amp; Imai 2017: SOD-2-produced H2O2 is<br />
+  a positive signal for sperm pseudopod extension; sod-2, not sod-1, is the required<br />
+  SOD [PMID:28724632 "sod-2 is required for pseudopod extension"; "SOD-2 plays an<br />
+  important role in the sperm activation of C. elegans by producing H2O2 as an<br />
+  activator of pseudopod extension"]. Reinforces sod-2/sod-3 non-redundancy and the<br />
+  signalling (not merely detoxifying) role of the H2O2 product.<br />
+- <strong>Transcriptional regulation split (from falcon; sources not cached).</strong> falcon<br />
+  reports sod-2 is regulated mainly by SKN-1/Nrf2 via p38 MAPK, whereas sod-3 is a<br />
+  DAF-16/FOXO (insulin/IGF-1) target (Yanase 2020; Honda 1999). Not independently<br />
+  quote-verified here (papers not in cache); recorded as context only.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>PMID:9353332 Hunter et al. 1997 J Biol Chem (abstract only in cache) — cloning</li>
+<li>heterologous expression + biochemical characterization of sod-2 and sod-3.</li>
+<li>PMID:23895727 Suthammarak et al. 2013 Aging Cell (full text cached) — mtSOD /<br />
+  ETC supercomplex interactions and lifespan; richest sod-2-specific source.</li>
+<li>PMID:19197346 Van Raamsdonk &amp; Hekimi 2009 PLoS Genet (full text cached) —<br />
+  sod-2 deletion extends lifespan; oxidative-stress-theory challenge.</li>
+<li>PMID:36449615 Branicky et al. 2022 Sci Adv (full text cached) — RAS-dependent<br />
+  ROS signalling (RDRS) mechanism of sod-2 longevity.</li>
+<li>PMID:28724632 Sakamoto &amp; Imai 2017 J Biol Chem (abstract only) — SOD-2 H2O2 in<br />
+  sperm activation; sod-2-specific.</li>
+<li>PMID:20188671 Haynes et al. 2010 Mol Cell (abstract only) — source of HDA<br />
+  mitochondrial-proteome localization annotation.</li>
+<li>genes/worm/sod-2/sod-2-deep-research-falcon.md — Edison deep research (33 cites).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P31161
+gene_symbol: sod-2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  sod-2 encodes the principal manganese-dependent superoxide dismutase (MnSOD) of
+  the Caenorhabditis elegans mitochondrion. The nuclear-encoded precursor carries
+  an N-terminal mitochondrial transit peptide that directs import into the
+  mitochondrial matrix, where the mature chain assembles into the characteristic
+  iron/manganese superoxide dismutase fold and binds one catalytic Mn(2+) ion per
+  subunit. The enzyme dismutates the superoxide anion radical, a by-product of the
+  respiratory electron transport chain, into hydrogen peroxide and molecular oxygen
+  (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), providing a first line of
+  antioxidant defense within the organelle. C. elegans has a second, closely
+  related mitochondrial MnSOD, sod-3 (~86% identical), which is expressed at low
+  basal levels and is strongly induced by the DAF-16/FOXO branch of insulin/IGF-1
+  signalling; sod-2 is the constitutively expressed and quantitatively dominant
+  mitochondrial isoform. Beyond bulk matrix scavenging, SOD-2 physically associates
+  with the respiratory-chain supercomplex I:III:IV, positioning it to detoxify
+  superoxide at its site of production and potentially to influence supercomplex
+  stability and complex I/II activity. Counterintuitively for a core antioxidant
+  enzyme, loss of sod-2 does not shorten and in several mitochondrial-mutant
+  backgrounds can extend C. elegans lifespan, a finding central to debates over the
+  role of reactive oxygen species in aging. The enzyme&#39;s hydrogen peroxide product
+  also serves as a signalling molecule: it contributes to a RAS-dependent
+  ROS-signalling program linked to longevity and is required for sperm pseudopod
+  extension during sperm activation.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19197346
+  title: Deletion of the mitochondrial superoxide dismutase sod-2 extends lifespan
+    in Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      Seminal demonstration that deleting the primary mitochondrial MnSOD sod-2
+      extends C. elegans lifespan despite increased protein oxidative damage and
+      heightened sensitivity to oxidative stress, directly challenging the
+      oxidative-damage theory of aging. sod-2 mutants phenocopy long-lived
+      mitochondrial mutants (slow development, small brood, reduced respiration).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID 19197346, PMC2628729) via DOI 10.1371/journal.pgen.1000361.
+      The defining reference for the counterintuitive longevity phenotype of sod-2
+      loss.
+- id: PMID:28724632
+  title: Hydrogen peroxide produced by superoxide dismutase SOD-2 activates sperm
+    in Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      SOD-2-generated hydrogen peroxide acts as a positive signaling molecule
+      required for sperm pseudopod extension during activation; sod-2 (not sod-1)
+      is the specific SOD required, linking SOD-2 enzymatic output to fertility.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID 28724632, PMC5592662) via DOI 10.1074/jbc.M117.788901.
+      Establishes a signalling (H2O2-mediated) role for SOD-2 output distinct from
+      bulk detoxification.
+- id: PMID:36449615
+  title: Stimulation of RAS-dependent ROS signaling extends longevity by modulating
+    a developmental program of global gene expression.
+  findings:
+  - statement: &gt;-
+      Proposes the RAS-dependent ROS signaling (RDRS) mechanism for sod-2 longevity:
+      loss of SOD-2 raises mitochondrial superoxide, which is converted by cytosolic
+      SOD-1 to hydrogen peroxide that oxidizes a redox-sensitive cysteine of
+      LET-60/RAS, driving a global developmental gene-expression program; the
+      lifespan extension requires SOD-1.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID 36449615, PMC9710873) via DOI 10.1126/sciadv.adc9851.
+      Provides a mechanistic account that narrows the long-standing gap in how sod-2
+      loss extends lifespan.
+- id: PMID:20188671
+  title: The matrix peptide exporter HAF-1 signals a mitochondrial UPR by activating
+    the transcription factor ZC376.7 in C. elegans.
+  findings:
+  - statement: &gt;-
+      High-throughput direct-assay (mass-spectrometry) source underlying the GOA
+      mitochondrion localization annotation for SOD-2. The cached abstract concerns
+      HAF-1/ClpP-mediated mitochondrial unfolded protein response signalling and
+      does not itself discuss sod-2; the annotation reflects detection of SOD-2 in
+      a mitochondrial proteome dataset.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMID resolves to the correct Haynes et al. 2010 Mol Cell paper on the
+      mitochondrial UPR. It is the assigned source of an HDA mitochondrial
+      localization for SOD-2; the abstract does not mention sod-2 (full text /
+      proteomics supplement not in cache), so no sod-2-specific verbatim quote is
+      available. Mitochondrial localization of a MnSOD is biologically unambiguous.
+- id: PMID:23895727
+  title: Novel interactions between mitochondrial superoxide dismutases and the electron
+    transport chain.
+  findings:
+  - statement: &gt;-
+      SOD-2 is the primary mitochondrial superoxide dismutase and co-localizes by
+      blue-native gel with the respiratory supercomplex I:III:IV; loss of SOD-2
+      specifically lowers complex I and II activity and destabilizes supercomplex
+      formation. sod-2 single mutants have a normal lifespan, but loss of sod-2 can
+      extend the lifespan of some electron-transport-chain mutants.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text cached (PMC3838459). The richest sod-2-specific source: directly
+      supports the supercomplex association (Fig 4D), the primary-mtSOD identity,
+      and the counterintuitive lifespan phenotypes. An anti-SOD-2 antibody with
+      partial cross-reactivity to SOD-3 is noted by the authors, but the
+      sod-2-specific band is lost in the sod-2 mutant, so the SOD-2 localization is
+      real.
+- id: PMID:9353332
+  title: Cloning, expression, and characterization of two manganese superoxide dismutases
+    from Caenorhabditis elegans.
+  findings:
+  - statement: &gt;-
+      Cloned sod-2 and sod-3, showed both encode mitochondrial (transit-peptide
+      bearing) manganese-type superoxide dismutases, and directly measured their
+      enzymatic activity after heterologous expression in SOD-deficient E. coli
+      (Mn-type: insensitive to hydrogen peroxide and cyanide; dimeric; protective
+      against paraquat/methyl-viologen oxidative stress).
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache (full_text_available: false), but the abstract
+      explicitly reports the direct biochemical characterization that underlies the
+      WormBase IDA (superoxide dismutase activity) and IMP (removal of superoxide
+      radicals) annotations. Note the IMP is based on heterologous E. coli
+      complementation, not a worm-mutant phenotype.
+existing_annotations:
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that SOD-2 is active in the mitochondrion.
+      Correct but less specific than the mitochondrial matrix, which is where this
+      MnSOD acts.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the mitochondrial transit peptide and with experimental
+      localization, but generic relative to mitochondrial matrix (GO:0005759),
+      which is retained as the core location. Kept as a correct, less-specific
+      companion term.
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of superoxide dismutase activity. This is the
+      core molecular function of SOD-2 and is directly confirmed experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      SOD-2 is an experimentally validated manganese superoxide dismutase; the IBA
+      call is fully concordant with the IDA evidence (PMID:9353332) and with the
+      Fe/Mn-SOD family assignment. Core function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+- term:
+    id: GO:0030145
+    label: manganese ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of manganese ion binding, the catalytic cofactor
+      of this MnSOD. Concordant with the UniProt Mn(2+) cofactor and Mn-ligand
+      residues, and with the enzyme&#39;s Mn-type biochemistry.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific metal-binding function: this is a Mn-type (not Fe- or
+      Cu/Zn-type) SOD, insensitive to hydrogen peroxide and cyanide, binding one
+      Mn(2+) per subunit. Core cofactor-binding function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (IEA) assignment of superoxide dismutase activity from combined
+      automated methods (ARBA/InterPro/EC/RHEA mapping). Redundant with the
+      experimental IDA and phylogenetic IBA calls for the same core function.
+    action: ACCEPT
+    reason: &gt;-
+      Same core molecular function as the IDA/IBA annotations; the EC 1.15.1.1 /
+      RHEA:20696 mapping is correct for this enzyme. Retained as concordant
+      supporting evidence.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (SubCell) localization to the mitochondrial matrix, matching the
+      UniProt subcellular location and the N-terminal mitochondrial transit
+      peptide. This is the core site of SOD-2 action.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and appropriately specific localization for a matrix MnSOD; supported
+      by the transit peptide and by the primary-mtSOD role. Core location.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        Both deduced protein sequences contain the expected N-terminal
+        mitochondrial transit peptides.
+- term:
+    id: GO:0006801
+    label: superoxide metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) assignment to the general superoxide metabolic
+      process. Correct but less specific than removal of superoxide radicals
+      (GO:0019430), which is the experimentally supported process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate parent process, but subsumed by the more specific removal of
+      superoxide radicals term retained as core. Kept as a correct, less-informative
+      companion.
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro2GO) generic metal-ion-binding annotation. Subsumed by
+      the specific manganese ion binding (GO:0030145) term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but uninformative parent of manganese ion binding; the specific Mn(2+)
+      term is retained as core. Kept as a non-core, less-specific companion.
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Electronic (ARBA) assertion that SOD-2 is part_of the respiratory chain
+      complex. SOD-2 is a soluble matrix MnSOD that physically associates with
+      supercomplex I:III:IV (see the experimental located_in annotation), but it is
+      not a canonical structural subunit of an electron-transport complex, so the
+      part_of qualifier overstates the relationship.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The experimentally supported relationship is association/co-localization with
+      the I:III:IV supercomplex (PMID:23895727, located_in), consistent with local
+      superoxide scavenging and possible supercomplex stabilization; SOD-2 does not
+      carry out or structurally constitute electron transport. The automated part_of
+      qualifier is an over-generalization, so this is retained only as a non-core
+      companion to the experimental located_in annotation rather than as evidence of
+      structural subunit membership.
+    supported_by:
+    - reference_id: PMID:23895727
+      supporting_text: &gt;-
+        Western blots of BNGs indicated that SOD-2 co-localized with the I:III:IV
+        supercomplex (Figure 4D).
+- term:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:9353332
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of superoxide dismutase activity: the mature SOD-2 protein
+      was expressed in SOD-deficient E. coli and shown to be an active, Mn-type
+      dismutase. This is the primary experimental evidence for the core function.
+    action: ACCEPT
+    reason: &gt;-
+      Gold-standard experimental support for the defining molecular function.
+      Insensitivity to hydrogen peroxide and cyanide confirms the Mn-type (not Fe-
+      or Cu/Zn-type) mechanism. Core function.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        The expressed enzymes, which were not inhibited by hydrogen peroxide or
+        cyanide, are dimeric, show quite different electrophoretic mobilities and
+        isoelectric points, but exhibit comparable specific activities.
+    - reference_id: file:worm/sod-2/sod-2-deep-research-falcon.md
+      supporting_text: &gt;-
+        Primary mitochondrial Mn-superoxide dismutase that converts superoxide to
+        hydrogen peroxide and oxygen
+- term:
+    id: GO:0019430
+    label: removal of superoxide radicals
+  evidence_type: IMP
+  original_reference_id: PMID:9353332
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SOD-2 removes superoxide radicals: heterologous expression of the worm enzyme
+      rescued SOD-deficient E. coli from methyl-viologen (paraquat) oxidative
+      stress. This is the core biological process the enzyme serves.
+    action: ACCEPT
+    reason: &gt;-
+      Functionally correct core process. The evidence is heterologous complementation
+      (protection of SOD-null E. coli against a superoxide generator) rather than a
+      worm loss-of-function phenotype, but it directly demonstrates superoxide-radical
+      removal by the SOD-2 protein. Core process.
+    supported_by:
+    - reference_id: PMID:9353332
+      supporting_text: &gt;-
+        Both proteins were shown to be active in E. coli, providing similar
+        protection against methyl viologen-induced oxidative stress.
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: IDA
+  original_reference_id: PMID:23895727
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) showing SOD-2 co-localizes with mitochondrial supercomplex
+      I:III:IV by blue-native gel Western blotting. A genuine, sod-2-specific
+      localization finding, but a peripheral association rather than the enzyme&#39;s
+      core identity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported association of SOD-2 with the I:III:IV supercomplex,
+      consistent with local scavenging of superoxide at its site of production and a
+      possible supercomplex-stabilizing role. Retained with the located_in qualifier
+      as a real but non-core localization (SOD-2&#39;s core identity is a matrix MnSOD,
+      not a structural ETC subunit).
+    supported_by:
+    - reference_id: PMID:23895727
+      supporting_text: &gt;-
+        Western blots of BNGs indicated that SOD-2 co-localized with the I:III:IV
+        supercomplex (Figure 4D).
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:20188671
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput direct-assay (HDA) mitochondrial-proteome localization of
+      SOD-2. Correct but generic relative to the mitochondrial matrix term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Mitochondrial localization of this MnSOD is biologically unambiguous and
+      concordant with the transit peptide and matrix localization; retained as a
+      correct, less-specific companion to mitochondrial matrix (GO:0005759). The
+      cited abstract concerns the mtUPR and does not mention sod-2, so no
+      sod-2-specific verbatim quote is available for the HDA dataset.
+core_functions:
+- description: &gt;-
+    SOD-2 is a mitochondrial matrix manganese superoxide dismutase that catalyzes
+    the dismutation of the superoxide anion radical to hydrogen peroxide and
+    molecular oxygen (2 superoxide + 2 H+ -&gt; H2O2 + O2; EC 1.15.1.1), the core
+    antioxidant defense of the mitochondrial matrix and the primary constitutively
+    expressed mtSOD of C. elegans.
+  molecular_function:
+    id: GO:0004784
+    label: superoxide dismutase activity
+  directly_involved_in:
+  - id: GO:0019430
+    label: removal of superoxide radicals
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      The expressed enzymes, which were not inhibited by hydrogen peroxide or
+      cyanide, are dimeric, show quite different electrophoretic mobilities and
+      isoelectric points, but exhibit comparable specific activities.
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      Both proteins were shown to be active in E. coli, providing similar
+      protection against methyl viologen-induced oxidative stress.
+- description: &gt;-
+    SOD-2 binds one catalytic manganese (Mn2+) ion per subunit, the redox-active
+    cofactor required for the dismutase mechanism. Its Mn-type identity is
+    established by insensitivity to hydrogen peroxide and cyanide, which inhibit
+    Fe-type and Cu/Zn-type SODs respectively.
+  molecular_function:
+    id: GO:0030145
+    label: manganese ion binding
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:9353332
+    supporting_text: &gt;-
+      The expressed enzymes, which were not inhibited by hydrogen peroxide or
+      cyanide, are dimeric, show quite different electrophoretic mobilities and
+      isoelectric points, but exhibit comparable specific activities.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    By what mechanism does loss of the primary mitochondrial antioxidant SOD-2 fail
+    to shorten, and in some backgrounds extend, C. elegans lifespan — is superoxide
+    acting as a pro-longevity signal (mitohormesis), or is the effect mediated by
+    metabolic slowing and supercomplex remodeling?
+- question: &gt;-
+    What is the functional division of labour between the two nearly identical
+    mitochondrial MnSODs, SOD-2 (constitutive, dominant) and SOD-3 (DAF-16-inducible,
+    low basal), given their non-redundant and sometimes opposite genetic
+    interactions with electron-transport-chain mutants?
+- question: &gt;-
+    Is SOD-2&#39;s association with respiratory supercomplex I:III:IV purely a
+    positioning device for local superoxide scavenging, or does SOD-2 also act as a
+    structural stabilizer of the supercomplex independent of its catalytic activity?
+suggested_experiments:
+- description: &gt;-
+    Catalytically-dead (metal-ligand mutant) versus wild-type sod-2 rescue in a
+    sod-2 null, scoring lifespan, complex I/II activity, and supercomplex formation,
+    to separate the scavenging function from a possible structural role.
+- description: &gt;-
+    Quantitative, isoform-resolved proteomics and tagged-allele localization of
+    SOD-2 versus SOD-3 across tissues and stress conditions to define their
+    non-redundant contributions and supercomplex occupancy.
+- description: &gt;-
+    Genetic-epistasis and redox-biosensor (e.g. mitochondrial roGFP/HyPer) analysis
+    of sod-2 loss in long-lived ETC mutants to test whether a superoxide/ROS signal,
+    rather than bulk oxidative damage, mediates the lifespan extension.
+knowledge_gaps:
+- gap_statement: &gt;-
+    How loss of the primary mitochondrial superoxide dismutase SOD-2 extends
+    C. elegans lifespan is only partly resolved. A specific mechanism has been
+    proposed — a RAS-dependent ROS-signalling (RDRS) pathway in which elevated
+    mitochondrial superoxide is converted by cytosolic SOD-1 to hydrogen peroxide
+    that oxidizes a redox-sensitive cysteine of LET-60/RAS — but how much of the
+    longevity effect is attributable to this ROS signal versus to the concurrent
+    reduction in respiration, altered mitochondrial supercomplex stability, and
+    developmental/metabolic slowing remains undetermined, as does why the same loss
+    shortens lifespan once mitochondrial dysfunction exceeds a threshold.
+  boundary: &gt;-
+    It is firmly established that SOD-2 is an active mitochondrial MnSOD and the
+    primary mitochondrial superoxide scavenger, that sod-2 single mutants are not
+    short-lived and are in fact long-lived despite increased protein oxidative
+    damage, that deletion of sod-2 markedly increases lifespan in clk-1 but
+    decreases it in isp-1 backgrounds, that loss of sod-2 lowers complex I/II
+    activity and supercomplex formation, and that a RDRS mechanism requiring SOD-1
+    can account for part of the extension. What is not established is the causal
+    weighting of the signalling versus metabolic contributions.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: NARROWING
+  significance: &gt;-
+    This is a central, counterintuitive case in the debate over the free-radical /
+    oxidative-damage theory of aging: a core antioxidant enzyme whose removal does
+    not shorten and can extend life. Resolving the causal weighting would clarify
+    when mitochondrial superoxide acts as a damaging agent versus a pro-longevity
+    signal.
+  provenance:
+  - reference_id: PMID:19197346
+    supporting_text: &gt;-
+      we find that sod-2 mutants are long-lived despite a significant increase in
+      oxidatively damaged proteins
+  - reference_id: PMID:19197346
+    supporting_text: &gt;-
+      deletion of sod-2 extends worm lifespan by altering mitochondrial function
+  - reference_id: PMID:36449615
+    supporting_text: &gt;-
+      RDRS is regulated by negative feedback from the superoxide dismutase 1
+      (SOD-1)-dependent conversion of superoxide into cytoplasmic hydrogen peroxide,
+      which, in turn, acts on a redox-sensitive cysteine (C118) of RAS
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      no single component of mitochondrial physiology that we studied correlates
+      simply with lifespan
+- gap_statement: &gt;-
+    The functional division of labour between the two nearly identical mitochondrial
+    manganese superoxide dismutases, SOD-2 and SOD-3, is undefined. It is unknown why
+    C. elegans maintains both, what distinguishes their substrates or sub-mitochondrial
+    contexts, and why loss of sod-2 versus sod-3 produces different (sometimes
+    opposite) genetic interactions with electron-transport-chain mutants.
+  boundary: &gt;-
+    It is established that sod-2 and sod-3 are ~86% identical mitochondrial MnSODs,
+    that sod-2 is constitutively expressed and dominant while sod-3 is expressed at
+    low basal levels and induced by DAF-16/insulin signalling, that both associate
+    with supercomplex I:III:IV, and that they are functionally non-redundant (loss of
+    sod-2 versus sod-3 produces different genetic interactions with ETC mutants, and
+    sod-2 but not sod-1 is specifically required for H2O2-dependent sperm activation).
+    What is not established is the mechanistic basis of the non-redundancy at the
+    level of substrate, sub-mitochondrial context, or partner; the authors of the key
+    ETC study explicitly state that the sod-3/supercomplex relationship was still
+    under investigation.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Two paralogous mitochondrial MnSODs with divergent, non-redundant phenotypes are
+    a clean model for how gene duplication partitions an antioxidant function; the
+    division of labour also determines which isoform is limiting under which stress.
+  provenance:
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      Studies are now being undertaken to characterize the interaction of sod3 with
+      supercomplex I:III:IV formation
+  - reference_id: PMID:28724632
+    supporting_text: &gt;-
+      sod-2 is required for pseudopod extension
+- gap_statement: &gt;-
+    Whether SOD-2&#39;s association with respiratory supercomplex I:III:IV reflects only
+    local superoxide scavenging at the site of ROS production, or whether SOD-2 also
+    acts as a direct structural stabilizer of the supercomplex independent of its
+    catalytic activity, is undetermined.
+  boundary: &gt;-
+    It is established that SOD-2 co-localizes with the I:III:IV supercomplex by
+    blue-native gel and that sod-2 loss reduces supercomplex formation and complex I
+    activity. The open question is causality/mechanism: complex I function falls out
+    of proportion to the measured ROS damage, so a catalysis-independent structural
+    role remains possible but unproven.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Distinguishing a scavenging role from a structural role would determine whether
+    MnSOD is a modular antioxidant or an integral stabilizer of the electron
+    transport chain, with implications for how supercomplex integrity is maintained.
+  provenance:
+  - reference_id: PMID:23895727
+    supporting_text: &gt;-
+      it is also possible that the mtSODs may directly serve as stabilizing factors
+      in the I:III:IV supercomplex
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
