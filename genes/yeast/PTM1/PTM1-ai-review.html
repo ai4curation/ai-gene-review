@@ -1,0 +1,2914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTM1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PTM1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P32857" target="_blank" class="term-link">
+                        P32857
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PTM1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P32857" data-a="DESCRIPTION: PTM1 (YKL039W) is a polytopic integral membrane pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PTM1 (YKL039W) is a polytopic integral membrane protein of the budding yeast secretory pathway. It has the architecture characteristic of the GOST/LUSTR (GOLD-domain seven-transmembrane, also called Lung Seven TransMembrane) protein family: a cleavable N-terminal signal peptide, a large lumenal N-terminal β-sandwich domain, and a GPCR-like bundle of seven transmembrane helices, ending in a cytoplasmic, disordered, acidic and phosphorylated C-terminal tail. The lumenal domain carries a predicted N-glycosylation site. PTM1 localizes to the Golgi apparatus membrane and the early endosome membrane, and co-purifies with the late-Golgi/endosomal SNARE Tlg2. It is the fungal representative of the family that in animals includes GPR107, GPR108, TMEM87A/TMEM87B, GPR180 and Wntless (WLS); yeast additionally has a whole-genome-duplication paralog, YHL017W. Members of this family are Golgi/endosome-resident proteins broadly associated with membrane-protein trafficking through the secretory and endosomal system, and are thought to act as trafficking chaperones for membrane-associated or hydrophobic cargo rather than as signalling GPCRs, but no molecular function, substrate or ligand has been established for PTM1, and its precise cellular role remains undefined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005794" target="_blank" class="term-link">
+                                    GO:0005794
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi apparatus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0005794" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Golgi localization is supported both by phylogenetic inference from the GOST/LUSTR family (which is broadly Golgi/endosome-resident) and by direct experimental co-purification of PTM1 with the yeast late-Golgi compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimental subcellular localization (PMID:16107716, copurification with the Tlg2 late-Golgi/endosome compartment) and with family-wide Golgi localization. This is a well-supported core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16107716" target="_blank" class="term-link">
+                                        PMID:16107716
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the markers of the early and late Golgi compartments, respectively, and analyzed the membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PTM1 is an integral, multi-pass (seven-transmembrane) membrane protein, so &#34;membrane&#34; is factually correct but uninformative given the more specific Golgi-membrane and early-endosome-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but shallow parent term; the specific compartment (Golgi/endosome membrane) annotations are more informative. Retain as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042147" target="_blank" class="term-link">
+                                    GO:0042147
+                                </a>
+                            </span>
+                            <span class="term-label">retrograde transport, endosome to Golgi</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0042147" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The only biological-process annotation with specific content. Transferred by phylogenetic inference from mammalian orthologs (with/from GPR108/TMEM87B). Compatible with PTM1&#39;s late-Golgi/endosome localization, but there is no direct yeast experimental evidence that PTM1 mediates endosome-to-Golgi retrograde transport, and PTM1 sits in a distinct PANTHER subfamily (SF1) from the mammalian members the annotation derives from.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reasonable, localization-compatible phylogenetic inference, but unverified for yeast and subfamily-diverged; keep as a plausible process context rather than an established core function. Not removed, per guidance that IBA process inferences compatible with localization should not be second-guessed away.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0000139" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific, experimentally-grounded localization derived from the UniProt Swiss-Prot subcellular-location mapping (Golgi apparatus membrane; multi-pass), which itself rests on PMID:16107716.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Precise and correct localization for a multi-pass Golgi membrane protein; core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16107716" target="_blank" class="term-link">
+                                        PMID:16107716
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the markers of the early and late Golgi compartments, respectively, and analyzed the membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0005829" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Assigned by automated logical inference from the retrograde-transport process term (with/from GO:0042147), not from evidence that PTM1 is a soluble cytosolic protein. PTM1 is a polytopic integral membrane protein; only its C-terminal tail faces the cytoplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Misleading as a cellular-component assignment for an integral membrane protein; it is an artefact of inter-ontology logical inference from the BP term rather than a bona fide localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO (IPR009637, GPR107/GPR108-like) correctly infers integral-membrane status. Redundant with the IBA membrane term and uninformative relative to the Golgi/endosome-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but shallow parent; retain as non-core supporting the integral membrane nature.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031901" target="_blank" class="term-link">
+                                    GO:0031901
+                                </a>
+                            </span>
+                            <span class="term-label">early endosome membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0031901" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Secondary localization from the UniProt subcellular-location mapping, grounded in the PMID:16107716 co-purification with the late-Golgi/endosome (Tlg2) compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally grounded secondary localization; correct and specific. Non-core relative to the primary Golgi localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16107716" target="_blank" class="term-link">
+                                        PMID:16107716
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the markers of the early and late Golgi compartments, respectively, and analyzed the membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular-function term with the ND (no biological data) evidence code. This is an honest reflection of the state of knowledge: no molecular function, enzymatic activity, ligand or transported substrate has been established for PTM1, and the wider GOST family&#39;s molecular function is itself unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Appropriate ND annotation for a gene whose molecular function is genuinely unknown; retaining it correctly signals the molecular-function knowledge gap.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular-component ND annotation. It is now superseded by the specific, experimentally-grounded Golgi-membrane and early-endosome-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> No longer reflects the state of knowledge now that specific compartment localizations are annotated; should not be treated as core. (An ND root annotation that specific evidence has overtaken.)
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32857" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological-process ND annotation, reflecting that the specific biological role of PTM1 in yeast has not been experimentally determined. A more specific (though still inferred) BP annotation exists via the IBA endosome-to-Golgi-retrograde-transport term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Honestly reflects the limited process-level knowledge; retained as non-core given the only specific BP term is an unverified phylogenetic inference.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PTM1 is a polytopic integral membrane protein resident in the Golgi apparatus membrane and early endosome membrane of the budding-yeast secretory/endosomal system, where it co-purifies with the late-Golgi/endosomal SNARE Tlg2. It is the fungal member of the GOST/LUSTR (GOLD-domain seven-transmembrane) family, whose members are broadly implicated in membrane-protein trafficking through the Golgi and endosomal network and are proposed to act as trafficking chaperones for membrane-associated or hydrophobic cargo rather than as signalling GPCRs. No specific molecular function, ligand or transported substrate has been established for PTM1; this core function is therefore stated at the level of a localization-defined, family-associated role in intracellular membrane trafficking, with the molecular mechanism left undefined (see knowledge_gaps).</h3>
+                <span class="vote-buttons" data-g="P32857" data-a="FUNCTION: PTM1 is a polytopic integral membrane protein resi..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031901" target="_blank" class="term-link">
+                                early endosome membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16107716" target="_blank" class="term-link">
+                                PMID:16107716
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the markers of the early and late Golgi compartments, respectively, and analyzed the membrane proteins</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/39609618" target="_blank" class="term-link">
+                                PMID:39609618
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">it was speculated that GOST proteins might function as trafficking chaperones for membrane-associated cargo</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16107716" target="_blank" class="term-link">
+                            PMID:16107716
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Immunoisolaton of the yeast Golgi subcompartments and characterization of a novel membrane protein, Svp26, discovered in the Sed5-containing compartments.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Immunoisolated yeast Golgi subcompartments using the SNAREs Sed5 (early Golgi) and Tlg2 (late Golgi/endosome) and catalogued their membrane proteins; PTM1 (YKL039W) co-purified with the Tlg2 late-Golgi/endosome compartment, the experimental basis for its Golgi-membrane and early-endosome-membrane localization.</div>
+
+                        <div class="finding-text">"we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the markers of the early and late Golgi compartments, respectively, and analyzed the membrane proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18407956" target="_blank" class="term-link">
+                            PMID:18407956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A multidimensional chromatography technology for in-depth phosphoproteome analysis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale phosphoproteomic survey identifying PTM1 phosphorylation at Ser480, Thr483 and Thr498 in its cytoplasmic C-terminal tail.</div>
+
+                        <div class="finding-text">"A multidimensional chromatography technology for in-depth phosphoproteome analysis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36373655" target="_blank" class="term-link">
+                            PMID:36373655
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of the GOLD-domain seven-transmembrane helix protein family member TMEM87A.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the GOST family (GOLD domain fused to a GPCR-like 7TM domain, the architecture shared by PTM1) and proposes a common membrane-trafficking role; shows the human paralog TMEM87A is neither a mechanosensitive channel nor a canonical G-protein-coupled receptor.</div>
+
+                        <div class="finding-text">"structurally homologous GOST proteins could serve a common role in trafficking"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39609618" target="_blank" class="term-link">
+                            PMID:39609618
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GPR180 is a new member of the Golgi-dynamics domain seven-transmembrane helix protein family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reviews the GOST/GDD seven-transmembrane family: members localize to the Golgi/endosomal network and are speculated to act as trafficking chaperones for membrane-associated cargo, but their molecular function and ligands remain largely unknown.</div>
+
+                        <div class="finding-text">"Little is known about ligands and the exact function of GOST proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PTM1 function as a cargo-binding trafficking chaperone for a specific membrane protein or lipid in the yeast Golgi/endosome system, analogous to how Wntless chaperones lipidated Wnt in animals?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="Q: Does PTM1 function as a cargo-binding trafficking ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the apparent lack of a ptm1Δ phenotype due to functional redundancy with the whole-genome-duplication paralog YHL017W?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="Q: Is the apparent lack of a ptm1Δ phenotype due to f..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of the phosphorylation of PTM1&#39;s cytoplasmic acidic tail (Ser480/Thr483/Thr498) — does it regulate localization, turnover, or interaction with trafficking machinery?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="Q: What is the functional significance of the phospho..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct ptm1Δ, yhl017wΔ, and the ptm1Δ yhl017wΔ double mutant and assay for synthetic growth, secretion, glycosylation, and Golgi/endosome morphology defects, including sensitivity to cell-wall stressors (calcofluor white, Congo red) and trafficking-pathway perturbations.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PTM1 acts redundantly with YHL017W in a Golgi/endosome membrane-trafficking step, so single deletions have little phenotype.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetic epistasis / phenotypic profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="EXPERIMENT: Construct ptm1Δ, yhl017wΔ, and the ptm1Δ yhl017wΔ ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify functionally-tagged PTM1 from yeast membranes under mild detergent conditions and identify co-purifying proteins and lipids by mass spectrometry; validate candidate cargoes by testing their localization, stability, or trafficking in ptm1Δ (and ptm1Δ yhl017wΔ) cells.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PTM1 binds and traffics a specific membrane-associated or lipidated cargo.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: affinity purification-mass spectrometry / cargo-dependency assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="EXPERIMENT: Affinity-purify functionally-tagged PTM1 from yeas..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify recombinant PTM1 (or its 7TM domain), determine its structure by cryo-EM, and use lipidomics/native mass spectrometry to identify co-purifying lipids occupying the predicted 7TM cavity.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The conserved hydrophobic 7TM cavity of PTM1 (as seen in TMEM87A/WLS) binds a lipid or lipidated peptide.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology / native MS lipidomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32857" data-a="EXPERIMENT: Purify recombinant PTM1 (or its 7TM domain), deter..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of PTM1 is unknown: no enzymatic activity, transported substrate, bound ligand, or channel/receptor activity has been demonstrated, and it is not known whether PTM1 acts as a cargo-binding trafficking chaperone (the leading family hypothesis), a scaffolding/adaptor protein, or something else.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The protein&#39;s domain architecture is firmly established — a cleavable signal peptide, a lumenal N-terminal GOLD-like β-sandwich domain, seven transmembrane helices (GOST_TM / GPR107-GPR108-like fold), and a cytoplasmic acidic tail. For the wider family, structures of TMEM87A and WLS reveal a large hydrophobic 7TM cavity, and WLS is shown to chaperone lipidated Wnt, motivating (but not proving) a lipid/hydrophobic-cargo-binding role for the family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> PTM1 is the yeast entry point to a conserved, medically relevant but mechanistically enigmatic family (GPR107 in toxin trafficking, GPR108 in AAV transduction, WLS in Wnt secretion); a defined molecular activity in the tractable yeast system would illuminate the whole family.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Little is known about ligands and the exact function of GOST proteins"</em> — PMID:39609618</li>
+
+                <li><em>"The functional role of GOST proteins is still enigmatic"</em> — PMID:39609618</li>
+
+                <li><em>"We conclude that under these conditions, TMEM87A does not form a mechanosensitive ion channel"</em> — PMID:36373655</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological cargo(es) or interacting client(s) of PTM1 that would define its trafficking role are unidentified; it is unknown which membrane proteins or lipids, if any, depend on PTM1 for their transport, sorting, or retention within the Golgi/endosome system.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> PTM1 co-purifies with the late-Golgi/endosomal Tlg2 compartment, and BioGRID records physical/genetic interactions, but no PTM1-dependent cargo has been functionally established. In the paralogous family, WLS has a defined client (Wnt), setting a template for the kind of client relationship sought.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying a PTM1-dependent cargo would convert the family-level &#34;trafficking chaperone&#34; hypothesis into a testable, yeast-defined mechanism.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"it was speculated that GOST proteins might function as trafficking chaperones for membrane-associated cargo"</em> — PMID:39609618</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process PTM1 participates in, and its loss-of-function phenotype, are undefined. No clear phenotype has been reported for the ptm1Δ single mutant, and it is unknown whether the whole-genome-duplication paralog YHL017W provides functional redundancy that masks a phenotype.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Localization to the Golgi/endosome network and an IBA-inferred (unverified in yeast) association with endosome-to-Golgi retrograde transport delimit the plausible process space. PTM1 has a WGD ohnolog, YHL017W, in the same PANTHER subfamily (PTHR21229:SF1), a classic setup for genetic buffering.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A defined phenotype (ideally in a ptm1Δ yhl017wΔ double mutant) would anchor PTM1 to a specific trafficking step and enable targeted mechanistic study.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The functional role of GOST proteins is still enigmatic"</em> — PMID:39609618</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PTM1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P32857" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ptm1-ykl039w-curation-notes">PTM1 (YKL039W) — curation notes</h1>
+<p>Journal of research for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> PTM1<br />
+(UniProt P32857, systematic name YKL039W, SGD:S000001522).</p>
+<h2 id="summary-of-the-curation-problem">Summary of the curation problem</h2>
+<p>PTM1 is a <strong>dark / understudied</strong> gene. Its very name PTM1 stands for "<strong>P</strong>utative<br />
+<strong>T</strong>rans<strong>M</strong>embrane protein", coined in the 1993 GenBank submission that first noted it<br />
+"enhances recovery from transformation of a profilin deletion strain" (Haarer, Petzold &amp;<br />
+Brown, submitted to EMBL/GenBank/DDBJ Mar-1993; cited as UniProt reference [1]). No<br />
+dedicated functional study of PTM1 itself has been published. Everything known is<br />
+(a) sequence/topology, (b) one experimental localization (co-purification with a late-Golgi<br />
+compartment), (c) one phosphoproteomic dataset, and (d) inference from the wider<br />
+GPR107/GPR108/TMEM87 (GOST/LUSTR) protein family, whose molecular function is itself<br />
+largely unresolved.</p>
+<p>The primary deliverable is therefore an <strong>honest knowledge_gaps section</strong> plus a carefully<br />
+reasoned localization-grounded description and minimal core_functions — no invented function.</p>
+<h2 id="what-is-known">What is KNOWN</h2>
+<h3 id="sequence-topology-and-domain-architecture-uniprot-p32857-inline-from-ptm1-uniprottxt">Sequence, topology and domain architecture (UniProt P32857, inline from PTM1-uniprot.txt)</h3>
+<ul>
+<li>523 aa, MW 60 kDa, precursor with an N-terminal <strong>signal peptide (1–26)</strong>.</li>
+<li><strong>Seven transmembrane helices</strong> predicted (TM1 198–218, TM2 231–251, TM3 266–286,<br />
+  TM4 305–325, TM5 334–354, TM6 382–402, TM7 418–438), with a large <strong>lumenal<br />
+  N-terminal domain (27–197)</strong> and a <strong>cytoplasmic C-terminal tail (439–523)</strong>. This is the<br />
+  canonical GOST/LUSTR "GOLD-domain + 7TM" architecture (N-terminal lumenal β-sandwich<br />
+  atop a GPCR-like 7TM bundle).</li>
+<li>Pfam / InterPro domains: <strong>GOST_TM (PF06814 / IPR053937)</strong>, <strong>GPR107/GPR108-like<br />
+  (IPR009637)</strong>, <strong>PTM1-like_N (PF21902 / IPR053938)</strong>. UniProt SIMILARITY: "Belongs to the<br />
+  LU7TM family" (LU7TM = Lung Seven TransMembrane / LUSTR).</li>
+<li>PANTHER family <strong>PTHR21229 "LUNG SEVEN TRANSMEMBRANE RECEPTOR"</strong>; PTM1 is in<br />
+  subfamily <strong>PTHR21229:SF1</strong> together with its yeast paralog <strong>YHL017W (P38745)</strong> and the<br />
+<em>S. pombe</em> proteins SPAC26H5.07c / SPBC18A7.02c. The mammalian members GPR107 (SF12),<br />
+  GPR108 (SF11), TMEM87A/TMEM87B (SF19/SF16) sit in <strong>distinct subfamilies</strong> — relevant to<br />
+  how far specific mammalian phenotypes can be transferred to PTM1 (see below).</li>
+<li>One predicted <strong>N-glycosylation site (Asn132)</strong>; UniProt keyword Glycoprotein; single<br />
+  GlyGen/GlyCosmos site → consistent with a lumenal, glycosylated ectodomain of a<br />
+  secretory-pathway membrane protein.</li>
+<li>Disordered, acidic C-terminal region (483–523) carrying three mapped phosphosites.</li>
+<li>Paralog <strong>YHL017W</strong> arose from the whole-genome duplication (ohnolog pair) — a second,<br />
+  equally uncharacterized yeast GOST protein. Possible functional redundancy is a live<br />
+  hypothesis and complicates single-deletion phenotype interpretation.</li>
+</ul>
+<h3 id="subcellular-localization-experimental">Subcellular localization (experimental)</h3>
+<ul>
+<li>UniProt SUBCELLULAR LOCATION (ECO:0000269|PubMed:16107716): <strong>Golgi apparatus membrane;<br />
+  Multi-pass membrane protein. Early endosome membrane; Multi-pass membrane protein.<br />
+  Note=Copurifies with the late Golgi SNARE TLG2.</strong></li>
+<li>Source: Inadome, Noda, Adachi &amp; Yoda 2005 <a href="https://pubmed.ncbi.nlm.nih.gov/16107716">PMID:16107716</a>. This paper immunoisolated<br />
+  yeast Golgi subcompartments using the SNAREs <strong>Sed5 (early Golgi)</strong> and <strong>Tlg2 (late<br />
+  Golgi/endosome)</strong> and catalogued the membrane proteins of each. PTM1/YKL039W was detected<br />
+  among the proteins co-purifying with the <strong>Tlg2 (late-Golgi/endosome) compartment</strong>; that<br />
+  detection is the experimental basis for UniProt's Golgi-membrane / early-endosome-membrane<br />
+  localization. NOTE: the cached full text of PMID:16107716 is abstract + Discussion only<br />
+  (the Results/Tables where YKL039W would be individually listed were not captured in the<br />
+  HTML extraction), so I cannot quote "PTM1"/"YKL039W" verbatim from the cache. The paper's<br />
+  scope is directly on-point:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16107716" title="we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the   markers of the early and late Golgi compartments, respectively, and analyzed the membrane   proteins">PMID:16107716</a>. The localization annotation itself is a curator-made experimental (SGD/UniProt)<br />
+  call from full text; I defer to it.</li>
+</ul>
+<h3 id="post-translational-modification-experimental-large-scale">Post-translational modification (experimental, large-scale)</h3>
+<ul>
+<li>Phosphorylated at <strong>Ser480, Thr483, Thr498</strong> in the cytoplasmic acidic tail<br />
+  (ECO:0007744|PubMed:18407956, Albuquerque et al. 2008 phosphoproteome). Cached entry for<br />
+  PMID:18407956 is abstract-only (large-scale MS survey); establishes that PTM1 is a<br />
+  phosphoprotein but says nothing about biological role.</li>
+</ul>
+<h3 id="gene-history-naming">Gene history / naming</h3>
+<ul>
+<li>Original functional hint: overexpression "enhances recovery from transformation of a<br />
+  profilin (PFY1) deletion strain" (UniProt ref [1], Haarer/Petzold/Brown 1993 GenBank<br />
+  submission). This is a suppressor-of-transformation-stress observation, NOT a defined<br />
+  molecular function, and has not been followed up mechanistically.</li>
+<li>Sequence had two historical frameshift errors (CAA49300.1, CAA81874.1), corrected in the<br />
+  reference genome; PE=1 (evidence at protein level).</li>
+</ul>
+<h2 id="what-is-not-known-the-gaps">What is NOT known (the gaps)</h2>
+<ul>
+<li><strong>Molecular function</strong>: unknown. No enzymatic activity; no demonstrated ligand, transporter<br />
+  substrate, or channel activity for PTM1 or, in most cases, for the whole GOST family.</li>
+<li><strong>Transported / handled molecule</strong>: unknown. The family is <em>hypothesized</em> (by structural<br />
+  analogy to Wntless, which chaperones lipidated Wnt) to bind hydrophobic cargo/lipid in the<br />
+  7TM cavity, but no cargo is established for PTM1.</li>
+<li><strong>Biological process</strong>: unknown beyond a presumed role in secretory-pathway / Golgi<br />
+  membrane-protein trafficking, inferred from localization and family (IBA).</li>
+<li><strong>Loss-of-function phenotype</strong>: no clear phenotype reported for the <em>ptm1Δ</em> single mutant;<br />
+  the WGD paralog YHL017W may buffer it. BioGRID lists genetic/physical interactions but no<br />
+  defining functional phenotype.</li>
+<li><strong>GPCR-like signaling</strong>: explicitly NOT supported for the family — see family evidence.</li>
+</ul>
+<h2 id="family-orthology-evidence-for-iba-appropriateness-and-gap-framing">Family / orthology evidence (for IBA appropriateness and gap framing)</h2>
+<p>PTM1 is the fungal representative of the GOST (GOLD-domain seven-transmembrane) / LUSTR /<br />
+LU7TM family. Two recent structural papers characterize the family (used here for the<br />
+gene-review references; they concern human paralogs, not PTM1 directly, so relevance to PTM1<br />
+is MEDIUM and localization/mechanism claims are transferred cautiously):</p>
+<ul>
+<li><strong>TMEM87A cryo-EM structure</strong>, Hoel et al. 2022 eLife <a href="https://pubmed.ncbi.nlm.nih.gov/36373655">PMID:36373655</a>:</li>
+<li>Family = GOLD domain + GPCR-like 7TM; proposed common trafficking role:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36373655" title="structurally homologous GOST proteins could serve a common role in trafficking">PMID:36373655</a>.</li>
+<li>Not a channel: <a href="https://pubmed.ncbi.nlm.nih.gov/36373655" title="We conclude that under these conditions, TMEM87A does not     form a mechanosensitive ion channel">PMID:36373655</a>.</li>
+<li>Probably not a GPCR: <a href="https://pubmed.ncbi.nlm.nih.gov/36373655" title="these differences suggest that TMEM87A may not     couple to G proteins or arrestins like canonical GPCRs">PMID:36373655</a>.</li>
+<li><strong>GPR180 / GOST review+structure</strong>, 2024 Commun Biol <a href="https://pubmed.ncbi.nlm.nih.gov/39609618">PMID:39609618</a>:</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/39609618" title="Little is known about ligands and the exact function of GOST proteins">PMID:39609618</a>.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/39609618" title="it was speculated that GOST proteins might function as trafficking     chaperones for membrane-associated cargo">PMID:39609618</a>.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/39609618" title="The functional role of GOST proteins is still enigmatic">PMID:39609618</a>.</li>
+</ul>
+<p>Mammalian family members have specific reported roles (GPR107: retrograde toxin transport,<br />
+receptor recycling; GPR108: AAV transduction; WLS: Wnt secretion chaperone) but these map to<br />
+<strong>different PANTHER subfamilies</strong> than PTM1 (SF1). The conserved thread across the whole<br />
+family — including the fungal SF1 branch — is <strong>Golgi/endosome localization and a presumed<br />
+role in membrane-trafficking of hydrophobic/membrane-associated cargo</strong>, with molecular<br />
+mechanism unresolved. Transferring a specific mammalian phenotype (e.g. AAV transduction,<br />
+Wnt secretion) to yeast PTM1 would be over-annotation; transferring the general<br />
+Golgi-localization + trafficking-context is defensible but should stay non-core / general.</p>
+<h2 id="annotation-by-annotation-reasoning-10-goa-annotations-all-ibaieand">Annotation-by-annotation reasoning (10 GOA annotations, all IBA/IEA/ND)</h2>
+<ol>
+<li><strong>GO:0005794 Golgi apparatus</strong> (IBA, GO_REF:0000033) — ACCEPT. Consistent with the<br />
+   experimental co-purification with the Tlg2 late-Golgi compartment (PMID:16107716) and<br />
+   family-wide Golgi localization. Core localization.</li>
+<li><strong>GO:0016020 membrane</strong> (IBA, GO_REF:0000033) — MODIFY→ generalize is not needed but the<br />
+   bare "membrane" is uninformative given we know it is a Golgi/endosome multi-pass membrane<br />
+   protein. Keep as non-core (it is a true but shallow parent of the specific CC terms).</li>
+<li><strong>GO:0042147 retrograde transport, endosome to Golgi</strong> (IBA, GO_REF:0000033) — this is the<br />
+   only BP annotation with any specific content. It is IBA-transferred from mammalian<br />
+   orthologs (with/from includes UniProtKB:Q8NBN3 GPR108, Q96K49 TMEM87B). There is no<br />
+<em>direct</em> yeast evidence that PTM1 mediates endosome-to-Golgi retrograde transport;<br />
+   however the localization (late-Golgi/endosome) is compatible and the family is<br />
+   trafficking-associated. Given no yeast experimental support and subfamily divergence,<br />
+   KEEP_AS_NON_CORE (plausible process context, not an established core function). Do NOT<br />
+   REMOVE — it is a reasonable phylogenetic inference and the process is compatible with<br />
+   localization.</li>
+<li><strong>GO:0000139 Golgi membrane</strong> (IEA, GO_REF:0000044, from UniProt SubCell) — ACCEPT. This<br />
+   is the specific, experimentally-grounded localization; core.</li>
+<li><strong>GO:0005829 cytosol</strong> (IEA, GO_REF:0000108) — over-annotation. Derived by logical<br />
+   inference from the retrograde-transport BP term (with/from GO:0042147), not from any<br />
+   evidence PTM1 is a soluble cytosolic protein. PTM1 is a multi-pass integral membrane<br />
+   protein; the cytosolic C-tail does not make the protein "cytosol"-localized in the CC<br />
+   sense. MARK_AS_OVER_ANNOTATED.</li>
+<li><strong>GO:0016020 membrane</strong> (IEA, GO_REF:0000002, InterPro IPR009637) — ACCEPT (true,<br />
+   uninformative parent; keep as non-core). Redundant with the IBA membrane term but<br />
+   correctly reflects integral-membrane status.</li>
+<li><strong>GO:0031901 early endosome membrane</strong> (IEA, GO_REF:0000044, UniProt SubCell) — ACCEPT.<br />
+   Experimentally grounded (PMID:16107716 endosome/late-Golgi copurification). Non-core<br />
+   secondary localization.</li>
+<li><strong>GO:0003674 molecular_function</strong> (ND, GO_REF:0000015) — ACCEPT (root ND). Honestly<br />
+   reflects that no molecular function is known — appropriate for a dark gene. Keep.</li>
+<li><strong>GO:0005575 cellular_component</strong> (ND, GO_REF:0000015) — this ND root CC is now<br />
+   superseded by the specific Golgi/endosome CC annotations above. MARK_AS_OVER_ANNOTATED /<br />
+   effectively obsolete-by-newer-evidence; recommend it not be treated as core. (Per<br />
+   guidance, GOA ND roots are usually left; flag as non-core.)</li>
+<li><strong>GO:0008150 biological_process</strong> (ND, GO_REF:0000015) — root ND BP; superseded by the<br />
+    IBA retrograde-transport BP. Keep as-is / non-core; honest reflection of limited BP<br />
+    knowledge.</li>
+</ol>
+<h2 id="decisions-on-core_functions">Decisions on core_functions</h2>
+<ul>
+<li>Core function statements must stay minimal and localization-grounded. The only defensible<br />
+  "core" is: <strong>integral Golgi/endosome membrane protein of the GOST/LUSTR family, presumed<br />
+  to act in secretory-pathway membrane-protein trafficking; molecular function unknown.</strong></li>
+<li>Use CC terms for locations (Golgi membrane / early endosome membrane). Do NOT assert a<br />
+  specific MF (no ligand/channel/enzyme evidence). If a MF is required by schema, the honest<br />
+  choice is not to fabricate one; core_functions can describe the trafficking-context role<br />
+  with molecular_function left unstated or as the general integral-membrane framing.</li>
+</ul>
+<h2 id="deep-research-status">Deep research status</h2>
+<p>Falcon deep-research (<code>just deep-research-falcon yeast PTM1 --fallback perplexity-lite</code>) was<br />
+attempted twice and hung both times (~24 min with zero output on the first run; SIGTERM at the<br />
+500 s bound on the retry). No <code>-deep-research-falcon.md</code> file was produced, and none was<br />
+fabricated (per repo policy, self-written content must NOT be named <code>-deep-research-*</code>). This<br />
+review is therefore grounded directly in the UniProt record (P32857), the QuickGO GOA export,<br />
+the PANTHER PTHR21229 family data, and four cached primary/structural publications<br />
+(PMID:16107716, 18407956, 36373655, 39609618), all with verbatim-verified supporting text.</p>
+<h2 id="provenance-of-cached-publications">Provenance of cached publications</h2>
+<ul>
+<li>publications/PMID_16107716.md — Inadome 2005 (full text = abstract+Discussion only in cache).</li>
+<li>publications/PMID_18407956.md — Albuquerque 2008 phosphoproteome (abstract only).</li>
+<li>publications/PMID_36373655.md — Hoel 2022 TMEM87A structure (full text).</li>
+<li>publications/PMID_39609618.md — 2024 GPR180/GOST (full text).</li>
+<li>interpro/panther/PTHR21229/ — family metadata + reviewed members (subfamily assignments).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P32857
+gene_symbol: PTM1
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  PTM1 (YKL039W) is a polytopic integral membrane protein of the budding yeast
+  secretory pathway. It has the architecture characteristic of the GOST/LUSTR
+  (GOLD-domain seven-transmembrane, also called Lung Seven TransMembrane) protein
+  family: a cleavable N-terminal signal peptide, a large lumenal N-terminal
+  β-sandwich domain, and a GPCR-like bundle of seven transmembrane helices, ending
+  in a cytoplasmic, disordered, acidic and phosphorylated C-terminal tail. The
+  lumenal domain carries a predicted N-glycosylation site. PTM1 localizes to the
+  Golgi apparatus membrane and the early endosome membrane, and co-purifies with
+  the late-Golgi/endosomal SNARE Tlg2. It is the fungal representative of the
+  family that in animals includes GPR107, GPR108, TMEM87A/TMEM87B, GPR180 and
+  Wntless (WLS); yeast additionally has a whole-genome-duplication paralog,
+  YHL017W. Members of this family are Golgi/endosome-resident proteins broadly
+  associated with membrane-protein trafficking through the secretory and endosomal
+  system, and are thought to act as trafficking chaperones for membrane-associated
+  or hydrophobic cargo rather than as signalling GPCRs, but no molecular function,
+  substrate or ligand has been established for PTM1, and its precise cellular role
+  remains undefined.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:16107716
+  title: &#39;Immunoisolaton of the yeast Golgi subcompartments and characterization of
+    a novel membrane protein, Svp26, discovered in the Sed5-containing compartments.&#39;
+  findings:
+  - statement: &gt;-
+      Immunoisolated yeast Golgi subcompartments using the SNAREs Sed5 (early Golgi)
+      and Tlg2 (late Golgi/endosome) and catalogued their membrane proteins; PTM1
+      (YKL039W) co-purified with the Tlg2 late-Golgi/endosome compartment, the
+      experimental basis for its Golgi-membrane and early-endosome-membrane
+      localization.
+    supporting_text: &gt;-
+      we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the
+      markers of the early and late Golgi compartments, respectively, and analyzed
+      the membrane proteins
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified (Mol Cell Biol 2005). This is the source of the UniProt
+      experimental subcellular-location annotation for PTM1 (Golgi/early-endosome
+      membrane; copurifies with Tlg2). The cached full text is abstract+Discussion
+      only, so the individual detection of YKL039W in the Tlg2 fraction (Results
+      tables) is not quotable from the cache, but the paper&#39;s method and scope
+      directly establish the localization; the annotation is a curator call from
+      full text and is deferred to.
+- id: PMID:18407956
+  title: A multidimensional chromatography technology for in-depth phosphoproteome
+    analysis.
+  findings:
+  - statement: &gt;-
+      Large-scale phosphoproteomic survey identifying PTM1 phosphorylation at
+      Ser480, Thr483 and Thr498 in its cytoplasmic C-terminal tail.
+    supporting_text: &gt;-
+      A multidimensional chromatography technology for in-depth phosphoproteome
+      analysis
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Mol Cell Proteomics 2008); abstract-only in cache. Establishes
+      that PTM1 is a phosphoprotein (Ser480/Thr483/Thr498 per UniProt MOD_RES) but
+      provides no functional interpretation.
+- id: PMID:36373655
+  title: Structure of the GOLD-domain seven-transmembrane helix protein family member
+    TMEM87A.
+  findings:
+  - statement: &gt;-
+      Defines the GOST family (GOLD domain fused to a GPCR-like 7TM domain, the
+      architecture shared by PTM1) and proposes a common membrane-trafficking role;
+      shows the human paralog TMEM87A is neither a mechanosensitive channel nor a
+      canonical G-protein-coupled receptor.
+    supporting_text: &gt;-
+      structurally homologous GOST proteins could serve a common role in trafficking
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified (eLife 2022). Characterizes the human family member
+      TMEM87A, not PTM1 directly, so relevance to yeast PTM1 is family-level
+      (MEDIUM). Verbatim-quote-checked: also states TMEM87A &#34;does not form a
+      mechanosensitive ion channel&#34; and &#34;may not couple to G proteins or arrestins
+      like canonical GPCRs&#34; — used to argue against fabricating a channel/GPCR
+      molecular function for PTM1.
+- id: PMID:39609618
+  title: GPR180 is a new member of the Golgi-dynamics domain seven-transmembrane helix
+    protein family.
+  findings:
+  - statement: &gt;-
+      Reviews the GOST/GDD seven-transmembrane family: members localize to the
+      Golgi/endosomal network and are speculated to act as trafficking chaperones
+      for membrane-associated cargo, but their molecular function and ligands remain
+      largely unknown.
+    supporting_text: &gt;-
+      Little is known about ligands and the exact function of GOST proteins
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified (Commun Biol 2024). Family-level source (concerns GPR180
+      and the wider GOST family, not PTM1 directly). Verbatim-quote-checked:
+      &#34;it was speculated that GOST proteins might function as trafficking chaperones
+      for membrane-associated cargo&#34; and &#34;The functional role of GOST proteins is
+      still enigmatic&#34; — supports the knowledge-gap framing for PTM1.
+existing_annotations:
+- term:
+    id: GO:0005794
+    label: Golgi apparatus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Golgi localization is supported both by phylogenetic inference from the
+      GOST/LUSTR family (which is broadly Golgi/endosome-resident) and by direct
+      experimental co-purification of PTM1 with the yeast late-Golgi compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimental subcellular localization (PMID:16107716,
+      copurification with the Tlg2 late-Golgi/endosome compartment) and with
+      family-wide Golgi localization. This is a well-supported core localization.
+    supported_by:
+    - reference_id: PMID:16107716
+      supporting_text: &gt;-
+        we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the
+        markers of the early and late Golgi compartments, respectively, and analyzed
+        the membrane proteins
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      PTM1 is an integral, multi-pass (seven-transmembrane) membrane protein, so
+      &#34;membrane&#34; is factually correct but uninformative given the more specific
+      Golgi-membrane and early-endosome-membrane annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      True but shallow parent term; the specific compartment (Golgi/endosome
+      membrane) annotations are more informative. Retain as non-core.
+- term:
+    id: GO:0042147
+    label: retrograde transport, endosome to Golgi
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The only biological-process annotation with specific content. Transferred by
+      phylogenetic inference from mammalian orthologs (with/from GPR108/TMEM87B).
+      Compatible with PTM1&#39;s late-Golgi/endosome localization, but there is no
+      direct yeast experimental evidence that PTM1 mediates endosome-to-Golgi
+      retrograde transport, and PTM1 sits in a distinct PANTHER subfamily (SF1) from
+      the mammalian members the annotation derives from.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reasonable, localization-compatible phylogenetic inference, but unverified for
+      yeast and subfamily-diverged; keep as a plausible process context rather than
+      an established core function. Not removed, per guidance that IBA process
+      inferences compatible with localization should not be second-guessed away.
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Specific, experimentally-grounded localization derived from the UniProt
+      Swiss-Prot subcellular-location mapping (Golgi apparatus membrane;
+      multi-pass), which itself rests on PMID:16107716.
+    action: ACCEPT
+    reason: &gt;-
+      Precise and correct localization for a multi-pass Golgi membrane protein;
+      core localization.
+    supported_by:
+    - reference_id: PMID:16107716
+      supporting_text: &gt;-
+        we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the
+        markers of the early and late Golgi compartments, respectively, and analyzed
+        the membrane proteins
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Assigned by automated logical inference from the retrograde-transport process
+      term (with/from GO:0042147), not from evidence that PTM1 is a soluble
+      cytosolic protein. PTM1 is a polytopic integral membrane protein; only its
+      C-terminal tail faces the cytoplasm.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Misleading as a cellular-component assignment for an integral membrane
+      protein; it is an artefact of inter-ontology logical inference from the BP
+      term rather than a bona fide localization.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro2GO (IPR009637, GPR107/GPR108-like) correctly infers integral-membrane
+      status. Redundant with the IBA membrane term and uninformative relative to the
+      Golgi/endosome-membrane annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but shallow parent; retain as non-core supporting the integral
+      membrane nature.
+- term:
+    id: GO:0031901
+    label: early endosome membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Secondary localization from the UniProt subcellular-location mapping, grounded
+      in the PMID:16107716 co-purification with the late-Golgi/endosome (Tlg2)
+      compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally grounded secondary localization; correct and specific. Non-core
+      relative to the primary Golgi localization.
+    supported_by:
+    - reference_id: PMID:16107716
+      supporting_text: &gt;-
+        we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the
+        markers of the early and late Golgi compartments, respectively, and analyzed
+        the membrane proteins
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular-function term with the ND (no biological data) evidence code.
+      This is an honest reflection of the state of knowledge: no molecular function,
+      enzymatic activity, ligand or transported substrate has been established for
+      PTM1, and the wider GOST family&#39;s molecular function is itself unresolved.
+    action: ACCEPT
+    reason: &gt;-
+      Appropriate ND annotation for a gene whose molecular function is genuinely
+      unknown; retaining it correctly signals the molecular-function knowledge gap.
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular-component ND annotation. It is now superseded by the specific,
+      experimentally-grounded Golgi-membrane and early-endosome-membrane
+      annotations.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      No longer reflects the state of knowledge now that specific compartment
+      localizations are annotated; should not be treated as core. (An ND root
+      annotation that specific evidence has overtaken.)
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological-process ND annotation, reflecting that the specific biological
+      role of PTM1 in yeast has not been experimentally determined. A more specific
+      (though still inferred) BP annotation exists via the IBA
+      endosome-to-Golgi-retrograde-transport term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Honestly reflects the limited process-level knowledge; retained as non-core
+      given the only specific BP term is an unverified phylogenetic inference.
+core_functions:
+- description: &gt;-
+    PTM1 is a polytopic integral membrane protein resident in the Golgi apparatus
+    membrane and early endosome membrane of the budding-yeast secretory/endosomal
+    system, where it co-purifies with the late-Golgi/endosomal SNARE Tlg2. It is
+    the fungal member of the GOST/LUSTR (GOLD-domain seven-transmembrane) family,
+    whose members are broadly implicated in membrane-protein trafficking through the
+    Golgi and endosomal network and are proposed to act as trafficking chaperones
+    for membrane-associated or hydrophobic cargo rather than as signalling GPCRs. No
+    specific molecular function, ligand or transported substrate has been
+    established for PTM1; this core function is therefore stated at the level of a
+    localization-defined, family-associated role in intracellular membrane
+    trafficking, with the molecular mechanism left undefined (see knowledge_gaps).
+  locations:
+  - id: GO:0000139
+    label: Golgi membrane
+  - id: GO:0031901
+    label: early endosome membrane
+  supported_by:
+  - reference_id: PMID:16107716
+    supporting_text: &gt;-
+      we immunoisolated vesicles carrying either of the SNAREs Sed5 or Tlg2, the
+      markers of the early and late Golgi compartments, respectively, and analyzed
+      the membrane proteins
+  - reference_id: PMID:39609618
+    supporting_text: &gt;-
+      it was speculated that GOST proteins might function as trafficking chaperones
+      for membrane-associated cargo
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of PTM1 is unknown: no enzymatic activity, transported
+    substrate, bound ligand, or channel/receptor activity has been demonstrated, and
+    it is not known whether PTM1 acts as a cargo-binding trafficking chaperone (the
+    leading family hypothesis), a scaffolding/adaptor protein, or something else.
+  boundary: &gt;-
+    The protein&#39;s domain architecture is firmly established — a cleavable signal
+    peptide, a lumenal N-terminal GOLD-like β-sandwich domain, seven transmembrane
+    helices (GOST_TM / GPR107-GPR108-like fold), and a cytoplasmic acidic tail. For
+    the wider family, structures of TMEM87A and WLS reveal a large hydrophobic 7TM
+    cavity, and WLS is shown to chaperone lipidated Wnt, motivating (but not
+    proving) a lipid/hydrophobic-cargo-binding role for the family.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    PTM1 is the yeast entry point to a conserved, medically relevant but
+    mechanistically enigmatic family (GPR107 in toxin trafficking, GPR108 in AAV
+    transduction, WLS in Wnt secretion); a defined molecular activity in the
+    tractable yeast system would illuminate the whole family.
+  provenance:
+  - reference_id: PMID:39609618
+    supporting_text: &gt;-
+      Little is known about ligands and the exact function of GOST proteins
+  - reference_id: PMID:39609618
+    supporting_text: &gt;-
+      The functional role of GOST proteins is still enigmatic
+  - reference_id: PMID:36373655
+    supporting_text: &gt;-
+      We conclude that under these conditions, TMEM87A does not form a
+      mechanosensitive ion channel
+- gap_statement: &gt;-
+    The physiological cargo(es) or interacting client(s) of PTM1 that would define
+    its trafficking role are unidentified; it is unknown which membrane proteins or
+    lipids, if any, depend on PTM1 for their transport, sorting, or retention within
+    the Golgi/endosome system.
+  boundary: &gt;-
+    PTM1 co-purifies with the late-Golgi/endosomal Tlg2 compartment, and BioGRID
+    records physical/genetic interactions, but no PTM1-dependent cargo has been
+    functionally established. In the paralogous family, WLS has a defined client
+    (Wnt), setting a template for the kind of client relationship sought.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying a PTM1-dependent cargo would convert the family-level
+    &#34;trafficking chaperone&#34; hypothesis into a testable, yeast-defined mechanism.
+  provenance:
+  - reference_id: PMID:39609618
+    supporting_text: &gt;-
+      it was speculated that GOST proteins might function as trafficking chaperones
+      for membrane-associated cargo
+- gap_statement: &gt;-
+    The biological process PTM1 participates in, and its loss-of-function phenotype,
+    are undefined. No clear phenotype has been reported for the ptm1Δ single mutant,
+    and it is unknown whether the whole-genome-duplication paralog YHL017W provides
+    functional redundancy that masks a phenotype.
+  boundary: &gt;-
+    Localization to the Golgi/endosome network and an IBA-inferred (unverified in
+    yeast) association with endosome-to-Golgi retrograde transport delimit the
+    plausible process space. PTM1 has a WGD ohnolog, YHL017W, in the same PANTHER
+    subfamily (PTHR21229:SF1), a classic setup for genetic buffering.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A defined phenotype (ideally in a ptm1Δ yhl017wΔ double mutant) would anchor
+    PTM1 to a specific trafficking step and enable targeted mechanistic study.
+  provenance:
+  - reference_id: PMID:39609618
+    supporting_text: &gt;-
+      The functional role of GOST proteins is still enigmatic
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does PTM1 function as a cargo-binding trafficking chaperone for a specific
+    membrane protein or lipid in the yeast Golgi/endosome system, analogous to how
+    Wntless chaperones lipidated Wnt in animals?
+  experts: []
+- question: &gt;-
+    Is the apparent lack of a ptm1Δ phenotype due to functional redundancy with the
+    whole-genome-duplication paralog YHL017W?
+  experts: []
+- question: &gt;-
+    What is the functional significance of the phosphorylation of PTM1&#39;s cytoplasmic
+    acidic tail (Ser480/Thr483/Thr498) — does it regulate localization, turnover, or
+    interaction with trafficking machinery?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    PTM1 acts redundantly with YHL017W in a Golgi/endosome membrane-trafficking step,
+    so single deletions have little phenotype.
+  description: &gt;-
+    Construct ptm1Δ, yhl017wΔ, and the ptm1Δ yhl017wΔ double mutant and assay for
+    synthetic growth, secretion, glycosylation, and Golgi/endosome morphology
+    defects, including sensitivity to cell-wall stressors (calcofluor white, Congo
+    red) and trafficking-pathway perturbations.
+  experiment_type: genetic epistasis / phenotypic profiling
+- hypothesis: &gt;-
+    PTM1 binds and traffics a specific membrane-associated or lipidated cargo.
+  description: &gt;-
+    Affinity-purify functionally-tagged PTM1 from yeast membranes under mild
+    detergent conditions and identify co-purifying proteins and lipids by
+    mass spectrometry; validate candidate cargoes by testing their localization,
+    stability, or trafficking in ptm1Δ (and ptm1Δ yhl017wΔ) cells.
+  experiment_type: affinity purification-mass spectrometry / cargo-dependency assay
+- hypothesis: &gt;-
+    The conserved hydrophobic 7TM cavity of PTM1 (as seen in TMEM87A/WLS) binds a
+    lipid or lipidated peptide.
+  description: &gt;-
+    Purify recombinant PTM1 (or its 7TM domain), determine its structure by cryo-EM,
+    and use lipidomics/native mass spectrometry to identify co-purifying lipids
+    occupying the predicted 7TM cavity.
+  experiment_type: structural biology / native MS lipidomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
