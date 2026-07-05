@@ -97,4 +97,8 @@ completed, reproducible bioinformatics analysis in `YFH7-bioinformatics/RESULTS.
 - GO:0005575 cellular_component (ND) — this is the root "no data" placeholder. KEEP_AS_NON_CORE
   (it is the standard ND stub; nothing to remove, adds no information).
 - ATP binding (GO:0005524) is present in UniProt DR (IEA UniProtKB-KW) but NOT in the GOA TSV
-  rows, so it is not an existing_annotation to review; it is captured in core_functions instead.
+  rows. Final decision: add it explicitly as an `existing_annotation` with `action: NEW`
+  (original_reference_id GO_REF:0000043, the UniProt-keyword mapping reference) AND include it
+  in `core_functions`. Rationale: it is a genuine UniProt annotation and the mechanistic basis
+  (Walker A P-loop) of the accepted kinase/ATP-hydrolysis activities, so recording it as a NEW
+  annotation makes the provenance explicit rather than leaving it only in core_functions.
