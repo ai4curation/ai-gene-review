@@ -1,0 +1,17 @@
+| Property | SRP40 / Srp40p summary | Evidence |
+|---|---|---|
+| Gene name | **SRP40** | (pqac-00000002, pqac-00000003) |
+| Systematic name | **YKR092C**; ORF name reported in UniProt context as **YKR412A** | (pqac-00000002) |
+| UniProt ID | **P32583** | (pqac-00000002) |
+| Organism | **Saccharomyces cerevisiae** (strain S288c / baker’s yeast) | (pqac-00000002, pqac-00000003) |
+| Primary function | Nucleolar phosphoprotein and **yeast homolog of mammalian Nopp140**; functions as a **snoRNP chaperone/assembly factor**, with strongest evidence for a selective role in **box H/ACA snoRNP biogenesis, stability, and trafficking**, thereby supporting pre-rRNA processing and modification | (pqac-00000000, pqac-00000001, pqac-00000002, pqac-00000003) |
+| Domain architecture | **N-terminal LisH dimerization motif**; **central intrinsically disordered repeat domain** with serine-rich acidic and lysine/proline-rich basic regions; **conserved C-terminal domain** corresponding to the **Srp40_C / Nopp140 C-terminus**. In yeast, the central region is simplified to **two acidic clusters separated by one basic stretch** | (pqac-00000008, pqac-00000009, pqac-00000025, pqac-00000026) |
+| Phosphorylation features | Central serine-rich region is a major target of **casein kinase 2 (CK2/CKII)** phosphorylation; phosphorylation is required for efficient interaction with snoRNP components and is a core mechanistic feature of Nopp140-family proteins | (pqac-00000008, pqac-00000010, pqac-00000012) |
+| Subcellular localization | Localizes to the **nucleolus**, specifically to the **nucleolar body (NB)**, a subnucleolar compartment related to the vertebrate Cajal body; N-terminus and central domain are sufficient for nuclear localization, whereas the C-terminus alone is not | (pqac-00000015, pqac-00000016, pqac-00000017, pqac-00000026) |
+| Key interactors / functional partners | Interacts functionally with **box H/ACA and box C/D snoRNPs**, more strongly with **box H/ACA snoRNPs**; works with **Nsr1p** in snoRNA trafficking; phosphorylation-dependent interactions connect the family to **CK2**; Nopp140-family proteins also interact with **RNA polymerase I**, linking snoRNP metabolism to rDNA transcription | (pqac-00000000, pqac-00000001, pqac-00000004, pqac-00000005, pqac-00000008, pqac-00000024) |
+| Role in pathways | Functions in **snoRNA maturation/trafficking**, **snoRNP assembly**, **pre-rRNA processing**, **rRNA modification** (especially pseudouridylation-associated H/ACA pathways), and coordination of these events with **Pol I transcription** | (pqac-00000000, pqac-00000001, pqac-00000014, pqac-00000022, pqac-00000023) |
+| Phenotype on deletion or depletion | **Reduction of box H/ACA snoRNAs** (e.g., snR3, snR10, snR11, snR42, snR30) with relative preservation of several box C/D snoRNAs; loss of SRP40 also disrupts **NB accumulation/retention of box C/D snoRNAs** and can impair NB formation or snoRNP association with the NB | (pqac-00000001, pqac-00000003, pqac-00000005, pqac-00000014, pqac-00000018) |
+| Mammalian ortholog | **Nopp140 / NOLC1**, a conserved nucleolar phosphoprotein chaperone involved in concentrating snoRNPs and supporting rRNA modification in the dense fibrillar component | (pqac-00000002, pqac-00000020, pqac-00000021) |
+
+
+*Table: This table summarizes the core identity, structure, localization, interactions, and functional phenotypes of yeast SRP40/Srp40p, together with its relationship to mammalian Nopp140/NOLC1. It is useful as a compact reference for functional annotation and evidence tracking.*
