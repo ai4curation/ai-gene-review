@@ -162,5 +162,3 @@ primary sources; no web-only claim is used as a supporting_text quote.
 - UniProt P53745: RecName *"Probable alpha-1,3-mannosyltransferase MNT4"*; EC 2.4.1.-; PE 3;
   SIMILARITY *"Belongs to the MNN1/MNT family."*; TRANSMEM 11–29 *"Signal-anchor for type II membrane
   protein"*.
-</content>
-</invoke>
