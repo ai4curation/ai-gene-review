@@ -1,0 +1,4099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dyf-3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dyf-3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6I6D4" target="_blank" class="term-link">
+                        Q6I6D4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dyf-3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6I6D4" data-a="DESCRIPTION: DYF-3 is the C. elegans ortholog of clusterin-asso..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DYF-3 is the C. elegans ortholog of clusterin-associated protein 1 (CLUAP1), also known as IFT38 or qilin, a conserved component of the intraflagellar transport (IFT) complex B. IFT-B, together with kinesin-2 and cytoplasmic dynein-2 motors, drives the bidirectional movement of ciliary cargo between the ciliary base and tip that builds and maintains cilia. DYF-3 is not an enzyme; it is a structural/scaffold subunit of the peripheral (IFT-B2) portion of the complex, contributing to complex architecture through protein-protein interactions rather than catalytic activity. It is expressed in ciliated sensory neurons — including eight pairs of amphid neurons, six IL2 inner labial neurons, and two pairs of phasmid neurons — where its expression is controlled by the RFX-type transcription factor DAF-19 via an X-box promoter motif. The protein is distributed through the neuronal cell body, dendrite and axon, and functions at the sensory cilium and its base. Loss of dyf-3 produces stunted, structurally abnormal sensory cilia, a dye-filling-defective (Dyf) phenotype, and impaired cilia-dependent sensory behaviors. The orthologous protein is essential for ciliogenesis across metazoa: zebrafish qilin mutants develop pronephric cysts, and mouse Cluap1 knockouts lack primary cilia, fail Hedgehog signaling, and die at mid-gestation.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>structural constituent of intraflagellar transport particle</h3>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="structural constituent of intraflagellar transport particle" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A structural molecule activity of a protein that is an integral subunit of an intraflagellar transport (IFT) particle (IFT-A or IFT-B), contributing to the assembly and architectural integrity of the complex through protein-protein interactions, without itself catalyzing a biochemical reaction or acting as a motor.</p>
+
+
+
+            <p><strong>Justification:</strong> Non-motor, non-catalytic IFT subunits such as DYF-3/CLUAP1/IFT38 have no adequate GO molecular function term and currently read as MF-dark despite well-defined roles as complex subunits.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                    structural molecule activity
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0060271" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-3/CLUAP1 is required for sensory cilium formation, directly demonstrated in C. elegans and conserved across metazoa. The IBA call from the CLUAP1/IFT38 orthology group is corroborated by direct experimental evidence in the worm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process. Phylogenetic inference agrees with the primary experimental finding that dyf-3 mutants have stunted, structurally abnormal cilia, and with the conserved requirement of the ortholog for ciliogenesis in zebrafish and mouse.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                                        PMID:15713455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we analyzed dyf-3 mutants that are defective in uptake of a fluorescent dye and abnormal in sensory cilium structure</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                                        PMID:15713455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the mutant has stunted cilia and abnormal posterior projections in some sensory neurons</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0005929" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-3 acts as an IFT-B component within the cilium. UniProt records cilium as a subcellular location (IDA, PMID:15713455), consistent with this phylogenetic call.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cilium is the functional site of the IFT machinery. is_active_in is appropriate for an IFT-B subunit that moves along and functions within the cilium.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cytoplasmic dynein-2 powers retrograde intraflagellar transport that is essential for cilium formation and maintenance</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005815" target="_blank" class="term-link">
+                                    GO:0005815
+                                </a>
+                            </span>
+                            <span class="term-label">microtubule organizing center</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0005815" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IFT trains dock and are assembled at the ciliary base (basal body region), which is a microtubule-organizing center. In vertebrates CLUAP1/IFT38 is recruited to the mother centriole/basal body prior to ciliogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The basal-body/MTOC association reflects the docking and assembly site of the IFT machinery rather than DYF-3&#39;s core functional compartment, which is the cilium and the IFT-B complex. Real but accessory; retained as non-core. (The more specific ciliary basal body, GO:0036064, would be preferable to the broad MTOC term.)
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030992" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-3 is an integral subunit of IFT complex B. UniProt lists it as a component of the worm IFT-B complex, and the vertebrate ortholog CLUAP1/IFT38 is an integral component of the IFT-B peripheral subcomplex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core cellular-component / complex membership, strongly supported by biochemistry of the ortholog and by the worm IFT-B subunit list.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" target="_blank" class="term-link">
+                                        PMID:26980730
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with certainty in previous models of the IFT-B complex, as integral components of the core and peripheral subcomplexes, respectively</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" target="_blank" class="term-link">
+                                        PMID:25443296
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">all IFT-B subunits, including the suspected subunit CLUAP1/DYF-3/qilin (Ou et al., 2005b), co-purified with IFT27[K68A] and with IFT27</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0005929" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt Subcellular Location keyword mapping places DYF-3 in the cilium, consistent with the experimental IDA cilium localization from PMID:15713455.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Electronic subcellular-location mapping agrees with experimental evidence; the cilium is the functional site.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030424" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Axon localization derives from UniProt Subcellular Location mapping and mirrors the experimental IDA annotation (PMID:15713455). DYF-3 is distributed through the neuron, but the axon is not its functional site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects the pan-neuronal distribution of an IFT protein en route to the cilium; accessory to the core ciliary function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030425" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Dendrite localization from UniProt Subcellular Location mapping, mirroring the experimental IDA annotation (PMID:15713455).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sensory cilium in C. elegans sits at the distal dendrite; DYF-3 is present along the dendrite in transit but its functional compartment is the cilium/ciliary base. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                    GO:0005929
+                                </a>
+                            </span>
+                            <span class="term-label">cilium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0005929" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation placing the IFT-B complex (and DYF-3) in the cilium.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental and phylogenetic evidence that DYF-3 localizes to and functions within the cilium.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization, revealing their important roles in ciliary entry of dynein-2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                                    GO:0030992
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport particle B</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030992" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal NAS annotation for DYF-3 membership in IFT particle B, corresponding to ComplexPortal CPX-1290 (Intraflagellar transport complex B).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core complex membership; agrees with the UniProt IFT-B subunit list and with biochemistry of the CLUAP1/IFT38 ortholog.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                    GO:0042073
+                                </a>
+                            </span>
+                            <span class="term-label">intraciliary transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0042073" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As an IFT-B subunit, DYF-3 participates in intraflagellar transport, the motor-driven bidirectional movement of ciliary cargo along the axoneme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process for an IFT-B complex component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                                        PMID:28479320
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization, revealing their important roles in ciliary entry of dynein-2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28479320
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dynein-Driven Retrograde Intraflagellar Transport Is Triphas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0060271" data-r="PMID:28479320" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-3 (as an IFT-B subunit) is required for cilium assembly. This NAS annotation restates the well-supported core process also captured by IDA/IBA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, redundant with but consistent with the IDA annotation from PMID:15713455.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006935" target="_blank" class="term-link">
+                                    GO:0006935
+                                </a>
+                            </span>
+                            <span class="term-label">chemotaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23664973" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23664973
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Environmental alkalinity sensing mediated by the transmembra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0006935" data-r="PMID:23664973" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dyf-3 was assayed in this study as a dye-filling-/cilium-defective strain; disrupting the sensory cilium impairs amphid-mediated chemotaxis. This is a downstream consequence of loss of functional cilia, not a distinct molecular activity of DYF-3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental IMP annotation made by curators with access to the full text (the cached abstract foregrounds the guanylyl cyclase GCY-14 and does not name dyf-3); per curation guidance this is retained, not removed. It reflects the indirect, cilia-dependent behavioral requirement rather than DYF-3&#39;s core ciliary function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007635" target="_blank" class="term-link">
+                                    GO:0007635
+                                </a>
+                            </span>
+                            <span class="term-label">chemosensory behavior</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23664973" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23664973
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Environmental alkalinity sensing mediated by the transmembra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0007635" data-r="PMID:23664973" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> dyf-3 mutants are defective in chemosensory behavior because their sensory cilia are structurally abnormal, compromising the sensory apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Downstream, cilia-dependent behavioral phenotype. Experimental IMP; retained as a non-core process consequence of DYF-3&#39;s ciliary role.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010446" target="_blank" class="term-link">
+                                    GO:0010446
+                                </a>
+                            </span>
+                            <span class="term-label">response to alkaline pH</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23664973" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23664973
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Environmental alkalinity sensing mediated by the transmembra...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0010446" data-r="PMID:23664973" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In the alkalinity-sensing study, dyf-3 (cilium-defective) animals fail the ASE-mediated alkaline-pH response, because functional amphid cilia are required to house the sensory transduction machinery (e.g. GCY-14).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Indirect requirement: the behavior fails because the cilium is disrupted, not because DYF-3 has a molecular role in pH transduction. Experimental IMP; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No molecular function is annotated for DYF-3. This is an accurate reflection of a genuine knowledge/ontology gap: DYF-3/CLUAP1 has no catalytic activity and acts as a structural/scaffold IFT-B subunit, a role for which no adequate GO molecular function term currently exists.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND molecular_function annotation should be retained rather than replaced with an invented activity. See knowledge_gaps and proposed_new_terms for the associated ontology gap.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030424" target="_blank" class="term-link">
+                                    GO:0030424
+                                </a>
+                            </span>
+                            <span class="term-label">axon</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15713455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The dyf-3 gene encodes a novel protein required for sensory ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030424" data-r="PMID:15713455" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct observation of DYF-3::GFP in the axon of ciliated sensory neurons.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine experimental localization, but reflects distribution of the protein through the neuron rather than its functional site (the cilium/ciliary base). Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030425" target="_blank" class="term-link">
+                                    GO:0030425
+                                </a>
+                            </span>
+                            <span class="term-label">dendrite</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15713455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The dyf-3 gene encodes a novel protein required for sensory ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0030425" data-r="PMID:15713455" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct observation of DYF-3::GFP in the dendrite of ciliated sensory neurons.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental localization along the dendrite that leads to the sensory cilium; accessory to the core ciliary function. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042995" target="_blank" class="term-link">
+                                    GO:0042995
+                                </a>
+                            </span>
+                            <span class="term-label">cell projection</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15713455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The dyf-3 gene encodes a novel protein required for sensory ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0042995" data-r="PMID:15713455" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DYF-3::GFP is present in cell projections (cilium, axon, dendrite are all cell projections). This is a broad parent term subsumed by the more specific cilium, axon and dendrite annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but very general; the informative specific children (cilium/axon/dendrite) are separately annotated. Retained as non-core rather than removed, since the experimental IDA is valid.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043025" target="_blank" class="term-link">
+                                    GO:0043025
+                                </a>
+                            </span>
+                            <span class="term-label">neuronal cell body</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15713455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The dyf-3 gene encodes a novel protein required for sensory ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0043025" data-r="PMID:15713455" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct observation of DYF-3::GFP in the neuronal cell body.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The protein is synthesized in and present throughout the cell body, but its functional compartment is the cilium/ciliary base. Retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                    GO:0060271
+                                </a>
+                            </span>
+                            <span class="term-label">cilium assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15713455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The dyf-3 gene encodes a novel protein required for sensory ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6I6D4" data-a="GO:0060271" data-r="PMID:15713455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The strongest evidence for DYF-3&#39;s core role: dyf-3 mutants directly show defective sensory cilium formation, and dyf-3 acts cell-autonomously in ciliated neurons and is regulated by DAF-19/RFX as part of the ciliary gene battery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, established by direct experimental evidence in the primary characterization of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                                        PMID:15713455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dyf-3 acts cell-autonomously for fluorescent dye uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                                        PMID:15713455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">dyf-3 expression is regulated by DAF-19 transcription factor, and DYF-3 may be involved in the intraflagellar transport system</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>DYF-3 is a structural/scaffold subunit of the peripheral (IFT-B2) part of intraflagellar transport complex B. Rather than catalyzing a reaction, it contributes to IFT-B architecture and, as part of the assembled IFT machinery, supports the anterograde/retrograde transport of ciliary cargo required to build and maintain sensory cilia in ciliated neurons. Its direct molecular activity and the specific worm IFT-B partners/cargo it engages remain undefined.</h3>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="FUNCTION: DYF-3 is a structural/scaffold subunit of the peri..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060271" target="_blank" class="term-link">
+                                cilium assembly
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042073" target="_blank" class="term-link">
+                                intraciliary transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link">
+                                cilium
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030992" target="_blank" class="term-link">
+                            intraciliary transport particle B
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                                PMID:15713455
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we analyzed dyf-3 mutants that are defective in uptake of a fluorescent dye and abnormal in sensory cilium structure</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" target="_blank" class="term-link">
+                                PMID:26980730
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with certainty in previous models of the IFT-B complex, as integral components of the core and peripheral subcomplexes, respectively</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:worm/dyf-3/dyf-3-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">is not an enzyme or transporter</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" target="_blank" class="term-link">
+                            PMID:15713455
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The dyf-3 gene encodes a novel protein required for sensory cilium formation in Caenorhabditis elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23664973" target="_blank" class="term-link">
+                            PMID:23664973
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Environmental alkalinity sensing mediated by the transmembrane guanylyl cyclase GCY-14 in C. elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28479320" target="_blank" class="term-link">
+                            PMID:28479320
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans Sensory Cilia.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" target="_blank" class="term-link">
+                            PMID:26980730
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Overall Architecture of the Intraflagellar Transport (IFT)-B Complex Containing Cluap1/IFT38 as an Essential Component of the IFT-B Peripheral Subcomplex.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" target="_blank" class="term-link">
+                            PMID:25443296
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The intraflagellar transport protein IFT27 promotes BBSome exit from cilia through the GTPase ARL6/BBS3.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which IFT-B subunits does DYF-3 directly contact in C. elegans, and is the CH-domain interaction with IFT80 and the coiled-coil heterodimer with IFT57 (as characterized for CLUAP1/IFT38 in other systems) conserved in the worm?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Guangshuo Ou</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="Q: Which IFT-B subunits does DYF-3 directly contact i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does DYF-3 confer selectivity for particular ciliary cargoes (e.g. che-3/dynein-2), or is its role purely architectural within IFT-B?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="Q: Does DYF-3 confer selectivity for particular cilia..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare the ciliary proteome (and live-imaged transport of candidate cargoes such as che-3/dynein-2) between wild-type and dyf-3 loss-of-function animals to identify cargoes whose ciliary entry specifically depends on DYF-3.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DYF-3 is required for the ciliary import of specific cargoes rather than for bulk IFT.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteomics / live imaging</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="EXPERIMENT: Compare the ciliary proteome (and live-imaged tran..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map DYF-3 protein-protein interactions in C. elegans (e.g. affinity purification-mass spectrometry, split fluorophore assays) and test predicted contacts with IFT80/che-2 and IFT57 orthologs.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: DYF-3 organizes the worm IFT-B2 subcomplex through conserved CH-domain and coiled-coil interactions.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction mapping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6I6D4" data-a="EXPERIMENT: Map DYF-3 protein-protein interactions in C. elega..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular activity of DYF-3/CLUAP1 is undefined. It is unresolved whether it acts purely as a structural constituent of IFT-B, as a scaffold/adaptor that bridges specific subunits, and which of its partner interactions are load-bearing in C. elegans. No GO molecular function term adequately expresses &#34;structural subunit of the IFT-B complex&#34;, so the gene reads MF-dark despite a well-defined cellular role.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: DYF-3 is an integral subunit of IFT complex B required for sensory cilium assembly and intraflagellar transport; the ortholog CLUAP1/IFT38 is an integral component of the IFT-B peripheral (IFT-B2) subcomplex and its ciliogenesis function depends on binding other IFT-B components. The protein has a coiled-coil region and an acidic disordered C-terminus and no catalytic domain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> IFT-B is the anterograde transport backbone of ciliogenesis; understanding DYF-3&#39;s precise molecular contribution would sharpen mechanistic models of IFT train assembly and explain how CLUAP1/IFT38 loss produces ciliopathy. The absence of an adequate MF term is a systematic ontology gap shared by many structural complex subunits.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Structure/interaction mapping of the worm IFT-B2 module (which subunits DYF-3 directly contacts); in vitro reconstitution of IFT-B subcomplexes; and a new GO molecular function term for IFT structural-subunit activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"a ciliogenesis defect of Cluap1-deficient mouse embryonic fibroblasts was rescued by exogenous expression of wild-type Cluap1 but not by mutant Cluap1 lacking the binding ability to other IFT-B components"</em> — PMID:26980730</li>
+
+                <li><em>"is not an enzyme or transporter"</em> — file:worm/dyf-3/dyf-3-deep-research-falcon.md</li>
+
+            </ul>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Proposed term (ontology gap):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><strong>structural constituent of intraflagellar transport particle</strong> — DYF-3/CLUAP1/IFT38 and other non-motor, non-catalytic IFT subunits have no adequate GO molecular function term and are annotatable only at the process level (intraciliary transport) or with the uninformative &#39;protein binding&#39;, leaving them MF-dark despite well-defined cellular roles.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Which specific ciliary cargoes DYF-3 is required to import or transport in C. elegans, and whether it confers cargo selectivity, is not established. UniProt only tentatively links it to entry of the dynein-2 heavy chain che-3 (&#34;May be required...&#34;).</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: the IFT-B complex is required for ciliary entry of cytoplasmic dynein-2 (che-3), and dyf-3 loss disrupts overall cilium structure. The worm IFT-B2 architecture and DYF-3&#39;s specific cargo contacts are inferred from vertebrate/algal biochemistry rather than measured directly in the worm.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Cargo selectivity would distinguish a purely architectural role from an adaptor role and clarify why IFT-B subunit losses have distinguishable phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Cilium proteomics comparing wild-type and dyf-3 mutant cilia; live imaging of candidate cargo (e.g. che-3) transport in dyf-3 alleles.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization, revealing their important roles in ciliary entry of dynein-2"</em> — PMID:28479320</li>
+
+                <li><em>"orthologous structural role inferred from IFT38"</em> — file:worm/dyf-3/dyf-3-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dyf-3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6I6D4" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: *dyf-3* (C. elegans CLUAP1/IFT38 Homolog)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">40 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-03T21:42:09.643264</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dyf-3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dyf-3-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-dyf-3-c-elegans-cluap1ift38-homolog">Comprehensive Research Report: <em>dyf-3</em> (C. elegans CLUAP1/IFT38 Homolog)</h1>
+<h2 id="1-gene-identity-and-protein-overview">1. Gene Identity and Protein Overview</h2>
+<p>The <em>dyf-3</em> gene (C04C3.5) in <em>Caenorhabditis elegans</em> encodes a 438-amino-acid protein (UniProt Q6I6D4) that is the ortholog of human clusterin-associated protein 1 (CLUAP1), now systematically designated IFT38 (intraflagellar transport protein 38) (sun2025multipleregulatorsconstrain pages 4-6, pasek2012mammalianclusterinassociated pages 1-2). The protein belongs to the CLUAP1 family and contains a characteristic Cluap1 domain (Pfam PF10234/IPR019366). In zebrafish, the ortholog is known as Qilin, while in mammals it is designated CLUAP1 or IFT38 (pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 2-4). The gene was originally identified through forward genetic screens in <em>C. elegans</em> for dye-filling defective (Dyf) mutants—animals unable to take up fluorescent dyes into their amphid and phasmid sensory neurons—indicating structural or functional defects in sensory cilia (efimenko2006caenorhabditiselegansdyf2an pages 2-3).</p>
+<h2 id="2-primary-function-structural-component-of-the-ift-b2-complex">2. Primary Function: Structural Component of the IFT-B2 Complex</h2>
+<p>DYF-3/CLUAP1/IFT38 is not an enzyme or transporter; rather, it functions as a <strong>structural/adaptor protein</strong> within the intraflagellar transport (IFT) machinery. Specifically, IFT38 is a subunit of the <strong>IFT-B2 (peripheral) subcomplex</strong> of the IFT-B complex, which is essential for anterograde ciliary transport—the movement of cargo from the ciliary base toward the tip, powered by kinesin-II motors (taschner2016intraflagellartransportproteins pages 1-2, tasaki2025assemblyandmother pages 1-5, wang2017structuralandbiochemical pages 29-33).</p>
+<h3 id="21-structural-architecture-within-the-ift-b-complex">2.1 Structural Architecture Within the IFT-B Complex</h3>
+<p>The 16-subunit IFT-B complex is divided into two subcomplexes: IFT-B1 (core, ~10 subunits) and IFT-B2 (peripheral, 6 subunits: IFT172, IFT80, IFT57, IFT54, IFT38, and IFT20) (taschner2016intraflagellartransportproteins pages 1-2, wang2017structuralandbiochemical pages 29-33). Biochemical reconstitution studies using recombinant <em>Chlamydomonas reinhardtii</em> proteins demonstrated that IFT38 contains an <strong>N-terminal calponin homology (CH) domain</strong> followed by a <strong>C-terminal coiled-coil region</strong> (taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 1-2). The CH domain of IFT38 mediates a direct interaction with IFT80, while the CH domain of its binding partner IFT57 contacts IFT172 (taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 5-5). Unlike the CH domain of IFT54, which binds αβ-tubulin as a potential IFT cargo, the CH domain of IFT38 does not directly bind tubulin; instead, it functions exclusively in protein-protein interactions within the complex (taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 8-9).</p>
+<p>IFT38 and IFT57 form a <strong>stable heterodimer</strong> through their coiled-coil domains. This IFT57/38 module serves as a central architectural connector within IFT-B2, analogous to the role of IFT52 in organizing IFT-B1 (taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 10-12). Furthermore, the IFT57/38 heterodimer also links IFT-B2 to IFT-B1 through interactions with IFT88 and the N-terminal domain of IFT52 (IFT52N), thus forming a critical bridge for IFT-B holocomplex assembly (tasaki2025assemblyandmother pages 1-5, taschner2016intraflagellartransportproteins pages 10-12, taschner2016intraflagellartransportproteins pages 8-9). This tetramer (IFT38/IFT57/IFT52/IFT88) has also been identified as a binding site for heterotrimeric kinesin-II, the anterograde motor (tasaki2025assemblyandmother pages 1-5).</p>
+<p>The following table summarizes the molecular interactions of IFT38/DYF-3:</p>
+<table>
+<thead>
+<tr>
+<th>Domain/Region</th>
+<th>Interacting Partner</th>
+<th>Interaction Type</th>
+<th>Functional Consequence</th>
+<th>Evidence Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>N-terminal calponin homology (CH) domain of IFT38/DYF-3</td>
+<td>IFT80</td>
+<td>Direct protein-protein interaction; CH domain of IFT38 binds IFT80</td>
+<td>Anchors IFT38 within the IFT-B2/peripheral IFT-B subcomplex; supports IFT-B2 architecture rather than tubulin binding by IFT38 itself (taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 5-5)</td>
+<td>Taschner et al. 2016 (taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 5-5)</td>
+</tr>
+<tr>
+<td>C-terminal coiled-coil region of IFT38/DYF-3</td>
+<td>IFT57</td>
+<td>Stable heterodimer/coiled-coil association</td>
+<td>Forms the IFT57/38 module, a core architectural unit of IFT-B2 that links to additional IFT-B2 components and helps organize complex assembly (taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 10-12, taschner2016intraflagellartransportproteins pages 5-5)</td>
+<td>Taschner et al. 2016 (taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 10-12, taschner2016intraflagellartransportproteins pages 5-5)</td>
+</tr>
+<tr>
+<td>IFT57/38 heterodimer (with IFT38 as one subunit)</td>
+<td>IFT172, IFT80, IFT54/20</td>
+<td>Higher-order subcomplex assembly within IFT-B2</td>
+<td>Builds the stable six-subunit IFT-B2 complex (IFT172/80/57/54/38/20), which is required for ciliogenesis and ciliary transport complex integrity (taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 8-9)</td>
+<td>Taschner et al. 2016 (taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 8-9)</td>
+</tr>
+<tr>
+<td>IFT57/38 module containing IFT38/DYF-3</td>
+<td>IFT88 and N-terminus of IFT52 (IFT52N)</td>
+<td>Bridging interaction between IFT-B2 and IFT-B1</td>
+<td>Connects peripheral IFT-B2 to core IFT-B1, enabling holocomplex formation and anterograde IFT train assembly (tasaki2025assemblyandmother pages 1-5, taschner2016intraflagellartransportproteins pages 10-12, taschner2016intraflagellartransportproteins pages 8-9)</td>
+<td>Taschner et al. 2016; Tasaki et al. 2025 (tasaki2025assemblyandmother pages 1-5, taschner2016intraflagellartransportproteins pages 10-12, taschner2016intraflagellartransportproteins pages 8-9)</td>
+</tr>
+<tr>
+<td>IFT38/DYF-3 as an IFT-B2 subunit at basal body/mother centriole</td>
+<td>IFT54, IFT52, IFT88-dependent assembly machinery</td>
+<td>Subcomplex recruitment/localization dependency</td>
+<td>Recruitment of IFT38 to the mother centriole/basal body depends on IFT54 and IFT-B1b components, indicating a role in pre-ciliary IFT-B assembly before ciliogenesis (tasaki2025assemblyandmother pages 5-10, tasaki2025assemblyandmother pages 1-5)</td>
+<td>Tasaki et al. 2025 (tasaki2025assemblyandmother pages 5-10, tasaki2025assemblyandmother pages 1-5)</td>
+</tr>
+<tr>
+<td>IFT38/CLUAP1</td>
+<td>VCP/UBXD3</td>
+<td>UBXD3 binds IFT38/CLUAP1 and directs VCP/UBXD3 motility with IFT</td>
+<td>Implicated in assembly/remodeling of IFT trains at the ciliary base and tip; loss of VCP/UBXD3 disrupts bidirectional IFT and train integrity (tran2016anageof pages 5-7)</td>
+<td>Tran &amp; Lechtreck 2016 conference report summarizing primary data (tran2016anageof pages 5-7)</td>
+</tr>
+<tr>
+<td>CLUAP1/IFT38 interactome (non-IFT-associated fraction)</td>
+<td>Ephrin-B1</td>
+<td>Proteomic interaction</td>
+<td>Suggests a role outside canonical IFT in cytoskeletal arrangement and cell architecture (beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 13-17)</td>
+<td>Beyer et al. 2018 (beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 13-17)</td>
+</tr>
+<tr>
+<td>CLUAP1/IFT38 interactome (non-IFT-associated fraction)</td>
+<td>TRIP6</td>
+<td>Proteomic interaction</td>
+<td>Links CLUAP1 to actin remodeling and cell migration-related pathways; consistent with actin phenotype in CLUAP1-knockout cells (beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 17-20, beyer2018crisprcas9mediatedgenomicediting pages 13-17)</td>
+<td>Beyer et al. 2018 (beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 17-20, beyer2018crisprcas9mediatedgenomicediting pages 13-17)</td>
+</tr>
+<tr>
+<td>CLUAP1/IFT38 interactome (non-IFT-associated fraction)</td>
+<td>PDGFA, CCDC6, CEP55, BBS7</td>
+<td>Proteomic interaction network</td>
+<td>Expands CLUAP1 functional landscape to ciliogenesis-associated signaling, BBSome-linked pathways, and possible cancer/cell-cycle related processes (beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 1-5)</td>
+<td>Beyer et al. 2018 (beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 1-5)</td>
+</tr>
+<tr>
+<td>Worm DYF-3 protein in sensory cilia (orthologous structural role inferred from IFT38)</td>
+<td>IFT-B complex in ciliated sensory neurons</td>
+<td>Conserved orthologous complex membership</td>
+<td>Explains why dyf-3 mutants show severe dye-filling defects and abnormal ciliary protein accumulation in amphid/phasmid neurons, consistent with defective IFT-B-mediated cilium assembly/function (sun2025multipleregulatorsconstrain pages 4-6, efimenko2006caenorhabditiselegansdyf2an pages 1-2)</td>
+<td>Sun et al. 2025; Efimenko et al. 2006 (sun2025multipleregulatorsconstrain pages 4-6, efimenko2006caenorhabditiselegansdyf2an pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the domain-level interactions and higher-order structural organization of IFT38/DYF-3 within the IFT-B complex, along with selected non-IFT partners. It is useful for linking worm DYF-3 function to conserved mechanistic data from vertebrate CLUAP1/IFT38 studies.</em></p>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<h3 id="31-localization-in-c-elegans">3.1 Localization in <em>C. elegans</em></h3>
+<p>In <em>C. elegans</em>, DYF-3 is expressed in <strong>ciliated sensory neurons</strong> (CSNs), including the amphid neurons in the head and phasmid neurons in the tail (efimenko2006caenorhabditiselegansdyf2an pages 2-3, sun2025multipleregulatorsconstrain pages 4-6). Expression of <em>dyf-3</em> is regulated by the RFX-type transcription factor <strong>DAF-19</strong>, which binds to an X-box motif (GTTTCTATGGGAAC) in the <em>dyf-3</em> promoter, consistent with its classification as a ciliary gene (chu2012finetuningof pages 1-2, efimenko2006caenorhabditiselegansdyf2an pages 2-3, warrington2018computationalandmolecular pages 106-108). DYF-3 has been noted to show expression in only a subset of CSNs, suggesting potential specializations during ciliary development (efimenko2006caenorhabditiselegansdyf2an pages 8-9).</p>
+<h3 id="32-localization-in-vertebrate-systems">3.2 Localization in Vertebrate Systems</h3>
+<p>In mammalian cells, CLUAP1/IFT38 localizes <strong>throughout the ciliary axoneme</strong> and is widely expressed in ciliated tissues, including lung bronchioles and brain ependymal cells (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 9-9). Studies using knockout cell lines demonstrate that IFT38 is recruited to the <strong>mother centriole/basal body</strong> prior to ciliogenesis. This basal body recruitment requires IFT54 (another IFT-B2 subunit) and the IFT-B1b subunits IFT52 and IFT88, but is independent of IFT-B1a subunits IFT74 and IFT81 (tasaki2025assemblyandmother pages 5-10). The protein thus occupies multiple ciliary compartments: the basal body (where IFT trains are assembled), along the ciliary axoneme during transport, and the ciliary tip (where trains are remodeled for retrograde transport).</p>
+<h2 id="4-mutant-phenotypes-in-c-elegans">4. Mutant Phenotypes in <em>C. elegans</em></h2>
+<p>Loss-of-function mutations in <em>dyf-3</em> produce severe ciliary defects in <em>C. elegans</em>:</p>
+<ul>
+<li>
+<p><strong>Dye-filling defects</strong>: The <em>dyf-3(ju1706)</em> allele, which carries a G-to-A transition at the 5′ splice donor site of the exon-intron 3 junction (resulting in out-of-frame splicing after Asp182), and the independent allele <em>dyf-3(m185)</em> both show <strong>complete (0%) dye-filling defects</strong> in amphid and phasmid sensory neurons, indicating severely compromised ciliary structure (sun2025multipleregulatorsconstrain pages 4-6).</p>
+</li>
+<li>
+<p><strong>Ciliary protein misaccumulation</strong>: <em>dyf-3</em> mutants exhibit abnormal accumulation of GFP::DLK-1 (a MAP3K) in the cilia region, with intensity comparable to other strong IFT loss-of-function mutations. This demonstrates that DYF-3 participates in IFT-dependent feedback regulation of protein abundance in ciliated sensory neurons (sun2025multipleregulatorsconstrain pages 4-6).</p>
+</li>
+<li>
+<p><strong>Shortened or absent cilia</strong>: Like other IFT-B complex mutants, <em>dyf-3</em> mutants show drastic reductions in cilia length (efimenko2006caenorhabditiselegansdyf2an pages 1-2).</p>
+</li>
+<li>
+<p><strong>Anthelmintic resistance</strong>: The <em>dyf-3(m185)</em> mutant is associated with <strong>ivermectin resistance</strong>, consistent with the broader finding that mutations disrupting amphid cilia and IFT function impair avermectin drug uptake through sensory neurons (brinzer2021theuptakeof pages 14-17).</p>
+</li>
+</ul>
+<h2 id="5-conserved-functions-across-species">5. Conserved Functions Across Species</h2>
+<p>The function of DYF-3/CLUAP1/IFT38 in ciliogenesis is deeply conserved across metazoa. The following table provides a cross-species comparison:</p>
+<table>
+<thead>
+<tr>
+<th>Organism</th>
+<th>Gene Name</th>
+<th>Mutant Phenotypes</th>
+<th>Key Findings</th>
+<th>References</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>Caenorhabditis elegans</em></td>
+<td><strong>dyf-3</strong> (UniProt Q6I6D4; CLUAP1/IFT38 ortholog)</td>
+<td>Fully penetrant dye-filling defects in amphid and phasmid neurons (0% dye fill reported for dyf-3 alleles), shortened/severely defective sensory cilia, abnormal accumulation of GFP::DLK-1 in ciliary regions, ivermectin resistance associated with amphid/cilia dysfunction (sun2025multipleregulatorsconstrain pages 4-6, brinzer2021theuptakeof pages 14-17, efimenko2006caenorhabditiselegansdyf2an pages 1-2)</td>
+<td>dyf-3 encodes a conserved IFT-B complex component required for sensory cilium development and intraflagellar transport; it is regulated as a ciliary gene by DAF-19/RFX via an X-box motif and functions in ciliated sensory neurons (sun2025multipleregulatorsconstrain pages 4-6, efimenko2006caenorhabditiselegansdyf2an pages 2-3, efimenko2006caenorhabditiselegansdyf2an pages 8-9, warrington2018computationalandmolecular pages 106-108)</td>
+<td>Sun et al., 2025, G3, https://doi.org/10.1093/g3journal/jkaf004; Efimenko et al., 2006, Mol Biol Cell, https://doi.org/10.1091/mbc.e06-04-0260; Brinzer et al., 2021, bioRxiv, https://doi.org/10.1101/2021.10.22.465401 (sun2025multipleregulatorsconstrain pages 4-6, brinzer2021theuptakeof pages 14-17, efimenko2006caenorhabditiselegansdyf2an pages 2-3, warrington2018computationalandmolecular pages 106-108)</td>
+</tr>
+<tr>
+<td>Zebrafish</td>
+<td><strong>qilin</strong></td>
+<td>Cilia degeneration/loss in pronephric duct, cystogenesis/polycystic kidney-like phenotype; morpholino knockdown produces more severe early cilia loss than some genetic mutants, consistent with maternal contribution masking early phenotypes (pasek2012mammalianclusterinassociated pages 6-9, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 9-9)</td>
+<td>qilin is the zebrafish ortholog of dyf-3/CLUAP1 and is required for cilia assembly and maintenance; zebrafish data support an evolutionarily conserved role in ciliogenesis and renal cilia integrity (pasek2012mammalianclusterinassociated pages 6-9, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 4-6)</td>
+<td>Pasek et al., 2012, <em>Cilia</em>, https://doi.org/10.1186/2046-2530-1-20 (summarizing prior zebrafish work) (pasek2012mammalianclusterinassociated pages 6-9, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 4-6)</td>
+</tr>
+<tr>
+<td>Mouse</td>
+<td><strong>Cluap1</strong></td>
+<td>Mid-gestation embryonic lethality; failure of embryonic turning; enlarged pericardial sac; neural tube defects/kinks; complete loss of primary cilia in examined tissues; repressed Sonic hedgehog signaling with reduced <em>Ptch1</em> and <em>Gli1</em> expression (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 6-9, bangs2017primaryciliaand pages 4-6)</td>
+<td>Cluap1 localizes to primary cilia/axoneme and is essential for ciliogenesis in vivo; mammalian loss causes severe developmental defects attributable to absent cilia and impaired Hedgehog signaling, establishing conserved IFT-B function (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 6-9, pasek2012mammalianclusterinassociated pages 9-9)</td>
+<td>Pasek et al., 2012, <em>Cilia</em>, https://doi.org/10.1186/2046-2530-1-20; Bangs &amp; Anderson, 2017, Cold Spring Harb Perspect Biol, https://doi.org/10.1101/cshperspect.a028175 (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 6-9, bangs2017primaryciliaand pages 4-6)</td>
+</tr>
+<tr>
+<td>Human / human cell models</td>
+<td><strong>CLUAP1 / IFT38</strong></td>
+<td>In CRISPR-edited hTERT-RPE1 cells, CLUAP1 knockout causes loss of cilia, increased filamentous actin, and impaired cell migration; disease-association resources link IFT38 to Joubert syndrome, Leber congenital amaurosis, skeletal abnormalities, obesity disorder, and type 2 diabetes mellitus (beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 17-20, OpenTargets Search: -CLUAP1)</td>
+<td>Human CLUAP1/IFT38 is an IFT-B2/peripheral IFT-B subunit with a calponin homology domain that binds IFT80 and forms a heterodimer with IFT57; it contributes structurally to IFT-B assembly and ciliogenesis, and may have separable roles in actin organization/cell migration (taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 2-3, taschner2016intraflagellartransportproteins pages 10-12, beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 1-5)</td>
+<td>Taschner et al., 2016, EMBO J, https://doi.org/10.15252/embj.201593164; Beyer et al., 2018, Mol Cell Proteomics, https://doi.org/10.1074/mcp.ra117.000487; Open Targets Platform association summary (OpenTargets Search: -CLUAP1, taschner2016intraflagellartransportproteins pages 1-2, taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 10-12, beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 1-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares the DYF-3/CLUAP1/IFT38 ortholog across worms, zebrafish, mouse, and human systems, summarizing mutation phenotypes, conserved biological roles, and representative references. It is useful for quickly linking the C. elegans gene to broader cilia biology and disease relevance.</em></p>
+<h3 id="51-zebrafish-qilin">5.1 Zebrafish (Qilin)</h3>
+<p>In zebrafish, loss-of-function mutations in <em>qilin</em> (the DYF-3 ortholog) result in <strong>cilia degeneration</strong> in the pronephric duct and <strong>cystogenesis</strong>, producing a polycystic kidney disease-like phenotype (pasek2012mammalianclusterinassociated pages 6-9, pasek2012mammalianclusterinassociated pages 1-2). Initial studies suggested that <em>qilin</em> genetic mutants could still assemble cilia, but subsequent morpholino knockdown experiments revealed a more severe cilia-loss phenotype, likely because maternal mRNA contribution in genetic mutants partially rescued early ciliogenesis (pasek2012mammalianclusterinassociated pages 6-9). These data implicate Qilin/CLUAP1 in both <strong>cilia assembly and cilia maintenance</strong>.</p>
+<h3 id="52-mouse-cluap1">5.2 Mouse (Cluap1)</h3>
+<p>Cluap1 knockout mice die during <strong>mid-gestation</strong> (between E10.5 and E18.5) with severe developmental abnormalities including failure of embryonic turning, enlarged pericardial sacs, and neural tube defects (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 1-2). Critically, Cluap1 KO embryos <strong>completely lack primary cilia</strong> in examined tissues, as demonstrated by the absence of acetylated α-tubulin and Arl13b staining in neural tubes and lateral plate mesenchyme (pasek2012mammalianclusterinassociated pages 4-6, pasek2012mammalianclusterinassociated pages 6-9). The Cluap1 protein localizes throughout the ciliary axoneme and is widely expressed in tissues including bronchioles, ependymal cells, and cells bearing single primary cilia (pasek2012mammalianclusterinassociated pages 4-6).</p>
+<h3 id="53-human-cell-models">5.3 Human Cell Models</h3>
+<p>CRISPR/Cas9-mediated knockout of CLUAP1 in human hTERT-RPE1 cells results in <strong>complete absence of cilia</strong> and reveals an additional phenotype: <strong>increased filamentous actin accumulation</strong> and <strong>impaired cell migration</strong> (beyer2018crisprcas9mediatedgenomicediting pages 25-30, beyer2018crisprcas9mediatedgenomicediting pages 13-17). Rescue experiments showed that CLUAP1 isoform 1 (which binds the IFT-B complex) can restore cilia assembly but does not rescue actin organization, suggesting these are <strong>mechanistically separable functions</strong> (beyer2018crisprcas9mediatedgenomicediting pages 25-30).</p>
+<h2 id="6-role-in-signaling-pathways">6. Role in Signaling Pathways</h2>
+<h3 id="61-sonic-hedgehog-shh-signaling">6.1 Sonic Hedgehog (Shh) Signaling</h3>
+<p>The most well-characterized signaling role of CLUAP1/IFT38 relates to the <strong>Sonic hedgehog (Shh) pathway</strong>, which in mammals is critically dependent on primary cilia for signal transduction. Cluap1 KO mouse embryos show a <strong>repressed Shh signaling pathway</strong>: expression of the pathway target genes <em>Patched-1</em> and <em>Gli1</em> is reduced to 53.3% and 20.8% of wild-type levels, respectively (pasek2012mammalianclusterinassociated pages 6-9). These embryos lack a properly defined Shh-positive floor plate and show abnormal neural tube patterning (pasek2012mammalianclusterinassociated pages 6-9, bangs2017primaryciliaand pages 4-6). These defects are a direct consequence of absent cilia, as the Shh pathway in mammals requires the cilium as a signaling platform for receptor trafficking (Smoothened accumulation, Gli processing). The phenotype of Cluap1 KO embryos—midgestation lethality and abnormal neural patterning—is consistent with that of other IFT-B mutants (bangs2017primaryciliaand pages 4-6).</p>
+<p><em>C. elegans</em> lacks a canonical Hedgehog signaling pathway, so this specific signaling role is not directly relevant to DYF-3 function in worms. However, the underlying principle—that DYF-3/CLUAP1 is required for cilia-dependent signaling—is conserved, as <em>C. elegans</em> sensory cilia are essential for chemosensation, osmosensation, and other environmental signaling processes.</p>
+<h3 id="62-ift-train-assembly-and-remodeling">6.2 IFT Train Assembly and Remodeling</h3>
+<p>IFT38/CLUAP1 is also implicated in the regulation of IFT train dynamics. The AAA-ATPase VCP and its cofactor UBXD3 bind directly to IFT38/CLUAP1, which directs VCP/UBXD3 motility through the cilium (tran2016anageof pages 5-7). These proteins function in <strong>assembling IFT-A, IFT-B, and BBSome subunits into IFT trains</strong> at the ciliary base and in <strong>remodeling IFT trains at the ciliary tip</strong> for retrograde transport. Loss of functional VCP/UBXD3 disrupts bidirectional IFT train integrity, resulting in uncoupled trafficking of IFT-A and IFT-B particles (tran2016anageof pages 5-7).</p>
+<h3 id="63-non-ciliary-roles-actin-cytoskeleton">6.3 Non-Ciliary Roles: Actin Cytoskeleton</h3>
+<p>Proteomic analysis of endogenously tagged CLUAP1 identified novel interacting partners beyond the IFT-B complex, including <strong>Ephrin-B1</strong>, <strong>TRIP6</strong>, <strong>Fascin</strong>, and <strong>TBCD</strong>, all of which are involved in cytoskeletal arrangement and protein transport (beyer2018crisprcas9mediatedgenomicediting pages 1-5, beyer2018crisprcas9mediatedgenomicediting pages 17-20, beyer2018crisprcas9mediatedgenomicediting pages 13-17). CLUAP1 knockout cells display altered actin filament organization with more uniformly oriented stress fibers and significantly reduced cell migration (~30–33% gap closure versus ~52% in controls) (beyer2018crisprcas9mediatedgenomicediting pages 13-17). Additional interactions with <strong>PDGFA</strong> and <strong>CCDC6</strong> link CLUAP1 to ciliogenesis-associated signaling and cancer-related cell cycle regulation (beyer2018crisprcas9mediatedgenomicediting pages 1-5). CLUAP1 expression is also reported to be upregulated in colon cancer in a cell-cycle-dependent manner (beyer2018crisprcas9mediatedgenomicediting pages 1-5).</p>
+<h2 id="7-disease-relevance-human-cluap1ift38">7. Disease Relevance (Human CLUAP1/IFT38)</h2>
+<p>The human ortholog IFT38/CLUAP1 is associated with several ciliopathy-spectrum disorders according to the OpenTargets platform. The strongest association is with <strong>Leber congenital amaurosis</strong> (association score 0.46), followed by <strong>skeletal abnormalities</strong> (0.35), <strong>obesity disorder</strong> (0.33), <strong>Joubert syndrome</strong> (0.33), and <strong>type 2 diabetes mellitus</strong> (0.29) (OpenTargets Search: -CLUAP1). These associations reflect the broad role of cilia and IFT in diverse developmental and homeostatic processes. The connection to Joubert syndrome is particularly relevant given that Joubert syndrome is a prototypical ciliopathy affecting neural development.</p>
+<h2 id="8-summary">8. Summary</h2>
+<p>DYF-3 in <em>C. elegans</em> is an evolutionarily conserved structural protein that functions as a component of the IFT-B2 peripheral subcomplex of the intraflagellar transport machinery. Its primary role is <strong>not enzymatic or transport-related in the classical sense</strong>; rather, it serves as a <strong>protein-protein interaction scaffold</strong> that organizes the IFT-B2 subcomplex through its CH domain (binding IFT80) and coiled-coil domain (heterodimerizing with IFT57), and bridges IFT-B2 to IFT-B1 via IFT88/IFT52N interactions (taschner2016intraflagellartransportproteins pages 1-2, tasaki2025assemblyandmother pages 1-5, taschner2016intraflagellartransportproteins pages 3-4, taschner2016intraflagellartransportproteins pages 10-12). This structural role is essential for the assembly and function of IFT trains that transport ciliary building materials and signaling molecules bidirectionally along the ciliary axoneme.</p>
+<p>In <em>C. elegans</em>, DYF-3 functions specifically in <strong>ciliated sensory neurons</strong> (amphid and phasmid), where it is required for normal cilia structure, dye-filling capacity, and regulation of protein abundance within the cilia compartment (sun2025multipleregulatorsconstrain pages 4-6, efimenko2006caenorhabditiselegansdyf2an pages 8-9). Loss of DYF-3 results in severe ciliary structural defects, complete inability to take up fluorescent dyes, and resistance to avermectin anthelmintics (brinzer2021theuptakeof pages 14-17). The conserved functions of the CLUAP1/IFT38 family in ciliogenesis and ciliary signaling—including Shh pathway regulation in vertebrates—underscore the critical importance of this protein in development and disease (pasek2012mammalianclusterinassociated pages 1-2, pasek2012mammalianclusterinassociated pages 6-9, bangs2017primaryciliaand pages 4-6).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(sun2025multipleregulatorsconstrain pages 4-6): Yue Sun, Junxiang Zhou, Arunima Debnath, Bokun Xie, Zhiping Wang, and Yishi Jin. Multiple regulators constrain the abundance of caenorhabditis elegans dlk-1 in ciliated sensory neurons. G3: Genes | Genomes | Genetics, Jan 2025. URL: https://doi.org/10.1093/g3journal/jkaf004, doi:10.1093/g3journal/jkaf004. This article has 1 citations.</p>
+</li>
+<li>
+<p>(pasek2012mammalianclusterinassociated pages 1-2): Raymond C Pasek, Nicolas F Berbari, Wesley R Lewis, Robert A Kesterson, and Bradley K Yoder. Mammalian clusterin associated protein 1 is an evolutionarily conserved protein required for ciliogenesis. Cilia, 1:20-20, Nov 2012. URL: https://doi.org/10.1186/2046-2530-1-20, doi:10.1186/2046-2530-1-20. This article has 34 citations.</p>
+</li>
+<li>
+<p>(pasek2012mammalianclusterinassociated pages 2-4): Raymond C Pasek, Nicolas F Berbari, Wesley R Lewis, Robert A Kesterson, and Bradley K Yoder. Mammalian clusterin associated protein 1 is an evolutionarily conserved protein required for ciliogenesis. Cilia, 1:20-20, Nov 2012. URL: https://doi.org/10.1186/2046-2530-1-20, doi:10.1186/2046-2530-1-20. This article has 34 citations.</p>
+</li>
+<li>
+<p>(efimenko2006caenorhabditiselegansdyf2an pages 2-3): Evgeni Efimenko, Oliver E. Blacque, Guangshuo Ou, Courtney J. Haycraft, Bradley K. Yoder, Jonathan M. Scholey, Michel R. Leroux, and Peter Swoboda. <i>caenorhabditis elegans</i>dyf-2, an orthologue of human wdr19, is a component of the intraflagellar transport machinery in sensory cilia. Nov 2006. URL: https://doi.org/10.1091/mbc.e06-04-0260, doi:10.1091/mbc.e06-04-0260. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 1-2): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(tasaki2025assemblyandmother pages 1-5): Koshi Tasaki, Yohei Katoh, Hye-Won Shin, and Kazuhisa Nakayama. Assembly and mother centriole recruitment of ift-b subcomplexes to form ift-b holocomplex. Cell structure and function, 50:157-168, Jun 2025. URL: https://doi.org/10.1247/csf.25027, doi:10.1247/csf.25027. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2017structuralandbiochemical pages 29-33): Qianmin Wang. Structural and biochemical characterization of cell shaping proteins. Dissertation, Jan 2017. URL: https://doi.org/10.5282/edoc.21497, doi:10.5282/edoc.21497. This article has 0 citations.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 3-4): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 5-5): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 8-9): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 2-3): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(taschner2016intraflagellartransportproteins pages 10-12): Michael Taschner, Kristina Weber, André Mourão, Melanie Vetter, Mayanka Awasthi, Marc Stiegler, Sagar Bhogaraju, and Esben Lorentzen. Intraflagellar transport proteins 172, 80, 57, 54, 38, and 20 form a stable tubulin‐binding ift‐b2 complex. The EMBO Journal, 35:773-790, Feb 2016. URL: https://doi.org/10.15252/embj.201593164, doi:10.15252/embj.201593164. This article has 224 citations.</p>
+</li>
+<li>
+<p>(tasaki2025assemblyandmother pages 5-10): Koshi Tasaki, Yohei Katoh, Hye-Won Shin, and Kazuhisa Nakayama. Assembly and mother centriole recruitment of ift-b subcomplexes to form ift-b holocomplex. Cell structure and function, 50:157-168, Jun 2025. URL: https://doi.org/10.1247/csf.25027, doi:10.1247/csf.25027. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tran2016anageof pages 5-7): Pamela V. Tran and Karl F. Lechtreck. An age of enlightenment for cilia: the faseb summer research conference on the "biology of cilia and flagella". Developmental biology, 409 2:319-28, Jan 2016. URL: https://doi.org/10.1016/j.ydbio.2015.10.030, doi:10.1016/j.ydbio.2015.10.030. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(beyer2018crisprcas9mediatedgenomicediting pages 1-5): Tina Beyer, Sylvia Bolz, Katrin Junger, Nicola Horn, Muhammad Moniruzzaman, Yasmin Wissinger, Marius Ueffing, and Karsten Boldt. Crispr/cas9-mediated genomic editing of cluap1/ift38 reveals a new role in actin arrangement. Jul 2018. URL: https://doi.org/10.1074/mcp.ra117.000487, doi:10.1074/mcp.ra117.000487. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(beyer2018crisprcas9mediatedgenomicediting pages 13-17): Tina Beyer, Sylvia Bolz, Katrin Junger, Nicola Horn, Muhammad Moniruzzaman, Yasmin Wissinger, Marius Ueffing, and Karsten Boldt. Crispr/cas9-mediated genomic editing of cluap1/ift38 reveals a new role in actin arrangement. Jul 2018. URL: https://doi.org/10.1074/mcp.ra117.000487, doi:10.1074/mcp.ra117.000487. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(beyer2018crisprcas9mediatedgenomicediting pages 17-20): Tina Beyer, Sylvia Bolz, Katrin Junger, Nicola Horn, Muhammad Moniruzzaman, Yasmin Wissinger, Marius Ueffing, and Karsten Boldt. Crispr/cas9-mediated genomic editing of cluap1/ift38 reveals a new role in actin arrangement. Jul 2018. URL: https://doi.org/10.1074/mcp.ra117.000487, doi:10.1074/mcp.ra117.000487. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(beyer2018crisprcas9mediatedgenomicediting pages 25-30): Tina Beyer, Sylvia Bolz, Katrin Junger, Nicola Horn, Muhammad Moniruzzaman, Yasmin Wissinger, Marius Ueffing, and Karsten Boldt. Crispr/cas9-mediated genomic editing of cluap1/ift38 reveals a new role in actin arrangement. Jul 2018. URL: https://doi.org/10.1074/mcp.ra117.000487, doi:10.1074/mcp.ra117.000487. This article has 31 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(efimenko2006caenorhabditiselegansdyf2an pages 1-2): Evgeni Efimenko, Oliver E. Blacque, Guangshuo Ou, Courtney J. Haycraft, Bradley K. Yoder, Jonathan M. Scholey, Michel R. Leroux, and Peter Swoboda. <i>caenorhabditis elegans</i>dyf-2, an orthologue of human wdr19, is a component of the intraflagellar transport machinery in sensory cilia. Nov 2006. URL: https://doi.org/10.1091/mbc.e06-04-0260, doi:10.1091/mbc.e06-04-0260. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chu2012finetuningof pages 1-2): J. S. C. Chu, M. Tarailo-Graovac, D. Zhang, J. Wang, B. Uyar, D. Tu, J. Trinh, D. L. Baillie, and N. Chen. Fine tuning of rfx/daf-19-regulated target gene expression through binding to multiple sites in caenorhabditis elegans. Nucleic Acids Research, 40:53-64, Sep 2012. URL: https://doi.org/10.1093/nar/gkr690, doi:10.1093/nar/gkr690. This article has 13 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(warrington2018computationalandmolecular pages 106-108): Timothy Burton Warrington. Computational and molecular dissection of an x-box cis-regulatory module. Preprint, Jan 2018. URL: https://doi.org/10.48550/arxiv.1810.00478, doi:10.48550/arxiv.1810.00478. This article has 2 citations.</p>
+</li>
+<li>
+<p>(efimenko2006caenorhabditiselegansdyf2an pages 8-9): Evgeni Efimenko, Oliver E. Blacque, Guangshuo Ou, Courtney J. Haycraft, Bradley K. Yoder, Jonathan M. Scholey, Michel R. Leroux, and Peter Swoboda. <i>caenorhabditis elegans</i>dyf-2, an orthologue of human wdr19, is a component of the intraflagellar transport machinery in sensory cilia. Nov 2006. URL: https://doi.org/10.1091/mbc.e06-04-0260, doi:10.1091/mbc.e06-04-0260. This article has 98 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pasek2012mammalianclusterinassociated pages 4-6): Raymond C Pasek, Nicolas F Berbari, Wesley R Lewis, Robert A Kesterson, and Bradley K Yoder. Mammalian clusterin associated protein 1 is an evolutionarily conserved protein required for ciliogenesis. Cilia, 1:20-20, Nov 2012. URL: https://doi.org/10.1186/2046-2530-1-20, doi:10.1186/2046-2530-1-20. This article has 34 citations.</p>
+</li>
+<li>
+<p>(pasek2012mammalianclusterinassociated pages 9-9): Raymond C Pasek, Nicolas F Berbari, Wesley R Lewis, Robert A Kesterson, and Bradley K Yoder. Mammalian clusterin associated protein 1 is an evolutionarily conserved protein required for ciliogenesis. Cilia, 1:20-20, Nov 2012. URL: https://doi.org/10.1186/2046-2530-1-20, doi:10.1186/2046-2530-1-20. This article has 34 citations.</p>
+</li>
+<li>
+<p>(brinzer2021theuptakeof pages 14-17): Robert A. Brinzer, David J. France, Claire McMaster, Stuart Ruddell, Alan D. Winter, and Antony P. Page. The uptake of avermectins in caenorhabditis elegans is dependent on intra-flagellar transport and other protein trafficking pathways. bioRxiv, Oct 2021. URL: https://doi.org/10.1101/2021.10.22.465401, doi:10.1101/2021.10.22.465401. This article has 1 citations.</p>
+</li>
+<li>
+<p>(pasek2012mammalianclusterinassociated pages 6-9): Raymond C Pasek, Nicolas F Berbari, Wesley R Lewis, Robert A Kesterson, and Bradley K Yoder. Mammalian clusterin associated protein 1 is an evolutionarily conserved protein required for ciliogenesis. Cilia, 1:20-20, Nov 2012. URL: https://doi.org/10.1186/2046-2530-1-20, doi:10.1186/2046-2530-1-20. This article has 34 citations.</p>
+</li>
+<li>
+<p>(bangs2017primaryciliaand pages 4-6): Fiona Bangs and Kathryn V. Anderson. Primary cilia and mammalian hedgehog signaling. Cold Spring Harbor perspectives in biology, 9 5:a028175, May 2017. URL: https://doi.org/10.1101/cshperspect.a028175, doi:10.1101/cshperspect.a028175. This article has 801 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -CLUAP1): Open Targets Query (-CLUAP1, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dyf-3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="dyf-3-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>tasaki2025assemblyandmother pages 1-5</li>
+<li>tran2016anageof pages 5-7</li>
+<li>tasaki2025assemblyandmother pages 5-10</li>
+<li>sun2025multipleregulatorsconstrain pages 4-6</li>
+<li>brinzer2021theuptakeof pages 14-17</li>
+<li>pasek2012mammalianclusterinassociated pages 6-9</li>
+<li>pasek2012mammalianclusterinassociated pages 4-6</li>
+<li>bangs2017primaryciliaand pages 4-6</li>
+<li>pasek2012mammalianclusterinassociated pages 1-2</li>
+<li>pasek2012mammalianclusterinassociated pages 2-4</li>
+<li>taschner2016intraflagellartransportproteins pages 1-2</li>
+<li>wang2017structuralandbiochemical pages 29-33</li>
+<li>taschner2016intraflagellartransportproteins pages 3-4</li>
+<li>taschner2016intraflagellartransportproteins pages 5-5</li>
+<li>taschner2016intraflagellartransportproteins pages 8-9</li>
+<li>taschner2016intraflagellartransportproteins pages 2-3</li>
+<li>taschner2016intraflagellartransportproteins pages 10-12</li>
+<li>chu2012finetuningof pages 1-2</li>
+<li>warrington2018computationalandmolecular pages 106-108</li>
+<li>pasek2012mammalianclusterinassociated pages 9-9</li>
+<li>https://doi.org/10.1093/g3journal/jkaf004;</li>
+<li>https://doi.org/10.1091/mbc.e06-04-0260;</li>
+<li>https://doi.org/10.1101/2021.10.22.465401</li>
+<li>https://doi.org/10.1186/2046-2530-1-20</li>
+<li>https://doi.org/10.1186/2046-2530-1-20;</li>
+<li>https://doi.org/10.1101/cshperspect.a028175</li>
+<li>https://doi.org/10.15252/embj.201593164;</li>
+<li>https://doi.org/10.1074/mcp.ra117.000487;</li>
+<li>https://doi.org/10.1093/g3journal/jkaf004,</li>
+<li>https://doi.org/10.1186/2046-2530-1-20,</li>
+<li>https://doi.org/10.1091/mbc.e06-04-0260,</li>
+<li>https://doi.org/10.15252/embj.201593164,</li>
+<li>https://doi.org/10.1247/csf.25027,</li>
+<li>https://doi.org/10.5282/edoc.21497,</li>
+<li>https://doi.org/10.1016/j.ydbio.2015.10.030,</li>
+<li>https://doi.org/10.1074/mcp.ra117.000487,</li>
+<li>https://doi.org/10.1093/nar/gkr690,</li>
+<li>https://doi.org/10.48550/arxiv.1810.00478,</li>
+<li>https://doi.org/10.1101/2021.10.22.465401,</li>
+<li>https://doi.org/10.1101/cshperspect.a028175,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dyf-3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6I6D4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dyf-3-c-elegans-research-notes">dyf-3 (C. elegans) research notes</h1>
+<p>UniProt: Q6I6D4 (CLUA1_CAEEL). WormBase: WBGene00001119 / C04C3.5. Gene: dyf-3.<br />
+Human ortholog: CLUAP1 (clusterin-associated protein 1); also known as IFT38 / qilin.<br />
+PANTHER family: PTHR21547 "CLUSTERIN ASSOCIATED PROTEIN 1". Pfam: PF10234 (Cluap1).<br />
+InterPro: IPR019366 (Clusterin-associated protein-1).</p>
+<p>Note: the flagship project doc <code>projects/CAEEL_CILIOPATHY.md</code> lists dyf-3 as an<br />
+"IFT54 ortholog" — this is incorrect. dyf-3 is the CLUAP1/IFT38 ortholog (PANTHER<br />
+PTHR21547, Pfam Cluap1). dyf-11 is the true IFT54/TRAF3IP1 ortholog.</p>
+<h2 id="identity-orthology">Identity / orthology</h2>
+<ul>
+<li>UniProt names the protein "Clusterin-associated protein 1 homolog" and states it<br />
+  "Belongs to the CLUAP1 family." 404 aa (isoform 1), 3 alternatively spliced isoforms<br />
+  (dyf-3a/b/c differing at the N-terminus).</li>
+<li>Structural features (UniProt): a long coiled-coil region (residues 176-306) and a<br />
+  C-terminal disordered, acidic region (328-382). No catalytic domain; no enzyme<br />
+  classification.</li>
+<li>Named "qilin" in some IFT literature: <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" title="all IFT-B subunits, including   the suspected subunit CLUAP1/DYF-3/qilin (Ou et al., 2005b), co-purified with   IFT27[K68A] and with IFT27">PMID:25443296</a>.</li>
+</ul>
+<h2 id="known-well-supported">KNOWN (well supported)</h2>
+<h3 id="1-required-for-sensory-cilium-formation-ciliogenesis-c-elegans-experimental">1. Required for sensory cilium formation / ciliogenesis (C. elegans, experimental)</h3>
+<ul>
+<li>dyf-3 mutants are Dyf (dye-filling defective) and have structurally abnormal cilia.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="we analyzed dyf-3 mutants that are defective in uptake of a fluorescent   dye and abnormal in sensory cilium structure">PMID:15713455</a>.</li>
+<li>Loss of dyf-3 stunts cilia and causes ectopic posterior neuronal projections.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="the mutant has stunted cilia and abnormal posterior projections in   some sensory neurons">PMID:15713455</a>.</li>
+<li>UniProt DISRUPTION PHENOTYPE: "Cilia of at least eight pairs of amphid neurons from<br />
+  mutant dyf(m185) animals are truncated at a middle segment, and empty amphidial<br />
+  sockets were seen indicating cilium structural abnormalities."</li>
+<li>GOA: cilium assembly (GO:0060271) IDA from PMID:15713455.</li>
+</ul>
+<h3 id="2-component-of-the-intraflagellar-transport-ift-complex-b">2. Component of the intraflagellar transport (IFT) complex B</h3>
+<ul>
+<li>The dyf-3 gene product was predicted early on to act in IFT: <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="DYF-3 may   be involved in the intraflagellar transport system">PMID:15713455</a>.</li>
+<li>UniProt FUNCTION/SUBUNIT (from PMID:28479320): "Component of the intraflagellar<br />
+  transport (IFT) complex B ... IFT complex B composed of at least che-2, che-13,<br />
+  dyf-1, dyf-3, dyf-6, dyf-11, dyf-13, ift-20, ift-74, ift-81, ifta-2, osm-1, osm-5<br />
+  and osm-6."</li>
+<li>Vertebrate ortholog IFT38/CLUAP1 is an integral component of the IFT-B <em>peripheral</em><br />
+  subcomplex: <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" title="we identified TTC26/IFT56 and Cluap1/IFT38, neither of   which was included with certainty in previous models of the IFT-B complex, as   integral components of the core and peripheral subcomplexes, respectively">PMID:26980730</a>.</li>
+<li>Function depends on binding to other IFT-B subunits: <a href="https://pubmed.ncbi.nlm.nih.gov/26980730" title="a ciliogenesis   defect of Cluap1-deficient mouse embryonic fibroblasts was rescued by exogenous   expression of wild-type Cluap1 but not by mutant Cluap1 lacking the binding ability   to other IFT-B components">PMID:26980730</a>.</li>
+<li>Co-purifies with the IFT-B complex: <a href="https://pubmed.ncbi.nlm.nih.gov/25443296" title="all IFT-B subunits, including the   suspected subunit CLUAP1/DYF-3/qilin ... co-purified with IFT27">PMID:25443296</a>.</li>
+<li>GOA: intraciliary transport particle B (GO:0030992), intraciliary transport<br />
+  (GO:0042073), cilium (GO:0005929) — IBA and NAS/ComplexPortal.</li>
+</ul>
+<h3 id="3-role-in-ciliary-entryretrograde-transport-of-dynein-2-cargo-che-3">3. Role in ciliary entry/retrograde transport of dynein-2 cargo (che-3)</h3>
+<ul>
+<li>PMID:28479320 (Yi et al 2017) shows IFT-B is required for ciliary entry of dynein-2:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28479320" title="Disruption of the dynein-2 tail domain, light intermediate chain, or   intraflagellar transport (IFT)-B complex abolishes dynein-2's ciliary localization,   revealing their important roles in ciliary entry of dynein-2">PMID:28479320</a>.</li>
+<li>UniProt FUNCTION (from PMID:28479320): "May be required for ciliary entrance and<br />
+  transport of specific ciliary cargo proteins such as che-3 which are related to<br />
+  motility." (che-3 = cytoplasmic dynein heavy chain / dynein-2). Note UniProt says<br />
+  "motile cilium" in the generic family sentence; C. elegans cilia are non-motile<br />
+  sensory cilia — the "motile" wording is generic CLUAP1-family text.</li>
+</ul>
+<h3 id="4-localization-ciliated-sensory-neurons-dendrite-cell-body-axon-cilium">4. Localization: ciliated sensory neurons (dendrite, cell body, axon, cilium)</h3>
+<ul>
+<li>Expressed in a defined set of ciliated chemosensory neurons: <a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="Expression of a functional dyf-3...gfp fusion gene is detected in 26 chemosensory   neurons, including six IL2 neurons, eight pairs of amphid neurons (ASE, ADF, ASG,   ASH, ASI, ASJ, ASK and ADL) and two pairs of phasmid neurons (PHA and PHB)">PMID:15713455</a>.</li>
+<li>UniProt SUBCELLULAR LOCATION: axon, cilium, dendrite (all IDA from PMID:15713455).</li>
+<li>GOA IDA (PMID:15713455): axon (GO:0030424), dendrite (GO:0030425), cell projection<br />
+  (GO:0042995), neuronal cell body (GO:0043025). These reflect the pan-neuronal<br />
+  distribution of an IFT protein en route to/along the cilium; the cilium/ciliary base<br />
+  is the site of function.</li>
+</ul>
+<h3 id="5-cell-autonomous-daf-19rfxregulated-ciliary-gene">5. Cell-autonomous, DAF-19/RFX–regulated ciliary gene</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="dyf-3 acts cell-autonomously for fluorescent dye uptake">PMID:15713455</a>.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15713455" title="Reduction of dyf-3...gfp expression in a daf-19 mutant suggests that   dyf-3 expression is regulated by DAF-19 transcription factor">PMID:15713455</a>. (X-box/RFX ciliary<br />
+  gene battery — consistent with a dedicated ciliary component.)</li>
+</ul>
+<h3 id="6-required-for-cilia-dependent-sensory-behaviors-downstreamindirect">6. Required for cilia-dependent sensory behaviors (downstream/indirect)</h3>
+<ul>
+<li>GOA IMP (PMID:23664973): chemotaxis (GO:0006935), chemosensory behavior (GO:0007635),<br />
+  response to alkaline pH (GO:0010446). PMID:23664973's abstract is about the guanylyl<br />
+  cyclase GCY-14 and does not name dyf-3; dyf-3 was assayed in the full text (as a<br />
+  Dyf/cilium-defective strain) — dye-filling/ciliary integrity is required for these<br />
+  amphid-mediated behaviors. These behaviors are downstream consequences of the loss<br />
+  of functional cilia, not a distinct molecular activity of DYF-3. Treat as NON-CORE.</li>
+</ul>
+<h2 id="not-known-knowledge-gaps">NOT known / knowledge gaps</h2>
+<ul>
+<li><strong>Molecular/biochemical activity is undefined.</strong> DYF-3/CLUAP1 has no catalytic<br />
+  activity and no assigned GO molecular function (GOA carries GO:0003674 ND). It is a<br />
+  structural/scaffold subunit of IFT-B; the exact interaction partners within IFT-B in<br />
+  C. elegans, and which specific cargo it adapts, are not established. The mouse work<br />
+  shows it must bind other IFT-B components to function but does not define a discrete<br />
+  molecular activity (PMID:26980730).</li>
+<li><strong>Which ciliary cargoes DYF-3 specifically adapts is uncertain.</strong> UniProt hedges "May<br />
+  be required for ciliary entrance and transport of specific ciliary cargo proteins<br />
+  such as che-3" (PMID:28479320) — the "May" and single-cargo example show the cargo<br />
+  spectrum is not defined.</li>
+<li><strong>Core vs peripheral placement / stoichiometry in the worm</strong> IFT-B is inferred from<br />
+  vertebrate biochemistry (PMID:26980730), not directly measured in C. elegans.</li>
+<li><strong>No GO MF term exists for "IFT-B structural subunit"</strong> — an ontology gap; the gene<br />
+  reads MF-dark despite a well-defined cellular role (mirrors CFAP300 exemplar).</li>
+</ul>
+<h2 id="existing-annotation-review-plan-20-goa-annotations">Existing-annotation review plan (20 GOA annotations)</h2>
+<ul>
+<li>cilium assembly (GO:0060271) IDA/IBA/NAS → ACCEPT (core). IDA is the strongest.</li>
+<li>intraciliary transport particle B (GO:0030992) IBA/NAS → ACCEPT (core CC / complex).</li>
+<li>intraciliary transport (GO:0042073) NAS → ACCEPT (core BP).</li>
+<li>cilium (GO:0005929) IBA/IEA/NAS → ACCEPT (site of function; is_active_in/located_in).</li>
+<li>microtubule organizing center (GO:0005815) IBA → KEEP_AS_NON_CORE or MODIFY. IFT<br />
+  proteins concentrate at the ciliary base (basal body region). The MTOC IBA is a<br />
+  broad phylogenetic call; basal body is the more specific/appropriate location.</li>
+<li>axon (GO:0030424) IDA/IEA, dendrite (GO:0030425) IDA/IEA, cell projection<br />
+  (GO:0042995) IDA, neuronal cell body (GO:0043025) IDA → KEEP_AS_NON_CORE. These<br />
+  reflect the neuronal distribution of the protein in transit; not the functional site.</li>
+<li>chemotaxis (GO:0006935), chemosensory behavior (GO:0007635), response to alkaline pH<br />
+  (GO:0010446) IMP → KEEP_AS_NON_CORE. Downstream cilia-dependent behaviors; do not<br />
+  REMOVE (experimental IMP, full text not in cache).</li>
+<li>molecular_function (GO:0003674) ND → ACCEPT as a genuine MF knowledge gap (do not<br />
+  invent an MF).</li>
+</ul>
+<h2 id="provenance-policy">Provenance policy</h2>
+<p>All supporting_text quotes above are verbatim substrings of the cached abstracts/<br />
+full-text in <code>publications/</code>. PMID:15713455, 23664973, 28479320 are abstract-only<br />
+(full_text_available: false); PMID:26980730 abstract-only; PMID:25443296 full text.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6I6D4
+gene_symbol: dyf-3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  DYF-3 is the C. elegans ortholog of clusterin-associated protein 1 (CLUAP1), also
+  known as IFT38 or qilin, a conserved component of the intraflagellar transport (IFT)
+  complex B. IFT-B, together with kinesin-2 and cytoplasmic dynein-2 motors, drives the
+  bidirectional movement of ciliary cargo between the ciliary base and tip that builds
+  and maintains cilia. DYF-3 is not an enzyme; it is a structural/scaffold subunit of
+  the peripheral (IFT-B2) portion of the complex, contributing to complex architecture
+  through protein-protein interactions rather than catalytic activity. It is expressed
+  in ciliated sensory neurons — including eight pairs of amphid neurons, six IL2 inner
+  labial neurons, and two pairs of phasmid neurons — where its expression is controlled
+  by the RFX-type transcription factor DAF-19 via an X-box promoter motif. The protein
+  is distributed through the neuronal cell body, dendrite and axon, and functions at the
+  sensory cilium and its base. Loss of dyf-3 produces stunted, structurally abnormal
+  sensory cilia, a dye-filling-defective (Dyf) phenotype, and impaired cilia-dependent
+  sensory behaviors. The orthologous protein is essential for ciliogenesis across
+  metazoa: zebrafish qilin mutants develop pronephric cysts, and mouse Cluap1 knockouts
+  lack primary cilia, fail Hedgehog signaling, and die at mid-gestation.
+alternative_products:
+- name: 1 (dyf-3a)
+  id: Q6I6D4-1
+- name: 2 (dyf-3b)
+  id: Q6I6D4-2
+  sequence_note: VSP_046490
+- name: 3 (dyf-3c)
+  id: Q6I6D4-3
+  sequence_note: VSP_046489
+existing_annotations:
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      DYF-3/CLUAP1 is required for sensory cilium formation, directly demonstrated in
+      C. elegans and conserved across metazoa. The IBA call from the CLUAP1/IFT38
+      orthology group is corroborated by direct experimental evidence in the worm.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process. Phylogenetic inference agrees with the primary
+      experimental finding that dyf-3 mutants have stunted, structurally abnormal cilia,
+      and with the conserved requirement of the ortholog for ciliogenesis in zebrafish
+      and mouse.
+    supported_by:
+    - reference_id: PMID:15713455
+      supporting_text: &gt;-
+        we analyzed dyf-3 mutants that are defective in uptake of a fluorescent dye and
+        abnormal in sensory cilium structure
+    - reference_id: PMID:15713455
+      supporting_text: &gt;-
+        the mutant has stunted cilia and abnormal posterior projections in some sensory
+        neurons
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      DYF-3 acts as an IFT-B component within the cilium. UniProt records cilium as a
+      subcellular location (IDA, PMID:15713455), consistent with this phylogenetic call.
+    action: ACCEPT
+    reason: &gt;-
+      The cilium is the functional site of the IFT machinery. is_active_in is
+      appropriate for an IFT-B subunit that moves along and functions within the cilium.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: &gt;-
+        Cytoplasmic dynein-2 powers retrograde intraflagellar transport that is
+        essential for cilium formation and maintenance
+- term:
+    id: GO:0005815
+    label: microtubule organizing center
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      IFT trains dock and are assembled at the ciliary base (basal body region), which
+      is a microtubule-organizing center. In vertebrates CLUAP1/IFT38 is recruited to
+      the mother centriole/basal body prior to ciliogenesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The basal-body/MTOC association reflects the docking and assembly site of the IFT
+      machinery rather than DYF-3&#39;s core functional compartment, which is the cilium and
+      the IFT-B complex. Real but accessory; retained as non-core. (The more specific
+      ciliary basal body, GO:0036064, would be preferable to the broad MTOC term.)
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      DYF-3 is an integral subunit of IFT complex B. UniProt lists it as a component of
+      the worm IFT-B complex, and the vertebrate ortholog CLUAP1/IFT38 is an integral
+      component of the IFT-B peripheral subcomplex.
+    action: ACCEPT
+    reason: &gt;-
+      Core cellular-component / complex membership, strongly supported by biochemistry
+      of the ortholog and by the worm IFT-B subunit list.
+    supported_by:
+    - reference_id: PMID:26980730
+      supporting_text: &gt;-
+        we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with
+        certainty in previous models of the IFT-B complex, as integral components of the
+        core and peripheral subcomplexes, respectively
+    - reference_id: PMID:25443296
+      supporting_text: &gt;-
+        all IFT-B subunits, including the suspected subunit CLUAP1/DYF-3/qilin (Ou et
+        al., 2005b), co-purified with IFT27[K68A] and with IFT27
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      UniProt Subcellular Location keyword mapping places DYF-3 in the cilium,
+      consistent with the experimental IDA cilium localization from PMID:15713455.
+    action: ACCEPT
+    reason: &gt;-
+      Electronic subcellular-location mapping agrees with experimental evidence; the
+      cilium is the functional site.
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Axon localization derives from UniProt Subcellular Location mapping and mirrors
+      the experimental IDA annotation (PMID:15713455). DYF-3 is distributed through the
+      neuron, but the axon is not its functional site.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reflects the pan-neuronal distribution of an IFT protein en route to the cilium;
+      accessory to the core ciliary function.
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Dendrite localization from UniProt Subcellular Location mapping, mirroring the
+      experimental IDA annotation (PMID:15713455).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The sensory cilium in C. elegans sits at the distal dendrite; DYF-3 is present
+      along the dendrite in transit but its functional compartment is the cilium/ciliary
+      base. Retained as non-core.
+- term:
+    id: GO:0005929
+    label: cilium
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ComplexPortal NAS annotation placing the IFT-B complex (and DYF-3) in the cilium.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with experimental and phylogenetic evidence that DYF-3 localizes to and
+      functions within the cilium.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: &gt;-
+        Disruption of the dynein-2 tail domain, light intermediate chain, or
+        intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+        localization, revealing their important roles in ciliary entry of dynein-2
+- term:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal NAS annotation for DYF-3 membership in IFT particle B, corresponding
+      to ComplexPortal CPX-1290 (Intraflagellar transport complex B).
+    action: ACCEPT
+    reason: &gt;-
+      Core complex membership; agrees with the UniProt IFT-B subunit list and with
+      biochemistry of the CLUAP1/IFT38 ortholog.
+- term:
+    id: GO:0042073
+    label: intraciliary transport
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      As an IFT-B subunit, DYF-3 participates in intraflagellar transport, the
+      motor-driven bidirectional movement of ciliary cargo along the axoneme.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for an IFT-B complex component.
+    supported_by:
+    - reference_id: PMID:28479320
+      supporting_text: &gt;-
+        Disruption of the dynein-2 tail domain, light intermediate chain, or
+        intraflagellar transport (IFT)-B complex abolishes dynein-2&#39;s ciliary
+        localization, revealing their important roles in ciliary entry of dynein-2
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: NAS
+  original_reference_id: PMID:28479320
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      DYF-3 (as an IFT-B subunit) is required for cilium assembly. This NAS annotation
+      restates the well-supported core process also captured by IDA/IBA.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process, redundant with but consistent with the IDA annotation
+      from PMID:15713455.
+- term:
+    id: GO:0006935
+    label: chemotaxis
+  evidence_type: IMP
+  original_reference_id: PMID:23664973
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      dyf-3 was assayed in this study as a dye-filling-/cilium-defective strain;
+      disrupting the sensory cilium impairs amphid-mediated chemotaxis. This is a
+      downstream consequence of loss of functional cilia, not a distinct molecular
+      activity of DYF-3.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental IMP annotation made by curators with access to the full text (the
+      cached abstract foregrounds the guanylyl cyclase GCY-14 and does not name dyf-3);
+      per curation guidance this is retained, not removed. It reflects the indirect,
+      cilia-dependent behavioral requirement rather than DYF-3&#39;s core ciliary function.
+- term:
+    id: GO:0007635
+    label: chemosensory behavior
+  evidence_type: IMP
+  original_reference_id: PMID:23664973
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      dyf-3 mutants are defective in chemosensory behavior because their sensory cilia
+      are structurally abnormal, compromising the sensory apparatus.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Downstream, cilia-dependent behavioral phenotype. Experimental IMP; retained as a
+      non-core process consequence of DYF-3&#39;s ciliary role.
+- term:
+    id: GO:0010446
+    label: response to alkaline pH
+  evidence_type: IMP
+  original_reference_id: PMID:23664973
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      In the alkalinity-sensing study, dyf-3 (cilium-defective) animals fail the
+      ASE-mediated alkaline-pH response, because functional amphid cilia are required to
+      house the sensory transduction machinery (e.g. GCY-14).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Indirect requirement: the behavior fails because the cilium is disrupted, not
+      because DYF-3 has a molecular role in pH transduction. Experimental IMP; retained
+      as non-core.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      No molecular function is annotated for DYF-3. This is an accurate reflection of a
+      genuine knowledge/ontology gap: DYF-3/CLUAP1 has no catalytic activity and acts as
+      a structural/scaffold IFT-B subunit, a role for which no adequate GO molecular
+      function term currently exists.
+    action: ACCEPT
+    reason: &gt;-
+      The ND molecular_function annotation should be retained rather than replaced with
+      an invented activity. See knowledge_gaps and proposed_new_terms for the associated
+      ontology gap.
+- term:
+    id: GO:0030424
+    label: axon
+  evidence_type: IDA
+  original_reference_id: PMID:15713455
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct observation of DYF-3::GFP in the axon of ciliated sensory neurons.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Genuine experimental localization, but reflects distribution of the protein
+      through the neuron rather than its functional site (the cilium/ciliary base).
+      Retained as non-core.
+- term:
+    id: GO:0030425
+    label: dendrite
+  evidence_type: IDA
+  original_reference_id: PMID:15713455
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct observation of DYF-3::GFP in the dendrite of ciliated sensory neurons.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimental localization along the dendrite that leads to the sensory cilium;
+      accessory to the core ciliary function. Retained as non-core.
+- term:
+    id: GO:0042995
+    label: cell projection
+  evidence_type: IDA
+  original_reference_id: PMID:15713455
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      DYF-3::GFP is present in cell projections (cilium, axon, dendrite are all cell
+      projections). This is a broad parent term subsumed by the more specific cilium,
+      axon and dendrite annotations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but very general; the informative specific children (cilium/axon/dendrite)
+      are separately annotated. Retained as non-core rather than removed, since the
+      experimental IDA is valid.
+- term:
+    id: GO:0043025
+    label: neuronal cell body
+  evidence_type: IDA
+  original_reference_id: PMID:15713455
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct observation of DYF-3::GFP in the neuronal cell body.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The protein is synthesized in and present throughout the cell body, but its
+      functional compartment is the cilium/ciliary base. Retained as non-core.
+- term:
+    id: GO:0060271
+    label: cilium assembly
+  evidence_type: IDA
+  original_reference_id: PMID:15713455
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The strongest evidence for DYF-3&#39;s core role: dyf-3 mutants directly show defective
+      sensory cilium formation, and dyf-3 acts cell-autonomously in ciliated neurons and
+      is regulated by DAF-19/RFX as part of the ciliary gene battery.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process, established by direct experimental evidence in the primary
+      characterization of the gene.
+    supported_by:
+    - reference_id: PMID:15713455
+      supporting_text: &gt;-
+        dyf-3 acts cell-autonomously for fluorescent dye uptake
+    - reference_id: PMID:15713455
+      supporting_text: &gt;-
+        dyf-3 expression is regulated by DAF-19 transcription factor, and DYF-3 may be
+        involved in the intraflagellar transport system
+core_functions:
+- description: &gt;-
+    DYF-3 is a structural/scaffold subunit of the peripheral (IFT-B2) part of
+    intraflagellar transport complex B. Rather than catalyzing a reaction, it
+    contributes to IFT-B architecture and, as part of the assembled IFT machinery,
+    supports the anterograde/retrograde transport of ciliary cargo required to build and
+    maintain sensory cilia in ciliated neurons. Its direct molecular activity and the
+    specific worm IFT-B partners/cargo it engages remain undefined.
+  directly_involved_in:
+  - id: GO:0060271
+    label: cilium assembly
+  - id: GO:0042073
+    label: intraciliary transport
+  in_complex:
+    id: GO:0030992
+    label: intraciliary transport particle B
+  locations:
+  - id: GO:0005929
+    label: cilium
+  supported_by:
+  - reference_id: PMID:15713455
+    supporting_text: &gt;-
+      we analyzed dyf-3 mutants that are defective in uptake of a fluorescent dye and
+      abnormal in sensory cilium structure
+  - reference_id: PMID:26980730
+    supporting_text: &gt;-
+      we identified TTC26/IFT56 and Cluap1/IFT38, neither of which was included with
+      certainty in previous models of the IFT-B complex, as integral components of the
+      core and peripheral subcomplexes, respectively
+  - reference_id: file:worm/dyf-3/dyf-3-deep-research-falcon.md
+    supporting_text: &gt;-
+      is not an enzyme or transporter
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular activity of DYF-3/CLUAP1 is undefined. It is unresolved whether
+    it acts purely as a structural constituent of IFT-B, as a scaffold/adaptor that
+    bridges specific subunits, and which of its partner interactions are load-bearing in
+    C. elegans. No GO molecular function term adequately expresses &#34;structural subunit of
+    the IFT-B complex&#34;, so the gene reads MF-dark despite a well-defined cellular role.
+  boundary: &gt;-
+    Firmly established: DYF-3 is an integral subunit of IFT complex B required for sensory
+    cilium assembly and intraflagellar transport; the ortholog CLUAP1/IFT38 is an integral
+    component of the IFT-B peripheral (IFT-B2) subcomplex and its ciliogenesis function
+    depends on binding other IFT-B components. The protein has a coiled-coil region and an
+    acidic disordered C-terminus and no catalytic domain.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    IFT-B is the anterograde transport backbone of ciliogenesis; understanding DYF-3&#39;s
+    precise molecular contribution would sharpen mechanistic models of IFT train assembly
+    and explain how CLUAP1/IFT38 loss produces ciliopathy. The absence of an adequate MF
+    term is a systematic ontology gap shared by many structural complex subunits.
+  resolution: &gt;-
+    Structure/interaction mapping of the worm IFT-B2 module (which subunits DYF-3 directly
+    contacts); in vitro reconstitution of IFT-B subcomplexes; and a new GO molecular
+    function term for IFT structural-subunit activity.
+  provenance:
+  - reference_id: PMID:26980730
+    supporting_text: &gt;-
+      a ciliogenesis defect of Cluap1-deficient mouse embryonic fibroblasts was rescued
+      by exogenous expression of wild-type Cluap1 but not by mutant Cluap1 lacking the
+      binding ability to other IFT-B components
+  - reference_id: file:worm/dyf-3/dyf-3-deep-research-falcon.md
+    supporting_text: &gt;-
+      is not an enzyme or transporter
+  proposed_terms:
+  - proposed_name: structural constituent of intraflagellar transport particle
+    proposed_definition: &gt;-
+      A structural molecule activity of a protein that is an integral subunit of an
+      intraflagellar transport (IFT) particle (IFT-A or IFT-B), contributing to the
+      assembly and architectural integrity of the complex through protein-protein
+      interactions, without itself catalyzing a biochemical reaction or acting as a motor.
+    justification: &gt;-
+      DYF-3/CLUAP1/IFT38 and other non-motor, non-catalytic IFT subunits have no adequate
+      GO molecular function term and are annotatable only at the process level
+      (intraciliary transport) or with the uninformative &#39;protein binding&#39;, leaving them
+      MF-dark despite well-defined cellular roles.
+    proposed_parent:
+      id: GO:0005198
+      label: structural molecule activity
+- gap_statement: &gt;-
+    Which specific ciliary cargoes DYF-3 is required to import or transport in C. elegans,
+    and whether it confers cargo selectivity, is not established. UniProt only tentatively
+    links it to entry of the dynein-2 heavy chain che-3 (&#34;May be required...&#34;).
+  boundary: &gt;-
+    Firmly established: the IFT-B complex is required for ciliary entry of cytoplasmic
+    dynein-2 (che-3), and dyf-3 loss disrupts overall cilium structure. The worm IFT-B2
+    architecture and DYF-3&#39;s specific cargo contacts are inferred from vertebrate/algal
+    biochemistry rather than measured directly in the worm.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Cargo selectivity would distinguish a purely architectural role from an adaptor role
+    and clarify why IFT-B subunit losses have distinguishable phenotypes.
+  resolution: &gt;-
+    Cilium proteomics comparing wild-type and dyf-3 mutant cilia; live imaging of candidate
+    cargo (e.g. che-3) transport in dyf-3 alleles.
+  provenance:
+  - reference_id: PMID:28479320
+    supporting_text: &gt;-
+      Disruption of the dynein-2 tail domain, light intermediate chain, or intraflagellar
+      transport (IFT)-B complex abolishes dynein-2&#39;s ciliary localization, revealing their
+      important roles in ciliary entry of dynein-2
+  - reference_id: file:worm/dyf-3/dyf-3-deep-research-falcon.md
+    supporting_text: &gt;-
+      orthologous structural role inferred from IFT38
+proposed_new_terms:
+- proposed_name: structural constituent of intraflagellar transport particle
+  proposed_definition: &gt;-
+    A structural molecule activity of a protein that is an integral subunit of an
+    intraflagellar transport (IFT) particle (IFT-A or IFT-B), contributing to the assembly
+    and architectural integrity of the complex through protein-protein interactions,
+    without itself catalyzing a biochemical reaction or acting as a motor.
+  justification: &gt;-
+    Non-motor, non-catalytic IFT subunits such as DYF-3/CLUAP1/IFT38 have no adequate GO
+    molecular function term and currently read as MF-dark despite well-defined roles as
+    complex subunits.
+  proposed_parent:
+    id: GO:0005198
+    label: structural molecule activity
+suggested_questions:
+- question: &gt;-
+    Which IFT-B subunits does DYF-3 directly contact in C. elegans, and is the CH-domain
+    interaction with IFT80 and the coiled-coil heterodimer with IFT57 (as characterized
+    for CLUAP1/IFT38 in other systems) conserved in the worm?
+  experts:
+  - Guangshuo Ou
+- question: &gt;-
+    Does DYF-3 confer selectivity for particular ciliary cargoes (e.g. che-3/dynein-2), or
+    is its role purely architectural within IFT-B?
+suggested_experiments:
+- hypothesis: &gt;-
+    DYF-3 is required for the ciliary import of specific cargoes rather than for bulk IFT.
+  description: &gt;-
+    Compare the ciliary proteome (and live-imaged transport of candidate cargoes such as
+    che-3/dynein-2) between wild-type and dyf-3 loss-of-function animals to identify
+    cargoes whose ciliary entry specifically depends on DYF-3.
+  experiment_type: proteomics / live imaging
+- hypothesis: &gt;-
+    DYF-3 organizes the worm IFT-B2 subcomplex through conserved CH-domain and coiled-coil
+    interactions.
+  description: &gt;-
+    Map DYF-3 protein-protein interactions in C. elegans (e.g. affinity purification-mass
+    spectrometry, split fluorophore assays) and test predicted contacts with IFT80/che-2
+    and IFT57 orthologs.
+  experiment_type: interaction mapping
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:15713455
+  title: The dyf-3 gene encodes a novel protein required for sensory cilium formation
+    in Caenorhabditis elegans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary characterization of dyf-3: establishes the Dyf/abnormal-cilium phenotype,
+      DYF-3::GFP localization in ciliated sensory neurons, cell-autonomous function,
+      DAF-19/RFX regulation, and the inference of an IFT role. Source of all IDA
+      annotations. Abstract-only in cache; quotes verified verbatim.
+- id: PMID:23664973
+  title: Environmental alkalinity sensing mediated by the transmembrane guanylyl cyclase
+    GCY-14 in C. elegans.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Identifier resolves to the intended GCY-14 alkalinity-sensing paper. The abstract
+      foregrounds GCY-14 and does not name dyf-3; the IMP annotations to chemotaxis,
+      chemosensory behavior and response to alkaline pH derive from the full text, where
+      dyf-3 was used as a dye-filling-/cilium-defective strain. These are downstream,
+      cilia-dependent behavioral requirements, not a molecular activity of DYF-3.
+- id: PMID:28479320
+  title: Dynein-Driven Retrograde Intraflagellar Transport Is Triphasic in C. elegans
+    Sensory Cilia.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Source of the UniProt IFT-B membership and ComplexPortal NAS annotations. The
+      abstract foregrounds dynein-2 but the study identifies the C. elegans IFT-B complex
+      (including dyf-3) by mass spectrometry and shows IFT-B is required for ciliary entry
+      of dynein-2. Abstract-only in cache; quotes verified verbatim.
+- id: PMID:26980730
+  title: Overall Architecture of the Intraflagellar Transport (IFT)-B Complex Containing
+    Cluap1/IFT38 as an Essential Component of the IFT-B Peripheral Subcomplex.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the ortholog CLUAP1/IFT38 as an integral component of the IFT-B
+      peripheral subcomplex and shows its ciliogenesis function depends on binding other
+      IFT-B components. Strong support for DYF-3&#39;s complex membership and structural role.
+- id: PMID:25443296
+  title: The intraflagellar transport protein IFT27 promotes BBSome exit from cilia
+    through the GTPase ARL6/BBS3.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text cached. Confirms co-purification of CLUAP1/DYF-3/qilin with the IFT-B
+      complex, corroborating IFT-B membership; the paper&#39;s primary focus (IFT27/ARL6/BBSome)
+      is otherwise tangential to dyf-3.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
