@@ -52,7 +52,7 @@ grounded in domain/orthology/literature — never invented function.
 - MF root (GO:0003674) ND, BP root (GO:0008150) ND → **ACCEPT** (correctly reflect "function unknown"; these are the honest state of knowledge).
 - GO:0005635 nuclear envelope IDA (PMID:33002606) → **KEEP_AS_NON_CORE** (experimental, SGD-curated; keep, defer to curator, note verification gap; it is a localization, not a core function).
 - GO:0005886 plasma membrane IBA and duplicate IEA (GO_REF:0000002) → both **MARK_AS_OVER_ANNOTATED** (family-consistent PM localization but no DCV1-specific evidence; DCV1's own IDA is nuclear envelope; kept consistent across evidence types for the same term).
-- GO:0032153 cell division site IBA → **REMOVE** (fission-yeast-derived localization over-propagated; no support in budding yeast; arguable on biological grounds per policy for IBA over-propagation).
+- GO:0032153 cell division site IBA → **REMOVE**. NB (per PR review): GO:0032153 is NOT lineage-specific — the S. cerevisiae bud neck is a bona fide cell division site — so the justification is weak single-source phylogenetic propagation (one S. pombe donor, PomBase:SPCC1739.10) with no DCV1-specific division-site evidence, NOT a taxon mismatch. Failure mode set to SOURCE_EVIDENCE_WEAK + COMPARTMENT_OR_COMPLEX_MISMATCH (LINEAGE_OR_TAXON_MISMATCH reserved for GO:0035838 growing cell tip, which genuinely is a tip-growth concept absent in budding yeast).
 - GO:0035838 growing cell tip IBA → **REMOVE** (fission-yeast polarized-tip-growth concept; not applicable to budding yeast S. cerevisiae).
 - GO:0016020 membrane IEA (SubCell) → **MARK_AS_OVER_ANNOTATED** (uninformative generic parent; the protein's PM/multi-pass membrane status is already captured more specifically).
 
