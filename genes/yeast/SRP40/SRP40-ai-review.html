@@ -1,0 +1,2777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRP40 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SRP40</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P32583" target="_blank" class="term-link">
+                        P32583
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SRP40";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P32583" data-a="DESCRIPTION: SRP40 (YKR092C) is a small (406-residue, ~41 kDa),..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SRP40 (YKR092C) is a small (406-residue, ~41 kDa), highly acidic (pI ~3.9), serine-rich (~49% Ser) nucleolar protein of Saccharomyces cerevisiae, and is the budding-yeast homolog of the vertebrate nucleolar phosphoprotein Nopp140 (its C-terminal SRP40_C domain is ~59% identical to the Nopp140 C-terminus). The protein is almost entirely intrinsically disordered, built from serine-rich low-complexity tracts interspersed with acidic (Asp/Glu) and basic (Lys/Arg) charge clusters, plus the single conserved folded C-terminal module; it carries no recognizable catalytic motif. Like Nopp140, it is a casein kinase II phosphoprotein (though phosphorylated to a lesser extent than the vertebrate protein) and is additionally serine- pyrophosphorylated by the inositol pyrophosphate 5-IP7. Srp40p localizes to the nucleolus and is proposed to act as a chaperone of small nucleolar ribonucleoprotein particles (snoRNPs) that mediate rRNA maturation, with a particular genetic link to the stability of box H/ACA snoRNAs; rat Nopp140 can functionally substitute for it. The gene is nonessential but dosage-sensitive: both deletion and overexpression impair growth. Its name (&#34;Suppressor of RNA Polymerase&#34;) derives from its original isolation as a weak extragenic suppressor of a mutation in the AC40 subunit shared by RNA polymerases I and III, and does not denote a signal-recognition-particle function.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0005730" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) nucleolar localization, concordant with the direct yeast experimental evidence and with the Nopp140/SRP40 family being nucleolar. Accept as a core cellular-component annotation.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                                        PMID:8702624
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SRP40 localizes to the yeast nucleolus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0005654" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred nucleoplasmic localization. Nopp140/Treacle-family members do distribute to the nucleoplasm and coiled/Cajal bodies in addition to the nucleolus, so this is plausible, but the direct yeast evidence is for the nucleolus. Keep as a secondary, non-core location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0005730" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) nucleolar localization; redundant with, and consistent with, the direct IDA and phylogenetic IBA nucleolus annotations. Accept.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                                        PMID:8702624
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SRP40 localizes to the yeast nucleolus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function with ND (no data). This is an honest reflection of the state of knowledge: no specific molecular activity has been experimentally assigned to this disordered nucleolar protein, and none can be inferred from sequence (no catalytic motif; only the non-enzymatic C-terminal SRP40_C module). Accept rather than inventing an MF term; the genuine molecular-function gap is recorded in knowledge_gaps.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8702624
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of the rat nucleolar protein nopp140 with its yea...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0005730" data-r="PMID:8702624" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization of Srp40p to the yeast nucleolus. This is the best-supported, core cellular-component annotation for the gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                                        PMID:8702624
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SRP40 localizes to the yeast nucleolus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006913" target="_blank" class="term-link">
+                                    GO:0006913
+                                </a>
+                            </span>
+                            <span class="term-label">nucleocytoplasmic transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8702624
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of the rat nucleolar protein nopp140 with its yea...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0006913" data-r="PMID:8702624" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation transferred from the rat ortholog Nopp140 (UniProtKB:P41777). Nopp140 shuttles between the nucleolus and cytoplasm and binds nuclear localization signals, and was proposed to chaperone ribosome biogenesis on that basis; the transport/shuttling activity, however, is a vertebrate-Nopp140 property and has NOT been directly demonstrated for yeast Srp40p, and the source paper itself notes yeast/vertebrate disparities in nucleolar dynamics. The better-supported functional role of yeast Srp40p is nucleolar snoRNP chaperoning within ribosome biogenesis (PMID:12700234), not transport per se. Retain as a non-core, ortholog-inferred process rather than removing an ISS annotation made by a curator from a selected ortholog.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                                        PMID:8702624
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">its nuclear localization signal binding capacity, and its shuttling between the nucleolus and the cytoplasm, Nopp140 was proposed to function as a chaperone in ribosome biogenesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042254" target="_blank" class="term-link">
+                                    GO:0042254
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome biogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12700234
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genetic interaction between a chaperone of small nucleolar r...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P32583" data-a="GO:0042254" data-r="PMID:12700234" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed new annotation (not currently in GOA). Srp40p is a nucleolar protein proposed to chaperone the snoRNPs required for rRNA maturation, and its genetic depletion specifically destabilizes box H/ACA snoRNAs; rat Nopp140 restores box H/ACA snoRNA stability, confirming it as the functional Nopp140 homolog. This is the best-supported biological process for the gene and is captured as a core function. Evidence is genetic/homology-based (a proposal), so the underlying molecular activity remains a knowledge gap.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" target="_blank" class="term-link">
+                                        PMID:12700234
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Srp40p is a nonessential yeast nucleolar protein proposed to function as a chaperone for over 100 small nucleolar ribonucleoprotein particles that are required for rRNA maturation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Nucleolar protein contributing to ribosome biogenesis, proposed to act as a chaperone of small nucleolar ribonucleoprotein particles (snoRNPs) — in particular the box H/ACA class involved in rRNA modification — with the underlying molecular activity undetermined.</h3>
+                <span class="vote-buttons" data-g="P32583" data-a="FUNCTION: Nucleolar protein contributing to ribosome biogene..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042254" target="_blank" class="term-link">
+                                ribosome biogenesis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" target="_blank" class="term-link">
+                                PMID:12700234
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Srp40p is a nonessential yeast nucleolar protein proposed to function as a chaperone for over 100 small nucleolar ribonucleoprotein particles that are required for rRNA maturation.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                                PMID:8702624
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">SRP40 localizes to the yeast nucleolus</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" target="_blank" class="term-link">
+                            PMID:8702624
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comparison of the rat nucleolar protein nopp140 with its yeast homolog SRP40. Differential phosphorylation in vertebrates and yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SRP40 encodes an acidic, serine-rich 41 kDa protein whose C-terminus is 59% identical to that of rat Nopp140; it localizes to the yeast nucleolus, is phosphorylated by casein kinase II (to a lesser extent than Nopp140), and is required at a specific cellular concentration for optimal growth (both overexpression and deletion are deleterious).</div>
+
+                        <div class="finding-text">"SRP40 localizes to the yeast nucleolus and is required at a specific cellular concentration for optimal growth as indicated by the negative effect on cell growth of both overexpression and deletion of its gene."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" target="_blank" class="term-link">
+                            PMID:12700234
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic interaction between a chaperone of small nucleolar ribonucleoprotein particles and cytosolic serine hydroxymethyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Srp40p is a nonessential nucleolar protein proposed to chaperone the &gt;100 snoRNPs required for rRNA maturation; its genetic depletion specifically depletes box H/ACA snoRNAs, and rat Nopp140 restores growth and box H/ACA snoRNA stability, confirming it as the functional yeast homolog of Nopp140.</div>
+
+                        <div class="finding-text">"Srp40p is a nonessential yeast nucleolar protein proposed to function as a chaperone for over 100 small nucleolar ribonucleoprotein particles that are required for rRNA maturation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8516295" target="_blank" class="term-link">
+                            PMID:8516295
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactions between three common subunits of yeast RNA polymerases I and III.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Srp40p bind snoRNAs (particularly box H/ACA snoRNAs) or snoRNP proteins directly, and does it possess measurable RNA-chaperone (annealing/remodeling) or RNP-assembly activity in vitro?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="Q: Does Srp40p bind snoRNAs (particularly box H/ACA s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> At which step of ribosome biogenesis does Srp40p act, and does its loss primarily affect box H/ACA snoRNP assembly, stability, localization, or recycling?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="Q: At which step of ribosome biogenesis does Srp40p a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What accounts for the dual dosage sensitivity (both deletion and overexpression are deleterious), and which factors buffer srp40-delta to keep the gene nonessential?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="Q: What accounts for the dual dosage sensitivity (bot..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the CK2 phosphorylation and 5-IP7 serine pyrophosphorylation of Srp40p regulate its snoRNP-associated function, and can specific phospho-sites be linked to the growth or box H/ACA snoRNA phenotypes?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="Q: Do the CK2 phosphorylation and 5-IP7 serine pyroph..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In vitro RNA-binding and RNA-chaperone assays (EMSA, filter binding, FRET-based annealing/strand-displacement) using recombinant Srp40p and candidate box H/ACA snoRNAs and snoRNP components, with the disordered N-terminus and the SRP40_C domain tested separately.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="EXPERIMENT: In vitro RNA-binding and RNA-chaperone assays (EMS..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenous affinity purification / proximity labeling (e.g. BioID or AP-MS) plus CLIP-seq of tagged Srp40p to define its direct protein and RNA partners in the nucleolus and to test the snoRNP-chaperone model in vivo.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="EXPERIMENT: Endogenous affinity purification / proximity label..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Systematic genetic analysis (synthetic-lethal / dosage screens beyond the known shm2 ade3 interaction) and phospho-site mutant series (CK2 and 5-IP7 pyrophosphorylation sites) scored for growth, box H/ACA snoRNA levels, and rRNA processing, to connect Srp40p&#39;s PTMs and partners to its cellular role.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P32583" data-a="EXPERIMENT: Systematic genetic analysis (synthetic-lethal / do..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The specific molecular activity of Srp40p and the precise step in ribosome biogenesis at which it acts are unknown. Whether it directly chaperones/assembles snoRNPs, stabilizes box H/ACA snoRNAs, or contributes indirectly (e.g. through its highly phosphorylated, acidic, disordered tracts) is undetermined, as is the reason the gene is simultaneously nonessential and dosage-sensitive (toxic when either deleted or overexpressed).</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly established: Srp40p is the yeast Nopp140 homolog (SRP40_C domain ~59% identical to Nopp140&#39;s C-terminus); it is a ~41 kDa, acidic (pI ~3.9), ~49%-serine, almost fully intrinsically disordered nucleolar protein with no catalytic motif; it is CK2-phosphorylated and 5-IP7 serine-pyrophosphorylated; it localizes to the nucleolus (IDA); it is nonessential but its deletion and overexpression both impair growth; its genetic depletion specifically destabilizes box H/ACA snoRNAs; and rat Nopp140 functionally complements srp40-delta.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Defining the activity of this tractable, conserved nucleolar chaperone would illuminate how the Nopp140/Treacle family (implicated in human ribosomopathies) contributes to snoRNP function and rRNA maturation, and would provide an experimental anchor for a class of disordered nucleolar proteins that GO cannot currently describe at the molecular-function level.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical reconstitution of Srp40p RNA/snoRNP-chaperone activity; interactome/ CLIP mapping of its snoRNP (especially box H/ACA) partners in vivo; genetic dissection of the redundancy/buffering that renders it nonessential and of the basis of overexpression toxicity; phospho-site (CK2 / 5-IP7) separation-of-function alleles to connect its unusual PTMs to the growth and box H/ACA phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Srp40p is a nonessential yeast nucleolar protein proposed to function as a chaperone for over 100 small nucleolar ribonucleoprotein particles that are required for rRNA maturation."</em> — PMID:12700234</li>
+
+                <li><em>"required at a specific cellular concentration for optimal growth as indicated by the negative effect on cell growth of both overexpression and deletion of its gene"</em> — PMID:8702624</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SRP40-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P32583" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: SRP40 (YKR092C) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">24 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T03:33:14.914697</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="SRP40-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-srp40-ykr092c-in-saccharomyces-cerevisiae">Comprehensive Research Report: SRP40 (YKR092C) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-geneprotein-identity-and-verification">1. Gene/Protein Identity and Verification</h2>
+<p>SRP40 (Suppressor protein SRP40; UniProt P32583) is encoded by the gene <em>SRP40</em> (systematic name YKR092C) in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). It is the budding yeast ortholog of mammalian nucleolar phosphoprotein 140 (Nopp140, gene <em>NOLC1</em>), a conserved nucleolar chaperone protein involved in small nucleolar ribonucleoprotein (snoRNP) biogenesis and ribosome assembly (yang2000conservedcompositionof pages 2-3, he2011structureandfunction pages 1-4). The carboxy-terminal domain of yeast Srp40p shares 59% identity with the corresponding region of mammalian Nopp140, and this high conservation has been used as a criterion for identifying Nopp140 orthologs across eukaryotes (he2011structureandfunction pages 1-4). The key C-terminal domain corresponds to the Srp40_C domain annotated in Pfam (PF05022) and InterPro (IPR007718).</p>
+<p>The following table summarizes the key properties of SRP40:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>SRP40 / Srp40p summary</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>SRP40</strong></td>
+<td>(yang2000conservedcompositionof pages 2-3, yang2000conservedcompositionof pages 7-9)</td>
+</tr>
+<tr>
+<td>Systematic name</td>
+<td><strong>YKR092C</strong>; ORF name reported in UniProt context as <strong>YKR412A</strong></td>
+<td>(yang2000conservedcompositionof pages 2-3)</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td><strong>P32583</strong></td>
+<td>(yang2000conservedcompositionof pages 2-3)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><strong>Saccharomyces cerevisiae</strong> (strain S288c / baker’s yeast)</td>
+<td>(yang2000conservedcompositionof pages 2-3, yang2000conservedcompositionof pages 7-9)</td>
+</tr>
+<tr>
+<td>Primary function</td>
+<td>Nucleolar phosphoprotein and <strong>yeast homolog of mammalian Nopp140</strong>; functions as a <strong>snoRNP chaperone/assembly factor</strong>, with strongest evidence for a selective role in <strong>box H/ACA snoRNP biogenesis, stability, and trafficking</strong>, thereby supporting pre-rRNA processing and modification</td>
+<td>(nierhaus2004proteinsynthesisand pages 141-145, he2011structureandfunction pages 8-11, yang2000conservedcompositionof pages 2-3, yang2000conservedcompositionof pages 7-9)</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td><strong>N-terminal LisH dimerization motif</strong>; <strong>central intrinsically disordered repeat domain</strong> with serine-rich acidic and lysine/proline-rich basic regions; <strong>conserved C-terminal domain</strong> corresponding to the <strong>Srp40_C / Nopp140 C-terminus</strong>. In yeast, the central region is simplified to <strong>two acidic clusters separated by one basic stretch</strong></td>
+<td>(he2011structureandfunction pages 4-6, he2011structureandfunction pages 1-4, he2011structureandfunction pages 6-8)</td>
+</tr>
+<tr>
+<td>Phosphorylation features</td>
+<td>Central serine-rich region is a major target of <strong>casein kinase 2 (CK2/CKII)</strong> phosphorylation; phosphorylation is required for efficient interaction with snoRNP components and is a core mechanistic feature of Nopp140-family proteins</td>
+<td>(he2011structureandfunction pages 4-6, meznad2026intrinsicallydisorderedregions pages 3-4, meznad2026intrinsicallydisorderedregions pages 1-2)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>Localizes to the <strong>nucleolus</strong>, specifically to the <strong>nucleolar body (NB)</strong>, a subnucleolar compartment related to the vertebrate Cajal body; N-terminus and central domain are sufficient for nuclear localization, whereas the C-terminus alone is not</td>
+<td>(verheggen2001boxcdsmall pages 5-6, verheggen2001boxcdsmall pages 4-5, verheggen2001boxcdsmall pages 7-9, he2011structureandfunction pages 1-4)</td>
+</tr>
+<tr>
+<td>Key interactors / functional partners</td>
+<td>Interacts functionally with <strong>box H/ACA and box C/D snoRNPs</strong>, more strongly with <strong>box H/ACA snoRNPs</strong>; works with <strong>Nsr1p</strong> in snoRNA trafficking; phosphorylation-dependent interactions connect the family to <strong>CK2</strong>; Nopp140-family proteins also interact with <strong>RNA polymerase I</strong>, linking snoRNP metabolism to rDNA transcription</td>
+<td>(nierhaus2004proteinsynthesisand pages 141-145, he2011structureandfunction pages 8-11, verheggen2001boxcdsmall pages 4-5, verheggen2001boxcdsmall pages 5-6, he2011structureandfunction pages 4-6, meznad2026intrinsicallydisorderedregions pages 4-5)</td>
+</tr>
+<tr>
+<td>Role in pathways</td>
+<td>Functions in <strong>snoRNA maturation/trafficking</strong>, <strong>snoRNP assembly</strong>, <strong>pre-rRNA processing</strong>, <strong>rRNA modification</strong> (especially pseudouridylation-associated H/ACA pathways), and coordination of these events with <strong>Pol I transcription</strong></td>
+<td>(nierhaus2004proteinsynthesisand pages 141-145, he2011structureandfunction pages 8-11, verheggen2001boxcdsmall pages 9-9, he2011structureandfunction pages 18-21)</td>
+</tr>
+<tr>
+<td>Phenotype on deletion or depletion</td>
+<td><strong>Reduction of box H/ACA snoRNAs</strong> (e.g., snR3, snR10, snR11, snR42, snR30) with relative preservation of several box C/D snoRNAs; loss of SRP40 also disrupts <strong>NB accumulation/retention of box C/D snoRNAs</strong> and can impair NB formation or snoRNP association with the NB</td>
+<td>(he2011structureandfunction pages 8-11, yang2000conservedcompositionof pages 7-9, verheggen2001boxcdsmall pages 5-6, verheggen2001boxcdsmall pages 9-9)</td>
+</tr>
+<tr>
+<td>Mammalian ortholog</td>
+<td><strong>Nopp140 / NOLC1</strong>, a conserved nucleolar phosphoprotein chaperone involved in concentrating snoRNPs and supporting rRNA modification in the dense fibrillar component</td>
+<td>(yang2000conservedcompositionof pages 2-3, meznad2026intrinsicallydisorderedregions pages 1-2, baral2019thedrosophilaneuroblasts pages 43-48)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core identity, structure, localization, interactions, and functional phenotypes of yeast SRP40/Srp40p, together with its relationship to mammalian Nopp140/NOLC1. It is useful as a compact reference for functional annotation and evidence tracking.</em></p>
+<h2 id="2-primary-function-snornp-chaperone">2. Primary Function: snoRNP Chaperone</h2>
+<p>SRP40/Srp40p functions primarily as a <strong>nucleolar phosphoprotein chaperone for small nucleolar ribonucleoproteins (snoRNPs)</strong>. It is not an enzyme per se, but rather a scaffolding/adapter protein that facilitates the biogenesis, assembly, trafficking, and stabilization of snoRNPs. These snoRNPs are essential for site-specific chemical modification of pre-ribosomal RNA (pre-rRNA) and for certain endonucleolytic pre-rRNA processing events required during ribosome biogenesis (nierhaus2004proteinsynthesisand pages 141-145, yang2000conservedcompositionof pages 2-3).</p>
+<p>Srp40p associates with both major classes of snoRNPs—box C/D snoRNPs (which guide 2′-O-methylation of rRNA) and box H/ACA snoRNPs (which guide pseudouridylation of rRNA)—but shows a stronger functional interaction with box H/ACA snoRNPs (he2011structureandfunction pages 8-11, yang2000conservedcompositionof pages 7-9). Genetic depletion of Srp40p leads to significant reductions in box H/ACA snoRNA levels (including snR3, snR10, snR11, snR42, and snR30), while box C/D snoRNAs (such as U3, U14, and U24) remain relatively unaffected (he2011structureandfunction pages 8-11). This phenotype closely resembles the effect of depleting integral box H/ACA snoRNP core proteins (Cbf5p, Nhp2p, and Nop10p), consistent with a model in which Srp40p acts as a biogenesis or stability factor for H/ACA-type snoRNPs (he2011structureandfunction pages 8-11, yang2000conservedcompositionof pages 7-9). The proposed chaperone function involves facilitating proper snoRNP assembly, localization, and transport—processes essential for snoRNP-mediated pre-rRNA processing and modification (yang2000conservedcompositionof pages 2-3).</p>
+<h2 id="3-domain-architecture-and-phosphorylation">3. Domain Architecture and Phosphorylation</h2>
+<h3 id="31-overall-structural-organization">3.1. Overall Structural Organization</h3>
+<p>Like its mammalian ortholog Nopp140, Srp40p has a tripartite domain architecture (he2011structureandfunction pages 4-6, he2011structureandfunction pages 1-4):</p>
+<ul>
+<li>
+<p><strong>N-terminal domain:</strong> Contains a LisH (Lis1-homology) dimerization motif consisting of two alpha helices that form a four-helix anti-parallel bundle upon dimerization (he2011structureandfunction pages 4-6).</p>
+</li>
+<li>
+<p><strong>Central repeat domain:</strong> In mammalian Nopp140, this consists of 10 repeating motifs of alternating serine-rich acidic segments and lysine/proline-rich basic segments (meznad2026intrinsicallydisorderedregions pages 3-4). In yeast Srp40p, this region is simplified to two acidic clusters separated by one basic stretch (he2011structureandfunction pages 1-4). The serine residues within the acidic motifs are extensively phosphorylated.</p>
+</li>
+<li>
+<p><strong>C-terminal domain (Srp40_C):</strong> This is the most conserved region among Nopp140 orthologs (he2011structureandfunction pages 6-8, he2011structureandfunction pages 1-4). In mammalian Nopp140, it consists of two subdomains (NoppCa and NoppCb) encoded by separate exons and contains a conserved protein kinase A (PKA) phosphorylation site (he2011structureandfunction pages 6-8). The C-terminal domain plays a critical role in nucleolar localization and Cajal body integrity; when overexpressed, it acts as a dominant negative, redistributing Nopp140, NAP57, and fibrillarin from nucleoli to nucleoplasmic granules and dispersing coilin from Cajal bodies (he2011structureandfunction pages 6-8). However, the C-terminal domain alone is not sufficient for nuclear localization—either the N-terminus or the central domain of Srp40p is required for this function (he2011structureandfunction pages 1-4).</p>
+</li>
+</ul>
+<h3 id="32-phosphorylation-by-casein-kinase-2">3.2. Phosphorylation by Casein Kinase 2</h3>
+<p>A defining biochemical feature of Srp40p/Nopp140 is its extensive phosphorylation by casein kinase 2 (CK2/CKII). In rat Nopp140, 82 serine residues in the acidic motifs of the central domain serve as potential phosphorylation substrates, with 45 being recognizable CK2 consensus sites (he2011structureandfunction pages 4-6). Once a serine is phosphorylated, it creates the critical acidic residue for another CK2 phosphorylation site, enabling a cascade phosphorylation mechanism (he2011structureandfunction pages 4-6). Nopp140 forms a stable complex with the β regulatory subunit of CK2 (he2011structureandfunction pages 4-6). Importantly, phosphorylation of the central domain is required for Nopp140's interaction with snoRNPs—dephosphorylation abolishes binding to snoRNP core proteins (meznad2026intrinsicallydisorderedregions pages 4-5, he2011structureandfunction pages 4-6, meznad2026intrinsicallydisorderedregions pages 3-4). This phosphorylation-dependent, electrostatic, and reversible mode of interaction is central to the protein's chaperone function.</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>Srp40p localizes to the <strong>nucleolar body (NB)</strong>, a subnucleolar compartment that is contiguous with the dense fibrillar region of the nucleolus in yeast (verheggen2001boxcdsmall pages 5-6, verheggen2001boxcdsmall pages 4-5, verheggen2001boxcdsmall pages 7-9). This NB is functionally related to the <strong>Cajal body (CB)</strong> found in vertebrate cells (verheggen2001boxcdsmall pages 4-5). YFP-fusion experiments have demonstrated that Srp40p is detected in the NB, where it plays a direct role in concentrating snoRNAs during snoRNP assembly (verheggen2001boxcdsmall pages 4-5). In mammalian cells, the Nopp140 ortholog localizes to both the dense fibrillar component (DFC) of the nucleolus and Cajal bodies, where it shuttles between the two compartments to facilitate snoRNP trafficking and delivery (meznad2026intrinsicallydisorderedregions pages 1-2, he2011structureandfunction pages 18-21).</p>
+<p>Nuclear targeting of Srp40p requires either its N-terminal or central domain, while the carboxy-terminal domain alone is insufficient for establishing nuclear localization (he2011structureandfunction pages 1-4).</p>
+<h2 id="5-role-in-snorna-trafficking-and-nucleolar-body-formation">5. Role in snoRNA Trafficking and Nucleolar Body Formation</h2>
+<p>Srp40p is required for the accumulation of box C/D snoRNAs in the nucleolar body (NB) (verheggen2001boxcdsmall pages 5-6). In the NB, snoRNAs interact with Srp40p as part of the initial assembly process. Deletion of <em>SRP40</em> prevents the concentration of overexpressed box C/D snoRNAs in the NB, although at endogenous expression levels from a centromeric vector, nucleolar localization of snoRNAs is not dramatically impaired (verheggen2001boxcdsmall pages 4-5). This suggests that Srp40p functions primarily in an intermediate step of snoRNA trafficking, particularly under conditions of snoRNA abundance.</p>
+<p>The protein works in concert with Nsr1p (the yeast ortholog of mammalian nucleolin) in a regulated snoRNA trafficking pathway: Srp40p promotes snoRNP concentration in the NB, while the fully assembled snoRNP is subsequently transferred to Nsr1p for final delivery to rRNA precursors (verheggen2001boxcdsmall pages 9-9). The two factors work antagonistically in regulating snoRNA localization—accumulation of snoRNAs in the NB is decreased by deletion of <em>SRP40</em> and increased by mutation of <em>NSR1</em> (verheggen2001boxcdsmall pages 4-5).</p>
+<p>Depletion of Srp40p can also inhibit NB formation itself and/or prevent snoRNP association with the NB structure, indicating a role in the structural organization of this subnucleolar compartment (verheggen2001boxcdsmall pages 9-9).</p>
+<h2 id="6-pathway-context-ribosome-biogenesis-and-rrna-modification">6. Pathway Context: Ribosome Biogenesis and rRNA Modification</h2>
+<p>SRP40/Nopp140-family proteins occupy a central position in the ribosome biogenesis pathway by linking snoRNP-mediated rRNA modification to RNA polymerase I transcription. Srp40p associates with both snoRNP classes and interacts with RNA Pol I's largest subunit, thereby connecting snoRNP metabolism to rDNA transcription (nierhaus2004proteinsynthesisand pages 141-145). In the mammalian system, the Nopp140 central domain (residues 204–382 in the mammalian protein) interacts with RPA194, the largest subunit of RNA polymerase I, while the carboxy-terminal portion mediates additional protein-protein interactions relevant to transcriptional regulation (he2011structureandfunction pages 11-13, baral2019thedrosophilaneuroblasts pages 43-48).</p>
+<p>The genetic interaction between <em>SRP40</em> and <em>LES2</em> (a synthetically lethal gene) underscores its tight functional coupling to snoRNP-dependent pathways (yang2000conservedcompositionof pages 7-9). Additionally, <em>LSM5</em> shows genetic interactions with <em>SRP40</em>, pointing to broader functional links to snoRNA biogenesis factors (as noted in the context of Lsm2–Lsm7 complex studies with snoRNA snR5).</p>
+<h2 id="7-recent-advances-phase-separation-and-the-dense-fibrillar-component">7. Recent Advances: Phase Separation and the Dense Fibrillar Component</h2>
+<p>Recent work on the mammalian ortholog Nopp140/NOLC1 has provided mechanistic insight into how SRP40-family proteins organize the nucleolar environment. Meznad et al. demonstrated that Nopp140 concentrates snoRNPs and other ribosome biogenesis factors through multivalent, phosphorylation-dependent interactions between its charged repeat domain and intrinsically disordered, NLS-rich regions of snoRNP core proteins (NAP57/dyskerin, NOP56, NOP58) and RNA polymerase I subunit PAF49 (meznad2026intrinsicallydisorderedregions pages 9-10, meznad2026intrinsicallydisorderedregions pages 1-2, meznad2026intrinsicallydisorderedregions pages 4-5). These complementary electrostatic interactions create a liquid-liquid phase-separated biomolecular condensate that constitutes the dense fibrillar component (DFC) of the nucleolus (meznad2026intrinsicallydisorderedregions pages 9-10, meznad2026intrinsicallydisorderedregions pages 1-2). As few as three repeats of Nopp140 are sufficient for interaction with binding partners, and the interactions are abolished by dephosphorylation (meznad2026intrinsicallydisorderedregions pages 4-5).</p>
+<p>This concentration mechanism ensures that approximately 200 snoRNPs are kept in the local vicinity of elongating RNA polymerase I, permitting efficient scanning of the ~13 kb rRNA transcript and near-complete modification of the ~200 target nucleotides per rRNA molecule across the approximately 10 million rRNAs produced per cell (meznad2026intrinsicallydisorderedregions pages 9-10). The dynamic, weak, and transient nature of these interactions allows free mobility of snoRNPs within the condensate while maintaining their high local concentration near nascent pre-rRNA (meznad2026intrinsicallydisorderedregions pages 9-10).</p>
+<h2 id="8-essentiality-and-phenotypic-consequences">8. Essentiality and Phenotypic Consequences</h2>
+<p><em>SRP40</em> is a <strong>non-essential gene</strong> in yeast; its deletion does not result in lethality under standard growth conditions. However, loss of Srp40p has specific phenotypic consequences including the reduction of box H/ACA snoRNA steady-state levels and disruption of nucleolar body structure (he2011structureandfunction pages 8-11, yang2000conservedcompositionof pages 7-9, verheggen2001boxcdsmall pages 9-9). In synthetic lethal backgrounds (e.g., with <em>les2</em> mutations), <em>srp40</em> deletion leads to more severe loss of box H/ACA snoRNAs (nierhaus2004proteinsynthesisand pages 141-145, yang2000conservedcompositionof pages 7-9). Earlier work by Ikonomova et al. (1997) suggested a dose-sensitive role for Srp40p in preribosome assembly or transport that depends on its carboxy-terminal domain for proper localization to the yeast nucleoskeleton (noted in retrieved unobtainable papers).</p>
+<h2 id="9-summary">9. Summary</h2>
+<p>Srp40p is a highly phosphorylated, intrinsically disordered nucleolar protein that functions as a chaperone for snoRNPs in <em>Saccharomyces cerevisiae</em>. Its primary role is to facilitate the biogenesis, stabilization, and trafficking of snoRNPs—particularly box H/ACA snoRNPs—within the nucleolus, thereby supporting rRNA pseudouridylation and pre-rRNA processing. Srp40p localizes to the nucleolar body and contributes to the structural organization of this subnucleolar compartment. Its phosphorylation by casein kinase 2 is essential for its interactions with snoRNP components. Through interactions with RNA Pol I, Srp40p connects snoRNP-mediated rRNA modification to rDNA transcription, coordinating key steps in ribosome biogenesis. Recent studies on its mammalian ortholog Nopp140 have revealed that this protein family drives the formation of the dense fibrillar component condensate through multivalent, charge-mediated interactions with intrinsically disordered regions of its binding partners.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(yang2000conservedcompositionof pages 2-3): Yunfeng Yang, Cynthia Isaac, Chen Wang, François Dragon, Vanda Pogac̆ić, and U. Thomas Meier. Conserved composition of mammalian box h/aca and box c/d small nucleolar ribonucleoprotein particles and their interaction with the common factor nopp140. Molecular biology of the cell, 11 2:567-77, Feb 2000. URL: https://doi.org/10.1091/mbc.11.2.567, doi:10.1091/mbc.11.2.567. This article has 163 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 1-4): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(yang2000conservedcompositionof pages 7-9): Yunfeng Yang, Cynthia Isaac, Chen Wang, François Dragon, Vanda Pogac̆ić, and U. Thomas Meier. Conserved composition of mammalian box h/aca and box c/d small nucleolar ribonucleoprotein particles and their interaction with the common factor nopp140. Molecular biology of the cell, 11 2:567-77, Feb 2000. URL: https://doi.org/10.1091/mbc.11.2.567, doi:10.1091/mbc.11.2.567. This article has 163 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nierhaus2004proteinsynthesisand pages 141-145): K. Nierhaus and Daniel N. Wilson. Protein synthesis and ribosome structure : translating the genome. ArXiv, Aug 2004. URL: https://doi.org/10.1002/3527603433, doi:10.1002/3527603433. This article has 39 citations.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 8-11): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 4-6): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 6-8): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(meznad2026intrinsicallydisorderedregions pages 3-4): Koceila Meznad, Manisha Deogharia, Ludivine Wacheul, Christiane Zorbas, Denis L.J. Lafontaine, and U. Thomas Meier. Intrinsically disordered regions stimulate concentration of small nucleolar ribonucleoproteins and formation of cajal bodies and nucleoli. Genes &amp; Development, 40(5-6):351-365, Nov 2026. URL: https://doi.org/10.1101/gad.353180.125, doi:10.1101/gad.353180.125. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(meznad2026intrinsicallydisorderedregions pages 1-2): Koceila Meznad, Manisha Deogharia, Ludivine Wacheul, Christiane Zorbas, Denis L.J. Lafontaine, and U. Thomas Meier. Intrinsically disordered regions stimulate concentration of small nucleolar ribonucleoproteins and formation of cajal bodies and nucleoli. Genes &amp; Development, 40(5-6):351-365, Nov 2026. URL: https://doi.org/10.1101/gad.353180.125, doi:10.1101/gad.353180.125. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(verheggen2001boxcdsmall pages 5-6): C. Verheggen, J. Mouaikel, M. Thiry, J. Blanchard, D. Tollervey, Remi Bordonné, D. Lafontaine, and E. Bertrand. Box c/d small nucleolar rna trafficking involves small nucleolar rnp proteins, nucleolar factors and a novel nuclear domain. The EMBO Journal, 20:5480-5490, Oct 2001. URL: https://doi.org/10.1093/emboj/20.19.5480, doi:10.1093/emboj/20.19.5480. This article has 218 citations.</p>
+</li>
+<li>
+<p>(verheggen2001boxcdsmall pages 4-5): C. Verheggen, J. Mouaikel, M. Thiry, J. Blanchard, D. Tollervey, Remi Bordonné, D. Lafontaine, and E. Bertrand. Box c/d small nucleolar rna trafficking involves small nucleolar rnp proteins, nucleolar factors and a novel nuclear domain. The EMBO Journal, 20:5480-5490, Oct 2001. URL: https://doi.org/10.1093/emboj/20.19.5480, doi:10.1093/emboj/20.19.5480. This article has 218 citations.</p>
+</li>
+<li>
+<p>(verheggen2001boxcdsmall pages 7-9): C. Verheggen, J. Mouaikel, M. Thiry, J. Blanchard, D. Tollervey, Remi Bordonné, D. Lafontaine, and E. Bertrand. Box c/d small nucleolar rna trafficking involves small nucleolar rnp proteins, nucleolar factors and a novel nuclear domain. The EMBO Journal, 20:5480-5490, Oct 2001. URL: https://doi.org/10.1093/emboj/20.19.5480, doi:10.1093/emboj/20.19.5480. This article has 218 citations.</p>
+</li>
+<li>
+<p>(meznad2026intrinsicallydisorderedregions pages 4-5): Koceila Meznad, Manisha Deogharia, Ludivine Wacheul, Christiane Zorbas, Denis L.J. Lafontaine, and U. Thomas Meier. Intrinsically disordered regions stimulate concentration of small nucleolar ribonucleoproteins and formation of cajal bodies and nucleoli. Genes &amp; Development, 40(5-6):351-365, Nov 2026. URL: https://doi.org/10.1101/gad.353180.125, doi:10.1101/gad.353180.125. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(verheggen2001boxcdsmall pages 9-9): C. Verheggen, J. Mouaikel, M. Thiry, J. Blanchard, D. Tollervey, Remi Bordonné, D. Lafontaine, and E. Bertrand. Box c/d small nucleolar rna trafficking involves small nucleolar rnp proteins, nucleolar factors and a novel nuclear domain. The EMBO Journal, 20:5480-5490, Oct 2001. URL: https://doi.org/10.1093/emboj/20.19.5480, doi:10.1093/emboj/20.19.5480. This article has 218 citations.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 18-21): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(baral2019thedrosophilaneuroblasts pages 43-48): S. S. Baral. The drosophila neuroblasts: a model system for human ribosomopathies. ArXiv, 2019. URL: https://doi.org/10.31390/gradschool_dissertations.4859, doi:10.31390/gradschool_dissertations.4859. This article has 0 citations.</p>
+</li>
+<li>
+<p>(he2011structureandfunction pages 11-13): Fang He and Patrick DiMario. Structure and function of nopp140 and treacle. ArXiv, pages 253-278, Jan 2011. URL: https://doi.org/10.1007/978-1-4614-0514-6_11, doi:10.1007/978-1-4614-0514-6_11. This article has 18 citations.</p>
+</li>
+<li>
+<p>(meznad2026intrinsicallydisorderedregions pages 9-10): Koceila Meznad, Manisha Deogharia, Ludivine Wacheul, Christiane Zorbas, Denis L.J. Lafontaine, and U. Thomas Meier. Intrinsically disordered regions stimulate concentration of small nucleolar ribonucleoproteins and formation of cajal bodies and nucleoli. Genes &amp; Development, 40(5-6):351-365, Nov 2026. URL: https://doi.org/10.1101/gad.353180.125, doi:10.1101/gad.353180.125. This article has 2 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="SRP40-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>he2011structureandfunction pages 1-4</li>
+<li>yang2000conservedcompositionof pages 2-3</li>
+<li>he2011structureandfunction pages 8-11</li>
+<li>he2011structureandfunction pages 4-6</li>
+<li>meznad2026intrinsicallydisorderedregions pages 3-4</li>
+<li>he2011structureandfunction pages 6-8</li>
+<li>verheggen2001boxcdsmall pages 4-5</li>
+<li>verheggen2001boxcdsmall pages 5-6</li>
+<li>verheggen2001boxcdsmall pages 9-9</li>
+<li>nierhaus2004proteinsynthesisand pages 141-145</li>
+<li>yang2000conservedcompositionof pages 7-9</li>
+<li>meznad2026intrinsicallydisorderedregions pages 4-5</li>
+<li>meznad2026intrinsicallydisorderedregions pages 9-10</li>
+<li>meznad2026intrinsicallydisorderedregions pages 1-2</li>
+<li>verheggen2001boxcdsmall pages 7-9</li>
+<li>he2011structureandfunction pages 18-21</li>
+<li>baral2019thedrosophilaneuroblasts pages 43-48</li>
+<li>he2011structureandfunction pages 11-13</li>
+<li>https://doi.org/10.1091/mbc.11.2.567,</li>
+<li>https://doi.org/10.1007/978-1-4614-0514-6_11,</li>
+<li>https://doi.org/10.1002/3527603433,</li>
+<li>https://doi.org/10.1101/gad.353180.125,</li>
+<li>https://doi.org/10.1093/emboj/20.19.5480,</li>
+<li>https://doi.org/10.31390/gradschool_dissertations.4859,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SRP40-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P32583" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="srp40-ykr092c-p32583-curation-notes">SRP40 (YKR092C, P32583) — curation notes</h1>
+<p>Autonomous AI review journal. Provenance recorded inline as <code>[PMID:xxxx "verbatim quote"]</code><br />
+or <code>[file:...]</code>. SRP40 is an understudied ("dark") <em>S. cerevisiae</em> nucleolar protein.</p>
+<h2 id="identity-and-basic-facts">Identity and basic facts</h2>
+<ul>
+<li>UniProt P32583, <code>SRP40_YEAST</code>; SGD S000001800; systematic name YKR092C; ORF YKR412A.</li>
+<li>406 aa, 41 kDa, acidic pI ~3.9, ~49% serine.</li>
+<li>RecName in UniProt is a historical misnomer: "Suppressor protein SRP40" — named as a<br />
+<strong>weak suppressor of a mutant of the AC40 subunit shared by RNA polymerases I and III</strong><br />
+  (Lalo, Carles, Sentenac, Thuriaux 1993, PMID:8516295, the naming paper). UniProt FUNCTION<br />
+  line: "Not known; weak suppressor of a mutant of the subunit AC40 of DNA dependent RNA<br />
+  polymerase I and III." SRP40 here = "Suppressor of RNA Polymerase, 40 kDa", NOT signal<br />
+  recognition particle.</li>
+</ul>
+<h2 id="domain-sequence-architecture-inline-bioinformatic-reasoning-from-the-uniprot-record">Domain / sequence architecture (inline bioinformatic reasoning from the UniProt record)</h2>
+<ul>
+<li>The protein is <strong>almost entirely intrinsically disordered</strong>: UniProt annotates<br />
+<code>REGION 1..335 /note="Disordered" (MobiDB-lite)</code>, i.e. the N-terminal ~82% of the protein.</li>
+<li>The disordered region is dominated by <strong>serine-rich low-complexity tracts</strong> interspersed<br />
+  with <strong>acidic (Asp/Glu) and basic (Lys/Arg) charge clusters</strong> — multiple <code>COMPBIAS</code><br />
+  features "Low complexity" and "Basic and acidic residues". The raw sequence shows long<br />
+  runs of <code>SSSSSSSSS...</code> and <code>DSDSDSDS...</code> (serine/aspartate repeats). This is the classic<br />
+  Nopp140/Treacle-type acidic-serine-rich (poly-S / SR-like, CK2-substrate) architecture,<br />
+  not a folded catalytic domain.</li>
+<li>The <strong>only recognizable folded module is the C-terminal SRP40_C domain</strong><br />
+  (Pfam PF05022, InterPro IPR007718), roughly the last ~70 aa. This is the region that is<br />
+<strong>59% identical to the C-terminus of rat Nopp140</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" title="carboxyl terminus   exhibits 59% sequence identity to that of Nopp140">PMID:8702624</a>. No enzymatic motif is present; this<br />
+  domain family has no assigned catalytic activity.</li>
+<li><strong>Interpretation:</strong> the sequence is consistent with a scaffold / chaperone / RNP-assembly<br />
+  factor that works through disordered, highly-phosphorylatable acidic-serine tracts plus a<br />
+  conserved C-terminal interaction module — NOT with a specific enzymatic molecular function.<br />
+  A specific biochemical activity cannot be assigned from sequence.</li>
+</ul>
+<h2 id="post-translational-modification">Post-translational modification</h2>
+<ul>
+<li>Extensively phosphorylated by <strong>casein kinase II (CK2)</strong>, like Nopp140, but to a much<br />
+  lesser degree than the vertebrate protein <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" title="Like Nopp140, SRP40 is   phosphorylated by casein kinase II, but to a much lesser extent">PMID:8702624</a>.</li>
+<li>Multiple mapped phosphosites (large-scale MS): pSer133, pThr289, pSer293, pSer394<br />
+  (UniProt MOD_RES; PMID:17287358, 17330950, 18407956, 19779198). Cdk1 substrate<br />
+  (PMID:19779198).</li>
+<li>Unusual <strong>serine pyrophosphorylation</strong> by the inositol pyrophosphate 5-IP7<br />
+  (5-diphosphoinositol pentakisphosphate): a Mg2+-dependent, enzyme-independent transfer of<br />
+  a β-phosphate onto a pre-phosphorylated serine (UniProt PTM; PMID:15604408, PMID:17873058).<br />
+  This is a PTM of the protein, not a molecular function <em>of</em> the protein.</li>
+</ul>
+<h2 id="what-is-known-evidence-supported">What is KNOWN (evidence-supported)</h2>
+<ol>
+<li><strong>Nucleolar localization.</strong> SRP40 localizes to the yeast nucleolus<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/8702624" title="SRP40 localizes to the yeast nucleolus">PMID:8702624</a>; GOA IDA C:nucleolus from<br />
+   PMID:8702624, assigned by SGD. Also nucleolus ISS/IBA. SGD C = nucleolus.</li>
+<li><strong>Yeast homolog of rat Nopp140.</strong> Immunologically and structurally related; C-terminus<br />
+   59% identical [PMID:8702624 "identifies the yeast SRP40 gene product as immunologically<br />
+   and structurally related to rat Nopp140"; "bona fide yeast Nopp140 homolog"]. Rat Nopp140<br />
+   functionally complements loss of SRP40 <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" title="rat Nopp140 restored growth and    stability of box H/ACA snoRNAs after genetic depletion of SRP40 ... it is indeed the    functional homolog of yeast Srp40p">PMID:12700234</a>.</li>
+<li><strong>Proposed snoRNP chaperone / role in ribosome biogenesis.</strong> Srp40p is "proposed to<br />
+   function as a chaperone for over 100 small nucleolar ribonucleoprotein particles that are<br />
+   required for rRNA maturation" <a href="https://pubmed.ncbi.nlm.nih.gov/12700234">PMID:12700234</a>. Depletion of SRP40 (in the srp40Δ shm2 ade3<br />
+   synthetic-lethal background) specifically depletes <strong>box H/ACA snoRNAs</strong><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12700234" title="the specific depletion of box H/ACA small nucleolar RNAs from the    srp40Delta shm2 ade3 strain">PMID:12700234</a>. This links SRP40 to box H/ACA snoRNP stability, i.e. the<br />
+   pseudouridylation snoRNP branch of ribosome biogenesis.</li>
+<li><strong>Dosage-sensitive, nonessential.</strong> Deletion is viable; SRP40 is "required at a specific<br />
+   cellular concentration for optimal growth as indicated by the negative effect on cell<br />
+   growth of both overexpression and deletion of its gene" <a href="https://pubmed.ncbi.nlm.nih.gov/8702624">PMID:8702624</a>. "Srp40p is a<br />
+   nonessential yeast nucleolar protein" <a href="https://pubmed.ncbi.nlm.nih.gov/12700234">PMID:12700234</a>. SGD: viable; overexpression<br />
+   decreases growth rate. Extensive genetic interaction network (SGD ~284 genes).</li>
+<li><strong>Historically a weak suppressor of the RNA Pol I/III AC40 (rpc40) mutant</strong> — the origin<br />
+   of the gene name <a href="https://pubmed.ncbi.nlm.nih.gov/8516295">PMID:8516295</a>; a genetic, not mechanistic, observation.</li>
+</ol>
+<p>The Nopp140 shuttling / NLS-binding "chaperone in ribosome biogenesis" model is a property<br />
+established for <strong>rat Nopp140</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/8702624" title="Based on its subcellular location, its nuclear localization signal binding capacity, and its shuttling between the nucleolus and the cytoplasm, Nopp140 was proposed to function as a chaperone in ribosome biogenesis">PMID:8702624</a>. It is<br />
+the basis of the SRP40 ISS annotation to nucleocytoplasmic transport (transferred from the<br />
+mammalian ortholog P41777), but the shuttling / NLS-binding activity has NOT been directly<br />
+demonstrated for yeast Srp40p itself — the 1996 paper notes yeast/vertebrate disparities in<br />
+nucleolar dynamics.</p>
+<h2 id="what-is-not-known-the-gap">What is NOT known (the gap)</h2>
+<ul>
+<li><strong>No specific molecular function has been experimentally assigned.</strong> UniProt FUNCTION =<br />
+  "Not known"; SGD MF = "molecular_function" (ND, GO:0003674); the protein is disordered with<br />
+  no catalytic motif. Whether Srp40p acts as an RNA chaperone, a snoRNP-assembly scaffold, a<br />
+  phosphoprotein hub, or a charge-based crowding/condensate component is undetermined.</li>
+<li><strong>The precise step in ribosome biogenesis is undefined.</strong> SRP40 is linked to box H/ACA<br />
+  snoRNP stability <em>genetically</em> (in a sensitized srp40Δ shm2 ade3 background), but its direct<br />
+  molecular role (which snoRNP components it binds, whether it acts on assembly, stability,<br />
+  transport, or recycling) is not established. The chaperone-of-snoRNPs role is stated as a<br />
+<em>proposal</em> <a href="https://pubmed.ncbi.nlm.nih.gov/12700234" title="proposed to function as a chaperone">PMID:12700234</a>.</li>
+<li><strong>Redundancy / dosage biology unexplained.</strong> Nonessential yet dosage-sensitive in both<br />
+  directions; the buffering partner(s) that make it dispensable, and the reason overexpression<br />
+  is toxic, are unknown.</li>
+<li><strong>Nucleocytoplasmic transport role not directly shown in yeast.</strong> The shuttling/NLS-binding<br />
+  activity is a Nopp140 (rat) property transferred by ISS; not directly demonstrated for<br />
+  yeast Srp40p.</li>
+</ul>
+<h2 id="annotation-by-annotation-plan-goa-6-rows">Annotation-by-annotation plan (GOA, 6 rows)</h2>
+<ol>
+<li><code>GO:0005730 nucleolus</code> IBA (is_active_in, GO_REF:0000033) — ACCEPT. Consistent with IDA;<br />
+   phylogenetically robust (Nopp140 family is nucleolar).</li>
+<li><code>GO:0005654 nucleoplasm</code> IBA (is_active_in, GO_REF:0000033) — KEEP_AS_NON_CORE. Plausible<br />
+   phylogenetic transfer (Nopp140/Treacle family members are nucleoplasmic/coiled-body too),<br />
+   but the direct yeast evidence is for nucleolus; keep, non-core, secondary location.</li>
+<li><code>GO:0005730 nucleolus</code> IEA (located_in, GO_REF:0000117 ARBA) — ACCEPT (redundant with IDA;<br />
+   electronic confirmation of the well-supported nucleolar localization).</li>
+<li><code>GO:0003674 molecular_function</code> ND (enables, GO_REF:0000015) — ACCEPT. Honest "no data"<br />
+   root MF annotation; correctly reflects that no specific MF is known. This is the honest<br />
+   dark-gene MF state; do not fabricate an MF term.</li>
+<li><code>GO:0005730 nucleolus</code> IDA (located_in, PMID:8702624) — ACCEPT. Core; primary experimental<br />
+   localization.</li>
+<li><code>GO:0006913 nucleocytoplasmic transport</code> ISS (involved_in, PMID:8702624, from<br />
+   UniProtKB:P41777 = rat Nopp140) — KEEP_AS_NON_CORE (lean) / consider MARK_AS_OVER_ANNOTATED.<br />
+   Rationale: the transport/shuttling role is a rat-Nopp140 property transferred by similarity;<br />
+   not directly demonstrated in yeast. It is not wrong on family grounds, but it is peripheral<br />
+   and unverified in <em>S. cerevisiae</em>. Keep as non-core with a clear caveat rather than REMOVE<br />
+   (ISS from a curator-selected ortholog; per guidelines do not REMOVE on paralog/ortholog<br />
+   grounds). The core supportable role is nucleolar snoRNP-chaperone/ribosome-biogenesis, not<br />
+   the transport aspect. NOTE: ribosome biogenesis (GO:0042254) is a better-supported BP for<br />
+   this gene but is not in GOA; capture it via core_functions + proposed reasoning, and note<br />
+   the snoRNP/box H/ACA link from PMID:12700234.</li>
+</ol>
+<h2 id="core_functions-plan">core_functions plan</h2>
+<ul>
+<li>Nucleolar localization (CC): GO:0005730 nucleolus — strongly supported (IDA).</li>
+<li>Ribosome-biogenesis / snoRNP-associated role (BP): the best-supported functional statement<br />
+  is participation in ribosome biogenesis via box H/ACA snoRNP chaperoning (GO:0042254<br />
+  ribosome biogenesis; PMID:12700234). No specific MF term is assignable — leave MF dark and<br />
+  document in knowledge_gaps. Avoid <code>protein binding</code>.</li>
+</ul>
+<h2 id="references-to-add">References to add</h2>
+<ul>
+<li>PMID:8702624 (Meier 1996) — HIGH, VERIFIED (abstract-only; primary yeast localization +<br />
+  homology).</li>
+<li>PMID:12700234 (Yang &amp; Meier 2003) — HIGH, VERIFIED (abstract-only; snoRNP-chaperone<br />
+  proposal, box H/ACA link, Nopp140 complementation).</li>
+<li>PMID:8516295 (Lalo et al. 1993) — MEDIUM, VERIFIED (gene-naming / AC40 suppressor origin).</li>
+<li>GO_REF:0000015, GO_REF:0000033, GO_REF:0000117 — annotation-method refs.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P32583
+gene_symbol: SRP40
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  SRP40 (YKR092C) is a small (406-residue, ~41 kDa), highly acidic (pI ~3.9),
+  serine-rich (~49% Ser) nucleolar protein of Saccharomyces cerevisiae, and is the
+  budding-yeast homolog of the vertebrate nucleolar phosphoprotein Nopp140 (its
+  C-terminal SRP40_C domain is ~59% identical to the Nopp140 C-terminus). The protein
+  is almost entirely intrinsically disordered, built from serine-rich low-complexity
+  tracts interspersed with acidic (Asp/Glu) and basic (Lys/Arg) charge clusters, plus
+  the single conserved folded C-terminal module; it carries no recognizable catalytic
+  motif. Like Nopp140, it is a casein kinase II phosphoprotein (though phosphorylated
+  to a lesser extent than the vertebrate protein) and is additionally serine-
+  pyrophosphorylated by the inositol pyrophosphate 5-IP7. Srp40p localizes to the
+  nucleolus and is proposed to act as a chaperone of small nucleolar ribonucleoprotein
+  particles (snoRNPs) that mediate rRNA maturation, with a particular genetic link to
+  the stability of box H/ACA snoRNAs; rat Nopp140 can functionally substitute for it.
+  The gene is nonessential but dosage-sensitive: both deletion and overexpression
+  impair growth. Its name (&#34;Suppressor of RNA Polymerase&#34;) derives from its original
+  isolation as a weak extragenic suppressor of a mutation in the AC40 subunit shared by
+  RNA polymerases I and III, and does not denote a signal-recognition-particle function.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:8702624
+  title: Comparison of the rat nucleolar protein nopp140 with its yeast homolog SRP40.
+    Differential phosphorylation in vertebrates and yeast.
+  findings:
+  - statement: &gt;-
+      SRP40 encodes an acidic, serine-rich 41 kDa protein whose C-terminus is 59%
+      identical to that of rat Nopp140; it localizes to the yeast nucleolus, is
+      phosphorylated by casein kinase II (to a lesser extent than Nopp140), and is
+      required at a specific cellular concentration for optimal growth (both
+      overexpression and deletion are deleterious).
+    supporting_text: &gt;-
+      SRP40 localizes to the yeast nucleolus and is required at a specific cellular
+      concentration for optimal growth as indicated by the negative effect on cell
+      growth of both overexpression and deletion of its gene.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Meier UT, J Biol Chem 1996; abstract-only). Establishes the
+      primary yeast experimental facts used here: nucleolar localization, Nopp140
+      homology (59% C-terminal identity), CK2 phosphorylation, and dosage sensitivity.
+      The shuttling / NLS-binding &#34;chaperone in ribosome biogenesis&#34; model in this
+      paper is stated for rat Nopp140, not directly demonstrated for yeast Srp40p.
+- id: PMID:12700234
+  title: Genetic interaction between a chaperone of small nucleolar ribonucleoprotein
+    particles and cytosolic serine hydroxymethyltransferase.
+  findings:
+  - statement: &gt;-
+      Srp40p is a nonessential nucleolar protein proposed to chaperone the &gt;100 snoRNPs
+      required for rRNA maturation; its genetic depletion specifically depletes box
+      H/ACA snoRNAs, and rat Nopp140 restores growth and box H/ACA snoRNA stability,
+      confirming it as the functional yeast homolog of Nopp140.
+    supporting_text: &gt;-
+      Srp40p is a nonessential yeast nucleolar protein proposed to function as a
+      chaperone for over 100 small nucleolar ribonucleoprotein particles that are
+      required for rRNA maturation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Yang Y, Meier UT, J Biol Chem 2003; abstract-only). Strongest
+      functional evidence linking SRP40 to ribosome biogenesis via box H/ACA snoRNP
+      stability and confirming rat-Nopp140 functional complementation. The snoRNP-
+      chaperone role is explicitly described as a proposal, and the box H/ACA snoRNA
+      depletion is measured in a sensitized srp40-delta shm2 ade3 background.
+- id: PMID:8516295
+  title: Interactions between three common subunits of yeast RNA polymerases I and III.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Lalo et al., PNAS 1993). Cited by UniProt as the origin of the
+      SRP40 name (a weak extragenic suppressor of an rpc40/AC40 RNA-polymerase-I/III
+      mutant). The cached abstract concerns AC40/AC19/ABC10 polymerase-subunit
+      interactions and does NOT itself mention SRP40; retained only as background for
+      the name/origin, not as support for any SRP40 functional claim.
+existing_annotations:
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) nucleolar localization, concordant with the direct yeast
+      experimental evidence and with the Nopp140/SRP40 family being nucleolar. Accept
+      as a core cellular-component annotation.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8702624
+      supporting_text: SRP40 localizes to the yeast nucleolus
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred nucleoplasmic localization. Nopp140/Treacle-family
+      members do distribute to the nucleoplasm and coiled/Cajal bodies in addition to
+      the nucleolus, so this is plausible, but the direct yeast evidence is for the
+      nucleolus. Keep as a secondary, non-core location.
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (ARBA) nucleolar localization; redundant with, and consistent with,
+      the direct IDA and phylogenetic IBA nucleolus annotations. Accept.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8702624
+      supporting_text: SRP40 localizes to the yeast nucleolus
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function with ND (no data). This is an honest reflection of the
+      state of knowledge: no specific molecular activity has been experimentally
+      assigned to this disordered nucleolar protein, and none can be inferred from
+      sequence (no catalytic motif; only the non-enzymatic C-terminal SRP40_C module).
+      Accept rather than inventing an MF term; the genuine molecular-function gap is
+      recorded in knowledge_gaps.
+    action: ACCEPT
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IDA
+  original_reference_id: PMID:8702624
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) localization of Srp40p to the yeast nucleolus. This is
+      the best-supported, core cellular-component annotation for the gene.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:8702624
+      supporting_text: SRP40 localizes to the yeast nucleolus
+- term:
+    id: GO:0006913
+    label: nucleocytoplasmic transport
+  evidence_type: ISS
+  original_reference_id: PMID:8702624
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS annotation transferred from the rat ortholog Nopp140 (UniProtKB:P41777).
+      Nopp140 shuttles between the nucleolus and cytoplasm and binds nuclear
+      localization signals, and was proposed to chaperone ribosome biogenesis on that
+      basis; the transport/shuttling activity, however, is a vertebrate-Nopp140
+      property and has NOT been directly demonstrated for yeast Srp40p, and the source
+      paper itself notes yeast/vertebrate disparities in nucleolar dynamics. The
+      better-supported functional role of yeast Srp40p is nucleolar snoRNP chaperoning
+      within ribosome biogenesis (PMID:12700234), not transport per se. Retain as a
+      non-core, ortholog-inferred process rather than removing an ISS annotation made
+      by a curator from a selected ortholog.
+    action: KEEP_AS_NON_CORE
+    supported_by:
+    - reference_id: PMID:8702624
+      supporting_text: &gt;-
+        its nuclear localization signal binding capacity, and its shuttling between the
+        nucleolus and the cytoplasm, Nopp140 was proposed to function as a chaperone in
+        ribosome biogenesis
+- term:
+    id: GO:0042254
+    label: ribosome biogenesis
+  evidence_type: IGI
+  original_reference_id: PMID:12700234
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed new annotation (not currently in GOA). Srp40p is a nucleolar protein
+      proposed to chaperone the snoRNPs required for rRNA maturation, and its genetic
+      depletion specifically destabilizes box H/ACA snoRNAs; rat Nopp140 restores box
+      H/ACA snoRNA stability, confirming it as the functional Nopp140 homolog. This is
+      the best-supported biological process for the gene and is captured as a core
+      function. Evidence is genetic/homology-based (a proposal), so the underlying
+      molecular activity remains a knowledge gap.
+    action: NEW
+    supported_by:
+    - reference_id: PMID:12700234
+      supporting_text: &gt;-
+        Srp40p is a nonessential yeast nucleolar protein proposed to function as a
+        chaperone for over 100 small nucleolar ribonucleoprotein particles that are
+        required for rRNA maturation.
+core_functions:
+- description: &gt;-
+    Nucleolar protein contributing to ribosome biogenesis, proposed to act as a
+    chaperone of small nucleolar ribonucleoprotein particles (snoRNPs) — in particular
+    the box H/ACA class involved in rRNA modification — with the underlying molecular
+    activity undetermined.
+  supported_by:
+  - reference_id: PMID:12700234
+    supporting_text: &gt;-
+      Srp40p is a nonessential yeast nucleolar protein proposed to function as a
+      chaperone for over 100 small nucleolar ribonucleoprotein particles that are
+      required for rRNA maturation.
+  - reference_id: PMID:8702624
+    supporting_text: SRP40 localizes to the yeast nucleolus
+  locations:
+  - id: GO:0005730
+    label: nucleolus
+  directly_involved_in:
+  - id: GO:0042254
+    label: ribosome biogenesis
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular activity that underlies this core function is undefined: whether
+      Srp40p&#39;s contribution to ribosome biogenesis is a bona fide RNA/snoRNP-chaperone
+      activity, an assembly/stabilization scaffold role, or an indirect phospho- and
+      charge-driven effect is not established. This entry scopes the MF gap to the core
+      function; the gene-level knowledge_gaps entry covers the broader unknowns
+      (precise biogenesis step, dosage sensitivity, redundancy).
+    gap_kind:
+    - BIOLOGY
+    - ONTOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    resolution: &gt;-
+      Direct in vitro RNA/snoRNP-binding and chaperone (RNA-annealing / RNP-assembly)
+      assays with recombinant Srp40p, paired with in vivo interactome/CLIP mapping of
+      its snoRNP partners.
+    provenance:
+    - reference_id: PMID:12700234
+      supporting_text: &gt;-
+        proposed to function as a chaperone for over 100 small nucleolar
+        ribonucleoprotein particles
+knowledge_gaps:
+- gap_statement: &gt;-
+    The specific molecular activity of Srp40p and the precise step in ribosome
+    biogenesis at which it acts are unknown. Whether it directly chaperones/assembles
+    snoRNPs, stabilizes box H/ACA snoRNAs, or contributes indirectly (e.g. through its
+    highly phosphorylated, acidic, disordered tracts) is undetermined, as is the reason
+    the gene is simultaneously nonessential and dosage-sensitive (toxic when either
+    deleted or overexpressed).
+  boundary: &gt;-
+    Firmly established: Srp40p is the yeast Nopp140 homolog (SRP40_C domain ~59%
+    identical to Nopp140&#39;s C-terminus); it is a ~41 kDa, acidic (pI ~3.9), ~49%-serine,
+    almost fully intrinsically disordered nucleolar protein with no catalytic motif; it
+    is CK2-phosphorylated and 5-IP7 serine-pyrophosphorylated; it localizes to the
+    nucleolus (IDA); it is nonessential but its deletion and overexpression both impair
+    growth; its genetic depletion specifically destabilizes box H/ACA snoRNAs; and rat
+    Nopp140 functionally complements srp40-delta.
+  gap_kind:
+  - BIOLOGY
+  - ONTOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Defining the activity of this tractable, conserved nucleolar chaperone would
+    illuminate how the Nopp140/Treacle family (implicated in human ribosomopathies)
+    contributes to snoRNP function and rRNA maturation, and would provide an
+    experimental anchor for a class of disordered nucleolar proteins that GO cannot
+    currently describe at the molecular-function level.
+  resolution: &gt;-
+    Biochemical reconstitution of Srp40p RNA/snoRNP-chaperone activity; interactome/
+    CLIP mapping of its snoRNP (especially box H/ACA) partners in vivo; genetic
+    dissection of the redundancy/buffering that renders it nonessential and of the
+    basis of overexpression toxicity; phospho-site (CK2 / 5-IP7) separation-of-function
+    alleles to connect its unusual PTMs to the growth and box H/ACA phenotypes.
+  provenance:
+  - reference_id: PMID:12700234
+    supporting_text: &gt;-
+      Srp40p is a nonessential yeast nucleolar protein proposed to function as a
+      chaperone for over 100 small nucleolar ribonucleoprotein particles that are
+      required for rRNA maturation.
+  - reference_id: PMID:8702624
+    supporting_text: &gt;-
+      required at a specific cellular concentration for optimal growth as indicated by
+      the negative effect on cell growth of both overexpression and deletion of its gene
+suggested_questions:
+- question: &gt;-
+    Does Srp40p bind snoRNAs (particularly box H/ACA snoRNAs) or snoRNP proteins
+    directly, and does it possess measurable RNA-chaperone (annealing/remodeling) or
+    RNP-assembly activity in vitro?
+- question: &gt;-
+    At which step of ribosome biogenesis does Srp40p act, and does its loss primarily
+    affect box H/ACA snoRNP assembly, stability, localization, or recycling?
+- question: &gt;-
+    What accounts for the dual dosage sensitivity (both deletion and overexpression are
+    deleterious), and which factors buffer srp40-delta to keep the gene nonessential?
+- question: &gt;-
+    Do the CK2 phosphorylation and 5-IP7 serine pyrophosphorylation of Srp40p regulate
+    its snoRNP-associated function, and can specific phospho-sites be linked to the
+    growth or box H/ACA snoRNA phenotypes?
+suggested_experiments:
+- description: &gt;-
+    In vitro RNA-binding and RNA-chaperone assays (EMSA, filter binding, FRET-based
+    annealing/strand-displacement) using recombinant Srp40p and candidate box H/ACA
+    snoRNAs and snoRNP components, with the disordered N-terminus and the SRP40_C
+    domain tested separately.
+- description: &gt;-
+    Endogenous affinity purification / proximity labeling (e.g. BioID or AP-MS) plus
+    CLIP-seq of tagged Srp40p to define its direct protein and RNA partners in the
+    nucleolus and to test the snoRNP-chaperone model in vivo.
+- description: &gt;-
+    Systematic genetic analysis (synthetic-lethal / dosage screens beyond the known
+    shm2 ade3 interaction) and phospho-site mutant series (CK2 and 5-IP7
+    pyrophosphorylation sites) scored for growth, box H/ACA snoRNA levels, and rRNA
+    processing, to connect Srp40p&#39;s PTMs and partners to its cellular role.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
