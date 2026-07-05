@@ -135,7 +135,15 @@ metalloendopeptidase core function (or none). Primary deliverable = knowledge_ga
 
 `just deep-research-falcon yeast SDD3 --fallback perplexity-lite` was run twice. First attempt
 failed (falcon template error because the UniProt file was not yet under `genes/yeast/SDD3/`;
-perplexity-lite fallback returned HTTP 401 insufficient_quota). A second attempt was launched
-after moving the UniProt file into place. This review is grounded directly in the UniProt record,
-the GOA TSV, the cached primary literature (PMID:26192197 full text; PMID:14562095 and
-PMID:30358795 abstracts), SGD, and inline domain/motif analysis — no fabricated content.
+perplexity-lite fallback returned HTTP 401 insufficient_quota). A second attempt (after moving the
+UniProt file into place) **succeeded**: falcon produced `SDD3-deep-research-falcon.md` (~29 min,
+24 citations) before the recipe's separate perplexity-lite fallback step erred on quota. The
+falcon report independently corroborates this review: it confirms "SDD3" is ambiguous but that the
+target is YOL098C, places YOL098C squarely in the M16 metalloendopeptidase family with the HXXEH
+inverted zinc-binding motif and clamshell architecture, contextualizes it against characterized
+yeast M16 members (MPP Mas1/Mas2, Cym1), and states that "No primary literature was identified
+that directly characterizes the function, substrate specificity, localization, or biological role
+of YOL098C" — matching the knowledge_gaps here. This review is grounded directly in the UniProt
+record, the GOA TSV, the cached primary literature (PMID:26192197 full text; PMID:14562095 and
+PMID:30358795 abstracts), SGD, PANTHER orthology, inline domain/motif analysis, and this falcon
+report — no fabricated content.
