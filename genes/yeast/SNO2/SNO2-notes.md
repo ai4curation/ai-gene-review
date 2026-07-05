@@ -8,7 +8,9 @@ recorded inline as `[PMID:xxxx "verbatim quote"]` where possible.
 ## Identity and domain architecture (from UniProt P53823)
 
 - Systematic name YNL334C; SGD:S000005278; SNZ-proximal ORF ("SNO" = **SN**Z **p**roximal
-  **O**RF). 222 aa, 25.2 kDa. UniProt PE=3 (Inferred from homology).
+  **O**RF). 222 aa, 25.2 kDa. UniProt PE=3 (Inferred from homology). NB: SNO2's own SGD id is
+  S000005278; the SGD ids in the GOA `WITH/FROM` fields (S000004701, S000001834) are
+  PANTHER-tree paralogs used as the IBA seed set, **not** SNO2's own identifier.
 - **Family:** glutaminase PdxT/SNO family; Pfam PF01174 (SNO); InterPro IPR002161 (PdxT/SNO),
   IPR029062 (class I glutamine amidotransferase-like), IPR021196 (PdxT/SNO conserved site);
   CDD cd01749 (GATase1_PB); TIGRFAM TIGR03800 (PLP_synth_Pdx2); PANTHER PTHR31559
