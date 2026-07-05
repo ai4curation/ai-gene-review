@@ -1,0 +1,10 @@
+| Enzyme | Systematic name / gene | Target residue on *S. cerevisiae* eEF1A | Methylation state | MTase family | Human orthologue / counterpart (if known) | Notes |
+|---|---|---|---|---|---|---|
+| Efm1 | **EFM1** | Lys30 | Monomethylation | SET-domain KMT | No clear human orthologue established in the gathered evidence | One of the first yeast eEF1A-specific KMTs identified (pqac-00000011, pqac-00000025) |
+| Efm4 | **EFM4** | Lys316 | Dimethylation | 7BS methyltransferase | METTL10 / eEF1A-KMT2; human site Lys318 trimethylated | Yeast Lys316 methylation is conserved functionally to human Lys318 methylation (pqac-00000009, pqac-00000025) |
+| Efm5 | **EFM5** | Lys79 | Trimethylation | 7BS methyltransferase | N6AMT2 / eEF1A-KMT1 | Originally notable because a putative RNA MTase was found to methylate eEF1A Lys79 (pqac-00000010, pqac-00000025) |
+| **Efm6** | **YNL024C / EFM6** | **Lys390** (also referred to as Lys395 in some review numbering) | **Primarily monomethylation in vivo; overexpression can drive higher methylation, including trimethylation** | **7BS methyltransferase; MTF16 / METTL21-like** | **No direct human orthologue for the same site; closest homologue discussed is METTL21B / eEF1A-KMT3, but mammalian Lys392 is unmethylated** | **Focus of this report. Identified as the enzyme responsible for the previously orphan eEF1A Lys390 methylation site in yeast** (pqac-00000000, pqac-00000002, pqac-00000016, pqac-00000021, pqac-00000025) |
+| Efm7 | **EFM7** | Lys3 | Dimethylation | 7BS methyltransferase | No human orthologue specified in the gathered evidence | Dual activity: also methylates the N-terminus of eEF1A (pqac-00000009, pqac-00000025) |
+
+
+*Table: This table summarizes the known eEF1A-specific lysine methyltransferases in *S. cerevisiae*, their target residues, methylation states, enzyme families, and human counterparts where known. Efm6/YNL024C is highlighted because it is the focus gene and catalyzes the Lys390 methylation event discussed in the report.*
