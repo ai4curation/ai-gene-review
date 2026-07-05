@@ -1,0 +1,3220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MOH1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MOH1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P38191" target="_blank" class="term-link">
+                        P38191
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MOH1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P38191" data-a="DESCRIPTION: MOH1 (YBL049W) is a small (138 aa), low-abundance ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MOH1 (YBL049W) is a small (138 aa), low-abundance protein of the Yippee family, the single Saccharomyces cerevisiae representative of the family that expanded to the five YPEL paralogs (YPEL1-YPEL5) in humans. It comprises a Yippee/Mis18/Cereblon (CULT) fold — a zinc-stabilized double beta-meander that coordinates one structural Zn(2+) ion through four conserved cysteines (Cys45, Cys48, Cys101, Cys104) and presents a cradle-shaped pocket implicated in protein or nucleic-acid binding. The fold is a binding/scaffold module rather than a catalytic one, and no enzymatic activity has been demonstrated. Functionally, MOH1 is understudied: it is stress-inducible, and its deletion increases acute resistance to several lethal stresses (UV, methyl methanesulfonate, camptothecin, heat, hyperosmotic shock, hydrogen peroxide and acetic acid) while impairing long-term stationary-phase and chronological survival. Human YPEL genes can partially substitute for MOH1, indicating conservation of function across the family. The direct molecular activity, physical partners, subcellular site of action, and the mechanism linking MOH1 to stress tolerance and quiescence remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000151" target="_blank" class="term-link">
+                                    GO:0000151
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin ligase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P38191" data-a="GO:0000151" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level phylogenetic propagation (IBA) from PANTHER PTHR13848, seeded by human YPEL5 (UniProtKB:P62699). There is no yeast experimental evidence that Moh1 is a component of a ubiquitin ligase complex. Although the Yippee fold is structurally related to the CULT domain of cereblon (a substrate receptor of a CRL4 E3 ligase), Yippee/YPEL proteins are not themselves established ubiquitin ligase complex subunits, and no such complex has been demonstrated for Moh1. This is an over-propagation from a distant structural relative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA propagated from a structurally related but functionally distinct neighborhood (Mis18/cereblon-CULT); no experimental or orthology evidence places Moh1 in a ubiquitin ligase complex in yeast. Not a core function.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">COMPARTMENT OR COMPLEX MISMATCH</span>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002302768</span>
+
+                                    &middot; Yippee-like ancestral node (PTHR13848)
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Node seeded by human YPEL5 (UniProtKB:P62699); the ubiquitin-ligase-complex role does not transfer to the Yippee/YPEL subfamily, which shares only the zinc-binding beta-fold with the Mis18/cereblon(CULT) neighborhood.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The Yippee fold (two four-stranded β-meanders coordinating one Zn²⁺ at the apex, forming a cradle-shaped pocket) is a **structural/binding scaffold, not a recognized catalytic fold**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/MOH1/MOH1-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">MOH1 is not an enzyme, transporter, or structural protein in the classical sense</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">RCA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30358795
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The cellular economy of the Saccharomyces cerevisiae zinc pr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38191" data-a="GO:0008270" data-r="PMID:30358795" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Zinc ion binding is the single well-supported molecular feature of Moh1. It is predicted by proteome-wide domain/motif analysis (RCA, PMID:30358795), corroborated by the UniProt Zn(2+)-binding features (Cys45, Cys48, Cys101, Cys104) and independently by in-repo bioinformatics, which recovers the canonical Yippee two-CxxC zinc signature and shows perfect conservation of all four cysteines across human YPEL1-5. The bound zinc is structural (folds the Yippee domain); it is not evidence of a catalytic activity. Accepted as the core molecular feature, though the downstream biochemical output remains unknown.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                                        PMID:30358795
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">582 known or potential zinc-binding proteins was identified using a bioinformatics analysis that combined global domain searches with local motif searches</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">MOH1 contains exactly the two CxxC motifs that define the Yippee zinc site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38191" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root cellular_component annotation with the ND (no data) code, the standard placeholder recording that no experimental localization is available for Moh1. This correctly reflects the state of knowledge; high-throughput localization for this low-abundance protein is not curated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P38191" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process annotation with the ND (no data) code. Although phenotypes are recorded (stress resistance, stationary-phase survival), no specific molecular biological process has been assigned to Moh1, so the ND placeholder is appropriate.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Structural zinc binding by the Yippee domain. The conserved Cys45/Cys48/Cys101/ Cys104 tetrad coordinates a single Zn(2+) ion that stabilizes the Yippee/Mis18/ CULT fold. This is the only molecular feature of Moh1 supported by convergent computational and comparative evidence; the resulting protein/nucleic-acid-binding activity of the cradle-shaped pocket, and any biochemical output, are not established.</h3>
+                <span class="vote-buttons" data-g="P38191" data-a="FUNCTION: Structural zinc binding by the Yippee domain. The ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                            zinc ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                                PMID:30358795
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">582 known or potential zinc-binding proteins was identified using a bioinformatics analysis that combined global domain searches with local motif searches</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">all four zinc-binding cysteines are perfectly conserved</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The ubiquitin ligase complex annotation on MOH1 is a phylogenetically propagated (IBA) inference from PANTHER family PTHR13848, seeded by human YPEL5 (UniProtKB:P62699); there is no yeast-specific experimental support.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" target="_blank" class="term-link">
+                            PMID:30358795
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The cellular economy of the Saccharomyces cerevisiae zinc proteome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">MOH1 is included among 582 known or potential zinc-binding proteins identified by a proteome-wide bioinformatic domain/motif survey; this is the basis of the RCA zinc ion binding annotation, a prediction rather than a direct metal-binding assay of Moh1.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28173693" target="_blank" class="term-link">
+                            PMID:28173693
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Pro-Apoptotic Role of the Human YPEL5 Gene Identified by Functional Complementation of a Yeast moh1Δ Mutation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">moh1 deletion increases cell viability under multiple lethal stresses (UV, MMS, camptothecin, heat, hyperosmotic shock), and Moh1 is stress-induced; human YPEL genes partially complement moh1delta. Framed by the authors as involvement in DNA-damage-induced, mitochondria-dependent regulated cell death.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9748261" target="_blank" class="term-link">
+                            PMID:9748261
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A role for Saccharomyces cerevisiae fatty acid activation protein 4 in regulating protein N-myristoylation during entry into stationary phase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">YBL049W (MOH1) was identified as one of nine putative N-myristoylproteins whose deletion reproduces the stationary-phase survival defect of nmt1 mutant cells, linking MOH1 phenotypically to maintenance of proliferative potential during stationary phase.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11240639" target="_blank" class="term-link">
+                            PMID:11240639
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Drosophila gene Yippee reveals a novel family of putative zinc binding proteins highly conserved among eukaryotes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines the Yippee family as a highly conserved eukaryotic family bearing a putative zinc-finger-like metal-binding domain; even at the family&#39;s founding the molecular function was left open.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15456898" target="_blank" class="term-link">
+                            PMID:15456898
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic analysis of stationary-phase and exit in Saccharomyces cerevisiae: gene expression and identification of novel essential genes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide screen that identified MOH1 as one of the stationary-phase-essential genes: moh1 deletion causes a large loss of viability during long-term stationary phase at 37C, yet MOH1 is not required for growth on nonfermentable carbon sources, indicating a specific quiescence-survival role rather than a generic respiratory defect.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/MOH1/MOH1-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research report on S. cerevisiae MOH1 (YBL049W)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Synthesis concluding MOH1 is a small conserved Yippee-family regulatory/adaptor protein with a zinc-stabilized beta-tent fold and cradle-shaped binding pocket, required for stationary-phase survival, whose precise biochemical activity, substrate, and dedicated pathway remain unresolved in the retrievable literature.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bioinformatics analysis of MOH1 (Yippee domain, zinc site, ortholog conservation)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Independently confirms the Yippee zinc signature (C45-x2-C48 ... C101-x2-C104, 52-residue spacer) matching the UniProt Zn-binding features, ~37-45% identity to human YPEL1-5 with all four Zn-cysteines perfectly conserved, and no sequence-level evidence for catalytic activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What does the Yippee-domain pocket of Moh1 bind (protein, nucleic acid, small molecule), and does the bound zinc have any role beyond folding the domain?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="Q: What does the Yippee-domain pocket of Moh1 bind (p..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> By what molecular mechanism does moh1 deletion simultaneously increase acute stress resistance and decrease long-term stationary-phase survival?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="Q: By what molecular mechanism does moh1 deletion sim..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the human YPEL family&#39;s proliferation/senescence role mechanistically the same as the yeast Moh1 stress/quiescence role, given cross-species complementation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="Q: Is the human YPEL family&#39;s proliferation/senescenc..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity-purify endogenously tagged Moh1 under basal and stress conditions and identify co-purifying proteins/nucleic acids by mass spectrometry and RNA sequencing; validate top candidates by reciprocal pulldown and epistasis with moh1delta stress phenotypes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Moh1 acts as a zinc-dependent binding module for a specific partner that mediates its stress-sensitizing function.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interaction proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="EXPERIMENT: Affinity-purify endogenously tagged Moh1 under bas..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct Cys-to-Ala/Ser substitutions at Cys45/48/101/104, test protein stability and rescue of moh1delta stress phenotypes, to determine whether the zinc site is required for function in vivo.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The four conserved cysteines are required for Moh1 function via structural zinc coordination.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structure-function mutagenesis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="EXPERIMENT: Construct Cys-to-Ala/Ser substitutions at Cys45/48..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure intracellular ROS, H2O2 uptake kinetics, and membrane lipid/permeability in wild-type vs moh1delta cells, following up the 2025 preprint under peer-reviewed conditions.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: moh1delta hydrogen-peroxide resistance stems from decreased uptake due to altered membrane permeability rather than altered ROS metabolism.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: cell physiology / permeability assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P38191" data-a="EXPERIMENT: Measure intracellular ROS, H2O2 uptake kinetics, a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular activity of Moh1 is undetermined. Beyond structural zinc binding by the Yippee domain, it is not known what Moh1 binds (protein? nucleic acid?) or what biochemical output, if any, the cradle-shaped Yippee pocket produces. No catalytic activity is supported.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The Yippee/Mis18/CULT fold and its structural Zn(2+) site (Cys45/48/101/104) are firmly established by UniProt features, PROSITE/Pfam/InterPro domain calls and independent in-repo bioinformatics; the fold is a zinc-stabilized binding scaffold, not a known catalytic fold.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Moh1 is the single yeast ortholog of the human YPEL family, which is implicated in proliferation, senescence and stress adaptation; defining the yeast protein&#39;s biochemistry would anchor mechanism for the whole conserved family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical identification of Moh1 ligands/substrates (e.g. interaction proteomics of tagged Moh1, in vitro binding assays with the purified Yippee domain, structural studies of the pocket) and tests for any enzymatic activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the Hemolin-Yippee interaction remains to be further elucidated"</em> — PMID:11240639</li>
+
+                <li><em>"There is no sequence-level evidence for enzymatic activity"</em> — file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No functionally validated direct physical partner or substrate of Moh1 is known. Despite ~49 recorded high-throughput interactions, none has been shown to be a direct, function-defining partner, and the Drosophila Yippee-Hemolin interaction has no established yeast counterpart.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Large-scale interaction datasets (affinity-capture-MS, genetic interactions) exist for Moh1, and human YPEL proteins partially complement moh1delta, indicating a conserved but unspecified activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying a direct partner would convert the family from &#34;putative binding module&#34; to a defined pathway component.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Targeted co-purification/crosslinking-MS with tagged Moh1, and validation of candidate partners by reciprocal pulldown and phenotype epistasis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the Hemolin-Yippee interaction remains to be further elucidated"</em> — PMID:11240639</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The mechanism by which Moh1 shapes stress tolerance and quiescence is unknown. It is unexplained why loss of Moh1 increases acute resistance to several lethal stresses yet decreases long-term stationary-phase/chronological survival, and whether Moh1 acts directly on membranes, metabolism, transcription, or cell death machinery.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">NARROWING</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The phenotypes are reproducible: moh1delta increases viability under UV, MMS, camptothecin, heat and hyperosmotic shock and is stress-induced (PMID:28173693); MOH1 is one of the stationary-phase-essential genes required for long-term survival in quiescence (PMID:15456898, PMID:9748261). A 2025 preprint additionally reports altered membrane permeability and metabolic remodeling in moh1delta.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the mechanism would explain a conserved stress/aging factor and clarify whether the human YPEL &#34;senescence/stress&#34; phenotypes share this mechanism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Epistasis of moh1delta with defined stress-response and membrane/metabolic pathways; peer-reviewed follow-up of the 2025 preprint&#39;s permeability and transcriptome findings.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"exhibited enhanced cell viability compared with the WT-MOH1 strain when treated with lethal UV irradiation"</em> — PMID:28173693</li>
+
+                <li><em>"32 genes essential for survival in stationary-phase at"</em> — PMID:15456898</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether &#34;apoptotic process&#34;/regulated cell death is the correct biological-process framing for Moh1 is unresolved. The label derives from a single heterologous complementation study interpreted within the contested yeast programmed-cell-death paradigm.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> It is established that Moh1 sensitizes cells to lethal stress (deletion is protective) and that human YPEL5 restores this sensitization; the interpretation as caspase/mitochondria-dependent apoptosis is the uncertain part.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether GO apoptosis/regulated-cell-death terms are appropriate for this gene and its orthologs.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Independent replication with genetic dissection of the metacaspase (YCA1) and mitochondrial pathways, distinguishing bona fide regulated cell death from passive stress-induced death.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"their involvement in mitochondria-dependent apoptosis induced by DNA damage"</em> — PMID:28173693</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The subcellular site of Moh1 action is unknown; no reliable localization is curated, and the GOA cellular_component annotation is ND.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Moh1 is a low-abundance soluble protein; SGD notes a possible link to vacuolar transport and an abnormal-vacuolar-morphology deletion phenotype, but these are hypotheses, not localization data.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Localization would constrain candidate functions (e.g. membrane vs nuclear vs cytosolic activity).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous fluorescent tagging and fractionation of Moh1 under normal and stress conditions.</p>
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MOH1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38191" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: MOH1 (YBL049W) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">26 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T23:49:57.749160</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="MOH1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="MOH1-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-moh1-ybl049w-in-saccharomyces-cerevisiae">Comprehensive Research Report: MOH1 (YBL049W) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>MOH1 (systematic name YBL049W; also referred to as YBL0518) encodes a small protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c) that is classified as a member of the Yippee protein family. The UniProt accession for this protein is P38191, and it is annotated as "Pro-Apoptotic protein MOH1" and "Protein yippee-like MOH1" (UniProt, ECO:0000303|PubMed:28173693). MOH1 contains a Yippee domain (InterPro: IPR034751, IPR004910, IPR039058; Pfam: PF03226), placing it in the broader Yippee/Mis18/Cereblon superfamily of zinc-binding proteins.</p>
+<h2 id="2-protein-structure-and-domain-architecture">2. Protein Structure and Domain Architecture</h2>
+<h3 id="21-the-yippee-domain-and-tent-fold">2.1. The Yippee Domain and β-Tent Fold</h3>
+<p>MOH1 belongs to the Yippee protein family, whose members share a highly conserved structural fold termed the <strong>β-tent fold</strong>. This fold consists of two four-stranded antiparallel β-meanders that pack at approximately right angles and coordinate a zinc ion at their apex (lupas2015thethalidomidebindingdomain pages 1-2). A β-hairpin inserted into the first β-meander extends across the bottom of the structure toward the second β-meander, forming a characteristic <strong>cradle-shaped binding site</strong> that is topologically conserved across all members of the fold (lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 9-10). The fold exhibits internal pseudosymmetry, suggesting it may have arisen through duplication of a subdomain-sized fragment (lupas2015thethalidomidebindingdomain pages 1-2).</p>
+<p>Zinc coordination in yippee domain proteins is mediated by conserved <strong>C-X-X-C motifs</strong> located in specific loops of the structure (subramanian2016centromerelocalizationand pages 1-2). Structural studies on the closely related Mis18 protein have shown that the Yippee-like domain consists of two perpendicular antiparallel β-sheets (one three-stranded and one six-stranded) held together by a single Zn²⁺ ion coordinated through these C-X-X-C zinc-binding motifs (subramanian2016centromerelocalizationand pages 1-2). The binding pocket features conserved aromatic residues (including tyrosines, phenylalanines, and tryptophans) that form an aromatic cage implicated in protein–protein or protein–nucleic acid interactions (lupas2015thethalidomidebindingdomain pages 5-6).</p>
+<h3 id="22-evolutionary-relationship-to-cereblon-mis18-and-other-tent-proteins">2.2. Evolutionary Relationship to Cereblon, Mis18, and Other β-Tent Proteins</h3>
+<p>The Yippee domain is evolutionarily related to several other well-characterized protein families. Lupas et al. (2015) demonstrated that the CULT domain of cereblon (the thalidomide-binding E3 ubiquitin ligase component), Mis18 (a centromere maintenance factor), and Drosophila Yippee are all members of the same β-tent fold superfamily, appearing roughly equidistant from each other in sequence space (lupas2015thethalidomidebindingdomain pages 1-2, lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 3-5). The β-tent fold also encompasses methionine sulfoxide reductase B (MsrB), the RIG-I helicase regulatory domain, and glutathione-dependent formaldehyde-activating enzyme (lupas2015thethalidomidebindingdomain pages 2-3). The fold serves primarily as a structural platform for mounting a functional binding site; the specific residues in the cradle-shaped groove determine the individual protein's binding partners and biological function (lupas2015thethalidomidebindingdomain pages 8-9).</p>
+<p>The following table compares MOH1 with its yippee-family relatives across organisms:</p>
+<table>
+<thead>
+<tr>
+<th>Protein name</th>
+<th>Organism</th>
+<th>Key function</th>
+<th>Domain type</th>
+<th>Zinc binding</th>
+<th>Oligomerization</th>
+<th>Key references from gathered evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MOH1 (YBL049W)</td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Stationary-phase-essential protein; supports long-term survival in quiescence/stationary phase; annotated in UniProt as pro-apoptotic, but direct mechanism was not retrievable from the available primary paper set</td>
+<td>Yippee family domain / Yippee-Mis18-like β-tent fold (inferred from family assignment)</td>
+<td>Predicted yes by family homology, but not directly shown for yeast MOH1 in retrieved papers</td>
+<td>Not directly demonstrated in retrieved MOH1 papers</td>
+<td>(martinez2004genomicanalysisof pages 7-8, martinez2004genomicanalysisof pages 8-9, martinez2004genomicanalysisof pages 9-10, lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 1-2)</td>
+</tr>
+<tr>
+<td>Yippee</td>
+<td><em>Drosophila melanogaster</em></td>
+<td>Conserved eukaryotic protein of previously unknown/poorly defined molecular function; serves as the founding member of the Yippee family and structural reference for the fold</td>
+<td>Yippee domain; β-tent fold with cradle-shaped binding site</td>
+<td>Yes; family members typically coordinate Zn via conserved CXXC motifs/structural site</td>
+<td>Family shows propensity for dimerization/oligomerization, though direct oligomeric state for Drosophila Yippee was not the focus of retrieved evidence</td>
+<td>(lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 1-2, lupas2015thethalidomidebindingdomain pages 9-10)</td>
+</tr>
+<tr>
+<td>YPEL1-5 (general human Yippee-like family)</td>
+<td><em>Homo sapiens</em></td>
+<td>Conserved regulatory proteins linked to apoptosis/senescence, development, and tumor suppression; family members provide the main orthology-based functional context for MOH1</td>
+<td>Yippee-like domain</td>
+<td>Predicted/expected by family homology; direct zinc biochemistry not retrieved for all YPEL paralogs</td>
+<td>Not established in the retrieved family-wide evidence</td>
+<td>(blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3, blancosanchez2020yippeelike3 pages 1-2, lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 1-2)</td>
+</tr>
+<tr>
+<td>YPEL3</td>
+<td><em>Homo sapiens</em> / vertebrate models</td>
+<td>p53-inducible tumor suppressor; promotes senescence, suppresses EMT/metastasis, and is required for glial development/myelination in zebrafish</td>
+<td>Yippee-like domain</td>
+<td>Inferred from family homology; direct zinc-binding assay not retrieved in the YPEL3 paper</td>
+<td>Not established in retrieved YPEL3 developmental paper</td>
+<td>(blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3, blancosanchez2020yippeelike3 pages 26-27, blancosanchez2020yippeelike3 pages 1-2)</td>
+</tr>
+<tr>
+<td>Mis18</td>
+<td>Fission yeast and humans</td>
+<td>Centromere maintenance factor; recruits/organizes machinery for CENP-A deposition and centromere identity maintenance</td>
+<td>Yippee-like domain plus C-terminal α-helical region</td>
+<td>Yes; Zn²⁺ coordinated through CXXC motifs in the Yippee-like domain</td>
+<td>Yes; homodimerization/heterodimerization and higher-order oligomerization are central to function</td>
+<td>(subramanian2016centromerelocalizationand pages 1-2, subramanian2016centromerelocalizationand pages 8-9, thamkachy2024structuralbasisfor pages 3-4, thamkachy2024structuralbasisfor pages 1-3, subramanian2016centromerelocalizationand pages 10-11)</td>
+</tr>
+<tr>
+<td>Cereblon CULT domain</td>
+<td>Animals and bacteria (domain family context)</td>
+<td>Ligand-binding domain of cereblon; defines the CULT family and provides a key evolutionary/structural link to Yippee and Mis18</td>
+<td>CULT domain; β-tent fold</td>
+<td>Yes in core structural models via conserved cysteine motifs, though some related β-tent proteins can lose the zinc site</td>
+<td>Not the primary functional feature emphasized in retrieved evidence</td>
+<td>(lupas2015thethalidomidebindingdomain pages 1-2, lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 8-9, lupas2015thethalidomidebindingdomain pages 3-5, lupas2015thethalidomidebindingdomain pages 2-3, lupas2015thethalidomidebindingdomain pages 6-8)</td>
+</tr>
+<tr>
+<td>FAM72A-D</td>
+<td><em>Homo sapiens</em></td>
+<td>DNA maintenance/replication stress-associated factors; accumulate on chromatin during replication and genotoxic stress; FAM72B binds UNG and RPA and can suppress BER during class-switch recombination</td>
+<td>MIS18/Yippee domain identified by structural annotation</td>
+<td>Predicted by Yippee/MIS18 family assignment; direct zinc biochemistry was not detailed in retrieved FAM72 evidence</td>
+<td>Yes; homo- and heterodimerization/multimerization reported for FAM72 family</td>
+<td>(schou2024exploringthestructural pages 10-11)</td>
+</tr>
+<tr>
+<td>SPIDR-associated Yippee/MIS18 domain annotation</td>
+<td><em>Homo sapiens</em></td>
+<td>Recent structural annotation places Yippee/MIS18-like domains in additional DNA maintenance proteins, expanding the family’s relevance beyond centromeres</td>
+<td>MIS18/Yippee-like domain annotation</td>
+<td>Predicted by domain assignment</td>
+<td>Not established in the retrieved summary evidence</td>
+<td>(schou2024exploringthestructural pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares yeast MOH1 with structurally or functionally related Yippee-family proteins and domains across fungi, animals, and DNA maintenance systems. It is useful for inferring MOH1 function when direct biochemical characterization is limited.</em></p>
+<h2 id="3-biological-function">3. Biological Function</h2>
+<h3 id="31-stationary-phase-survival-and-quiescence">3.1. Stationary Phase Survival and Quiescence</h3>
+<p>The best-documented function of MOH1 in <em>S. cerevisiae</em> comes from a genome-wide analysis of stationary phase gene expression and viability by Martinez et al. (2004). MOH1 was identified as one of 127 stationary-phase-expressed genes whose transcripts reproducibly accumulate in cells during quiescence. More importantly, deletion of MOH1 resulted in approximately <strong>10-fold loss of viability after 9 days</strong> of growth at 37°C, classifying it as a <strong>stationary-phase-essential (SP-essential) gene</strong> (martinez2004genomicanalysisof pages 7-8, martinez2004genomicanalysisof pages 8-9). This phenotype was specific: MOH1 was among nine SP-essential genes that were <strong>not required for growth on nonfermentable carbon sources</strong>, distinguishing it from the majority of SP-essential genes that encode mitochondrial or respiratory chain components (martinez2004genomicanalysisof pages 9-10). This indicates that MOH1's role in stationary-phase survival is not simply a consequence of respiratory deficiency but rather involves a specific function in maintaining cell viability during quiescence.</p>
+<p>Martinez et al. (2004) described Moh1p as a "myristolated protein of unknown function" and noted that its sequence is related to Snf7p (an ESCRT-III component) according to SGD annotations available at the time (martinez2004genomicanalysisof pages 9-10). The study also established that SP-expressed and SP-essential genes, including MOH1, are more broadly conserved across the three major phylogenetic domains (Eukarya, Bacteria, Archaea) than yeast genes in general (martinez2004genomicanalysisof pages 8-9).</p>
+<h3 id="32-pro-apoptotic-function">3.2. Pro-Apoptotic Function</h3>
+<p>The UniProt annotation of MOH1 as a "Pro-Apoptotic protein" derives from the characterization reported in PubMed:28173693. While this primary publication was not directly retrievable in our literature searches, multiple lines of evidence support this functional assignment:</p>
+<ol>
+<li>
+<p><strong>Human homologues induce apoptosis</strong>: Martinez et al. (2004) specifically noted that "the human homologues of MOH1 and NGR1 are known to induce apoptosis" (martinez2004genomicanalysisof pages 9-10). Of the 32 SP-essential genes identified, 23 have human homologues, and at least 13 of these are involved in apoptosis or are associated with human diseases including cancer.</p>
+</li>
+<li>
+<p><strong>YPEL family as apoptosis-associated proteins</strong>: The closest human orthologs of MOH1 are the YPEL (Yippee-like) protein family members (YPEL1–YPEL5). YPEL3, the best-characterized member, was originally identified as a senescence factor involved in the apoptotic phase of myeloid cell development and functions as a tumor suppressor (blancosanchez2020yippeelike3 pages 2-3). Under genotoxic stress, YPEL3 is an inducible target of p53. Overexpression of YPEL3 causes cell cycle arrest, suppresses epithelial-mesenchymal transition, and can be repressed by estrogen in ER+ mammary tumor cells (blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 26-27). YPEL protein family members more broadly have been characterized as apoptosis-associated proteins that suppress proliferation of myeloid cells (blancosanchez2020yippeelike3 pages 25-26).</p>
+</li>
+<li>
+<p><strong>MOH1 in fungal stress and cell death pathways</strong>: The MOH1 gene in <em>Candida albicans</em> has been reported to interact genetically with the molecular chaperone Hsp90, and its expression is induced by various stress conditions (singhbabak2012globalanalysisof pages 4-5). A recent study by Wang et al. (2025) directly investigated MOH1 in <em>Candida albicans</em> in the context of ROS-dependent apoptosis in genotoxic stress response, though this paper was not fully accessible for our analysis.</p>
+</li>
+</ol>
+<h3 id="33-role-in-fungal-pathogen-biology">3.3. Role in Fungal Pathogen Biology</h3>
+<p>In <em>Candida glabrata</em>, MOH1 was identified as one of four genes that acquired non-synonymous mutations during clinical evolution of echinocandin resistance. Whole-genome sequencing of serial clinical isolates revealed a MOH1 mutation (Y5H, resulting from a TAC→CAC codon change at position 5) that accompanied an early modest increase in echinocandin resistance (singhbabak2012globalanalysisof pages 4-5, singhbabak2012globalanalysisof pages 17-18). However, when the specific MOH1-T13C(Y5H) allele was cloned into a susceptible laboratory strain, it did not confer any increase in echinocandin resistance, suggesting that MOH1 changes may not directly drive resistance but could instead create a genetic background in which the primary FKS2 resistance mutation is less detrimental to fitness (singhbabak2012globalanalysisof pages 6-8). This finding positions MOH1 as a stress-responsive gene in fungal pathogens without a direct role in drug resistance per se.</p>
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>According to UniProt annotations, MOH1 localizes to the <strong>cytoplasm</strong>. The dynamic subcellular localization of related yippee-family proteins provides additional context: YPEL3 in vertebrate cells shows dynamic localization during the cell cycle, residing in the nucleus, perinuclear structures, and near centrosomes during mitosis (blancosanchez2020yippeelike3 pages 2-3). This pattern suggests that yippee-family proteins, including potentially MOH1, may function as mobile regulatory factors rather than enzymes with fixed organellar localization.</p>
+<h2 id="5-structural-and-functional-context-from-the-yippeemis18-family">5. Structural and Functional Context from the Yippee/Mis18 Family</h2>
+<h3 id="51-mis18-and-centromere-biology">5.1. Mis18 and Centromere Biology</h3>
+<p>The most extensively structurally characterized yippee-domain protein is Mis18, which functions in centromere maintenance by recruiting the CENP-A chaperone HJURP for centromeric histone deposition. The yippee-like domain of Mis18 mediates <strong>homo- and hetero-oligomerization</strong> that is essential for its centromere localization and function (subramanian2016centromerelocalizationand pages 8-9, subramanian2016centromerelocalizationand pages 1-2). In the human Mis18 complex, Mis18α and Mis18β contain yippee domains that form homodimers (Mis18α/Mis18α) or heterodimers (Mis18α/Mis18β), and their C-terminal helices form a 2:1 heterotrimer, assembling into a hetero-octameric complex (4 Mis18α, 2 Mis18β, 2 Mis18BP1) (thamkachy2024structuralbasisfor pages 3-4, thamkachy2024structuralbasisfor pages 1-3). This complex architecture is cell-cycle regulated and essential for centromere identity maintenance.</p>
+<h3 id="52-fam72-and-dna-damage-response-recent-2024-data">5.2. FAM72 and DNA Damage Response (Recent 2024 Data)</h3>
+<p>Schou et al. (2024) recently identified Yippee/MIS18-like domains in the FAM72A-D protein family through systematic structural annotation of DNA maintenance proteins. FAM72 proteins accumulate on chromatin during DNA replication and in response to genotoxic insults. FAM72B binds UNG (uracil-DNA glycosylase) and RPA subunits involved in DNA repair, and can suppress base excision repair during class-switch recombination in B cells (schou2024exploringthestructural pages 10-11). This expands the functional repertoire of the yippee domain family beyond centromere biology into active DNA damage response and repair pathways, and suggests that MOH1's β-tent fold may similarly function as a protein–protein interaction platform in stress-related processes.</p>
+<h2 id="6-summary-of-key-properties">6. Summary of Key Properties</h2>
+<table>
+<thead>
+<tr>
+<th>Gene / ORF</th>
+<th>UniProt accession</th>
+<th>Organism</th>
+<th>Protein description</th>
+<th>Protein family</th>
+<th>Domain architecture</th>
+<th>Subcellular localization</th>
+<th>Key functions / current interpretation</th>
+<th>Human orthologs / family context</th>
+<th>Key phenotypes from deletion or mutation studies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>MOH1 / YBL049W</strong></td>
+<td><strong>P38191</strong></td>
+<td><em>Saccharomyces cerevisiae</em> strain S288c</td>
+<td>Pro-apoptotic protein MOH1; protein yippee-like MOH1 (UniProt identity provided in prompt)</td>
+<td>Yippee family; evolutionarily related to Mis18 and cereblon/CULT-domain proteins (lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 1-2, subramanian2016centromerelocalizationand pages 1-2)</td>
+<td>Predicted Yippee/Mis18/Cereblon-like <strong>β-tent fold</strong> with zinc-binding CXXC-type motifs and a cradle-shaped binding pocket, based on family-level structural studies; Yippee domains often mediate oligomerization and binding functions (lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 1-2, lupas2015thethalidomidebindingdomain pages 9-10, subramanian2016centromerelocalizationand pages 1-2, lupas2015thethalidomidebindingdomain pages 3-5, lupas2015thethalidomidebindingdomain pages 6-8)</td>
+<td>Cytoplasm (from UniProt identity provided in prompt); direct localization evidence from retrieved primary literature was limited</td>
+<td>Best-supported direct yeast function is <strong>required for long-term stationary-phase survival/quiescence maintenance</strong>; MOH1 was identified as a stationary-phase-essential gene. More generally, its family context suggests a small conserved regulatory/adaptor protein rather than an enzyme or transporter. The “pro-apoptotic” annotation is consistent with later characterization and with apoptosis-associated functions of YPEL family orthologs, but mechanism-level evidence in <em>S. cerevisiae</em> was limited in retrievable papers (martinez2004genomicanalysisof pages 8-9, martinez2004genomicanalysisof pages 9-10, blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3)</td>
+<td>Human YPEL family proteins (<strong>YPEL1–YPEL5</strong>) are the closest family counterparts. YPEL3 is a p53-inducible, tumor-suppressive, apoptosis/senescence-associated yippee-like protein; family members are evolutionarily conserved and linked to development and stress responses (blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3, blancosanchez2020yippeelike3 pages 1-2, OpenTargets Search: -YPEL1,YPEL2,YPEL3,YPEL4,YPEL5)</td>
+<td>In <em>S. cerevisiae</em>, <strong>moh1Δ</strong> showed about <strong>10-fold loss of viability after 16 days</strong> in stationary phase at 37°C, identifying MOH1 as a stationary-phase-essential gene; notably, it was among SP-essential genes <strong>not required for growth on nonfermentable carbon sources</strong>, suggesting a specific role in persistence/quiescence rather than generic respiratory deficiency (martinez2004genomicanalysisof pages 7-8, martinez2004genomicanalysisof pages 8-9, martinez2004genomicanalysisof pages 9-10)</td>
+</tr>
+<tr>
+<td><strong>Additional comparative evidence relevant to MOH1 interpretation</strong></td>
+<td>—</td>
+<td>Fungal / metazoan comparators</td>
+<td>In <em>Candida glabrata</em>, a <strong>MOH1 Y5H</strong> variant arose during echinocandin-resistance evolution but did <strong>not</strong> confer resistance when tested, implying MOH1 may be stress-responsive without being a primary resistance determinant (singhbabak2012globalanalysisof pages 4-5, singhbabak2012globalanalysisof pages 6-8)</td>
+<td>Conserved yippee-like proteins in fungi and animals</td>
+<td>Related Yippee domains in Mis18 form zinc-stabilized β-sheet structures and mediate homo-/hetero-oligomerization required for centromere function; FAM72 yippee/Mis18 domains were recently implicated in DNA maintenance and replication-stress biology, illustrating broader functional versatility of the fold (subramanian2016centromerelocalizationand pages 8-9, thamkachy2024structuralbasisfor pages 3-4, schou2024exploringthestructural pages 10-11, subramanian2016centromerelocalizationand pages 1-2, thamkachy2024structuralbasisfor pages 1-3)</td>
+<td>YPEL3 localization in vertebrates is dynamic across nucleus, perinuclear structures, and near centrosomes during mitosis, underscoring that family members can act as mobile regulatory proteins rather than fixed metabolic enzymes (blancosanchez2020yippeelike3 pages 2-3)</td>
+<td>Together, current evidence supports MOH1 as a <strong>small conserved yippee-family regulatory protein involved in stress survival and likely cell-death-related signaling</strong>, but its precise biochemical activity in budding yeast remains unresolved in the retrievable literature (martinez2004genomicanalysisof pages 8-9, martinez2004genomicanalysisof pages 9-10, lupas2015thethalidomidebindingdomain pages 5-6, lupas2015thethalidomidebindingdomain pages 8-9)</td>
+<td>YPEL proteins provide the strongest orthology-based functional clues for apoptosis/senescence; Open Targets also links some YPEL genes to human disease phenotypes, though these associations are indirect for yeast MOH1 (blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3, OpenTargets Search: -YPEL1,YPEL2,YPEL3,YPEL4,YPEL5)</td>
+<td>Comparative evidence strengthens the interpretation of MOH1 as stress- and survival-related, but does not yet define a substrate, catalytic activity, or dedicated signaling pathway in <em>S. cerevisiae</em> (singhbabak2012globalanalysisof pages 4-5, singhbabak2012globalanalysisof pages 6-8, schou2024exploringthestructural pages 10-11)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the identity, family assignment, inferred structure, localization, function, orthology, and phenotypes of yeast MOH1/YBL049W using the gathered evidence. It is useful as a compact reference for functional annotation, especially where direct biochemical characterization remains limited.</em></p>
+<h2 id="7-conclusions-and-current-understanding">7. Conclusions and Current Understanding</h2>
+<p>MOH1 (YBL049W) in <em>S. cerevisiae</em> encodes a small, conserved yippee-family protein whose precise biochemical activity remains to be fully elucidated. The available evidence converges on the following functional interpretation:</p>
+<p><strong>MOH1 is not an enzyme, transporter, or structural protein in the classical sense.</strong> Rather, it appears to function as a small regulatory or adaptor protein, likely acting through its yippee domain-mediated protein–protein interactions. Its β-tent fold contains a conserved zinc-binding site and a cradle-shaped binding pocket that, in homologous proteins, mediates oligomerization and recruitment of binding partners (lupas2015thethalidomidebindingdomain pages 5-6, subramanian2016centromerelocalizationand pages 1-2).</p>
+<p><strong>Its primary biological role is in maintaining cell viability during stationary phase/quiescence</strong>, where its deletion causes significant loss of viability under stress conditions (martinez2004genomicanalysisof pages 7-8, martinez2004genomicanalysisof pages 9-10). The pro-apoptotic annotation is consistent with the known functions of its human orthologs (YPEL1-5), which regulate apoptosis, cellular senescence, and cell cycle control (blancosanchez2020yippeelike3 pages 25-26, blancosanchez2020yippeelike3 pages 2-3, martinez2004genomicanalysisof pages 9-10).</p>
+<p><strong>The protein localizes to the cytoplasm</strong> and its function is likely linked to stress response pathways, potentially involving reactive oxygen species signaling and interactions with the Hsp90 chaperone network (singhbabak2012globalanalysisof pages 4-5). Recent structural and functional work on the broader yippee/Mis18 domain family (2024) has revealed an expanding role for this fold in DNA maintenance and chromatin-associated processes (schou2024exploringthestructural pages 10-11, thamkachy2024structuralbasisfor pages 3-4), which may provide additional avenues for understanding MOH1's specific molecular mechanism in future research.</p>
+<p>The precise signaling pathway in which MOH1 functions in <em>S. cerevisiae</em> remains an open question. Its involvement in stationary-phase survival, combined with the apoptotic functions of its orthologs, suggests it may participate in the cellular decision-making process between survival and programmed cell death during nutrient deprivation and stress—a process that is increasingly recognized as having deep evolutionary roots shared between unicellular and multicellular organisms (martinez2004genomicanalysisof pages 8-9, martinez2004genomicanalysisof pages 9-10).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 1-2): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 5-6): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 9-10): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(subramanian2016centromerelocalizationand pages 1-2): Lakxmi Subramanian, Bethan Medina‐Pritchard, Rachael Barton, Frances Spiller, Raghavendran Kulasegaran‐Shylini, Guoda Radaviciute, Robin C Allshire, and A Arockia Jeyaprakash. Centromere localization and function of mis18 requires yippee‐like domain‐mediated oligomerization. EMBO reports, 17:496-507, Mar 2016. URL: https://doi.org/10.15252/embr.201541520, doi:10.15252/embr.201541520. This article has 54 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 3-5): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 2-3): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 8-9): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2004genomicanalysisof pages 7-8): M. Juanita Martinez, Sushmita Roy, Amanda B. Archuletta, Peter D. Wentzell, Sonia Santa Anna-Arriola, Angelina L. Rodriguez, Anthony D. Aragon, Gabriel A. Quiñones, Chris Allen, and Margaret Werner-Washburne. Genomic analysis of stationary-phase and exit in saccharomyces cerevisiae: gene expression and identification of novel essential genes. Molecular biology of the cell, 15 12:5295-305, Dec 2004. URL: https://doi.org/10.1091/mbc.e03-11-0856, doi:10.1091/mbc.e03-11-0856. This article has 190 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2004genomicanalysisof pages 8-9): M. Juanita Martinez, Sushmita Roy, Amanda B. Archuletta, Peter D. Wentzell, Sonia Santa Anna-Arriola, Angelina L. Rodriguez, Anthony D. Aragon, Gabriel A. Quiñones, Chris Allen, and Margaret Werner-Washburne. Genomic analysis of stationary-phase and exit in saccharomyces cerevisiae: gene expression and identification of novel essential genes. Molecular biology of the cell, 15 12:5295-305, Dec 2004. URL: https://doi.org/10.1091/mbc.e03-11-0856, doi:10.1091/mbc.e03-11-0856. This article has 190 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(martinez2004genomicanalysisof pages 9-10): M. Juanita Martinez, Sushmita Roy, Amanda B. Archuletta, Peter D. Wentzell, Sonia Santa Anna-Arriola, Angelina L. Rodriguez, Anthony D. Aragon, Gabriel A. Quiñones, Chris Allen, and Margaret Werner-Washburne. Genomic analysis of stationary-phase and exit in saccharomyces cerevisiae: gene expression and identification of novel essential genes. Molecular biology of the cell, 15 12:5295-305, Dec 2004. URL: https://doi.org/10.1091/mbc.e03-11-0856, doi:10.1091/mbc.e03-11-0856. This article has 190 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blancosanchez2020yippeelike3 pages 25-26): Bernardo Blanco-Sánchez, Aurélie Clément, Sara J. Stednitz, Jennifer Kyle, Judy L. Peirce, Marcie McFadden, Jeremy Wegner, Jennifer B. Phillips, Ellen Macnamara, Yan Huang, David R. Adams, Camilo Toro, William A. Gahl, May Christine V. Malicdan, Cynthia J. Tifft, Erika M. Zink, Kent J. Bloodsworth, Kelly G. Stratton, David M. Koeller, Thomas O. Metz, Philip Washbourne, and Monte Westerfield. Yippee like 3 (ypel3) is a novel gene required for myelinating and perineurial glia development. PLOS Genetics, 16:e1008841, Jun 2020. URL: https://doi.org/10.1371/journal.pgen.1008841, doi:10.1371/journal.pgen.1008841. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blancosanchez2020yippeelike3 pages 2-3): Bernardo Blanco-Sánchez, Aurélie Clément, Sara J. Stednitz, Jennifer Kyle, Judy L. Peirce, Marcie McFadden, Jeremy Wegner, Jennifer B. Phillips, Ellen Macnamara, Yan Huang, David R. Adams, Camilo Toro, William A. Gahl, May Christine V. Malicdan, Cynthia J. Tifft, Erika M. Zink, Kent J. Bloodsworth, Kelly G. Stratton, David M. Koeller, Thomas O. Metz, Philip Washbourne, and Monte Westerfield. Yippee like 3 (ypel3) is a novel gene required for myelinating and perineurial glia development. PLOS Genetics, 16:e1008841, Jun 2020. URL: https://doi.org/10.1371/journal.pgen.1008841, doi:10.1371/journal.pgen.1008841. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blancosanchez2020yippeelike3 pages 1-2): Bernardo Blanco-Sánchez, Aurélie Clément, Sara J. Stednitz, Jennifer Kyle, Judy L. Peirce, Marcie McFadden, Jeremy Wegner, Jennifer B. Phillips, Ellen Macnamara, Yan Huang, David R. Adams, Camilo Toro, William A. Gahl, May Christine V. Malicdan, Cynthia J. Tifft, Erika M. Zink, Kent J. Bloodsworth, Kelly G. Stratton, David M. Koeller, Thomas O. Metz, Philip Washbourne, and Monte Westerfield. Yippee like 3 (ypel3) is a novel gene required for myelinating and perineurial glia development. PLOS Genetics, 16:e1008841, Jun 2020. URL: https://doi.org/10.1371/journal.pgen.1008841, doi:10.1371/journal.pgen.1008841. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(blancosanchez2020yippeelike3 pages 26-27): Bernardo Blanco-Sánchez, Aurélie Clément, Sara J. Stednitz, Jennifer Kyle, Judy L. Peirce, Marcie McFadden, Jeremy Wegner, Jennifer B. Phillips, Ellen Macnamara, Yan Huang, David R. Adams, Camilo Toro, William A. Gahl, May Christine V. Malicdan, Cynthia J. Tifft, Erika M. Zink, Kent J. Bloodsworth, Kelly G. Stratton, David M. Koeller, Thomas O. Metz, Philip Washbourne, and Monte Westerfield. Yippee like 3 (ypel3) is a novel gene required for myelinating and perineurial glia development. PLOS Genetics, 16:e1008841, Jun 2020. URL: https://doi.org/10.1371/journal.pgen.1008841, doi:10.1371/journal.pgen.1008841. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(subramanian2016centromerelocalizationand pages 8-9): Lakxmi Subramanian, Bethan Medina‐Pritchard, Rachael Barton, Frances Spiller, Raghavendran Kulasegaran‐Shylini, Guoda Radaviciute, Robin C Allshire, and A Arockia Jeyaprakash. Centromere localization and function of mis18 requires yippee‐like domain‐mediated oligomerization. EMBO reports, 17:496-507, Mar 2016. URL: https://doi.org/10.15252/embr.201541520, doi:10.15252/embr.201541520. This article has 54 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thamkachy2024structuralbasisfor pages 3-4): Reshma Thamkachy, Bethan Medina-Pritchard, Sang Ho Park, Carla G Chiodi, Juan Zou, Maria de la Torre-Barranco, Kazuma Shimanaka, Maria Alba Abad, Cristina Gallego Páramo, Regina Feederle, Emilija Ruksenaite, Patrick Heun, Owen R Davies, Juri Rappsilber, Dina Schneidman-Duhovny, Uhn-Soo Cho, and A Arockia Jeyaprakash. Structural basis for mis18 complex assembly and its implications for centromere maintenance. EMBO Reports, 25:3348-3372, Jul 2024. URL: https://doi.org/10.1038/s44319-024-00183-w, doi:10.1038/s44319-024-00183-w. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thamkachy2024structuralbasisfor pages 1-3): Reshma Thamkachy, Bethan Medina-Pritchard, Sang Ho Park, Carla G Chiodi, Juan Zou, Maria de la Torre-Barranco, Kazuma Shimanaka, Maria Alba Abad, Cristina Gallego Páramo, Regina Feederle, Emilija Ruksenaite, Patrick Heun, Owen R Davies, Juri Rappsilber, Dina Schneidman-Duhovny, Uhn-Soo Cho, and A Arockia Jeyaprakash. Structural basis for mis18 complex assembly and its implications for centromere maintenance. EMBO Reports, 25:3348-3372, Jul 2024. URL: https://doi.org/10.1038/s44319-024-00183-w, doi:10.1038/s44319-024-00183-w. This article has 15 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(subramanian2016centromerelocalizationand pages 10-11): Lakxmi Subramanian, Bethan Medina‐Pritchard, Rachael Barton, Frances Spiller, Raghavendran Kulasegaran‐Shylini, Guoda Radaviciute, Robin C Allshire, and A Arockia Jeyaprakash. Centromere localization and function of mis18 requires yippee‐like domain‐mediated oligomerization. EMBO reports, 17:496-507, Mar 2016. URL: https://doi.org/10.15252/embr.201541520, doi:10.15252/embr.201541520. This article has 54 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lupas2015thethalidomidebindingdomain pages 6-8): Andrei N. Lupas, Hongbo Zhu, and Mateusz Korycinski. The thalidomide-binding domain of cereblon defines the cult domain family and is a new member of the β-tent fold. PLoS Computational Biology, 11:e1004023, Jan 2015. URL: https://doi.org/10.1371/journal.pcbi.1004023, doi:10.1371/journal.pcbi.1004023. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schou2024exploringthestructural pages 10-11): Kenneth Bødkter Schou, Samuel Mandacaru, Muhammad Tahir, Nikola Tom, Ann-Sofie Nilsson, Jens S. Andersen, Matteo Tiberti, Elena Papaleo, and Jiri Bartek. Exploring the structural landscape of dna maintenance proteins. Nature Communications, Sep 2024. URL: https://doi.org/10.1038/s41467-024-49983-7, doi:10.1038/s41467-024-49983-7. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singhbabak2012globalanalysisof pages 4-5): Sheena D. Singh-Babak, Tomas Babak, Stephanie Diezmann, Jessica A. Hill, Jinglin Lucy Xie, Ying-Lien Chen, Susan M. Poutanen, Robert P. Rennie, Joseph Heitman, and Leah E. Cowen. Global analysis of the evolution and mechanism of echinocandin resistance in candida glabrata. PLoS Pathogens, 8:e1002718, May 2012. URL: https://doi.org/10.1371/journal.ppat.1002718, doi:10.1371/journal.ppat.1002718. This article has 240 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singhbabak2012globalanalysisof pages 17-18): Sheena D. Singh-Babak, Tomas Babak, Stephanie Diezmann, Jessica A. Hill, Jinglin Lucy Xie, Ying-Lien Chen, Susan M. Poutanen, Robert P. Rennie, Joseph Heitman, and Leah E. Cowen. Global analysis of the evolution and mechanism of echinocandin resistance in candida glabrata. PLoS Pathogens, 8:e1002718, May 2012. URL: https://doi.org/10.1371/journal.ppat.1002718, doi:10.1371/journal.ppat.1002718. This article has 240 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(singhbabak2012globalanalysisof pages 6-8): Sheena D. Singh-Babak, Tomas Babak, Stephanie Diezmann, Jessica A. Hill, Jinglin Lucy Xie, Ying-Lien Chen, Susan M. Poutanen, Robert P. Rennie, Joseph Heitman, and Leah E. Cowen. Global analysis of the evolution and mechanism of echinocandin resistance in candida glabrata. PLoS Pathogens, 8:e1002718, May 2012. URL: https://doi.org/10.1371/journal.ppat.1002718, doi:10.1371/journal.ppat.1002718. This article has 240 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(OpenTargets Search: -YPEL1,YPEL2,YPEL3,YPEL4,YPEL5): Open Targets Query (-YPEL1,YPEL2,YPEL3,YPEL4,YPEL5, 13 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="MOH1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="MOH1-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>lupas2015thethalidomidebindingdomain pages 1-2</li>
+<li>subramanian2016centromerelocalizationand pages 1-2</li>
+<li>lupas2015thethalidomidebindingdomain pages 5-6</li>
+<li>lupas2015thethalidomidebindingdomain pages 2-3</li>
+<li>lupas2015thethalidomidebindingdomain pages 8-9</li>
+<li>schou2024exploringthestructural pages 10-11</li>
+<li>martinez2004genomicanalysisof pages 9-10</li>
+<li>martinez2004genomicanalysisof pages 8-9</li>
+<li>singhbabak2012globalanalysisof pages 4-5</li>
+<li>singhbabak2012globalanalysisof pages 6-8</li>
+<li>lupas2015thethalidomidebindingdomain pages 9-10</li>
+<li>lupas2015thethalidomidebindingdomain pages 3-5</li>
+<li>martinez2004genomicanalysisof pages 7-8</li>
+<li>subramanian2016centromerelocalizationand pages 8-9</li>
+<li>thamkachy2024structuralbasisfor pages 3-4</li>
+<li>thamkachy2024structuralbasisfor pages 1-3</li>
+<li>subramanian2016centromerelocalizationand pages 10-11</li>
+<li>lupas2015thethalidomidebindingdomain pages 6-8</li>
+<li>singhbabak2012globalanalysisof pages 17-18</li>
+<li>https://doi.org/10.1371/journal.pcbi.1004023,</li>
+<li>https://doi.org/10.15252/embr.201541520,</li>
+<li>https://doi.org/10.1091/mbc.e03-11-0856,</li>
+<li>https://doi.org/10.1371/journal.pgen.1008841,</li>
+<li>https://doi.org/10.1038/s44319-024-00183-w,</li>
+<li>https://doi.org/10.1038/s41467-024-49983-7,</li>
+<li>https://doi.org/10.1371/journal.ppat.1002718,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MOH1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38191" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="moh1-ybl049w-p38191-research-notes">MOH1 (YBL049W, P38191) — research notes</h1>
+<p>Research journal for the AI GO-annotation review. MOH1 is a genuinely<br />
+understudied ("dark") <em>S. cerevisiae</em> gene. This file separates what is KNOWN<br />
+from what is NOT known, with inline provenance.</p>
+<h2 id="identity-basic-facts-known">Identity / basic facts (KNOWN)</h2>
+<ul>
+<li>UniProt <strong>P38191</strong>, gene <strong>MOH1</strong>, systematic name <strong>YBL049W</strong> (chromosome II,<br />
+  left arm). 138 aa, 16 kDa. SGD <strong>S000000145</strong>. <strong>Verified ORF, protein of<br />
+  unknown function</strong> (SGD).</li>
+<li>Member of the <strong>Yippee family</strong> (UniProt SIMILARITY: "Belongs to the yippee<br />
+  family"). InterPro: IPR034751 (Yippee), IPR004910 (Yippee/Mis18/Cereblon),<br />
+  IPR039058 (Yippee_fam); Pfam PF03226 (Yippee-Mis18); PROSITE PS51792 (YIPPEE);<br />
+  PANTHER PTHR13848.</li>
+<li><strong>Single yeast ortholog of the human YPEL1–YPEL5 family.</strong> The human paralogs<br />
+  arose by gene duplication; yeast has one member.</li>
+</ul>
+<h2 id="domain-molecular-architecture-known-independently-verified">Domain / molecular architecture (KNOWN, independently verified)</h2>
+<ul>
+<li>UniProt annotates a <strong>Yippee domain (residues 41–138)</strong> with a structural<br />
+<strong>Zn(2+) site coordinated by Cys45, Cys48, Cys101, Cys104</strong> (ProRule<br />
+  PRU01128).</li>
+<li>My own bioinformatics analysis (<code>MOH1-bioinformatics/</code>) independently<br />
+  confirms the Yippee zinc signature: two CxxC pairs <strong>C45-x2-C48 … C101-x2-C104</strong><br />
+  separated by a 52-residue spacer — the canonical Yippee motif<br />
+  (Cys-X₂-Cys-X₅₂-Cys-X₂-Cys). See <code>file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md</code>.</li>
+<li>Conservation vs human YPEL1–5: ~37–45% identity; <strong>all four Zn-cysteines are<br />
+  perfectly conserved in every human ortholog</strong>, supporting a retained structural<br />
+  zinc site. (Bioinformatics RESULTS.md.)</li>
+<li>The Yippee/Mis18/CULT fold is a <strong>zinc-stabilized β-fold with a cradle-shaped<br />
+  pocket implicated in protein/nucleic-acid binding</strong> — a binding/scaffold module,<br />
+<strong>not a recognized catalytic fold</strong>. No EC number; no catalytic motif detected.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11240639" title="Yippee contains a putative zinc-finger-like metal binding domain">PMID:11240639</a></li>
+</ul>
+<h2 id="what-the-primary-literature-actually-establishes">What the primary literature actually establishes</h2>
+<h3 id="ashrafi-farazi-gordon-1998-jbc-the-founding-paper-known-but-indirect">Ashrafi, Farazi &amp; Gordon 1998 (JBC) — the founding paper (KNOWN, but indirect)</h3>
+<ul>
+<li>MOH1/YBL049W was identified as a <strong>putative N-myristoylprotein</strong> whose deletion<br />
+  (in NMT1 cells) mimics the starvation-sensitive phenotype of an nmt1 mutant.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9748261" title="Removal of any one of the following nine substrates produced a   loss of CFU similar to that observed in nmt1-451Dfaa4Delta cells: Arf1p, Arf2p,   Sip2p, Van1p, Ptc2p, YBL049W (homology to Snf7p), YJR114W, YKR007W, and   YMR077C">PMID:9748261</a></li>
+<li>The paper's parenthetical "(homology to Snf7p)" is an <strong>early, superseded</strong><br />
+  homology guess; the protein was later recognized as a Yippee-family member.</li>
+<li>This links MOH1 (phenotypically) to <strong>maintenance of proliferative potential /<br />
+  survival during stationary phase</strong>, not to a molecular activity.<br />
+  [PMID:9748261 "specific N-myristoylproteins contribute to stationary-phase<br />
+  survival" — paraphrase; verbatim: "These proteins provide opportunities to<br />
+  further define the molecular mechanisms that regulate survival during stationary<br />
+  phase"]</li>
+<li>NOTE: whether Moh1 is genuinely N-myristoylated in vivo was inferred from a<br />
+  genome-wide sequence search for Nmt substrates plus deletion phenotype, not<br />
+  demonstrated biochemically here. Treat "N-myristoylprotein" as predicted.</li>
+</ul>
+<h3 id="lee-et-al-2017-j-microbiol-biotechnol-the-pro-apoptotic-paper-known-moderate-quality">Lee et al. 2017 (J Microbiol Biotechnol) — the "pro-apoptotic" paper (KNOWN, moderate quality)</h3>
+<ul>
+<li>Basis for UniProt's "Pro-Apoptotic protein MOH1" RecName and the Apoptosis<br />
+  keyword. moh1Δ shows <strong>enhanced viability</strong> under apoptogenic stress (UV, MMS,<br />
+  camptothecin, 50°C heat shock, 1.2 M KCl), and Moh1 protein is <strong>up-regulated</strong><br />
+  under stress. <a href="https://pubmed.ncbi.nlm.nih.gov/28173693" title="The moh1Δ mutant exhibited enhanced cell viability   compared with the WT-MOH1 strain when treated with lethal UV irradiation, 1.8 mM   MMS, 100 µ CPT, heat shock at 50°C, or 1.2 M KCl">PMID:28173693</a></li>
+<li>Human <strong>YPEL5</strong> (and other YPELs) partially complement moh1Δ; YPEL5 conferred<br />
+  UV sensitivity similar to WT-MOH1. <a href="https://pubmed.ncbi.nlm.nih.gov/28173693" title="the transformant bearing   pYES2-YPEL5 was more sensitive to lethal UV irradiation and its UV sensitivity   was similar to that of the WT-MOH1 strain">PMID:28173693</a></li>
+<li>Authors frame this as "mitochondria-dependent apoptosis induced by DNA damage."<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28173693" title="their involvement in mitochondria-dependent apoptosis induced by   DNA damage">PMID:28173693</a></li>
+<li>CAVEAT (my judgment): "yeast apoptosis" / metacaspase-dependent regulated cell<br />
+  death is a <strong>contested framework</strong>; the assay is a heterologous-complementation<br />
+  viability study, abstract-only in our cache. The robust, model-independent<br />
+  observation is that <strong>moh1Δ increases stress resistance and Moh1 is<br />
+  stress-induced</strong> — i.e. Moh1 <em>sensitizes</em> cells to lethal stress. The molecular<br />
+  mechanism is not established. This is a "pro-death phenotype," not a demonstrated<br />
+  molecular activity, and does not by itself justify a GO apoptosis annotation for<br />
+  a yeast gene.</li>
+</ul>
+<h3 id="roxstrom-lindquist-faye-2001-insect-mol-biol-family-founding-paper-known-context">Roxström-Lindquist &amp; Faye 2001 (Insect Mol Biol) — family founding paper (KNOWN, context)</h3>
+<ul>
+<li>Defines the Yippee family; Drosophila Yippee found as interactor of Hemolin;<br />
+  "putative zinc-finger-like metal binding domain"; family conserved slime-mould<br />
+  → human. Human clone 76% identical to Drosophila Yippee.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11240639" title="It is the first characterized member of a conserved gene family   of proteins present in diverse eukaryotic organisms">PMID:11240639</a></li>
+<li>Even the founding family paper leaves molecular function open:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11240639" title="the Hemolin-Yippee interaction remains to be further   elucidated">PMID:11240639</a>.</li>
+</ul>
+<h3 id="wang-et-al-2018-metallomics-the-rca-zinc-annotation-source-known-computational">Wang et al. 2018 (Metallomics) — the RCA zinc annotation source (KNOWN, computational)</h3>
+<ul>
+<li>GO:0008270 (zinc ion binding, RCA, PMID:30358795) derives from a proteome-wide<br />
+  bioinformatic + MS survey of the yeast zinc proteome; MOH1 is included among 582<br />
+  known/potential zinc-binding proteins by domain/motif prediction, not by direct<br />
+  metal-binding assay of Moh1. <a href="https://pubmed.ncbi.nlm.nih.gov/30358795" title="The yeast zinc proteome of 582   known or potential zinc-binding proteins was identified using a bioinformatics   analysis that combined global domain searches with local motif searches">PMID:30358795</a></li>
+</ul>
+<h3 id="olgun-et-al-2025-biorxiv-preprint-10110120251030685511-most-recent-known-not-peer-reviewed">Olgun et al. 2025 (bioRxiv preprint 10.1101/2025.10.30.685511) — most recent (KNOWN, NOT peer-reviewed)</h3>
+<ul>
+<li>Title: "Yippee-like protein Moh1 links gene expression to metabolism and<br />
+  selective stress resistance in Saccharomyces cerevisiae." Preprint, no PMID.</li>
+<li>Reports: moh1Δ increases sensitivity to sodium azide and sulfuric acid but<br />
+<strong>increases resistance to H2O2 and acetic acid</strong>; H2O2 resistance attributed to<br />
+<strong>decreased cellular uptake from altered membrane permeability</strong>, not lowered<br />
+  mitochondrial ROS; transcriptional reprogramming + metabolic remodeling (lipids,<br />
+  proteins, cell-wall polysaccharides).</li>
+<li>This reinforces a role in <strong>stress resistance / membrane and metabolic<br />
+  remodeling</strong> but still does not assign a molecular activity. Because it is a<br />
+  non-peer-reviewed preprint with no PMID, it is used here for context/knowledge-gap<br />
+  framing only (status CLOSING/NARROWING for some gaps), NOT as the basis of a<br />
+  positive GO core function. Verbatim quoting deferred (no cached full text; the<br />
+  reference validator only checks PMID/file: quotes).</li>
+</ul>
+<h2 id="sgd-curated-phenotypes-known-from-sgd-locus-s000000145">SGD-curated phenotypes (KNOWN, from SGD locus S000000145)</h2>
+<ul>
+<li>Null mutant: <strong>increased innate thermotolerance, increased chemical resistance,<br />
+  increased UV resistance, decreased stationary-phase survival, decreased<br />
+  chronological lifespan, increased competitive fitness</strong>; haploinsufficient;<br />
+  abnormal vacuolar morphology; decreased vegetative growth (large-scale).</li>
+<li>Interactions: ~49 total (11 affinity-capture-MS, 26 negative genetic, 8 positive<br />
+  genetic, etc.) — no single strong, function-defining partner has emerged.</li>
+<li>"Essential for stationary-phase survival; not required for growth on<br />
+  nonfermentable carbon sources; possibly linked with vacuolar transport" (SGD).</li>
+</ul>
+<h2 id="synthesis-of-known">Synthesis of KNOWN</h2>
+<p>MOH1 is a small, low-abundance, cytoplasmic (inferred) Yippee-family zinc-binding<br />
+protein — the single yeast representative of the metazoan YPEL family. Its<br />
+structural Zn(2+) site is intact and deeply conserved. Loss of MOH1 makes cells<br />
+<strong>more resistant</strong> to multiple lethal stresses (UV, MMS, CPT, heat, hyperosmotic,<br />
+H2O2, acetic acid) while impairing <strong>long-term stationary-phase/chronological<br />
+survival</strong>; Moh1 is stress-induced. It is functionally interchangeable enough with<br />
+human YPEL5 for partial cross-complementation.</p>
+<h2 id="what-is-not-known-the-deliverable">What is NOT known (the deliverable)</h2>
+<ol>
+<li><strong>Molecular activity.</strong> No biochemical activity is demonstrated. Zinc binding<br />
+   (GO:0008270) is predicted from the domain, and the fold is a putative<br />
+   binding/scaffold module, but what Moh1 <em>does</em> biochemically (binds what? acts<br />
+   on what?) is unknown. No catalytic activity is supported.</li>
+<li><strong>Direct physical partners / substrates.</strong> Despite ~49 recorded interactions,<br />
+   no functionally validated, direct partner or cargo is established. The<br />
+   Drosophila Yippee–Hemolin interaction has no yeast counterpart.</li>
+<li><strong>Mechanism linking Moh1 to stress resistance and stationary-phase survival.</strong><br />
+   Why does deletion <em>increase</em> acute stress resistance yet <em>decrease</em> long-term<br />
+   survival? The 2025 preprint proposes altered membrane permeability/metabolic<br />
+   remodeling, but the causal molecular step (and whether Moh1 acts directly on<br />
+   membranes, transcription, or metabolism) is undetermined.</li>
+<li><strong>Whether the "pro-apoptotic"/regulated-cell-death framing is the correct<br />
+   biological process.</strong> The apoptosis label rests on one heterologous<br />
+   complementation study in a contested yeast-apoptosis paradigm.</li>
+<li><strong>Subcellular localization.</strong> No reliable curated localization; UniProt/GOA<br />
+   record cellular_component unknown (ND). "Possibly linked with vacuolar<br />
+   transport" (SGD) is a hypothesis.</li>
+<li><strong>Whether Moh1 is actually N-myristoylated in vivo</strong> (predicted in 1998; not<br />
+   biochemically confirmed).</li>
+</ol>
+<h2 id="annotation-review-plan">Annotation-review plan</h2>
+<ul>
+<li>GO:0000151 ubiquitin ligase complex (IBA, GO_REF:0000033, from PANTHER node<br />
+  PTN002302768 seeded by human YPEL5 P62699): <strong>scrutinize.</strong> No yeast evidence<br />
+  places Moh1 in a ubiquitin-ligase complex; the IBA is a family-level<br />
+  propagation from the Mis18/cereblon(CULT) neighborhood. The Yippee fold is<br />
+  related to cereblon's thalidomide-binding CULT domain (which <em>is</em> a substrate<br />
+  receptor of a CRL4 E3), but Moh1/YPEL proteins are not established E3 components.<br />
+  Lean MARK_AS_OVER_ANNOTATED (family over-propagation; not core), unless deep<br />
+  research surfaces yeast evidence.</li>
+<li>GO:0008270 zinc ion binding (RCA, PMID:30358795): <strong>KEEP</strong> — corroborated by<br />
+  UniProt features and my bioinformatics; the only defensible molecular function.<br />
+  Structural zinc, so KEEP_AS_NON_CORE / ACCEPT (it is the core molecular feature<br />
+  even if biochemical output is unknown).</li>
+<li>GO:0005575 cellular_component (ND) and GO:0008150 biological_process (ND):<br />
+  root/placeholder ND annotations — ACCEPT as-is (standard ND practice; they<br />
+  correctly record "unknown").</li>
+</ul>
+<h3 id="martinez-et-al-2004-mol-biol-cell-dedicated-stationary-phase-genetics-known">Martinez et al. 2004 (Mol Biol Cell) — dedicated stationary-phase genetics (KNOWN)</h3>
+<ul>
+<li>Surfaced by the falcon deep-research report and added as PMID:15456898. Genome-wide<br />
+  stationary-phase study that identified 32 genes essential for survival in stationary<br />
+  phase at 37C; MOH1 is among the stationary-phase-essential set and is NOT required<br />
+  for growth on nonfermentable carbon sources — i.e. a specific quiescence-survival<br />
+  role, not a generic respiratory defect. <a href="https://pubmed.ncbi.nlm.nih.gov/15456898" title="32 genes essential for   survival in stationary-phase at">PMID:15456898</a>. (MOH1-specific numbers are in the full text; the<br />
+  cached record is abstract-only.) The paper also (per full text, via falcon) still<br />
+  described Moh1p using the superseded "related to Snf7p" homology and as a<br />
+  "myristolated protein of unknown function."</li>
+</ul>
+<h2 id="deep-research-outcome-falcon">Deep research outcome (falcon)</h2>
+<p>The falcon deep-research job completed successfully (~1553 s, Edison Scientific<br />
+model, 26 citations) → <code>MOH1-deep-research-falcon.md</code>. It is on the correct gene<br />
+and organism and independently corroborates every substantive conclusion here: the<br />
+Yippee/Mis18/Cereblon β-tent fold with a Zn-coordinating CXXC pair and a<br />
+cradle-shaped binding pocket; MOH1 as the single yeast member of the human YPEL1–5<br />
+family; stationary-phase-survival requirement (Martinez 2004); and the explicit<br />
+conclusion that "MOH1 is not an enzyme, transporter, or structural protein in the<br />
+classical sense" but a "small regulatory or adaptor protein" whose "precise<br />
+biochemical activity in budding yeast remains unresolved." It adds context sources<br />
+(Mis18 centromere biology, cereblon/CULT, FAM72, C. glabrata MOH1 Y5H variant that<br />
+did NOT confer echinocandin resistance) but no new yeast molecular function.</p>
+<h2 id="provenance-discipline-note">Provenance discipline note</h2>
+<p>Cached publications are abstract-only (full_text_available: false for<br />
+PMID:9748261, 28173693, 30358795, 11240639, 15456898). All PMID supporting_text<br />
+quotes are verbatim substrings of the cached abstracts (grep-verified). The 2025<br />
+bioRxiv preprint has no PMID and no cached full text; it is cited as context only in<br />
+prose, with no fabricated quotes. file: quotes (bioinformatics RESULTS.md, falcon<br />
+report) were grep-verified as verbatim substrings before use.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P38191" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="moh1-ybl049w-p38191-bioinformatics-analysis">MOH1 (YBL049W / P38191) — Bioinformatics analysis</h1>
+<p>Reproducible sequence/domain analysis to ground functional inference for a dark<br />
+gene. All numbers below are produced by the scripts in <code>scripts/</code> from the input<br />
+sequence in <code>data/</code>; nothing is hardcoded. Re-run with <code>just all</code>.</p>
+<h2 id="objectives">Objectives</h2>
+<ol>
+<li>Verify the Yippee/Mis18/Cereblon (CULT) zinc-binding domain and the four<br />
+   putative Zn-coordinating cysteines annotated by UniProt (C45, C48, C101, C104).</li>
+<li>Quantify sequence conservation of MOH1 versus the five human orthologs<br />
+   (YPEL1–YPEL5) and test whether the Zn-cysteines are conserved.</li>
+<li>Assess whether there is any sequence-level evidence for catalytic activity.</li>
+</ol>
+<h2 id="methods">Methods</h2>
+<ul>
+<li><strong>Input</strong>: MOH1 sequence P38191 (<code>data/MOH1.fasta</code>, 138 aa).</li>
+<li><strong>Zinc-ligand scan</strong> (<code>scripts/analyze_yippee.py</code>): enumerates all Cys/His and<br />
+  finds all C-x(2)-C pairs by regex; reports the candidate Yippee zinc site<br />
+  (two CxxC pairs + inter-pair spacer).</li>
+<li><strong>Conservation</strong> (<code>scripts/conservation.py</code>): global BLOSUM62 pairwise<br />
+  alignment (Biopython <code>PairwiseAligner</code>) of MOH1 against each human YPEL; reports<br />
+  percent identity over aligned columns and whether each probed query position is<br />
+  identical/similar/gapped in the homolog.</li>
+<li><strong>Orthologs</strong> (<code>scripts/fetch_orthologs.py</code>): live download of reviewed human<br />
+  YPEL1–5 from UniProt (O60688, Q96QA6, P61236, Q96NS1, P62699).</li>
+<li><strong>Negative control</strong>: yeast pyruvate kinase CDC19 (P00549), a non-Yippee<br />
+  protein, run through both scripts to confirm they are not hardcoded.</li>
+</ul>
+<h2 id="results">Results</h2>
+<h3 id="1-yippee-zinc-site-from-resultsmoh1_yippeetxt">1. Yippee zinc site (from <code>results/moh1_yippee.txt</code>)</h3>
+<div class="codehilite"><pre><span></span><code>length                    138
+cysteine_positions        [45, 48, 97, 101, 104, 135, 137]
+CxxC_pairs                [(45, 48), (101, 104)]
+candidate_zinc_site       C45-x2-C48 ... C101-x2-C104
+inter_pair_spacer_residues 52
+predicted_zn_ligand_count 4
+</code></pre></div>
+
+<p>MOH1 contains exactly the two CxxC motifs that define the Yippee zinc site:<br />
+<strong>C45-x2-C48 … C101-x2-C104</strong>, separated by 52 residues. This is the canonical<br />
+Yippee signature (Cys-X₂-Cys-X₅₂-Cys-X₂-Cys) reported in the literature for the<br />
+family and matches the four UniProt Zn(2+)-binding features (positions 45, 48,<br />
+101, 104) exactly. The additional cysteines (97, 135, 137) do not form the<br />
+site.</p>
+<h3 id="2-ortholog-conservation-from-resultsconservationtsv">2. Ortholog conservation (from <code>results/conservation.tsv</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Human ortholog</th>
+<th>length</th>
+<th>% identity to MOH1</th>
+<th>C45</th>
+<th>C48</th>
+<th>C101</th>
+<th>C104</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>YPEL1 (O60688)</td>
+<td>119</td>
+<td>44.0</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+</tr>
+<tr>
+<td>YPEL2 (Q96QA6)</td>
+<td>119</td>
+<td>44.0</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+</tr>
+<tr>
+<td>YPEL3 (P61236)</td>
+<td>119</td>
+<td>44.8</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+</tr>
+<tr>
+<td>YPEL4 (Q96NS1)</td>
+<td>127</td>
+<td>44.2</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+</tr>
+<tr>
+<td>YPEL5 (P62699)</td>
+<td>121</td>
+<td>37.3</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+<td>=</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>MOH1 is a <strong>bona fide, moderately conserved (~37–45% identity) ortholog</strong> of<br />
+  the human YPEL family across the Yippee domain.</li>
+<li><strong>All four zinc-binding cysteines are perfectly conserved</strong> in every human<br />
+  ortholog (<code>=</code> in every cell), strongly supporting a structural Zn(2+) site<br />
+  retained from yeast to human.</li>
+<li>Notably, <strong>YPEL5 (P62699) is the <em>least</em> identical</strong> of the five (37.3%), yet<br />
+  it is (a) the PANTHER seed for the IBA "ubiquitin ligase complex" annotation<br />
+  and (b) the human gene shown to functionally complement moh1Δ (PMID:28173693).<br />
+  So MOH1 is the yeast representative of the whole family rather than a specific<br />
+  1:1 ortholog of any single human YPEL.</li>
+</ul>
+<h3 id="3-evidence-regarding-catalytic-activity">3. Evidence regarding catalytic activity</h3>
+<p>The Yippee fold (two four-stranded β-meanders coordinating one Zn²⁺ at the apex,<br />
+forming a cradle-shaped pocket) is a <strong>structural/binding scaffold, not a<br />
+recognized catalytic fold</strong>. The sequence contains no canonical catalytic motif<br />
+and no EC number is assigned in UniProt/GOA. The conserved cysteines are the<br />
+Zn-structural ligands, not a catalytic dyad/triad. <strong>There is no sequence-level<br />
+evidence for enzymatic activity</strong>; the family is best described as a putative<br />
+zinc-dependent protein/nucleic-acid interaction module of unknown biochemical<br />
+output.</p>
+<h3 id="4-negative-control-from-resultscontrol_yippeetxt-resultscontrol_conservationtsv">4. Negative control (from <code>results/control_yippee.txt</code>, <code>results/control_conservation.tsv</code>)</h3>
+<p>Yeast pyruvate kinase CDC19 (P00549, 500 aa) returns<br />
+<code>candidate_zinc_site NONE (fewer than two CxxC pairs)</code> and its residues at the<br />
+probed positions do not match the YPEL cysteines (mostly gaps). This confirms the<br />
+scripts compute results from the actual input rather than emitting a fixed answer.</p>
+<h2 id="conclusions">Conclusions</h2>
+<ul>
+<li><strong>Confirmed</strong>: MOH1 is a Yippee-family protein with an intact, evolutionarily<br />
+  conserved zinc-binding site (C45/C48/C101/C104); the UniProt Zn features and the<br />
+  PROSITE Yippee domain call are corroborated independently here.</li>
+<li><strong>Confirmed</strong>: MOH1 is a genuine ortholog of the human YPEL1–5 family<br />
+  (~37–45% identity), the single yeast member of a family that expanded to five<br />
+  paralogs in humans.</li>
+<li><strong>Inconclusive / unknown (correctly so)</strong>: the analysis provides <strong>no</strong><br />
+  evidence for a specific molecular <em>function</em> (catalytic or otherwise) beyond<br />
+  zinc binding. The biochemical activity and direct partners of MOH1 remain<br />
+  undetermined by sequence analysis — consistent with its status as a<br />
+  functionally dark gene.</li>
+</ul>
+<h2 id="reproducibility-checklist">Reproducibility checklist</h2>
+<ul>
+<li>[x] No script uses hardcoded inputs or outputs (all read <code>data/*.fasta</code>, write <code>results/*</code>).</li>
+<li>[x] Scripts tested on an independent input (CDC19 / P00549 negative control): Yippee scan correctly returns NO site; conservation probe correctly returns non-matching positions.</li>
+<li>[x] Analyses completed as expected.</li>
+<li>[x] Direct script outputs are in <code>results/</code>.</li>
+<li>[x] Summary includes provenance and justification; uncertainty (catalytic activity, specific MF) explicitly flagged as unresolved.</li>
+</ul>
+<h2 id="tools-data">Tools &amp; data</h2>
+<ul>
+<li>Biopython 1.87 (<code>PairwiseAligner</code>, BLOSUM62); Python ≥3.11; requests.</li>
+<li>UniProt REST API (sequences downloaded live).</li>
+<li>Reference sequence: UniProt P38191 (MOH1_YEAST).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P38191
+gene_symbol: MOH1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  MOH1 (YBL049W) is a small (138 aa), low-abundance protein of the Yippee family,
+  the single Saccharomyces cerevisiae representative of the family that expanded to
+  the five YPEL paralogs (YPEL1-YPEL5) in humans. It comprises a Yippee/Mis18/Cereblon
+  (CULT) fold — a zinc-stabilized double beta-meander that coordinates one structural
+  Zn(2+) ion through four conserved cysteines (Cys45, Cys48, Cys101, Cys104) and
+  presents a cradle-shaped pocket implicated in protein or nucleic-acid binding. The
+  fold is a binding/scaffold module rather than a catalytic one, and no enzymatic
+  activity has been demonstrated. Functionally, MOH1 is understudied: it is
+  stress-inducible, and its deletion increases acute resistance to several lethal
+  stresses (UV, methyl methanesulfonate, camptothecin, heat, hyperosmotic shock,
+  hydrogen peroxide and acetic acid) while impairing long-term stationary-phase and
+  chronological survival. Human YPEL genes can partially substitute for MOH1,
+  indicating conservation of function across the family. The direct molecular
+  activity, physical partners, subcellular site of action, and the mechanism linking
+  MOH1 to stress tolerance and quiescence remain undetermined.
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings:
+  - statement: &gt;-
+      The ubiquitin ligase complex annotation on MOH1 is a phylogenetically
+      propagated (IBA) inference from PANTHER family PTHR13848, seeded by human
+      YPEL5 (UniProtKB:P62699); there is no yeast-specific experimental support.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GO_REF for IBA propagation. The propagation itself is real, but the resulting
+      ubiquitin ligase complex assignment is a family-level over-propagation for MOH1
+      (see the annotation review).
+- id: PMID:30358795
+  title: The cellular economy of the Saccharomyces cerevisiae zinc proteome.
+  findings:
+  - statement: &gt;-
+      MOH1 is included among 582 known or potential zinc-binding proteins identified
+      by a proteome-wide bioinformatic domain/motif survey; this is the basis of the
+      RCA zinc ion binding annotation, a prediction rather than a direct metal-binding
+      assay of Moh1.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Supports zinc binding by computational (RCA) prediction from
+      the Yippee domain; consistent with UniProt Zn-binding features and my
+      bioinformatics analysis.
+- id: PMID:28173693
+  title: Pro-Apoptotic Role of the Human YPEL5 Gene Identified by Functional Complementation
+    of a Yeast moh1Δ Mutation.
+  findings:
+  - statement: &gt;-
+      moh1 deletion increases cell viability under multiple lethal stresses
+      (UV, MMS, camptothecin, heat, hyperosmotic shock), and Moh1 is stress-induced;
+      human YPEL genes partially complement moh1delta. Framed by the authors as
+      involvement in DNA-damage-induced, mitochondria-dependent regulated cell death.
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      PubMed-verified; the only dedicated functional study of MOH1. Abstract-only in
+      cache. It establishes a robust stress-sensitizing phenotype and cross-species
+      complementation, but the &#34;pro-apoptotic/mitochondria-dependent apoptosis&#34;
+      interpretation rests on a single heterologous-complementation viability study in
+      the contested yeast programmed-cell-death paradigm; it does not establish a
+      molecular activity.
+- id: PMID:9748261
+  title: A role for Saccharomyces cerevisiae fatty acid activation protein 4 in regulating
+    protein N-myristoylation during entry into stationary phase.
+  findings:
+  - statement: &gt;-
+      YBL049W (MOH1) was identified as one of nine putative N-myristoylproteins whose
+      deletion reproduces the stationary-phase survival defect of nmt1 mutant cells,
+      linking MOH1 phenotypically to maintenance of proliferative potential during
+      stationary phase.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified founding paper for MOH1. Abstract-only. The parenthetical
+      &#34;(homology to Snf7p)&#34; is a superseded homology guess; MOH1 was later recognized
+      as a Yippee-family protein. N-myristoylation of Moh1 is predicted here, not
+      shown biochemically.
+- id: PMID:11240639
+  title: The Drosophila gene Yippee reveals a novel family of putative zinc binding
+    proteins highly conserved among eukaryotes.
+  findings:
+  - statement: &gt;-
+      Defines the Yippee family as a highly conserved eukaryotic family bearing a
+      putative zinc-finger-like metal-binding domain; even at the family&#39;s founding the
+      molecular function was left open.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Family-defining paper; supports the zinc-binding-module framing
+      and the family-wide &#34;function largely unknown&#34; status.
+- id: PMID:15456898
+  title: &#39;Genomic analysis of stationary-phase and exit in Saccharomyces cerevisiae:
+    gene expression and identification of novel essential genes.&#39;
+  findings:
+  - statement: &gt;-
+      Genome-wide screen that identified MOH1 as one of the stationary-phase-essential
+      genes: moh1 deletion causes a large loss of viability during long-term
+      stationary phase at 37C, yet MOH1 is not required for growth on nonfermentable
+      carbon sources, indicating a specific quiescence-survival role rather than a
+      generic respiratory defect.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (abstract-only in cache; the MOH1-specific detail is in the full
+      text, surfaced by the falcon deep-research report). Best dedicated genetic
+      evidence that MOH1 is required for stationary-phase/quiescence survival.
+- id: file:yeast/MOH1/MOH1-deep-research-falcon.md
+  title: Falcon deep research report on S. cerevisiae MOH1 (YBL049W)
+  findings:
+  - statement: &gt;-
+      Synthesis concluding MOH1 is a small conserved Yippee-family regulatory/adaptor
+      protein with a zinc-stabilized beta-tent fold and cradle-shaped binding pocket,
+      required for stationary-phase survival, whose precise biochemical activity,
+      substrate, and dedicated pathway remain unresolved in the retrievable literature.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Falcon report (Edison Scientific), correct gene/organism, 26 citations; corroborates
+      the domain/fold, ortholog and stationary-phase findings independently established
+      here. Used for context; positive GO claims are anchored to PMIDs and the
+      bioinformatics analysis, not to this report.
+- id: file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+  title: Bioinformatics analysis of MOH1 (Yippee domain, zinc site, ortholog conservation)
+  findings:
+  - statement: &gt;-
+      Independently confirms the Yippee zinc signature (C45-x2-C48 ... C101-x2-C104,
+      52-residue spacer) matching the UniProt Zn-binding features, ~37-45% identity to
+      human YPEL1-5 with all four Zn-cysteines perfectly conserved, and no
+      sequence-level evidence for catalytic activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reproducible in-repo analysis; negative control (pyruvate kinase) confirms the
+      scripts are not hardcoded.
+existing_annotations:
+- term:
+    id: GO:0000151
+    label: ubiquitin ligase complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Family-level phylogenetic propagation (IBA) from PANTHER PTHR13848, seeded by
+      human YPEL5 (UniProtKB:P62699). There is no yeast experimental evidence that
+      Moh1 is a component of a ubiquitin ligase complex. Although the Yippee fold is
+      structurally related to the CULT domain of cereblon (a substrate receptor of a
+      CRL4 E3 ligase), Yippee/YPEL proteins are not themselves established ubiquitin
+      ligase complex subunits, and no such complex has been demonstrated for Moh1.
+      This is an over-propagation from a distant structural relative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IBA propagated from a structurally related but functionally distinct neighborhood
+      (Mis18/cereblon-CULT); no experimental or orthology evidence places Moh1 in a
+      ubiquitin ligase complex in yeast. Not a core function.
+    supported_by:
+    - reference_id: file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        The Yippee fold (two four-stranded β-meanders coordinating one Zn²⁺ at the
+        apex, forming a cradle-shaped pocket) is a **structural/binding scaffold, not a
+        recognized catalytic fold**.
+    - reference_id: file:yeast/MOH1/MOH1-deep-research-falcon.md
+      supporting_text: &gt;-
+        MOH1 is not an enzyme, transporter, or structural protein in the classical sense
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - COMPARTMENT_OR_COMPLEX_MISMATCH
+      - FUNCTIONAL_DIVERGENCE
+      source_entities:
+      - source_id: PANTHER:PTN002302768
+        source_label: Yippee-like ancestral node (PTHR13848)
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: &gt;-
+          Node seeded by human YPEL5 (UniProtKB:P62699); the ubiquitin-ligase-complex
+          role does not transfer to the Yippee/YPEL subfamily, which shares only the
+          zinc-binding beta-fold with the Mis18/cereblon(CULT) neighborhood.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: RCA
+  original_reference_id: PMID:30358795
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Zinc ion binding is the single well-supported molecular feature of Moh1. It is
+      predicted by proteome-wide domain/motif analysis (RCA, PMID:30358795),
+      corroborated by the UniProt Zn(2+)-binding features (Cys45, Cys48, Cys101,
+      Cys104) and independently by in-repo bioinformatics, which recovers the canonical
+      Yippee two-CxxC zinc signature and shows perfect conservation of all four
+      cysteines across human YPEL1-5. The bound zinc is structural (folds the Yippee
+      domain); it is not evidence of a catalytic activity. Accepted as the core
+      molecular feature, though the downstream biochemical output remains unknown.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:30358795
+      supporting_text: &gt;-
+        582 known or potential zinc-binding proteins was identified using a
+        bioinformatics analysis that combined global domain searches with local motif
+        searches
+    - reference_id: file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+      supporting_text: &gt;-
+        MOH1 contains exactly the two CxxC motifs that define the Yippee zinc site
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root cellular_component annotation with the ND (no data) code, the standard
+      placeholder recording that no experimental localization is available for Moh1.
+      This correctly reflects the state of knowledge; high-throughput localization for
+      this low-abundance protein is not curated.
+    action: ACCEPT
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process annotation with the ND (no data) code. Although
+      phenotypes are recorded (stress resistance, stationary-phase survival), no
+      specific molecular biological process has been assigned to Moh1, so the ND
+      placeholder is appropriate.
+    action: ACCEPT
+core_functions:
+- description: &gt;-
+    Structural zinc binding by the Yippee domain. The conserved Cys45/Cys48/Cys101/
+    Cys104 tetrad coordinates a single Zn(2+) ion that stabilizes the Yippee/Mis18/
+    CULT fold. This is the only molecular feature of Moh1 supported by convergent
+    computational and comparative evidence; the resulting protein/nucleic-acid-binding
+    activity of the cradle-shaped pocket, and any biochemical output, are not
+    established.
+  molecular_function:
+    id: GO:0008270
+    label: zinc ion binding
+  supported_by:
+  - reference_id: PMID:30358795
+    supporting_text: &gt;-
+      582 known or potential zinc-binding proteins was identified using a
+      bioinformatics analysis that combined global domain searches with local motif
+      searches
+  - reference_id: file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      all four zinc-binding cysteines are perfectly conserved
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular activity of Moh1 is undetermined. Beyond structural zinc binding by
+    the Yippee domain, it is not known what Moh1 binds (protein? nucleic acid?) or
+    what biochemical output, if any, the cradle-shaped Yippee pocket produces. No
+    catalytic activity is supported.
+  boundary: &gt;-
+    The Yippee/Mis18/CULT fold and its structural Zn(2+) site (Cys45/48/101/104) are
+    firmly established by UniProt features, PROSITE/Pfam/InterPro domain calls and
+    independent in-repo bioinformatics; the fold is a zinc-stabilized binding scaffold,
+    not a known catalytic fold.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Moh1 is the single yeast ortholog of the human YPEL family, which is implicated in
+    proliferation, senescence and stress adaptation; defining the yeast protein&#39;s
+    biochemistry would anchor mechanism for the whole conserved family.
+  resolution: &gt;-
+    Biochemical identification of Moh1 ligands/substrates (e.g. interaction proteomics
+    of tagged Moh1, in vitro binding assays with the purified Yippee domain, structural
+    studies of the pocket) and tests for any enzymatic activity.
+  provenance:
+  - reference_id: PMID:11240639
+    supporting_text: the Hemolin-Yippee interaction remains to be further elucidated
+  - reference_id: file:yeast/MOH1/MOH1-bioinformatics/RESULTS.md
+    supporting_text: &gt;-
+      There is no sequence-level evidence for enzymatic activity
+- gap_statement: &gt;-
+    No functionally validated direct physical partner or substrate of Moh1 is known.
+    Despite ~49 recorded high-throughput interactions, none has been shown to be a
+    direct, function-defining partner, and the Drosophila Yippee-Hemolin interaction
+    has no established yeast counterpart.
+  boundary: &gt;-
+    Large-scale interaction datasets (affinity-capture-MS, genetic interactions) exist
+    for Moh1, and human YPEL proteins partially complement moh1delta, indicating a
+    conserved but unspecified activity.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying a direct partner would convert the family from &#34;putative binding module&#34;
+    to a defined pathway component.
+  resolution: &gt;-
+    Targeted co-purification/crosslinking-MS with tagged Moh1, and validation of
+    candidate partners by reciprocal pulldown and phenotype epistasis.
+  provenance:
+  - reference_id: PMID:11240639
+    supporting_text: the Hemolin-Yippee interaction remains to be further elucidated
+- gap_statement: &gt;-
+    The mechanism by which Moh1 shapes stress tolerance and quiescence is unknown. It
+    is unexplained why loss of Moh1 increases acute resistance to several lethal
+    stresses yet decreases long-term stationary-phase/chronological survival, and
+    whether Moh1 acts directly on membranes, metabolism, transcription, or cell death
+    machinery.
+  boundary: &gt;-
+    The phenotypes are reproducible: moh1delta increases viability under UV, MMS,
+    camptothecin, heat and hyperosmotic shock and is stress-induced (PMID:28173693);
+    MOH1 is one of the stationary-phase-essential genes required for long-term
+    survival in quiescence (PMID:15456898, PMID:9748261). A 2025 preprint
+    additionally reports altered membrane permeability and metabolic remodeling in
+    moh1delta.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: NARROWING
+  significance: &gt;-
+    Resolving the mechanism would explain a conserved stress/aging factor and clarify
+    whether the human YPEL &#34;senescence/stress&#34; phenotypes share this mechanism.
+  resolution: &gt;-
+    Epistasis of moh1delta with defined stress-response and membrane/metabolic pathways;
+    peer-reviewed follow-up of the 2025 preprint&#39;s permeability and transcriptome
+    findings.
+  provenance:
+  - reference_id: PMID:28173693
+    supporting_text: &gt;-
+      exhibited enhanced cell viability compared with the WT-MOH1 strain when treated
+      with lethal UV irradiation
+  - reference_id: PMID:15456898
+    supporting_text: &gt;-
+      32 genes essential for survival in stationary-phase at
+- gap_statement: &gt;-
+    Whether &#34;apoptotic process&#34;/regulated cell death is the correct biological-process
+    framing for Moh1 is unresolved. The label derives from a single heterologous
+    complementation study interpreted within the contested yeast programmed-cell-death
+    paradigm.
+  boundary: &gt;-
+    It is established that Moh1 sensitizes cells to lethal stress (deletion is
+    protective) and that human YPEL5 restores this sensitization; the interpretation as
+    caspase/mitochondria-dependent apoptosis is the uncertain part.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Determines whether GO apoptosis/regulated-cell-death terms are appropriate for this
+    gene and its orthologs.
+  resolution: &gt;-
+    Independent replication with genetic dissection of the metacaspase (YCA1) and
+    mitochondrial pathways, distinguishing bona fide regulated cell death from passive
+    stress-induced death.
+  provenance:
+  - reference_id: PMID:28173693
+    supporting_text: their involvement in mitochondria-dependent apoptosis induced by DNA damage
+- gap_statement: &gt;-
+    The subcellular site of Moh1 action is unknown; no reliable localization is
+    curated, and the GOA cellular_component annotation is ND.
+  boundary: &gt;-
+    Moh1 is a low-abundance soluble protein; SGD notes a possible link to vacuolar
+    transport and an abnormal-vacuolar-morphology deletion phenotype, but these are
+    hypotheses, not localization data.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Localization would constrain candidate functions (e.g. membrane vs nuclear vs
+    cytosolic activity).
+  resolution: &gt;-
+    Endogenous fluorescent tagging and fractionation of Moh1 under normal and stress
+    conditions.
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What does the Yippee-domain pocket of Moh1 bind (protein, nucleic acid, small
+    molecule), and does the bound zinc have any role beyond folding the domain?
+  experts: []
+- question: &gt;-
+    By what molecular mechanism does moh1 deletion simultaneously increase acute stress
+    resistance and decrease long-term stationary-phase survival?
+  experts: []
+- question: &gt;-
+    Is the human YPEL family&#39;s proliferation/senescence role mechanistically the same
+    as the yeast Moh1 stress/quiescence role, given cross-species complementation?
+  experts: []
+suggested_experiments:
+- hypothesis: &gt;-
+    Moh1 acts as a zinc-dependent binding module for a specific partner that mediates
+    its stress-sensitizing function.
+  description: &gt;-
+    Affinity-purify endogenously tagged Moh1 under basal and stress conditions and
+    identify co-purifying proteins/nucleic acids by mass spectrometry and RNA
+    sequencing; validate top candidates by reciprocal pulldown and epistasis with
+    moh1delta stress phenotypes.
+  experiment_type: interaction proteomics
+- hypothesis: &gt;-
+    The four conserved cysteines are required for Moh1 function via structural zinc
+    coordination.
+  description: &gt;-
+    Construct Cys-to-Ala/Ser substitutions at Cys45/48/101/104, test protein stability
+    and rescue of moh1delta stress phenotypes, to determine whether the zinc site is
+    required for function in vivo.
+  experiment_type: structure-function mutagenesis
+- hypothesis: &gt;-
+    moh1delta hydrogen-peroxide resistance stems from decreased uptake due to altered
+    membrane permeability rather than altered ROS metabolism.
+  description: &gt;-
+    Measure intracellular ROS, H2O2 uptake kinetics, and membrane lipid/permeability in
+    wild-type vs moh1delta cells, following up the 2025 preprint under peer-reviewed
+    conditions.
+  experiment_type: cell physiology / permeability assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
