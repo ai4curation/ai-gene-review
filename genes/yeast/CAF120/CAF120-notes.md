@@ -134,6 +134,37 @@ NOT known (knowledge gaps):
   DNA-damage-induced relocalization.
 - Functional relationship to / redundancy with paralog SKG3.
 
+## UPDATE (post-merge, from falcon deep research + independent verification): meiotic crossover role
+
+The falcon deep-research report (CAF120-deep-research-falcon.md, 21 citations) surfaced a
+specific, previously-missed functional finding, which I then verified independently against the
+primary paper (NOT taking falcon's word for it):
+
+- **CAF120 is a regulator of meiotic crossing-over.** Wild et al. 2019 (Mol Cell; PMID:31351878;
+  DOI 10.1016/j.molcel.2019.06.022; full text cached) affinity-purified the recombination-
+  intermediate-processing enzymes across mitosis and meiosis and found CAF120 as a meiosis-
+  specific (metaphase-I-enriched) interactor of the MutLgamma (Mlh1-Mlh3)-Exo1 crossover
+  machinery. A functional screen showed caf120Δ reproducibly REDUCES crossover frequency:
+  [PMID:31351878 "Rtk1, Caf120, and Chd1 as regulators of crossing-over"] and
+  [PMID:31351878 "chd1Δ, rtk1Δ, and caf120Δ" (the 3 of 5 mutants with reduced genetic distance)].
+- The authors characterized the MECHANISM only for the co-identified factor Chd1 (via DNA
+  binding), and explicitly leave CAF120 as unresolved:
+  [PMID:31351878 "Rtk1 and Caf120 are interesting candidates for further functional analyses"].
+- Verified independently via PubMed/abstract (PMID:31351878) and WebSearch — the abstract states
+  the same. This is a genuine experimental role, so CAF120 is NOT wholly dark; it is MF-dark with
+  one now-known BP (meiotic crossover regulation) whose mechanism is a residual sub-gap.
+
+Actions taken: added NEW annotation GO:0010520 (regulation of reciprocal meiotic recombination,
+IMP, PMID:31351878); added a meiotic core_function; added a RESIDUAL_SUBGAP knowledge gap for the
+unknown mechanism; updated description. All supporting_text verbatim-verified against the cached
+full text.
+
+Note on falcon's other claims: falcon also cited Goldstrohm 2007 (JBC; PUF/Ccr4 deadenylation)
+as testing caf120Δ with NO effect on HO mRNA deadenylation, and Kim 2018 (Genome Res; homomer-
+ization) for self-interaction + cytoplasm/bud/bud-neck localization. These are plausible but I
+did NOT independently verify the caf120-specific data in those papers, so I did not add them as
+annotations (only the crossover finding, which I verified, was incorporated).
+
 ## Provenance summary of key references
 - PMID:11733989 — CCR4-NOT 1.0 MDa complex purification (abstract-only in cache; names CAF40/
   CAF130 as new components; UniProt attributes CAF120 subunit status to it).
