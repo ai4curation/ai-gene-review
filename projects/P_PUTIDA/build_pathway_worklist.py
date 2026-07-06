@@ -18,6 +18,8 @@ MODULE_MAP = {
         "module_file": "modules/tryptophan_biosynthesis.yaml",
         "scope_note": "Seeded submodule; KEGG bucket also includes phenylalanine, tyrosine, and chorismate genes.",
         "priority_phase": "3",
+        "pr_status": "MERGED",
+        "pr_url": "https://github.com/ai4curation/ai-gene-review/pull/1874",
     },
     "kegg:ppu00270": {
         "module": "methionine_biosynthesis",
@@ -39,7 +41,7 @@ MODULE_MAP = {
     },
     "kegg:ppu00010": {
         "module": "entner_doudoroff_and_gluconeogenesis",
-        "module_file": "",
+        "module_file": "modules/entner_doudoroff_and_gluconeogenesis.yaml",
         "scope_note": "P. putida lacks canonical EMP glycolysis; needs careful split from generic glycolysis/gluconeogenesis.",
         "priority_phase": "1",
     },
@@ -161,8 +163,8 @@ def build_worklist(project_dir: Path) -> list[dict[str, str]]:
             "taxon_research_path": taxon_research_path.as_posix(),
             "priority_phase": mapping.get("priority_phase", ""),
             "batch_status": "SEEDED" if module_name else "UNMAPPED",
-            "pr_status": "NOT_STARTED",
-            "pr_url": "",
+            "pr_status": mapping.get("pr_status", "NOT_STARTED"),
+            "pr_url": mapping.get("pr_url", ""),
             "scope_note": mapping.get("scope_note", ""),
         }
         if not module_name and bucket.get("bucket_type") == "kegg_pathway":

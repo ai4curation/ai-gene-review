@@ -13,6 +13,7 @@ import yaml
 
 
 DEFAULT_PROJECT_DIR = Path("projects/P_PUTIDA")
+_PSEPK_REVIEW_INDEX: tuple[dict[str, Path], dict[str, Path]] | None = None
 
 
 def read_tsv(path: Path) -> list[dict[str, str]]:
@@ -44,11 +45,46 @@ def locus_key(row: dict[str, str]) -> tuple[int, str]:
     return (999999, row.get("suggested_review_name", ""))
 
 
+def psepk_review_index() -> tuple[dict[str, Path], dict[str, Path]]:
+    global _PSEPK_REVIEW_INDEX
+    if _PSEPK_REVIEW_INDEX is not None:
+        return _PSEPK_REVIEW_INDEX
+
+    by_accession: dict[str, Path] = {}
+    by_symbol: dict[str, Path] = {}
+    for review in Path("genes/PSEPK").glob("*/*-ai-review.yaml"):
+        try:
+            data = yaml.safe_load(review.read_text(encoding="utf-8")) or {}
+        except Exception:
+            continue
+        accession = data.get("id", "")
+        symbol = data.get("gene_symbol", "")
+        if accession:
+            by_accession.setdefault(str(accession), review)
+        if symbol:
+            by_symbol.setdefault(str(symbol), review)
+
+    _PSEPK_REVIEW_INDEX = (by_accession, by_symbol)
+    return _PSEPK_REVIEW_INDEX
+
+
+def locate_review(row: dict[str, str]) -> Path:
+    gene = row.get("suggested_review_name", "")
+    direct = Path("genes") / "PSEPK" / gene / f"{gene}-ai-review.yaml"
+    by_accession, by_symbol = psepk_review_index()
+    accession = row.get("uniprot_accession", "")
+    return by_accession.get(accession) or by_symbol.get(gene) or direct
+
+
 def review_status(row: dict[str, str]) -> dict[str, str]:
     gene = row.get("suggested_review_name", "")
-    gene_dir = Path("genes") / "PSEPK" / gene
-    review = gene_dir / f"{gene}-ai-review.yaml"
-    asta = gene_dir / f"{gene}-deep-research-asta.md"
+    review = locate_review(row)
+    gene_dir = review.parent
+    review_stem = review.name.removesuffix("-ai-review.yaml")
+    asta_candidates = [gene_dir / f"{gene}-deep-research-asta.md"]
+    if review_stem != gene:
+        asta_candidates.append(gene_dir / f"{review_stem}-deep-research-asta.md")
+    asta = next((candidate for candidate in asta_candidates if candidate.exists()), asta_candidates[0])
     curation = "MISSING"
     if review.exists():
         curation = "CURATED"
