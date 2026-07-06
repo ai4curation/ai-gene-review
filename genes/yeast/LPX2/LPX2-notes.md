@@ -131,7 +131,11 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
 
 ## References worth citing
 - PMID:36164978 Yifrach 2022 — peroxi-ome; naming; matrix localization; LPG lipidome. HIGH.
-- PMID:24187129 Ploier 2013 — hydrolase screen; source of "lipase activity" attribution.
-  MEDIUM (abstract-only for us; Ykl050c not in abstract). 
+- PMID:24187129 Ploier 2013 — hydrolase screen; source of the "lipase activity" attribution.
+  HIGH. Full text available: it DID test Ykl050cp (named among GXSXG candidates; overexpression
+  proposed a TG-mobilization role) but confirmed in-vivo lipolytic activity only for Lpx1p and
+  Ayr1p — all other candidates including Ykl050cp did NOT exhibit lipolytic activity in vivo. So
+  this is a NEGATIVE direct result for LPX2; Yifrach 2022's "clear lipase activity" attribution
+  is an overstatement, and this strengthens the MF-unknown conclusion.
 - PMID:16467472 Slattery 2006 — AZF1 regulates LPX2 expression (UniProt-curated). MEDIUM.
 - PMID:16338374 Tang 2005 — SCF/Cdc4 substrate screen (SGD-curated turnover). LOW/MEDIUM.
