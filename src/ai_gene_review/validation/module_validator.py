@@ -267,7 +267,110 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
 
+    # Supporting-text snippets: every EvidenceItem literature quote (PMID/DOI
+    # source_id paired with supporting_text) must be a verbatim (normalized)
+    # substring of the cached publication. Mismatches block; unfetchable or
+    # uncached references degrade to advisory warnings.
+    st_errors, st_warnings = validate_supporting_text(doc)
+    errors.extend(st_errors)
+    warnings.extend(st_warnings)
+
     return ModuleValidationResult(path=path, errors=errors, warnings=warnings)
+
+
+# Literature source_id prefixes whose supporting_text quotes are checked
+# verbatim against a cached publication. Everything else (GO, file:, PANTHER,
+# Reactome, UniProtKB, ...) is provenance grounding, not a fetchable quote.
+_LITERATURE_PREFIXES = {"PMID", "DOI"}
+
+
+def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
+    """Yield ``(source_id, supporting_text)`` for every EvidenceItem-like dict.
+
+    An EvidenceItem is recognised structurally as any mapping carrying both a
+    ``source_id`` and a non-empty ``supporting_text``. Only literature sources
+    (``PMID:``/``DOI:``) are yielded, since only those have a fetchable text to
+    check the quote against.
+
+    >>> doc = {"evidence": [{"source_id": "PMID:1", "supporting_text": "x"},
+    ...                     {"source_id": "GO:0001", "supporting_text": "y"}]}
+    >>> list(iter_evidence_snippets(doc))
+    [('PMID:1', 'x')]
+    """
+    if isinstance(obj, dict):
+        source_id = obj.get("source_id")
+        supporting_text = obj.get("supporting_text")
+        if (
+            isinstance(source_id, str)
+            and isinstance(supporting_text, str)
+            and supporting_text.strip()
+        ):
+            prefix = source_id.split(":", 1)[0].upper()
+            if prefix in _LITERATURE_PREFIXES:
+                yield (source_id, supporting_text)
+        for value in obj.values():
+            yield from iter_evidence_snippets(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from iter_evidence_snippets(item)
+
+
+def validate_supporting_text(
+    doc: object,
+    publications_dir: Optional[Path] = None,
+) -> Tuple[List[str], List[str]]:
+    """Verify every EvidenceItem literature quote against the cached publication.
+
+    Uses ``linkml-reference-validator``'s own ``SupportingTextValidator`` (the
+    same normalize + deterministic-substring matcher gene reviews use), reading
+    from the ``publications/`` cache. Returns ``(errors, warnings)``:
+
+    - a quote that is not a substring of the fetched/cached publication is an
+      **error** (blocks validation);
+    - a reference that cannot be fetched or is not cached is a **warning**
+      (advisory, so offline/rate-limited runs do not hard-fail).
+
+    The check is a no-op (returns empty) when the reference validator is not
+    installed, so it degrades gracefully.
+    """
+    if not isinstance(doc, dict):
+        return [], []
+
+    snippets = list(iter_evidence_snippets(doc))
+    if not snippets:
+        return [], []
+
+    try:
+        from linkml_reference_validator.models import ReferenceValidationConfig
+        from linkml_reference_validator.validation.supporting_text_validator import (
+            SupportingTextValidator,
+        )
+    except ImportError:
+        return [], []
+
+    if publications_dir is None:
+        publications_dir = (
+            Path(__file__).resolve().parents[3] / "publications"
+        )
+
+    config = ReferenceValidationConfig(
+        cache_dir=publications_dir,
+        fetch_full_text=False,
+    )
+    validator = SupportingTextValidator(config)
+
+    errors: List[str] = []
+    warnings: List[str] = []
+    for source_id, supporting_text in snippets:
+        result = validator.validate(supporting_text, source_id)
+        if result.is_valid:
+            continue
+        message = str(getattr(result, "message", "") or "")
+        if "could not fetch" in message.lower() or "no records found" in message.lower():
+            warnings.append(f"Supporting text unverified ({source_id}): {message}")
+        else:
+            errors.append(f"Supporting text mismatch ({source_id}): {message}")
+    return errors, warnings
 
 
 def validate_chaining(doc: object) -> List[str]:
