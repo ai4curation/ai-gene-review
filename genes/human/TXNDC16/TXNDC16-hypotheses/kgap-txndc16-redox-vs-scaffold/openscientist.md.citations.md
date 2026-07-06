@@ -17,7 +17,7 @@
 - PMID:35965326
 - PMID:38629066
 - PMID:39319369
-- PMID:42253318
+- PMID:42253318 - SUSPECT/UNVERIFIED. Reviewer flagged this as likely invalid or hallucinated for the cited 2025 Bonadio/BMC Bioinformatics claim; verify in PubMed or replace with the correct citation before using the ROB-Fold/CXXC claim in curation.
 
 ## Detected DOIs
 
