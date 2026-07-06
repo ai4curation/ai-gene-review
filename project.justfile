@@ -628,10 +628,11 @@ aggregate-knowledge-gaps:
     uv run python scripts/aggregate_knowledge_gaps.py
 
 # Validate module YAML files: (1) structural schema validation against
-# ModuleReview, and (2) ontology term-label validation (GO/CHEBI/PO/SBO/... ids
-# resolve and their labels match). The external linkml-term-validator only
-# checks enum-bound slots, which ModuleReview lacks, so module term labels are
-# checked by the project's module_validator instead.
+# ModuleReview, and (2) custom module validation: ontology term-label checks,
+# GO branch checks for known F/P/C slots, PANTHER/PAINT PTN checks, and template
+# conformance. The external linkml-term-validator only checks enum-bound slots,
+# which ModuleReview lacks, so module semantics are checked by the project's
+# module_validator instead.
 validate-modules:
     #!/usr/bin/env bash
     set -uo pipefail

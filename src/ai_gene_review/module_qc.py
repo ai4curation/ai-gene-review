@@ -4,8 +4,8 @@
 This module computes the derived stats surfaced on rendered module pages:
 
 1. ``run_data_qc`` -- LinkML recommended-field compliance (via ``linkml-data-qc``)
-2. ``leaf_nodes_missing_representatives`` -- terminal nodes that do not ground to
-   any concrete protein (a "representative member")
+2. ``leaf_nodes_missing_representatives`` -- terminal nodes in concrete modules
+   that do not ground to any concrete protein (a "representative member")
 3. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
    template motif, whether the bundle's tiers and connection topology match it
 4. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
@@ -120,6 +120,21 @@ def is_leaf_node(node: dict[str, Any]) -> bool:
     return not as_list(node.get("parts")) and not as_list(node.get("variant_sets"))
 
 
+def module_scope(data: dict[str, Any]) -> Optional[str]:
+    """Return the normalized module scope, if declared."""
+    scope = data.get("scope")
+    if scope is None and isinstance(data.get("module"), dict):
+        scope = data["module"].get("scope")
+    if scope is None:
+        return None
+    return str(scope).strip().upper() or None
+
+
+def is_abstract_module(data: dict[str, Any]) -> bool:
+    """Return True when the document declares an abstract module/template."""
+    return module_scope(data) == "ABSTRACT"
+
+
 def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
     """Return concrete protein groundings (representative members) for a selector.
 
@@ -187,8 +202,13 @@ def leaf_nodes_missing_representatives(
 
     A leaf node (no parts, no variant sets) is flagged when none of its annotons'
     participants resolve to a concrete protein -- e.g. abstract ``FAMILY`` or
-    ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``.
+    ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``. Documents
+    declared as ``scope: ABSTRACT`` are reusable motifs and skip this grounding
+    completeness check.
     """
+    if is_abstract_module(data):
+        return []
+
     flagged: list[dict[str, Any]] = []
     for node in iter_nodes(data):
         if not is_leaf_node(node):

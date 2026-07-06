@@ -15,8 +15,10 @@ genetics and biology. The scope combines Mendelian/familial Alzheimer disease
 genes, high-confidence common and rare variant risk genes, and pathway genes
 needed to curate reusable disease-relevant modules.
 
-The initial project focus is human Alzheimer disease (`MONDO:0004975`) with
-module curation in the root-level `modules/` directory.
+The initial project focus is human Alzheimer disease (`MONDO:0004975`). Disease
+scope, gene-set rationale, and prioritization belong in this project page;
+reusable `modules/` entries should be normal biological pathways, complexes, or
+motifs rather than disease-project overviews.
 
 ## Model Species
 
@@ -78,16 +80,18 @@ module curation in the root-level `modules/` directory.
 | LRP1 | ApoE receptor and APP/amyloid clearance pathway component |
 | ABCA1 | ApoE lipidation and cholesterol efflux pathway component |
 
-## Pathway Modules
+## Reusable Normal-Biology Modules
 
-Curate disease-relevant pathway and complex models as `ModuleReview` YAML files
-under `modules/`:
+Curate reusable pathway and complex models as `ModuleReview` YAML files under
+`modules/` only when the module is a normal biological unit with a normal
+biology name. Alzheimer relevance can be recorded here in the project page and
+in gene reviews, but the module title/scope should stay biological rather than
+disease-project scoped.
 
-| Module | Scope |
-|--------|-------|
-| `modules/alzheimer_disease_pathways.yaml` | Validated overview module with parts for APP processing/amyloid-beta handling, lipid/lipoprotein transport, microglial lipid-debris sensing, tau/cytoskeletal kinase biology, and endocytic/adhesion adaptor systems |
-
-Rendered module page: `pages/modules/alzheimer_disease_pathways.html`.
+Candidate normal-biology modules for future curation include APP processing and
+amyloid-beta handling, gamma-secretase-mediated intramembrane proteolysis,
+apolipoprotein/lipoprotein transport, microglial lipid-debris sensing, tau
+microtubule biology, and endocytic adaptor trafficking.
 
 Validate each module with:
 
@@ -119,7 +123,7 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
 - [x] Fetch UniProt, GOA, and publication caches for all frontmatter genes
 - [x] Run deep research or record manual notes for Priority 1 genes
 - [x] Complete Priority 1 gene annotation reviews
-- [x] Draft and validate Alzheimer pathway modules under `modules/`
+- [x] Retire disease-project overview from `modules/`; keep Alzheimer scope as a project
 - [x] Review Priority 2 and Priority 3 genes
 - [x] Render project page and update project index
 
@@ -636,11 +640,9 @@ uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleRe
   KEEP_AS_NON_CORE, 84 MARK_AS_OVER_ANNOTATED, 8 MODIFY; LRP1 77 ACCEPT, 29
   KEEP_AS_NON_CORE, 18 MARK_AS_OVER_ANNOTATED; ABCA1 94 ACCEPT, 34
   KEEP_AS_NON_CORE, 11 MARK_AS_OVER_ANNOTATED, 6 MODIFY.
-- Created and validated `modules/alzheimer_disease_pathways.yaml`, a
-  `ModuleReview` overview module grouping the reviewed gene set into APP
-  processing/amyloid-beta handling, lipid/lipoprotein transport, microglial
-  lipid-debris sensing, tau/cytoskeletal kinase biology, and
-  endocytic/adhesion adaptor systems. `uv run linkml-validate -s
-  src/ai_gene_review/schema/gene_review.yaml -C ModuleReview
-  modules/alzheimer_disease_pathways.yaml` passes cleanly, and the module renders
-  to `pages/modules/alzheimer_disease_pathways.html`.
+- Retired the disease-project overview module from `modules/`. The Alzheimer
+  disease gene set, rationale, and pathway relevance remain in this project page;
+  future reusable module YAMLs should be normal biological modules, such as APP
+  processing, gamma-secretase-mediated intramembrane proteolysis,
+  apolipoprotein/lipoprotein transport, microglial lipid-debris sensing, tau
+  microtubule biology, or endocytic adaptor trafficking.
