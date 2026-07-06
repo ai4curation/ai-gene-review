@@ -9,6 +9,8 @@ This script:
 """
 
 import argparse
+import os
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +18,21 @@ import re
 
 # Default timeout for deep research subprocess (seconds)
 DEFAULT_TIMEOUT = 600
+DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+
+
+def deep_research_client_command() -> list[str]:
+    """Return the command prefix for invoking deep-research-client.
+
+    Use uvx by default so research jobs do not need to sync this repository's
+    large Python environment. Set DEEP_RESEARCH_CLIENT_CMD to override, e.g.
+    DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
+    """
+    override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
+    if override:
+        return shlex.split(override)
+    package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
+    return ["uvx", "--from", package, "deep-research-client"]
 
 
 def parse_uniprot_gene_name(uniprot_file: Path) -> str:
@@ -147,7 +164,7 @@ def _build_cmd(
 
     if use_template:
         cmd = [
-            "uv", "run", "deep-research-client", "research",
+            *deep_research_client_command(), "research",
             "--template", "templates/gene_research_go_focused.md",
             "--var", f"organism={organism}",
             "--var", f"gene_id={gene_id}",
@@ -179,7 +196,7 @@ def _build_cmd(
             f"Include information about protein domains, known interactions, and any disease associations."
         )
         cmd = [
-            "uv", "run", "deep-research-client", "research",
+            *deep_research_client_command(), "research",
             query,
             "--provider", actual_provider,
             "--param", "reasoning_effort=low",
