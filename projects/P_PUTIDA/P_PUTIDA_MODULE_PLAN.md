@@ -214,7 +214,7 @@ Pilot batch files:
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.tsv`
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md`
 
-Status as of 2026-07-05 PDT / 2026-07-06 UTC:
+Status as of 2026-07-06:
 
 - 28 KEGG `ppu00400` candidate genes extracted from pathway membership.
 - 28/28 review folders present.
@@ -226,7 +226,8 @@ Status as of 2026-07-05 PDT / 2026-07-06 UTC:
   `projects/P_PUTIDA/deep-research/PSEPK__tryptophan_biosynthesis__ppu00400-deep-research-falcon.md`.
 - Validation complete for all 28 gene reviews with `just validate PSEPK <gene>`.
 - Module validation complete with:
-- Draft PR open: [#1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
+- PR [#1874](https://github.com/ai4curation/ai-gene-review/pull/1874)
+  merged.
 
 ```bash
 uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/tryptophan_biosynthesis.yaml
@@ -249,6 +250,40 @@ Main curation conclusions from the pilot:
 - Paralog ambiguity remains for aroE, aroQ, and DAHP synthase copies. The pilot
   reviews accept the enzyme-class annotations while avoiding claims about which
   paralog uniquely satisfies upstream shikimate flux.
+
+## Current batch: ppu00010 / entner_doudoroff_and_gluconeogenesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00010_entner_doudoroff_and_gluconeogenesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00010_entner_doudoroff_and_gluconeogenesis.md`
+
+Status as of 2026-07-06:
+
+- 38 KEGG `ppu00010` membership candidates extracted for first-pass review.
+- 38/38 review folders present.
+- 38/38 Asta gene-level retrieval reports present.
+- 38/38 review YAMLs curated with no remaining `PENDING` actions.
+- Falcon generic module research complete:
+  `modules/entner_doudoroff_and_gluconeogenesis-deep-research-falcon.md`.
+- Falcon PSEPK module+pathway research complete:
+  `projects/P_PUTIDA/deep-research/PSEPK__entner_doudoroff_and_gluconeogenesis__ppu00010-deep-research-falcon.md`.
+- Module YAML seeded:
+  `modules/entner_doudoroff_and_gluconeogenesis.yaml`.
+
+Main curation conclusions from the current batch:
+
+- KT2440 should be treated as ED-centered rather than complete forward EMP
+  glycolysis; the module combines the ED branch, shared lower EMP trunk, and
+  gluconeogenic bypasses.
+- KEGG `ppu00010` is an incomplete satisfiability boundary for KT2440 because
+  `edd`, `eda`, `zwf`, and `pgl` are required ED-branch genes but are carried
+  through the neighboring `ppu00030`-style boundary.
+- The ppu00010 membership table includes peripheral EC/pathway spillover from
+  pyruvate dehydrogenase, acetyl-CoA synthetase, aldehyde/alcohol
+  dehydrogenases, phosphosugar mutases/epimerases, and periplasmic glucose
+  oxidation. These reviews are useful first-pass curation, but not every member
+  is a core ED/gluconeogenesis module component.
 
 ## First batch proposal
 
