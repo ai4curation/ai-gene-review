@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPX2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LPX2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P35736" target="_blank" class="term-link">
+                        P35736
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LPX2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P35736" data-a="DESCRIPTION: LPX2 (systematic name YKL050C) is a large (922-res..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LPX2 (systematic name YKL050C) is a large (922-residue, ~103 kDa), predominantly intrinsically disordered protein of the budding yeast Saccharomyces cerevisiae. It is a whole-genome-duplication paralog (ohnolog) of the eisosome protein EIS1, and its only recognizable sequence-family signature is shared EIS1/Eisosome1 ancestry (Pfam PF12757, InterPro IPR024527, PANTHER PTHR28298 &#34;eisosome protein 1&#34;); it carries no recognizable hydrolase or other catalytic domain. Despite this family placement, LPX2 was experimentally localized to the peroxisomal matrix in a systematic peroxisome-proteome study, and deletion of the gene produces the largest single change in the yeast lipidome under glucose growth (an accumulation of lyso-phosphatidylglycerol), which together with a reported lipase-like activity led to its naming as &#34;Lipase of Peroxisomes 2.&#34; Its subcellular distribution (peroxisomal, nuclear and cytosolic) is dependent on the carbon source (oleate), its expression is induced by the transcription factor Azf1, and the protein is a reported substrate of the SCF(Cdc4) ubiquitin ligase. A direct, purified-protein enzymatic activity and physiological substrate for LPX2 have not been firmly established, so its molecular function remains provisional.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36164978
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic multi-level analysis of an organelle proteome rev...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P35736" data-a="GO:0005777" data-r="PMID:36164978" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental (IDA) localization of Ykl050c/Lpx2 to the peroxisome (peroxisomal matrix) in the Yifrach 2022 systematic peroxisome-proteome study. This is well supported and represents the most solidly established fact about the protein. Accept. Note that SGD reports the peroxisomal/nuclear/cytosolic distribution is oleate-dependent, so peroxisomal localization is condition-dependent rather than constitutive.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                                        PMID:36164978
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P35736" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function annotation with ND (No biological Data) evidence — a placeholder indicating that no experimentally determined molecular function has been curated for LPX2. This is an accurate reflection of the current state: although the gene is named as a putative lipase, no direct enzymatic activity has been established on the purified protein, and its only sequence-family signature (EIS1/Eisosome1) implies no hydrolase fold. Keep as the honest &#34;unknown MF&#34; placeholder; the specific molecular activity is a genuine knowledge gap (see knowledge_gaps).
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P35736" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process annotation with ND evidence — a placeholder indicating no experimentally curated biological process. A role in peroxisomal glycerophospholipid / lipid metabolism is suggested by the deletion lipidome phenotype (LPG accumulation), but this is a genetic association proposed in one study, not an established, curated process. Keep as the honest &#34;unknown BP&#34; placeholder; the in-vivo role is a knowledge gap.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Localizes to the peroxisomal matrix (experimentally, IDA), in an oleate-dependent manner; this is the single well-established functional attribute of the protein.</h3>
+                <span class="vote-buttons" data-g="P35736" data-a="FUNCTION: Localizes to the peroxisomal matrix (experimentall..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                peroxisome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                                PMID:36164978
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36164978" target="_blank" class="term-link">
+                            PMID:36164978
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic multi-level analysis of an organelle proteome reveals new peroxisomal functions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ykl050c was identified as a peroxisomal matrix protein in a systematic multi-level analysis of the yeast peroxisome proteome, and named Lpx2 (Lipase of Peroxisomes 2).</div>
+
+                        <div class="finding-text">"an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Deletion of YKL050C caused the most significant change in the yeast lipidome in glucose medium, an increase in lyso-phosphatidylglycerol (LPG), consistent with a role in glycerophospholipid metabolism.</div>
+
+                        <div class="finding-text">"Δykl050c shows the most significant change in glucose conditions, with an increase of LPG lipids."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24187129" target="_blank" class="term-link">
+                            PMID:24187129
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Screening for hydrolytic enzymes reveals Ayr1p as a novel triacylglycerol lipase in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A functional-proteomics screen of hydrolase candidates carrying the GXSXG lipase motif on peroxisomes and lipid droplets. Ykl050cp (LPX2) was one of the screened GXSXG-motif candidates, and overexpression analysis proposed a role for it in TG mobilization; but in the definitive in-vivo (and in-vitro) lipolytic assays only Lpx1p and Ayr1p were confirmed as lipases, whereas all other candidates (Ykl050cp included) did NOT exhibit lipolytic activity in vivo.</div>
+
+                        <div class="finding-text">"In vivo mobilization of TG by Lpx1p and Ayr1p confirmed the role of these two proteins as lipases in living cells, whereas all other enzymes did not exhibit lipolytic activities in vivo"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ykl050cp is explicitly named among the short list of putative novel TG lipases carrying the classical GXSXG lipase motif, confirming that this study did assay Ykl050c rather than only its paralogs.</div>
+
+                        <div class="finding-text">"The short list of putative novel TG lipases included Lpx1p, Ldh1p, Yju3p, Ayr1p, Eht1p, Tsc10p, Ybr056wp, and Ykl050cp."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16467472" target="_blank" class="term-link">
+                            PMID:16467472
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The function and properties of the Azf1 transcriptional regulator change with growth conditions in Saccharomyces cerevisiae.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPX2/YKL050C expression is regulated by the Azf1 transcription factor, which activates carbon and energy metabolism genes in glucose.</div>
+
+                        <div class="finding-text">"in glucose, Azf1 activates"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16338374" target="_blank" class="term-link">
+                            PMID:16338374
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide surveys for phosphorylation-dependent substrates of SCF ubiquitin ligases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LPX2/YKL050C is reported by SGD as a substrate of the SCF(Cdc4) ubiquitin ligase complex, identified in a genome-wide phospho-dependent-substrate survey.</div>
+
+                        <div class="finding-text">"phosphorylation-dependent substrates of SCF ubiquitin ligases"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified LPX2 have a measurable lipase/esterase activity, and if so on which lipid substrate class (triacylglycerol, phosphatidylglycerol, lyso-phosphatidylglycerol, other)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="Q: Does purified LPX2 have a measurable lipase/estera..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the single GXSXG motif (G875-S877-G879), which lies within a predicted disordered C-terminal region, a genuine catalytic serine, or is LPX2 catalytically inactive?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="Q: Is the single GXSXG motif (G875-S877-G879), which ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How is LPX2 imported into the peroxisomal matrix given the absence of a canonical C-terminal PTS1, and what governs its oleate-dependent partitioning between peroxisome, nucleus and cytosol?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="Q: How is LPX2 imported into the peroxisomal matrix g..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does LPX2 retain any EIS1-like eisosome-related function, or has it fully neofunctionalized after the whole-genome duplication?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="Q: Does LPX2 retain any EIS1-like eisosome-related fu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant LPX2 and assay hydrolytic activity against a defined lipid panel (tri/di/monoacylglycerol, major glycerophospholipids including phosphatidylglycerol and lyso-phosphatidylglycerol), with a catalytic-serine (S877A) mutant as a negative control.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="EXPERIMENT: Express and purify recombinant LPX2 and assay hydr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct lpx2Δ, lpx1Δ lpx2Δ, and lpx1Δ lpx2Δ fsh3Δ strains and phenotype for growth on oleate/fatty-acid carbon sources, beta-oxidation flux, quantitative lipidomics (confirming LPG accumulation), and peroxisomal membrane morphology by microscopy.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="EXPERIMENT: Construct lpx2Δ, lpx1Δ lpx2Δ, and lpx1Δ lpx2Δ fsh3..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Map LPX2&#39;s peroxisomal import determinants (test the non-canonical C terminus and any internal PTS) and image tagged LPX2 relative to eisosome markers (Pil1/Lsp1) to test the eisosome-family inference directly.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P35736" data-a="EXPERIMENT: Map LPX2&#39;s peroxisomal import determinants (test t..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular function and physiological substrate of LPX2 are unknown. The &#34;peroxisomal lipase&#34; designation rests on gene-deletion lipidomics plus a literature attribution of lipase activity (Ploier et al. 2013) that is actually a NEGATIVE direct result: that study tested Ykl050cp in vivo and it did not exhibit lipolytic activity (only Lpx1p and Ayr1p were confirmed as lipases); no purified-protein enzymatic assay or substrate specificity has been established, and the protein has no recognizable hydrolase domain.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Firmly known: LPX2/YKL050C is experimentally localized to the peroxisomal matrix (IDA, PMID:36164978); its deletion produces the largest single glucose-medium change in the yeast lipidome (lyso-phosphatidylglycerol accumulation); its expression is Azf1-induced; it is an SCF(Cdc4) substrate; and it is the whole-genome-duplication paralog of the eisosome protein EIS1, which is also its sole sequence-family signature.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> LPX2 is a conserved (pan-Saccharomycotina) but essentially uncharacterized protein. Whether it is a bona fide lipase, another kind of lipid-handling protein, or an EIS1-related protein that only indirectly affects lipids is unresolved, and bears on how many lipases the peroxisomal matrix actually contains.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro lipase/esterase assays on purified LPX2 against a defined lipid-substrate panel; active-site (GXSXG serine) mutant complementation testing whether catalysis is required to rescue the deletion lipidome phenotype.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"brought to our attention that Ykl050c possesses a clear lipase activity; however, its cellular localization was never clearly determined."</em> — PMID:36164978</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> LPX2&#39;s family placement conflicts with its proposed function: its only recognized sequence family is EIS1/Eisosome1 (a plasma-membrane eisosome protein family), yet it localizes to the peroxisomal matrix and is proposed to act in lipid metabolism. Whether LPX2 retains any EIS1-like (eisosome/membrane-organizing) role, has neofunctionalized after the whole-genome duplication, or does something else entirely is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LPX2 is the whole-genome-duplication paralog of EIS1 (SGD), and PANTHER PTHR28298 / Pfam PF12757 place both in the &#34;eisosome protein 1&#34; family. EIS1 is a characterized eisosome component; LPX2 is a peroxisomal-matrix protein with no experimental eisosome role. A GO &#34;eisosome assembly&#34; inference (IBA:GO_Central, present in the UniProt GO cross-references) is propagated from this family and is inconsistent with LPX2&#39;s experimental localization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving the paralog relationship would clarify whether the eisosome-family assignment (and any downstream IBA &#34;eisosome assembly&#34; annotation) is biologically meaningful for LPX2 or a paralog-driven over-propagation that should be down-weighted.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test LPX2 for eisosome localization/assembly phenotypes directly (e.g. Pil1/Lsp1 eisosome imaging in lpx2Δ and localization of tagged LPX2 relative to eisosomes) and structurally compare the LPX2 and EIS1 domains.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"two additional potential lipases in peroxisomes, Ykl050c (Lpx2) and Fsh3"</em> — PMID:36164978</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The in-vivo biological role of LPX2 is undefined beyond a lipidomic association. No growth phenotype, defined pathway placement, or contribution to peroxisomal fatty-acid metabolism has been demonstrated specifically for LPX2; the model that peroxisomal lipases release fatty acids for beta-oxidation and maintain peroxisomal membrane morphology is a speculative suggestion proposed for the Lpx1/Lpx2/Fsh3 set, not an LPX2-specific result.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The one specific phenotype is that lpx2Δ has the largest glucose-medium lipidome effect (LPG accumulation) in the Yifrach 2022 screen. The functional model that peroxisomal lipases act on the peroxisomal membrane/intraperoxisomal vesicles to release fatty acids for beta-oxidation is stated as a suggestion covering the whole lipase set.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a defined process, LPX2 cannot be placed in a peroxisomal metabolic pathway, and its physiological importance (e.g. under oleate/fatty-acid growth) is unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phenotype lpx2Δ (and lpx1Δ lpx2Δ fsh3Δ combinations) for growth on fatty-acid carbon sources, beta-oxidation flux, and peroxisomal membrane morphology; determine LPX2&#39;s peroxisomal import route (it lacks a canonical C-terminal PTS1).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"act on the peroxisomal membrane or on intraperoxisomal vesicles to release fatty acids for"</em> — PMID:36164978</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LPX2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P35736" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research Report on LPX2/YKL050C (UniProt P35736) in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">32 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:14:38.565961</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="LPX2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-on-lpx2ykl050c-uniprot-p35736-in-saccharomyces-cerevisiae">Research Report on LPX2/YKL050C (UniProt P35736) in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="critical-note-on-gene-identity">Critical Note on Gene Identity</h2>
+<p><strong>The gene symbol "LPX2" is ambiguous, and literature directly characterizing the protein product of YKL050C is extremely limited.</strong> The UniProt entry P35736 describes YKL050C as an "Uncharacterized protein" that belongs to the EIS1 protein family and contains the Eisosome1 domain (Pfam PF12757; InterPro IPR024527). It is critical to note that YKL050C is <strong>distinct</strong> from the well-characterized eisosome protein EIS1, which is encoded by the ORF YMR031C. EIS1/YMR031C has been extensively studied as a component of eisosomes involved in eisosome assembly and stability (lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7). YKL050C is not listed among the known eisosome-associated proteins in comprehensive reviews of MCC/eisosome biology (lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7). The function of the YKL050C/LPX2 gene product can therefore only be <strong>inferred</strong> from its domain and family annotations.</p>
+<h2 id="1-gene-and-protein-overview">1. Gene and Protein Overview</h2>
+<p>The YKL050C locus (alternative ORF names YKL263, YKL301) encodes a protein of unknown function in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). According to its UniProt annotation (P35736), the protein belongs to the <strong>EIS1 family</strong> and contains the <strong>Eisosome1 domain</strong> (Pfam PF12757). This domain family is named after Eis1 (YMR031C), which was first identified as a new eisosome component through a systematic plasma membrane E-MAP (epistatic miniarray profile) study (aguilar2010aplasmamembraneemap pages 8-10, aguilar2010aplasmamembraneemap pages 4-8). Notably, the promoter of YKL050C has been reported to drive <strong>spore-autonomous gene expression</strong>, and it was used in a reporter construct system for tracking meiotic chromosome segregation in yeast hybrids (rogers2018sporeautonomousfluorescentprotein pages 3-5). This suggests that YKL050C may have a sporulation-specific or meiosis-related expression pattern, although its functional role during sporulation has not been characterized.</p>
+<h2 id="2-inferred-function-from-the-eis1-protein-family-and-eisosome1-domain">2. Inferred Function from the EIS1 Protein Family and Eisosome1 Domain</h2>
+<p>Because YKL050C contains the Eisosome1 domain, its function is most plausibly inferred from what is known about the EIS1 family protein Eis1/YMR031C and the broader biology of eisosomes. The Eisosome1 domain defines a family of proteins associated with eisosome structure and assembly.</p>
+<h3 id="21-eis1ymr031c-the-characterized-family-member">2.1 EIS1/YMR031C: The Characterized Family Member</h3>
+<p>Eis1 (YMR031C) was identified as a new eisosome component in a plasma membrane E-MAP that revealed links between the eisosome, sphingolipid metabolism, and endosomal trafficking (aguilar2010aplasmamembraneemap pages 8-10, aguilar2010aplasmamembraneemap pages 4-8). In the comprehensive catalog of MCC/eisosome proteins compiled by Lanze et al. (2020), Eis1 is listed as a peripheral eisosome protein with a function in "eisosome assembly and stability," with an estimated 5,570–12,142 copies per cell (lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7). Eis1 promotes eisosome assembly, possibly through a direct effect, since it localizes to these domains (lanze2020plasmamembranemcceisosome pages 7-8). Its role appears to be related to maintaining the integrity and proper formation of eisosome structures at the plasma membrane.</p>
+<h3 id="22-eisosome-structure-and-architecture">2.2 Eisosome Structure and Architecture</h3>
+<p>Eisosomes are large protein complexes that underlie specialized plasma membrane domains termed the MCC (Membrane Compartment of Can1) in <em>S. cerevisiae</em> (lanze2020plasmamembranemcceisosome pages 1-2). These domains correspond to stable furrow-like invaginations of the plasma membrane, approximately 200–300 nm long, 50 nm wide, and 50 nm deep (lanze2020plasmamembranemcceisosome pages 1-2). The core structural components of eisosomes are the BAR-domain proteins Pil1 and Lsp1, present at approximately 100,000 copies each per cell, which self-assemble into filaments that bind PI(4,5)P2-containing membranes and sculpt the membrane furrows (karotki2012structureandarchitecture pages 101-104, lanze2020plasmamembranemcceisosome pages 7-8). Crystal structure analysis of Lsp1 revealed that Pil1 and Lsp1 contain banana-shaped BAR domains known to promote membrane curvature (karotki2012structureandarchitecture pages 86-86, lanze2020plasmamembranemcceisosome pages 7-8). The "half-pipe" model proposes that aligned filaments of Pil1 and Lsp1 create the characteristic plasma membrane invaginations (lanze2020plasmamembranemcceisosome pages 7-8).</p>
+<p>A landmark cryo-EM study by Kefauver et al. (2024) solved the near-native structure of eisosomes as helical tubules composed of Pil1/Lsp1 lattices bound to plasma membrane lipids (kefauver2024cryoemarchitectureof pages 1-2, kefauver2024cryoemarchitectureof pages 2-3). This work revealed that individual PI(4,5)P2, phosphatidylserine (PS), and sterol molecules are specifically sequestered beneath the Pil1/Lsp1 coat (kefauver2024cryoemarchitectureof pages 1-2, kefauver2024cryoemarchitectureof pages 5-5). Key residues in the Pil1 lipid-binding pocket include R126, K130, and R133 for PI(4,5)P2 interaction, K66 and R70 for PS binding, and hydrophobic residues F33, Y40, F42, and F50 for sterol coordination (kefauver2024cryoemarchitectureof pages 5-6, kefauver2024cryoemarchitectureof pages 5-5). Three-dimensional variability analysis revealed dynamic stretching of the Pil1/Lsp1 lattice that affects lipid sequestration, providing the molecular basis for mechanosensing (kefauver2024cryoemarchitectureof pages 1-2, kefauver2024cryoemarchitectureof pages 5-6).</p>
+<h2 id="3-subcellular-localization">3. Subcellular Localization</h2>
+<p>The protein product of YKL050C has not been definitively localized in published studies available in the literature surveyed. However, based on domain homology:</p>
+<ul>
+<li><strong>Eis1/YMR031C</strong> localizes to eisosomes at the cytoplasmic face of the plasma membrane (lanze2020plasmamembranemcceisosome pages 6-7).</li>
+<li>Eisosomes are found exclusively at the plasma membrane in a punctate pattern, primarily in non-growing regions of the cell, and are absent from apical/growing regions (athanasopoulos2019fungalplasmamembrane pages 5-6).</li>
+<li>The <strong>spore-autonomous</strong> expression profile of the YKL050C promoter (rogers2018sporeautonomousfluorescentprotein pages 3-5) raises the possibility that the YKL050C protein product may function during sporulation, potentially at the plasma membrane or prospore membrane.</li>
+</ul>
+<h2 id="4-signaling-and-biochemical-pathways">4. Signaling and Biochemical Pathways</h2>
+<p>While YKL050C's specific pathway involvement is unknown, the EIS1 family context places it within the eisosome-centered signaling network, which includes several critical pathways:</p>
+<h3 id="41-torc2ypk1orm12-sphingolipid-homeostasis-pathway">4.1 TORC2–Ypk1–Orm1/2 Sphingolipid Homeostasis Pathway</h3>
+<p>Eisosomes serve as mechanosensitive membrane domains that sense changes in membrane tension. Under conditions of increased membrane tension (e.g., hypoosmotic shock, sphingolipid depletion), the eisosome furrows flatten and release sequestered proteins such as Slm1 and Slm2 (lanze2020plasmamembranemcceisosome pages 11-12, lanze2020plasmamembranemcceisosome pages 12-13). Released Slm1/2 proteins relocate to the TORC2-containing membrane compartment (MCT), where they promote TORC2 activation (athanasopoulos2019fungalplasmamembrane pages 21-22, athanasopoulos2019fungalplasmamembrane pages 8-9). TORC2 then phosphorylates the kinase Ypk1, which in turn phosphorylates and inactivates the Orm1/2 repressors of sphingolipid biosynthesis, thereby stimulating de novo sphingolipid production and restoring membrane homeostasis (lanze2020plasmamembranemcceisosome pages 11-12, lanze2020plasmamembranemcceisosome pages 12-13, lanze2020plasmamembranemcceisosome pages 9-11, athanasopoulos2019fungalplasmamembrane pages 21-22).</p>
+<h3 id="42-pkh12-kinase-regulation">4.2 Pkh1/2 Kinase Regulation</h3>
+<p>The Ser/Thr kinases Pkh1 and Pkh2 localize to eisosomes and phosphorylate Pil1 and Lsp1 on multiple sites, regulating eisosome assembly and disassembly (lanze2020plasmamembranemcceisosome pages 8-9, lanze2020plasmamembranemcceisosome pages 6-7). Full activation of Ypk1 requires dual phosphorylation by both TORC2 and Pkh1/2 (athanasopoulos2019fungalplasmamembrane pages 21-22). The transmembrane protein Nce102 acts as a sphingolipid sensor: under sphingolipid-replete conditions, Nce102 resides in the MCC and inhibits Pkh1/2, promoting eisosome stability; upon sphingolipid depletion, Nce102 relocates, de-repressing Pkh1/2 and triggering eisosome remodeling (frohlich2010analysisofsphingolipidsignaling pages 35-38, athanasopoulos2019fungalplasmamembrane pages 8-9).</p>
+<h3 id="43-mrna-decay-regulation-via-xrn1-sequestration">4.3 mRNA Decay Regulation via Xrn1 Sequestration</h3>
+<p>During the post-diauxic shift (glucose depletion), the 5'–3' exoribonuclease Xrn1 is sequestered at eisosomes, separating it from its mRNA substrates and thereby protecting mRNAs from degradation (courtin2023xrn1biochemicallyassociates pages 1-5, athanasopoulos2019fungalplasmamembrane pages 17-18, lanze2020plasmamembranemcceisosome pages 15-16). This sequestration is reversible upon glucose restoration and represents a mechanism for preserving mRNAs during nutrient starvation, enabling faster recovery when conditions improve (athanasopoulos2019fungalplasmamembrane pages 17-18).</p>
+<h3 id="44-stress-response-functions">4.4 Stress Response Functions</h3>
+<p>MCC/eisosomes act as coordinating hubs for diverse stress responses, including osmotic stress, alkaline pH stress, nutrient limitation, cell wall integrity, oxidative stress, and copper toxicity (lanze2020plasmamembranemcceisosome pages 13-14, lanze2020plasmamembranemcceisosome pages 9-11, lanze2020plasmamembranemcceisosome pages 1-2). In each case, eisosome flattening under increased membrane tension or altered lipid composition triggers release of specific protein subsets that activate downstream signaling pathways (lanze2020plasmamembranemcceisosome pages 13-14, lanze2020plasmamembranemcceisosome pages 9-11).</p>
+<h2 id="5-summary-of-known-and-inferred-functions-of-ykl050clpx2">5. Summary of Known and Inferred Functions of YKL050C/LPX2</h2>
+<p>The following table summarizes the known MCC/eisosome proteins and the placement of YKL050C/LPX2 based on domain inference:</p>
+<table>
+<thead>
+<tr>
+<th>Protein</th>
+<th>Localization/domain context</th>
+<th>Reported or inferred function</th>
+<th>Estimated copies per cell</th>
+<th>Notes</th>
+<th>Citation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pil1</td>
+<td>Eisosome; BAR-domain scaffold</td>
+<td>Core structural eisosome component; essential for eisosome formation; binds PI(4,5)P2 and helps sculpt plasma-membrane furrows</td>
+<td>Western: 115,000; MS: 48,996; GFP: 38,869</td>
+<td>Major structural scaffold; phosphorylation regulates assembly/disassembly</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 7-8, lanze2020plasmamembranemcceisosome pages 6-7, kefauver2024cryoemarchitectureof pages 1-2)</td>
+</tr>
+<tr>
+<td>Lsp1</td>
+<td>Eisosome; BAR-domain scaffold</td>
+<td>Core eisosome component; forms filaments with Pil1 and contributes to membrane curvature and furrow architecture</td>
+<td>Western: 104,000; MS: 41,516; GFP: 6,109</td>
+<td>Highly similar to Pil1; important for stress-dependent eisosome remodeling</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 7-8, lanze2020plasmamembranemcceisosome pages 6-7, kefauver2024cryoemarchitectureof pages 1-2)</td>
+</tr>
+<tr>
+<td>Eis1 (YMR031C)</td>
+<td>Eisosome</td>
+<td>Eisosome assembly and stability</td>
+<td>Western: 5,570; MS: 12,142; GFP: 7,173</td>
+<td>Well-characterized eisosome protein; distinct from YKL050C/LPX2</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 7-8, lanze2020plasmamembranemcceisosome pages 6-7)</td>
+</tr>
+<tr>
+<td>Seg1</td>
+<td>Eisosome</td>
+<td>Eisosome assembly and stability; facilitates initiation/nucleation and promotes furrow length</td>
+<td>Western: ND; MS: 4,834; GFP: 3,890</td>
+<td>Loss reduces eisosome formation efficiency; overproduction lengthens furrows</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 7-8, lanze2020plasmamembranemcceisosome pages 6-7)</td>
+</tr>
+<tr>
+<td>Pkh1</td>
+<td>Eisosome; Ser/Thr kinase</td>
+<td>Regulates eisosome assembly via Pil1/Lsp1 phosphorylation; part of sphingolipid/endocytosis/cell-wall signaling</td>
+<td>Western: ND; MS: 1,786; GFP: 1,262</td>
+<td>Redundant with Pkh2; linked to Pkh-Ypk signaling</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7)</td>
+</tr>
+<tr>
+<td>Pkh2</td>
+<td>Eisosome; Ser/Thr kinase</td>
+<td>Regulates eisosome assembly via Pil1/Lsp1 phosphorylation; part of sphingolipid/endocytosis/cell-wall signaling</td>
+<td>Western: ND; MS: 1,080; GFP: 1,336</td>
+<td>Redundant with Pkh1</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7)</td>
+</tr>
+<tr>
+<td>Slm1</td>
+<td>Eisosome; BAR/PH-domain protein</td>
+<td>Stress-responsive eisosome protein; exits eisosomes under membrane tension and promotes TORC2 signaling</td>
+<td>Western: 5,190; MS: 4,116; GFP: 3,289</td>
+<td>Binds PI(4,5)P2; links eisosomes to TORC2-Ypk1-Orm1/2 signaling</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7, lanze2020plasmamembranemcceisosome pages 11-12, lanze2020plasmamembranemcceisosome pages 12-13)</td>
+</tr>
+<tr>
+<td>Slm2</td>
+<td>Eisosome; BAR/PH-domain protein</td>
+<td>Stress-responsive eisosome protein; functionally related to Slm1 in TORC2 signaling and membrane-stress response</td>
+<td>Western: 2,610; MS: 980; GFP: ND</td>
+<td>Can exit eisosomes during increased membrane tension</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7, lanze2020plasmamembranemcceisosome pages 11-12, lanze2020plasmamembranemcceisosome pages 12-13)</td>
+</tr>
+<tr>
+<td>Sur7</td>
+<td>MCC (membrane compartment of Can1)</td>
+<td>Tetraspan membrane protein associated with MCC/eisosome architecture and stress responses</td>
+<td>Western: 17,000; MS: 4,045; GFP: 14,332</td>
+<td>Localizes near tops/rims of furrows; one of the longest-lived yeast proteins</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7)</td>
+</tr>
+<tr>
+<td>Nce102</td>
+<td>MCC</td>
+<td>Tetraspan protein implicated in eisosome assembly and sphingolipid sensing; influences furrow depth</td>
+<td>Western: ND; MS: 7,567; GFP: 55,428</td>
+<td>Proposed sphingolipid sensor; exits MCC/eisosome under stress</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 7-8, lanze2020plasmamembranemcceisosome pages 11-12, athanasopoulos2019fungalplasmamembrane pages 8-9)</td>
+</tr>
+<tr>
+<td>Can1</td>
+<td>MCC</td>
+<td>Arginine/H+ symporter protected in MCC/eisosomes from endocytosis under steady-state conditions</td>
+<td>Western: ND; MS: 1,812; GFP: 8,324</td>
+<td>Nutrient transporter resident of MCC; can exit under substrate/stress conditions</td>
+<td>(lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 1-2)</td>
+</tr>
+<tr>
+<td>Xrn1</td>
+<td>Eisosome under post-diauxic shift</td>
+<td>5'-3' exoribonuclease; sequestration at eisosomes during nutrient limitation reduces mRNA degradation</td>
+<td>Western: 11,700; MS: 14,753; GFP: 14,897</td>
+<td>Recruited to eisosomes after post-diauxic shift; not a constitutive structural eisosome protein</td>
+<td>(lanze2020plasmamembranemcceisosome pages 6-7, courtin2023xrn1biochemicallyassociates pages 1-5, lanze2020plasmamembranemcceisosome pages 15-16)</td>
+</tr>
+<tr>
+<td>YKL050C / LPX2</td>
+<td>Not established; UniProt P35736; EIS1-family protein with Eisosome1 domain</td>
+<td>Uncharacterized protein; inferred family relationship to EIS1/eisosome-associated proteins</td>
+<td>Not reported in Lanze et al. Table 1</td>
+<td>Distinct from EIS1/YMR031C; literature is limited; YKL050C promoter supports spore-autonomous expression in a reporter context</td>
+<td>(rogers2018sporeautonomousfluorescentprotein pages 3-5)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes major S. cerevisiae MCC/eisosome proteins, their functions, and copy-number estimates compiled primarily from Lanze et al. 2020 Table 1, with added recent functional context and a clarification that YKL050C/LPX2 is distinct from the canonical eisosome protein EIS1/YMR031C.</em></p>
+<h2 id="6-conclusions">6. Conclusions</h2>
+<p>The YKL050C gene (also referred to as LPX2; UniProt P35736) encodes an <strong>uncharacterized protein</strong> in <em>S. cerevisiae</em> that belongs to the EIS1 protein family and contains the Eisosome1 domain (Pfam PF12757). Despite this domain annotation, YKL050C is <strong>not</strong> the canonical EIS1 protein (which is YMR031C), and it is not listed among the recognized eisosome components in major published studies of eisosome composition (lanze2020plasmamembranemcceisosome pages 5-6, lanze2020plasmamembranemcceisosome pages 6-7). Its function therefore remains experimentally uncharacterized.</p>
+<p>By inference from its EIS1 family membership, YKL050C may have a role related to eisosome biology—potentially in eisosome assembly, stability, or membrane organization at the plasma membrane. The observation that the YKL050C promoter drives spore-autonomous expression (rogers2018sporeautonomousfluorescentprotein pages 3-5) suggests that this gene may have a specialized role during meiosis and sporulation, possibly in organizing membrane domains during prospore membrane formation or spore wall assembly. However, no direct experimental evidence supports this hypothesis.</p>
+<p>Given the current state of knowledge, future studies employing GFP tagging, deletion phenotyping, and protein interaction analysis would be required to determine whether YKL050C/LPX2 functions as an eisosome component, acts during sporulation, or has another as-yet-undiscovered function. The presence of the Eisosome1 domain provides the strongest clue to its likely biological role, placing it within the broader context of plasma membrane microdomain organization in yeast.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 5-6): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 6-7): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aguilar2010aplasmamembraneemap pages 8-10): Pablo S Aguilar, Florian Fröhlich, Michael Rehman, Mike Shales, Igor Ulitsky, Agustina Olivera-Couto, Hannes Braberg, Ron Shamir, Peter Walter, Matthias Mann, Christer S Ejsing, Nevan J Krogan, and Tobias C Walther. A plasma-membrane e-map reveals links of the eisosome with sphingolipid metabolism and endosomal trafficking. Jun 2010. URL: https://doi.org/10.1038/nsmb.1829, doi:10.1038/nsmb.1829. This article has 125 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aguilar2010aplasmamembraneemap pages 4-8): Pablo S Aguilar, Florian Fröhlich, Michael Rehman, Mike Shales, Igor Ulitsky, Agustina Olivera-Couto, Hannes Braberg, Ron Shamir, Peter Walter, Matthias Mann, Christer S Ejsing, Nevan J Krogan, and Tobias C Walther. A plasma-membrane e-map reveals links of the eisosome with sphingolipid metabolism and endosomal trafficking. Jun 2010. URL: https://doi.org/10.1038/nsmb.1829, doi:10.1038/nsmb.1829. This article has 125 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(rogers2018sporeautonomousfluorescentprotein pages 3-5): David W. Rogers, Ellen McConnell, Jasmine Ono, and Duncan Greig. Spore-autonomous fluorescent protein expression identifies meiotic chromosome mis-segregation as the principal cause of hybrid sterility in yeast. PLOS Biology, 16:e2005066, Nov 2018. URL: https://doi.org/10.1371/journal.pbio.2005066, doi:10.1371/journal.pbio.2005066. This article has 59 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 7-8): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 1-2): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(karotki2012structureandarchitecture pages 101-104): Lena Karotki. Structure and architecture of eisosomes. Dissertation, Jan 2012. URL: https://doi.org/10.5282/edoc.14882, doi:10.5282/edoc.14882. This article has 0 citations.</p>
+</li>
+<li>
+<p>(karotki2012structureandarchitecture pages 86-86): Lena Karotki. Structure and architecture of eisosomes. Dissertation, Jan 2012. URL: https://doi.org/10.5282/edoc.14882, doi:10.5282/edoc.14882. This article has 0 citations.</p>
+</li>
+<li>
+<p>(kefauver2024cryoemarchitectureof pages 1-2): Jennifer M. Kefauver, Markku Hakala, Luoming Zou, Josephine Alba, Javier Espadas, Maria G. Tettamanti, Jelena Gajić, Caroline Gabus, Pablo Campomanes, Leandro F. Estrozi, Nesli E. Sen, Stefano Vanni, Aurélien Roux, Ambroise Desfosses, and Robbie Loewith. Cryo-em architecture of a near-native stretch-sensitive membrane microdomain. Nature, 632:664-671, Jul 2024. URL: https://doi.org/10.1038/s41586-024-07720-6, doi:10.1038/s41586-024-07720-6. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kefauver2024cryoemarchitectureof pages 2-3): Jennifer M. Kefauver, Markku Hakala, Luoming Zou, Josephine Alba, Javier Espadas, Maria G. Tettamanti, Jelena Gajić, Caroline Gabus, Pablo Campomanes, Leandro F. Estrozi, Nesli E. Sen, Stefano Vanni, Aurélien Roux, Ambroise Desfosses, and Robbie Loewith. Cryo-em architecture of a near-native stretch-sensitive membrane microdomain. Nature, 632:664-671, Jul 2024. URL: https://doi.org/10.1038/s41586-024-07720-6, doi:10.1038/s41586-024-07720-6. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kefauver2024cryoemarchitectureof pages 5-5): Jennifer M. Kefauver, Markku Hakala, Luoming Zou, Josephine Alba, Javier Espadas, Maria G. Tettamanti, Jelena Gajić, Caroline Gabus, Pablo Campomanes, Leandro F. Estrozi, Nesli E. Sen, Stefano Vanni, Aurélien Roux, Ambroise Desfosses, and Robbie Loewith. Cryo-em architecture of a near-native stretch-sensitive membrane microdomain. Nature, 632:664-671, Jul 2024. URL: https://doi.org/10.1038/s41586-024-07720-6, doi:10.1038/s41586-024-07720-6. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kefauver2024cryoemarchitectureof pages 5-6): Jennifer M. Kefauver, Markku Hakala, Luoming Zou, Josephine Alba, Javier Espadas, Maria G. Tettamanti, Jelena Gajić, Caroline Gabus, Pablo Campomanes, Leandro F. Estrozi, Nesli E. Sen, Stefano Vanni, Aurélien Roux, Ambroise Desfosses, and Robbie Loewith. Cryo-em architecture of a near-native stretch-sensitive membrane microdomain. Nature, 632:664-671, Jul 2024. URL: https://doi.org/10.1038/s41586-024-07720-6, doi:10.1038/s41586-024-07720-6. This article has 27 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 5-6): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 11-12): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 12-13): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 21-22): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 8-9): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 9-11): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 8-9): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(frohlich2010analysisofsphingolipidsignaling pages 35-38): Florian Fröhlich. Analysis of sphingolipid-signaling at the plasma membrane of saccharomyces cerevisiae. Dissertation, Jan 2010. URL: https://doi.org/10.5282/edoc.12051, doi:10.5282/edoc.12051. This article has 1 citations.</p>
+</li>
+<li>
+<p>(courtin2023xrn1biochemicallyassociates pages 1-5): Baptiste Courtin, Abdelkader Namane, Maïté Gomard, Laura Meyer, Alain Jacquier, and Micheline Fromont-Racine. Xrn1 biochemically associates to the eisosome after the post diauxic shift in yeast. bioRxiv, Jul 2023. URL: https://doi.org/10.1101/2023.07.19.549689, doi:10.1101/2023.07.19.549689. This article has 0 citations.</p>
+</li>
+<li>
+<p>(athanasopoulos2019fungalplasmamembrane pages 17-18): Alexandros Athanasopoulos, Bruno André, Vicky Sophianopoulou, and Christos Gournas. Fungal plasma membrane domains. FEMS Microbiology Reviews, 43:642-673, Aug 2019. URL: https://doi.org/10.1093/femsre/fuz022, doi:10.1093/femsre/fuz022. This article has 96 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 15-16): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lanze2020plasmamembranemcceisosome pages 13-14): Carla E. Lanze, Rafael M. Gandra, Jenna E. Foderaro, Kara A. Swenson, Lois M. Douglas, and James B. Konopka. Plasma membrane mcc/eisosome domains promote stress resistance in fungi. Nov 2020. URL: https://doi.org/10.1128/mmbr.00063-19, doi:10.1128/mmbr.00063-19. This article has 68 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="LPX2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>rogers2018sporeautonomousfluorescentprotein pages 3-5</li>
+<li>lanze2020plasmamembranemcceisosome pages 7-8</li>
+<li>lanze2020plasmamembranemcceisosome pages 1-2</li>
+<li>lanze2020plasmamembranemcceisosome pages 6-7</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 5-6</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 21-22</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 17-18</li>
+<li>lanze2020plasmamembranemcceisosome pages 5-6</li>
+<li>aguilar2010aplasmamembraneemap pages 8-10</li>
+<li>aguilar2010aplasmamembraneemap pages 4-8</li>
+<li>karotki2012structureandarchitecture pages 101-104</li>
+<li>karotki2012structureandarchitecture pages 86-86</li>
+<li>kefauver2024cryoemarchitectureof pages 1-2</li>
+<li>kefauver2024cryoemarchitectureof pages 2-3</li>
+<li>kefauver2024cryoemarchitectureof pages 5-5</li>
+<li>kefauver2024cryoemarchitectureof pages 5-6</li>
+<li>lanze2020plasmamembranemcceisosome pages 11-12</li>
+<li>lanze2020plasmamembranemcceisosome pages 12-13</li>
+<li>athanasopoulos2019fungalplasmamembrane pages 8-9</li>
+<li>lanze2020plasmamembranemcceisosome pages 9-11</li>
+<li>lanze2020plasmamembranemcceisosome pages 8-9</li>
+<li>frohlich2010analysisofsphingolipidsignaling pages 35-38</li>
+<li>lanze2020plasmamembranemcceisosome pages 15-16</li>
+<li>lanze2020plasmamembranemcceisosome pages 13-14</li>
+<li>https://doi.org/10.1128/mmbr.00063-19,</li>
+<li>https://doi.org/10.1038/nsmb.1829,</li>
+<li>https://doi.org/10.1371/journal.pbio.2005066,</li>
+<li>https://doi.org/10.5282/edoc.14882,</li>
+<li>https://doi.org/10.1038/s41586-024-07720-6,</li>
+<li>https://doi.org/10.1093/femsre/fuz022,</li>
+<li>https://doi.org/10.5282/edoc.12051,</li>
+<li>https://doi.org/10.1101/2023.07.19.549689,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LPX2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P35736" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lpx2-ykl050c-curation-notes">LPX2 (YKL050C) — curation notes</h1>
+<p>UniProt: <strong>P35736</strong> (YKF0_YEAST); systematic name <strong>YKL050C</strong>; SGD standard name <strong>LPX2</strong><br />
+(assigned 2022 by Yifrach et al.). SGD:S000001533. Taxon: <em>S. cerevisiae</em> S288C<br />
+(NCBITaxon:559292). 922 aa, ~103 kDa.</p>
+<blockquote>
+<p><strong>Identity resolution note.</strong> <code>just fetch-gene yeast LPX2</code> failed because UniProt's<br />
+<code>gene_exact:LPX2</code> query returns nothing — UniProt has NOT yet adopted the SGD standard<br />
+name LPX2 and still lists the entry only under <code>OrderedLocusNames=YKL050C</code><br />
+(RecName: "Uncharacterized protein YKL050C"). Resolved via SGD (LPX2 → YKL050C → P35736)<br />
+and re-fetched with <code>--uniprot-id P35736</code>. This mirror between an old ORF name and a<br />
+new gene-symbol name is itself a small piece of the "dark gene" story.</p>
+</blockquote>
+<h2 id="summary-of-what-is-known">Summary of what is KNOWN</h2>
+<ul>
+<li>
+<p><strong>Name / proposed function.</strong> SGD name "LPX2" = "<strong>Lipase of PeroXisomes 2</strong>"<br />
+  [SGD name_description: "Lipase of PeroXisomes"]. Proposed in the peroxisome-proteome<br />
+  paper Yifrach et al. 2022 [PMID:36164978, "The identification of Ykl050c as a peroxisomal<br />
+  matrix protein (Fig 2D) alongside our lipidomic results and its clear lipase activity as<br />
+  previously reported (Ploier et al, 2013) propose that Ykl050c is an additional newly<br />
+  identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)."].</p>
+</li>
+<li>
+<p><strong>Localization: peroxisomal matrix (experimental).</strong> Yifrach 2022 place Ykl050c in the<br />
+  peroxi-ome as a matrix protein [PMID:36164978, "Our work uncovers also Ykl050c as part of<br />
+  the peroxi‐ome ..."; "The identification of Ykl050c as a peroxisomal matrix protein<br />
+  (Fig 2D)"]. This is the basis of the GOA <strong>GO:0005777 peroxisome IDA (SGD, PMID:36164978)</strong><br />
+  annotation. SGD adds that "peroxisomal, nuclear and cytosolic localization is dependent on<br />
+  the presence of oleate" [SGD locus description] — i.e. localization is condition-dependent<br />
+  (oleate = peroxisome-inducing carbon source).</p>
+</li>
+<li>
+<p><strong>Lipidomic phenotype of the deletion.</strong> Δykl050c had the single largest effect on the<br />
+  yeast lipidome in glucose medium, specifically an <strong>increase in lyso-phosphatidylglycerol<br />
+  (LPG)</strong> [PMID:36164978, "Δykl050c shows the most significant change in glucose conditions,<br />
+  with an increase of LPG lipids." ; "This strain showed significantly higher levels of<br />
+  lyso‐phosphatidylglycerol (LPG; Fig 4F)."]. This is a genetic/phenotypic association, not a<br />
+  direct enzymatic assignment.</p>
+</li>
+<li>
+<p><strong>Reported lipase activity.</strong> Yifrach 2022 attribute "clear lipase activity" of Ykl050c to<br />
+  Ploier et al. 2013 <a href="https://pubmed.ncbi.nlm.nih.gov/24187129">PMID:24187129</a>. <strong>Caveat:</strong> the Ploier 2013 abstract (all we can access<br />
+  — <code>full_text_available: false</code>) names <strong>Ayr1p</strong> as the novel triacylglycerol lipase and<br />
+  confirms <strong>Lpx1p</strong>; it does NOT mention Ykl050c in the abstract. Ykl050c was one of the<br />
+  GXSXG-motif candidate hydrolases screened; the specific "clear lipase activity" statement<br />
+  lives in the Ploier full text / supplement, which is not in our cache. So the biochemical<br />
+  lipase claim for LPX2 is second-hand and NOT directly verifiable from cached text.</p>
+</li>
+<li>
+<p><strong>Regulation.</strong> Expression is induced by the AZF1 transcription factor<br />
+  [UniProt CC INDUCTION, ECO:0000269|PubMed:16467472; PMID:16467472 Slattery 2006]. AZF1<br />
+  activates carbon/energy-metabolism genes in glucose — consistent with a metabolic role.</p>
+</li>
+<li>
+<p><strong>Post-translational regulation.</strong> SGD: "target of SCFCdc4 ubiquitin ligase complex"<br />
+  [SGD locus description; derived from Tang et al. 2005, PMID:16338374, a genome-wide screen<br />
+  for phospho-dependent SCF substrates — abstract-only in our cache, gene-specific data in<br />
+  supplement]. Consistent with the UniProt disordered regions carrying multiple<br />
+  phospho-sites (LPX2 appears in yeast phosphoproteome datasets, e.g. PMID:33491328,<br />
+  PMID:37845410).</p>
+</li>
+<li>
+<p><strong>Family / orthology.</strong> LPX2 is the whole-genome-duplication (WGD) <strong>paralog (ohnolog) of<br />
+  EIS1</strong> [SGD locus description: "LPX2 has a paralog, EIS1, that arose from the whole genome<br />
+  duplication"]. PANTHER <strong>PTHR28298 / :SF1 "EISOSOME PROTEIN 1"</strong> groups P35736 together with<br />
+<em>S. cerevisiae</em> Eis1 (Q05050) and Eis1 orthologs across budding yeasts (K. lactis,<br />
+  C. glabrata, Z. rouxii, Lachancea, S. pombe SPCC63.14). InterPro <strong>IPR024527 "Eisosome1"</strong>,<br />
+  Pfam <strong>PF12757 "Eisosome1"</strong>. So the sole domain-family signal for this protein is<br />
+<em>eisosome/EIS1 ancestry</em>, NOT a hydrolase fold.</p>
+</li>
+</ul>
+<h2 id="inline-domain-sequence-analysis-done-in-conversation-no-sub-agent">Inline domain / sequence analysis (done in-conversation, no sub-agent)</h2>
+<ul>
+<li>
+<p><strong>No recognized hydrolase/α-β-hydrolase domain.</strong> UniProt lists exactly one domain family<br />
+  (EIS1/Eisosome1, PF12757) and no catalytic-domain features. There is no InterPro<br />
+  α/β-hydrolase, lipase, esterase, or GDSL signature on P35736.</p>
+</li>
+<li>
+<p><strong>Massively disordered.</strong> UniProt annotates six MobiDB-lite disordered regions<br />
+  (1–27, 34–53, 687–730, 751–778, 791–821, 834–922) plus multiple polar / basic-acidic /<br />
+  low-complexity biased regions. Much of the 922-aa protein is predicted intrinsically<br />
+  disordered — atypical for a folded lipase.</p>
+</li>
+<li>
+<p><strong>GXSXG "lipase motif" search (done here on the P35736 sequence).</strong> Exactly ONE canonical<br />
+  GXSXG nucleophile-elbow motif is present: <strong>G875-F-S877-Q-G879 (GFSQG)</strong>. Critically it lies<br />
+<em>inside</em> the C-terminal disordered/low-complexity region (UniProt disorder 834–922,<br />
+  low-complexity 871–880). A catalytic GXSXG in a true lipase sits on the nucleophile elbow of<br />
+  a folded α/β-hydrolase core; a lone GXSXG buried in a disordered tail is a weak, plausibly<br />
+  coincidental match and is NOT structural evidence for a lipase active site. (A second, non-<br />
+  catalytic-context GDSK is at pos 101.) =&gt; Sequence does not independently corroborate a<br />
+  lipase fold; the lipase hypothesis rests on the Ploier/Yifrach functional data, not on domain<br />
+  architecture.</p>
+</li>
+<li>
+<p><strong>No obvious C-terminal PTS1.</strong> The protein ends "...SFFKEVI" (…E-V-I). A classic PTS1 is a<br />
+  C-terminal S/A/C-K/R/H-L tripeptide (e.g. SKL); "-EVI"/"-KEVI" is not a canonical PTS1, and<br />
+  there is no annotated PTS1/PTS2 in UniProt. If LPX2 is truly a peroxisomal <em>matrix</em> protein,<br />
+  its import route (PTS1 variant, PTS2, or piggy-back) is unresolved — a real knowledge gap.</p>
+</li>
+</ul>
+<h2 id="what-is-not-known-dark-gene-gaps">What is NOT known (dark-gene gaps)</h2>
+<ol>
+<li><strong>Molecular function is unproven.</strong> No direct, reproducible enzymatic assay on purified<br />
+   LPX2 is available to us. "Lipase" is a proposal (name + Ploier attribution + deletion<br />
+   lipidome) not an established activity. Substrate specificity is unknown (Yifrach explicitly<br />
+   frame Lpx1/Lpx2/Fsh3 as acting "on different lipid substrates" — i.e. undetermined).</li>
+<li><strong>Domain–function conflict.</strong> The only sequence-family signal is EIS1/eisosome ancestry,<br />
+   which has nothing to do with lipid hydrolysis; yet the experimental phenotype/localization<br />
+   point to peroxisomal lipid metabolism. Whether LPX2 retained an EIS1-like structural role,<br />
+   neofunctionalized into a lipase, or does something else entirely is unresolved.</li>
+<li><strong>In-vivo role / phenotype.</strong> Beyond the glucose-medium LPG lipidome shift, there is no<br />
+   growth phenotype, pathway placement, or β-oxidation contribution demonstrated for LPX2<br />
+   specifically; the "release fatty acids for β-oxidation / maintain peroxisomal membrane<br />
+   morphology" idea is a <em>speculative model</em> in Yifrach for the Lpx1/Lpx2/Fsh3 set, not an<br />
+   LPX2-specific result ["All of the above may suggest that the peroxisomal lipases Lpx1,<br />
+   Lpx2, and possibly also Fsh3, act on the peroxisomal membrane or on intraperoxisomal<br />
+   vesicles to release fatty acids for β‐oxidation and in doing so also help to maintain<br />
+   normal peroxisomal membrane morphology."].</li>
+<li><strong>Localization determinants.</strong> Oleate-dependent tri-compartment (peroxisome/nucleus/<br />
+   cytosol) distribution and the peroxisomal import signal are uncharacterized.</li>
+<li><strong>Physiological relevance of AZF1 induction and SCF/Cdc4 turnover</strong> to LPX2 function is<br />
+   unknown.</li>
+</ol>
+<h2 id="annotation-by-annotation-plan-goa-has-3-rows">Annotation-by-annotation plan (GOA has 3 rows)</h2>
+<ul>
+<li><strong>GO:0005777 peroxisome, IDA, PMID:36164978</strong> — ACCEPT (experimental IDA, curator/SGD;<br />
+  matrix localization directly supported). Could optionally note more specific<br />
+  GO:0005782 peroxisomal matrix in core_functions.</li>
+<li><strong>GO:0003674 molecular_function, ND, GO_REF:0000015</strong> — this is a placeholder "no data" root<br />
+  annotation. Standard handling: mark as the root/ND placeholder (KEEP_AS_NON_CORE /<br />
+  note it reflects unknown MF; do not treat as core). MF genuinely unknown.</li>
+<li><strong>GO:0008150 biological_process, ND, GO_REF:0000015</strong> — root/ND placeholder, same handling.</li>
+<li><strong>GO:0070941 eisosome assembly, IBA, GO_Central</strong> — NOTE: this IBA is in UniProt's GO<br />
+  cross-refs (DR GO:0070941 ... IBA:GO_Central) but is NOT in the QuickGO GOA TSV we fetched<br />
+  (only the 3 rows above are). It is a phylogenetic inference propagated from the EIS1 side of<br />
+  PTHR28298. LPX2 (peroxisomal-matrix paralog of EIS1) has no experimental eisosome role and<br />
+  its localization is inconsistent with the plasma-membrane eisosome. If it appears in the<br />
+  review it should be MARK_AS_OVER_ANNOTATED (over-propagated paralog IBA), argued on<br />
+  biological grounds (allowed for electronic IBA). Since it is not in the GOA TSV, it is not a<br />
+  required row; will document in notes and knowledge_gaps rather than fabricate a GOA row.</li>
+</ul>
+<h2 id="references-worth-citing">References worth citing</h2>
+<ul>
+<li>PMID:36164978 Yifrach 2022 — peroxi-ome; naming; matrix localization; LPG lipidome. HIGH.</li>
+<li>PMID:24187129 Ploier 2013 — hydrolase screen; source of the "lipase activity" attribution.<br />
+  HIGH. Full text available: it DID test Ykl050cp (named among GXSXG candidates; overexpression<br />
+  proposed a TG-mobilization role) but confirmed in-vivo lipolytic activity only for Lpx1p and<br />
+  Ayr1p — all other candidates including Ykl050cp did NOT exhibit lipolytic activity in vivo. So<br />
+  this is a NEGATIVE direct result for LPX2; Yifrach 2022's "clear lipase activity" attribution<br />
+  is an overstatement, and this strengthens the MF-unknown conclusion.</li>
+<li>PMID:16467472 Slattery 2006 — AZF1 regulates LPX2 expression (UniProt-curated). MEDIUM.</li>
+<li>PMID:16338374 Tang 2005 — SCF/Cdc4 substrate screen (SGD-curated turnover). LOW/MEDIUM.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P35736
+gene_symbol: LPX2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  LPX2 (systematic name YKL050C) is a large (922-residue, ~103 kDa), predominantly
+  intrinsically disordered protein of the budding yeast Saccharomyces cerevisiae. It is a
+  whole-genome-duplication paralog (ohnolog) of the eisosome protein EIS1, and its only
+  recognizable sequence-family signature is shared EIS1/Eisosome1 ancestry (Pfam PF12757,
+  InterPro IPR024527, PANTHER PTHR28298 &#34;eisosome protein 1&#34;); it carries no recognizable
+  hydrolase or other catalytic domain. Despite this family placement, LPX2 was experimentally
+  localized to the peroxisomal matrix in a systematic peroxisome-proteome study, and deletion
+  of the gene produces the largest single change in the yeast lipidome under glucose growth
+  (an accumulation of lyso-phosphatidylglycerol), which together with a reported lipase-like
+  activity led to its naming as &#34;Lipase of Peroxisomes 2.&#34; Its subcellular distribution
+  (peroxisomal, nuclear and cytosolic) is dependent on the carbon source (oleate), its
+  expression is induced by the transcription factor Azf1, and the protein is a reported
+  substrate of the SCF(Cdc4) ubiquitin ligase. A direct, purified-protein enzymatic activity
+  and physiological substrate for LPX2 have not been firmly established, so its molecular
+  function remains provisional.
+references:
+- id: GO_REF:0000015
+  title: &gt;-
+    Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: PMID:36164978
+  title: &gt;-
+    Systematic multi-level analysis of an organelle proteome reveals new peroxisomal
+    functions.
+  findings:
+  - statement: &gt;-
+      Ykl050c was identified as a peroxisomal matrix protein in a systematic multi-level
+      analysis of the yeast peroxisome proteome, and named Lpx2 (Lipase of Peroxisomes 2).
+    supporting_text: &#34;an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)&#34;
+    reference_section_type: RESULTS
+  - statement: &gt;-
+      Deletion of YKL050C caused the most significant change in the yeast lipidome in glucose
+      medium, an increase in lyso-phosphatidylglycerol (LPG), consistent with a role in
+      glycerophospholipid metabolism.
+    supporting_text: &#34;Δykl050c shows the most significant change in glucose conditions, with an increase of LPG lipids.&#34;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PMC full text available and quoted verbatim. This is the source of the GO:0005777
+      peroxisome IDA annotation (matrix localization), the LPG lipidomic phenotype, and the
+      LPX2 gene name. The lipase-activity claim it makes is itself attributed to Ploier et al.
+      2013 (see that reference); Yifrach&#39;s own direct evidence is localization and the deletion
+      lipidome, not a purified-enzyme assay.
+- id: PMID:24187129
+  title: &gt;-
+    Screening for hydrolytic enzymes reveals Ayr1p as a novel triacylglycerol lipase in
+    Saccharomyces cerevisiae.
+  findings:
+  - statement: &gt;-
+      A functional-proteomics screen of hydrolase candidates carrying the GXSXG lipase motif
+      on peroxisomes and lipid droplets. Ykl050cp (LPX2) was one of the screened GXSXG-motif
+      candidates, and overexpression analysis proposed a role for it in TG mobilization; but
+      in the definitive in-vivo (and in-vitro) lipolytic assays only Lpx1p and Ayr1p were
+      confirmed as lipases, whereas all other candidates (Ykl050cp included) did NOT exhibit
+      lipolytic activity in vivo.
+    supporting_text: &#34;In vivo mobilization of TG by Lpx1p and Ayr1p confirmed the role of these two proteins as lipases in living cells, whereas all other enzymes did not exhibit lipolytic activities in vivo&#34;
+    reference_section_type: DISCUSSION
+  - statement: &gt;-
+      Ykl050cp is explicitly named among the short list of putative novel TG lipases carrying
+      the classical GXSXG lipase motif, confirming that this study did assay Ykl050c rather
+      than only its paralogs.
+    supporting_text: &#34;The short list of putative novel TG lipases included Lpx1p, Ldh1p, Yju3p, Ayr1p, Eht1p, Tsc10p, Ybr056wp, and Ykl050cp.&#34;
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly cited primary hydrolase-screen paper (PubMed-verified title/authors), full
+      text available in the cache and directly informative for LPX2. Contrary to the
+      second-hand &#34;clear lipase activity&#34; that Yifrach 2022 attributes to this paper, the
+      Ploier full text actually TESTED Ykl050cp (it is named among the GXSXG-motif
+      candidates and its overexpression proposed a TG-mobilization role) and found that
+      in-vivo lipolytic activity was confirmed only for Lpx1p and Ayr1p, while all other
+      candidates including Ykl050cp did NOT exhibit lipolytic activity in vivo (in line with
+      the in-vitro assays). This is a NEGATIVE direct result for LPX2 lipase activity, so
+      Yifrach&#39;s attribution is an overstatement; the paper strengthens, rather than
+      supports, the MF-unknown/not-a-confirmed-lipase conclusion.
+- id: PMID:16467472
+  title: &gt;-
+    The function and properties of the Azf1 transcriptional regulator change with growth
+    conditions in Saccharomyces cerevisiae.
+  findings:
+  - statement: &gt;-
+      LPX2/YKL050C expression is regulated by the Azf1 transcription factor, which activates
+      carbon and energy metabolism genes in glucose.
+    supporting_text: &#34;in glucose, Azf1 activates&#34;
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in our cache; supports the UniProt-curated INDUCTION statement
+      (ECO:0000269|PubMed:16467472) that Azf1 regulates LPX2 expression. The gene-specific
+      Azf1 target relationship is in the full text/microarray data curated by UniProt/SGD,
+      not restated in the abstract; cited here for the regulatory context only.
+- id: PMID:16338374
+  title: &gt;-
+    Genome-wide surveys for phosphorylation-dependent substrates of SCF ubiquitin ligases.
+  findings:
+  - statement: &gt;-
+      LPX2/YKL050C is reported by SGD as a substrate of the SCF(Cdc4) ubiquitin ligase
+      complex, identified in a genome-wide phospho-dependent-substrate survey.
+    supporting_text: &#34;phosphorylation-dependent substrates of SCF ubiquitin ligases&#34;
+    reference_section_type: TITLE
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract/title-only in our cache; high-throughput screen. The LPX2-specific SCF(Cdc4)
+      relationship is a SGD curation from this paper&#39;s dataset and is background/regulatory
+      context, not a core-function determinant.
+existing_annotations:
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:36164978
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental (IDA) localization of Ykl050c/Lpx2 to the peroxisome (peroxisomal
+      matrix) in the Yifrach 2022 systematic peroxisome-proteome study. This is well
+      supported and represents the most solidly established fact about the protein. Accept.
+      Note that SGD reports the peroxisomal/nuclear/cytosolic distribution is oleate-dependent,
+      so peroxisomal localization is condition-dependent rather than constitutive.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:36164978
+      supporting_text: &#34;an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)&#34;
+      reference_section_type: RESULTS
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function annotation with ND (No biological Data) evidence — a placeholder
+      indicating that no experimentally determined molecular function has been curated for
+      LPX2. This is an accurate reflection of the current state: although the gene is named as
+      a putative lipase, no direct enzymatic activity has been established on the purified
+      protein, and its only sequence-family signature (EIS1/Eisosome1) implies no hydrolase
+      fold. Keep as the honest &#34;unknown MF&#34; placeholder; the specific molecular activity is a
+      genuine knowledge gap (see knowledge_gaps).
+    action: KEEP_AS_NON_CORE
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process annotation with ND evidence — a placeholder indicating no
+      experimentally curated biological process. A role in peroxisomal glycerophospholipid /
+      lipid metabolism is suggested by the deletion lipidome phenotype (LPG accumulation), but
+      this is a genetic association proposed in one study, not an established, curated process.
+      Keep as the honest &#34;unknown BP&#34; placeholder; the in-vivo role is a knowledge gap.
+    action: KEEP_AS_NON_CORE
+core_functions:
+- description: &gt;-
+    Localizes to the peroxisomal matrix (experimentally, IDA), in an oleate-dependent manner;
+    this is the single well-established functional attribute of the protein.
+  supported_by:
+  - reference_id: PMID:36164978
+    supporting_text: &#34;an additional newly identified peroxisomal lipase, hence we named Ykl050c, Lpx2 (Lipase of Peroxisomes 2)&#34;
+    reference_section_type: RESULTS
+  locations:
+  - id: GO:0005777
+    label: peroxisome
+  knowledge_gaps:
+  - gap_statement: &gt;-
+      The molecular function of LPX2 is not experimentally established. It is proposed to be a
+      peroxisomal lipase (&#34;Lipase of Peroxisomes 2&#34;), but no reproducible enzymatic activity,
+      catalytic mechanism, or physiological substrate has been demonstrated on the purified
+      protein, and its true substrate class (if any) is undefined.
+    boundary: &gt;-
+      LPX2 is experimentally localized to the peroxisomal matrix (IDA), its deletion causes the
+      largest glucose-medium lipidome change in the yeast peroxi-ome screen (lyso-
+      phosphatidylglycerol accumulation), and it is a whole-genome-duplication paralog of the
+      eisosome protein EIS1. A &#34;clear lipase activity&#34; is attributed to Ploier et al. 2013, but
+      that full text actually TESTED Ykl050cp (it is named among the GXSXG-motif lipase
+      candidates and assayed in vivo) and found it did NOT exhibit lipolytic activity in vivo —
+      only Lpx1p and Ayr1p were confirmed as lipases — so the &#34;clear lipase activity&#34;
+      attribution is an overstatement and the direct evidence for LPX2 is negative.
+    gap_kind:
+    - BIOLOGY
+    - CURATION
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Determining whether LPX2 is a genuine lipid hydrolase (and on which substrate) versus a
+      neofunctionalized EIS1-family protein with a non-catalytic role would resolve a
+      conserved-fungal dark gene and clarify whether the peroxisomal matrix contains additional
+      lipases beyond Lpx1.
+    resolution: &gt;-
+      Purify recombinant LPX2 and assay a substrate panel (triacylglycerol, phospholipids
+      including phosphatidylglycerol/lyso-PG) in vitro; test a putative-catalytic-serine mutant
+      for loss of the deletion lipidome phenotype (LPG) in vivo.
+    provenance:
+    - reference_id: PMID:24187129
+      supporting_text: &#34;In vivo mobilization of TG by Lpx1p and Ayr1p confirmed the role of these two proteins as lipases in living cells, whereas all other enzymes did not exhibit lipolytic activities in vivo&#34;
+      reference_section_type: RESULTS
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular function and physiological substrate of LPX2 are unknown. The
+    &#34;peroxisomal lipase&#34; designation rests on gene-deletion lipidomics plus a literature
+    attribution of lipase activity (Ploier et al. 2013) that is actually a NEGATIVE direct
+    result: that study tested Ykl050cp in vivo and it did not exhibit lipolytic activity (only
+    Lpx1p and Ayr1p were confirmed as lipases); no purified-protein enzymatic assay or substrate
+    specificity has been established, and the protein has no recognizable hydrolase domain.
+  boundary: &gt;-
+    Firmly known: LPX2/YKL050C is experimentally localized to the peroxisomal matrix (IDA,
+    PMID:36164978); its deletion produces the largest single glucose-medium change in the yeast
+    lipidome (lyso-phosphatidylglycerol accumulation); its expression is Azf1-induced; it is an
+    SCF(Cdc4) substrate; and it is the whole-genome-duplication paralog of the eisosome protein
+    EIS1, which is also its sole sequence-family signature.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    LPX2 is a conserved (pan-Saccharomycotina) but essentially uncharacterized protein. Whether
+    it is a bona fide lipase, another kind of lipid-handling protein, or an EIS1-related protein
+    that only indirectly affects lipids is unresolved, and bears on how many lipases the
+    peroxisomal matrix actually contains.
+  resolution: &gt;-
+    In vitro lipase/esterase assays on purified LPX2 against a defined lipid-substrate panel;
+    active-site (GXSXG serine) mutant complementation testing whether catalysis is required to
+    rescue the deletion lipidome phenotype.
+  provenance:
+  - reference_id: PMID:36164978
+    supporting_text: &#34;brought to our attention that Ykl050c possesses a clear lipase activity; however, its cellular localization was never clearly determined.&#34;
+    reference_section_type: RESULTS
+- gap_statement: &gt;-
+    LPX2&#39;s family placement conflicts with its proposed function: its only recognized sequence
+    family is EIS1/Eisosome1 (a plasma-membrane eisosome protein family), yet it localizes to
+    the peroxisomal matrix and is proposed to act in lipid metabolism. Whether LPX2 retains any
+    EIS1-like (eisosome/membrane-organizing) role, has neofunctionalized after the whole-genome
+    duplication, or does something else entirely is unknown.
+  boundary: &gt;-
+    LPX2 is the whole-genome-duplication paralog of EIS1 (SGD), and PANTHER PTHR28298 / Pfam
+    PF12757 place both in the &#34;eisosome protein 1&#34; family. EIS1 is a characterized eisosome
+    component; LPX2 is a peroxisomal-matrix protein with no experimental eisosome role. A GO
+    &#34;eisosome assembly&#34; inference (IBA:GO_Central, present in the UniProt GO cross-references)
+    is propagated from this family and is inconsistent with LPX2&#39;s experimental localization.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving the paralog relationship would clarify whether the eisosome-family assignment
+    (and any downstream IBA &#34;eisosome assembly&#34; annotation) is biologically meaningful for LPX2
+    or a paralog-driven over-propagation that should be down-weighted.
+  resolution: &gt;-
+    Test LPX2 for eisosome localization/assembly phenotypes directly (e.g. Pil1/Lsp1 eisosome
+    imaging in lpx2Δ and localization of tagged LPX2 relative to eisosomes) and structurally
+    compare the LPX2 and EIS1 domains.
+  provenance:
+  - reference_id: PMID:36164978
+    supporting_text: &#34;two additional potential lipases in peroxisomes, Ykl050c (Lpx2) and Fsh3&#34;
+    reference_section_type: DISCUSSION
+- gap_statement: &gt;-
+    The in-vivo biological role of LPX2 is undefined beyond a lipidomic association. No growth
+    phenotype, defined pathway placement, or contribution to peroxisomal fatty-acid metabolism
+    has been demonstrated specifically for LPX2; the model that peroxisomal lipases release
+    fatty acids for beta-oxidation and maintain peroxisomal membrane morphology is a speculative
+    suggestion proposed for the Lpx1/Lpx2/Fsh3 set, not an LPX2-specific result.
+  boundary: &gt;-
+    The one specific phenotype is that lpx2Δ has the largest glucose-medium lipidome effect
+    (LPG accumulation) in the Yifrach 2022 screen. The functional model that peroxisomal
+    lipases act on the peroxisomal membrane/intraperoxisomal vesicles to release fatty acids for
+    beta-oxidation is stated as a suggestion covering the whole lipase set.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a defined process, LPX2 cannot be placed in a peroxisomal metabolic pathway, and its
+    physiological importance (e.g. under oleate/fatty-acid growth) is unknown.
+  resolution: &gt;-
+    Phenotype lpx2Δ (and lpx1Δ lpx2Δ fsh3Δ combinations) for growth on fatty-acid carbon
+    sources, beta-oxidation flux, and peroxisomal membrane morphology; determine LPX2&#39;s
+    peroxisomal import route (it lacks a canonical C-terminal PTS1).
+  provenance:
+  - reference_id: PMID:36164978
+    supporting_text: &#34;act on the peroxisomal membrane or on intraperoxisomal vesicles to release fatty acids for&#34;
+    reference_section_type: DISCUSSION
+suggested_questions:
+- question: &gt;-
+    Does purified LPX2 have a measurable lipase/esterase activity, and if so on which lipid
+    substrate class (triacylglycerol, phosphatidylglycerol, lyso-phosphatidylglycerol, other)?
+- question: &gt;-
+    Is the single GXSXG motif (G875-S877-G879), which lies within a predicted disordered
+    C-terminal region, a genuine catalytic serine, or is LPX2 catalytically inactive?
+- question: &gt;-
+    How is LPX2 imported into the peroxisomal matrix given the absence of a canonical
+    C-terminal PTS1, and what governs its oleate-dependent partitioning between peroxisome,
+    nucleus and cytosol?
+- question: &gt;-
+    Does LPX2 retain any EIS1-like eisosome-related function, or has it fully neofunctionalized
+    after the whole-genome duplication?
+suggested_experiments:
+- description: &gt;-
+    Express and purify recombinant LPX2 and assay hydrolytic activity against a defined lipid
+    panel (tri/di/monoacylglycerol, major glycerophospholipids including phosphatidylglycerol
+    and lyso-phosphatidylglycerol), with a catalytic-serine (S877A) mutant as a negative
+    control.
+- description: &gt;-
+    Construct lpx2Δ, lpx1Δ lpx2Δ, and lpx1Δ lpx2Δ fsh3Δ strains and phenotype for growth on
+    oleate/fatty-acid carbon sources, beta-oxidation flux, quantitative lipidomics (confirming
+    LPG accumulation), and peroxisomal membrane morphology by microscopy.
+- description: &gt;-
+    Map LPX2&#39;s peroxisomal import determinants (test the non-canonical C terminus and any
+    internal PTS) and image tagged LPX2 relative to eisosome markers (Pil1/Lsp1) to test the
+    eisosome-family inference directly.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
