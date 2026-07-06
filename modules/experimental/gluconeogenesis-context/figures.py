@@ -22,9 +22,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import ListedColormap  # noqa: E402
 from matplotlib.patches import Rectangle  # noqa: E402
 
-from ai_gene_review.module_logic import (  # noqa: E402
-    compile_module_file, is_satisfied, step_id, unsatisfied_steps,
-)
+from ai_gene_review.module_logic import compile_module_file, is_satisfied  # noqa: E402
 from gtex_oracle import load_cache  # noqa: E402
 from kegg_oracle import ORGANISMS, load_cache as load_kegg  # noqa: E402
 from resolve_abduction import resolve as resolve_abduction  # noqa: E402

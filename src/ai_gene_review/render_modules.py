@@ -79,6 +79,17 @@ def descriptor_text(descriptor: Any) -> str:
     )
 
 
+def compact_text(value: Any, limit: int = 150) -> str:
+    """Return a compact single-line-ish preview for long prose."""
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if len(text) <= limit:
+        return text
+    clipped = text[: limit - 1].rstrip()
+    if " " in clipped:
+        clipped = clipped.rsplit(" ", 1)[0]
+    return f"{clipped}..."
+
+
 def selector_summary(selector: Any) -> str:
     """Return a compact human-readable participant selector."""
     if not isinstance(selector, dict):
@@ -198,6 +209,68 @@ def collect_module_stats(data: dict[str, Any]) -> dict[str, int]:
     return stats
 
 
+def collect_module_taxa(data: dict[str, Any]) -> list[str]:
+    """Collect unique taxon/context labels from a module document."""
+    taxa: dict[str, str] = {}
+
+    def add_taxon(descriptor: Any) -> None:
+        if not isinstance(descriptor, dict):
+            return
+        text = descriptor_text(descriptor)
+        if not text:
+            return
+        term = descriptor.get("term")
+        key = (
+            str(term.get("id"))
+            if isinstance(term, dict) and term.get("id")
+            else text.lower()
+        )
+        taxa.setdefault(key, text)
+
+    def walk(obj: Any) -> None:
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if key == "taxa":
+                    for descriptor in as_list(value):
+                        add_taxon(descriptor)
+                elif key == "taxon":
+                    add_taxon(value)
+                walk(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                walk(item)
+
+    walk(data)
+    return sorted(taxa.values(), key=str.lower)
+
+
+def collect_ptn_ids(data: dict[str, Any]) -> list[str]:
+    """Collect unique PANTHER PTN ids declared under ancestral_nodes."""
+    ptn_ids: set[str] = set()
+
+    def walk(obj: Any) -> None:
+        if isinstance(obj, dict):
+            ancestral_nodes = obj.get("ancestral_nodes")
+            if isinstance(ancestral_nodes, list):
+                for node in ancestral_nodes:
+                    if not isinstance(node, dict):
+                        continue
+                    term = node.get("term")
+                    if not isinstance(term, dict):
+                        continue
+                    term_id = term.get("id")
+                    if isinstance(term_id, str) and re.match(r"^PANTHER:PTN\d+$", term_id):
+                        ptn_ids.add(term_id)
+            for value in obj.values():
+                walk(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                walk(item)
+
+    walk(data)
+    return sorted(ptn_ids)
+
+
 def collect_duplicate_ids(data: dict[str, Any]) -> list[str]:
     """Find duplicate node, annoton, and variant set IDs in a module document."""
     counts: dict[str, int] = {}
@@ -308,11 +381,25 @@ def make_summary(
         "id": data.get("id"),
         "title": data.get("title") or module.get("label") or yaml_path.stem,
         "description": data.get("description") or module.get("description"),
+        "description_preview": compact_text(
+            data.get("description") or module.get("description")
+        ),
+        "description_is_truncated": (
+            compact_text(data.get("description") or module.get("description"))
+            != re.sub(
+                r"\s+",
+                " ",
+                str(data.get("description") or module.get("description") or ""),
+            ).strip()
+        ),
         "status": data.get("status"),
+        "scope": data.get("scope"),
         "source_path": yaml_path.as_posix(),
         "href": relative_href(index_path, output_path),
         "module_type": module.get("module_type"),
         "concepts": concepts,
+        "taxa": collect_module_taxa(data),
+        "ptn_ids": collect_ptn_ids(data),
         "stats": collect_module_stats(data),
         "qc": qc,
     }
