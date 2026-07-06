@@ -36,9 +36,12 @@ data, and the single foundational budding-yeast paper that defines the family.
 
 Sequence:
 `MSQPYLISKW MDPLFGIFVG TYGYYLYEKE HRPRGRSLRE LALRKWNKQA VSQQSMKN` (58 aa)
-The TM helix (res 10–27) is the single obvious feature; the C-terminal tail is
-short and enriched in basic/charged residues (…RPRGRSLRELALRKWNKQ…), consistent with a
-tail-anchored / single-pass membrane microprotein but with no diagnostic catalytic motif.
+The TM helix (res 10–27) is the single obvious feature. Because the TM segment is
+N-terminal (not near the C-terminus), the topology is more consistent with a
+signal-anchor / type-II-like single-pass membrane protein than with a tail-anchored
+protein; the ~30-residue post-TM segment is short and enriched in basic/charged residues
+(…RPRGRSLRELALRKWNKQ…). No diagnostic catalytic motif is present. The precise orientation
+(N-in vs N-out) is not experimentally determined.
 
 ## 2. Family / orthology (from InterPro + PANTHER; interpro/panther/PTHR28011/)
 
