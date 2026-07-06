@@ -1,0 +1,3160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FAH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P16930" target="_blank" class="term-link">
+                        P16930
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FAH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P16930" data-a="DESCRIPTION: FAH encodes fumarylacetoacetase (fumarylacetoaceta..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FAH encodes fumarylacetoacetase (fumarylacetoacetate hydrolase, EC 3.7.1.2), the enzyme that catalyzes the fifth and final step of the cytosolic L-tyrosine and L-phenylalanine catabolic pathway: the hydrolysis of 4-fumarylacetoacetate to fumarate plus acetoacetate. It is a homodimer, with each subunit using a bound Ca(2+) and Mg(2+) ion as catalytic cofactors, and is expressed mainly in liver and kidney with lower levels in other tissues. By clearing 4-fumarylacetoacetate, FAH prevents accumulation of this reactive intermediate and the upstream metabolite maleylacetoacetate, feeding fumarate into the citric acid cycle and acetoacetate into ketone-body/lipid metabolism. Loss-of-function variants cause hepatorenal tyrosinemia type I (TYRSN1), the most severe tyrosinemia, in which accumulated fumarylacetoacetate, maleylacetoacetate, and the derived toxin succinylacetone drive hepatocyte apoptosis, cirrhosis, hepatocellular carcinoma risk, and renal tubular dysfunction.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0006572" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement of FAH in L-tyrosine catabolism. FAH is the terminal (fifth) enzyme of the tyrosine degradation pathway, and this is a core biological-process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAH catalyzes the last step of tyrosine catabolism, hydrolyzing 4-fumarylacetoacetate to fumarate and acetoacetate; this is well supported experimentally and is the defining role of the gene. The IBA is consistent with the whole FAH family and with the direct human evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" target="_blank" class="term-link">
+                                        PMID:9305902
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the last enzyme in the tyrosine catabolic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                                    GO:0004334
+                                </a>
+                            </span>
+                            <span class="term-label">fumarylacetoacetase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0004334" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred fumarylacetoacetase (EC 3.7.1.2) activity. This is the core molecular function of FAH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct enzymatic activity is documented for human FAH and the term matches the catalyzed reaction exactly (4-fumarylacetoacetate + H2O = acetoacetate + fumarate + H+). The IBA is at the correct level of specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link">
+                                        PMID:1998338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0006559" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in L-phenylalanine catabolism. Phenylalanine is catabolized via conversion to tyrosine, so FAH is the terminal step of both pathways.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places FAH as the final step (step 6/6) of L-phenylalanine degradation to acetoacetate and fumarate (UniPathway UPA00139). The annotation is correct, though the phenylalanine framing is one metabolic conversion removed from FAH&#39;s direct substrate; the more direct role is captured by L-tyrosine catabolic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link">
+                                        PMID:1998338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902000" target="_blank" class="term-link">
+                                    GO:1902000
+                                </a>
+                            </span>
+                            <span class="term-label">homogentisate catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:1902000" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in homogentisate catabolism. Homogentisate is a tyrosine-pathway intermediate several steps upstream of FAH&#39;s substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAH acts on 4-fumarylacetoacetate, three enzymatic steps downstream of homogentisate (which is ring-cleaved by HGD to maleylacetoacetate). This IBA reflects a pathway-level grouping propagated across the FAH family rather than a direct role of FAH in homogentisate breakdown. It is not wrong at the whole-pathway level but is broader than FAH&#39;s actual biochemical step, so it is retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the root molecular-function catalytic term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0003824 is the top-level catalytic activity term and is uninformative for FAH, whose specific activity (fumarylacetoacetase, GO:0004334) is already annotated with stronger evidence. It is not incorrect, but it is an over-general mapping superseded by the specific EC 3.7.1.2 term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                                    GO:0004334
+                                </a>
+                            </span>
+                            <span class="term-label">fumarylacetoacetase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0004334" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (combined IEA pipeline, keyed to RHEA:10244 / EC 3.7.1.2) to the core fumarylacetoacetase activity term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This IEA maps FAH to its correct catalyzed reaction via RHEA:10244 and EC 3.7.1.2, in agreement with the IBA and TAS annotations to the same term. Redundant but correct.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009072" target="_blank" class="term-link">
+                                    GO:0009072
+                                </a>
+                            </span>
+                            <span class="term-label">aromatic amino acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0009072" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the broad aromatic amino acid metabolic process grouping term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Tyrosine and phenylalanine are aromatic amino acids, so FAH&#39;s catabolic role legitimately falls under this grouping term. However it is more general than the specific tyrosine and phenylalanine catabolic process annotations that better describe FAH, so it is retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a high-throughput binary interactome (Y2H) screen; interactors include TCF4 and keratin-associated proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an uninformative bare protein binding annotation from a genome-scale binary interactome map (the human interactome network / HuRI project). The reported partners (e.g. TCF4, keratin-associated proteins) have no plausible functional relationship to a cytosolic tyrosine-catabolic hydrolase and are typical high-throughput Y2H hits. Per curation guidelines this bare protein binding conveys no specific molecular function; it is retained but flagged as an over-annotation (not removed, as it is an experimental IPI).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from the HuRI binary reference interactome (Y2H); interactors include ADAMTSL4, CHRDL2, KRTAP13-3, PLEKHF2, SERTAD1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with PMID:25416956, this is an uninformative bare protein binding annotation from a systematic binary interactome screen. The partners are unrelated to FAH&#39;s enzymatic function and are consistent with high-throughput screening artifacts. Retained but flagged as an over-annotation (not removed, as it is an experimental IPI) per the guideline discouraging bare protein binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0006572" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transfer IEA of tyrosine catabolic process from the mouse ortholog (P35505).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This transfers a correct annotation (L-tyrosine catabolic process) from the mouse ortholog Fah. It is redundant with the IBA and TAS annotations to the same term and is at the appropriate level of specificity, so it is accepted despite being an ortholog-transfer inference.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006559" target="_blank" class="term-link">
+                                    GO:0006559
+                                </a>
+                            </span>
+                            <span class="term-label">L-phenylalanine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0006559" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-derived electronic annotation to L-phenylalanine catabolic process (UniPathway UPA00139).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records FAH as step 6/6 of L-phenylalanine degradation to acetoacetate and fumarate (UPA00139/UER00341). This IEA correctly reflects that pathway placement and is consistent with the IBA to the same term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of FAH in prostatic-secretion (urinary) exosome preparations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAH was cataloged among ~900 proteins in a shotgun proteomic survey of urinary exosomes. This is a bulk proteomics detection rather than a functional localization; FAH is fundamentally a cytosolic liver/kidney enzyme. The annotation is retained as a non-core secondary location observation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In pooled EPS-urine exosome samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of FAH in human urinary exosome proteome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAH was among 1132 proteins identified in a large-scale proteomic profile of human urinary exosomes. As with PMID:23533145, this is a proteomic catalog detection, not a functional site of action; kept as non-core relative to the core cytosolic localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the analysis identified 1132 proteins unambiguously</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71181
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0005829" data-r="Reactome:R-HSA-71181" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion (Reactome) that FAH acts in the cytosol, where the final step of tyrosine degradation occurs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> FAH is a cytosolic enzyme catalyzing the terminal cytosolic step of tyrosine/phenylalanine catabolism. This is the core subcellular localization and is well established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71181
+
+                                </span>
+
+                                <div class="support-text">This is the final step of tyrosine degradation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                                    GO:0004334
+                                </a>
+                            </span>
+                            <span class="term-label">fumarylacetoacetase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1998338
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of the cDNA encoding human fumarylace...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0004334" data-r="PMID:1998338" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion of fumarylacetoacetase activity from the human FAH cDNA cloning and expression study, which demonstrated hydrolysis of the natural substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Expression of the human FAH cDNA yielded a protein with fumarylacetoacetase enzymatic activity, directly supporting the core molecular function annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link">
+                                        PMID:1998338
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                    GO:0006572
+                                </a>
+                            </span>
+                            <span class="term-label">L-tyrosine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9305902
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Complete rescue of lethal albino c14CoS mice by null mutatio...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P16930" data-a="GO:0006572" data-r="PMID:9305902" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion that FAH is the last enzyme of the tyrosine catabolic pathway, based on the Fah-deficient mouse model of tyrosinemia type 1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This annotation is directly supported: FAH encodes the last enzyme in tyrosine catabolism, and its loss causes accumulation of toxic pathway intermediates. Core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" target="_blank" class="term-link">
+                                        PMID:9305902
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the last enzyme in the tyrosine catabolic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Fumarylacetoacetase catalyzing the terminal step of cytosolic tyrosine/phenylalanine catabolism: hydrolysis of 4-fumarylacetoacetate to fumarate and acetoacetate.</h3>
+                <span class="vote-buttons" data-g="P16930" data-a="FUNCTION: Fumarylacetoacetase catalyzing the terminal step o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004334" target="_blank" class="term-link">
+                            fumarylacetoacetase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006572" target="_blank" class="term-link">
+                                L-tyrosine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link">
+                                PMID:1998338
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" target="_blank" class="term-link">
+                                PMID:9305902
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the last enzyme in the tyrosine catabolic pathway.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAH was among 1132 proteins identified in a large-scale proteomic profile of human urinary exosomes; a bulk proteomics detection rather than a functional localization.</div>
+
+                        <div class="finding-text">"the analysis identified 1132 proteins unambiguously"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1998338" target="_blank" class="term-link">
+                            PMID:1998338
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of the cDNA encoding human fumarylacetoacetate hydrolase, the enzyme deficient in hereditary tyrosinemia: assignment of the gene to chromosome 15.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human FAH cDNA expressed in mammalian cells produces an enzymatically active protein that hydrolyzes the natural substrate fumarylacetoacetate; the in vivo dimer is a homodimer.</div>
+
+                        <div class="finding-text">"having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">FAH was cataloged among ~900 proteins in a shotgun proteomic survey of prostatic-secretion (urinary) exosomes.</div>
+
+                        <div class="finding-text">"In pooled EPS-urine exosome samples, ~900 proteins were detected."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-scale binary interactome (Y2H) map reporting FAH interactions with partners unrelated to its enzymatic function.</div>
+
+                        <div class="finding-text">"A proteome-scale map of the human interactome network."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HuRI binary reference interactome (Y2H) reporting FAH interactions with functionally unrelated partners (e.g. ADAMTSL4, CHRDL2, KRTAPs, PLEKHF2, SERTAD1).</div>
+
+                        <div class="finding-text">"A reference map of the human binary protein interactome."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" target="_blank" class="term-link">
+                            PMID:9305902
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Complete rescue of lethal albino c14CoS mice by null mutation of 4-hydroxyphenylpyruvate dioxygenase and induction of apoptosis of hepatocytes in these mice by in vivo retrieval of the tyrosine catabolic pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fah encodes the last enzyme of the tyrosine catabolic pathway; its loss causes accumulation of fumarylacetoacetate, maleylacetoacetate, and succinylacetone that trigger hepatocyte apoptosis, the mouse model of tyrosinemia type 1.</div>
+
+                        <div class="finding-text">"HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the last enzyme in the tyrosine catabolic pathway."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71181
+
+                    </span>
+                </div>
+
+                <div class="reference-title">FAH cleaves 4FAA</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction: FAH (a cytosolic homodimer using Ca2+ and Mg2+ cofactors) catalyzes the final step of tyrosine degradation, hydrolyzing 4-fumarylacetoacetate to fumarate and acetoacetate.</div>
+
+                        <div class="finding-text">"This is the final step of tyrosine degradation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FAH-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P16930" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fah-fumarylacetoacetase-p16930-review-notes">FAH (Fumarylacetoacetase, P16930) — review notes</h1>
+<h2 id="core-function-well-established">Core function (well established)</h2>
+<p>FAH catalyzes the fifth and final step of the cytosolic L-tyrosine (and L-phenylalanine)<br />
+catabolic pathway: hydrolysis of 4-fumarylacetoacetate to fumarate + acetoacetate.</p>
+<ul>
+<li>EC 3.7.1.2, fumarylacetoacetase activity (GO:0004334).</li>
+<li>Reaction (UniProt/Rhea RHEA:10244): "4-fumarylacetoacetate + H2O = acetoacetate + fumarate + H(+)".</li>
+<li>GO:0004334 definition (QuickGO, verified): "Catalysis of the reaction: 4-fumarylacetoacetate + H2O = acetoacetate + fumarate + H+."</li>
+<li>Homodimer; each monomer binds one Ca2+ and one Mg2+ as catalytic cofactors [UniProt COFACTOR/SUBUNIT; Reactome R-HSA-71181 "The enzyme is a homodimer, with each monomer binding one Ca(2+) and one Mg(2+) ion as catalytic cofactors"].</li>
+<li>Cytosolic; mainly expressed in liver and kidney [UniProt TISSUE SPECIFICITY: "Mainly expressed in liver and kidney. Lower levels are also detected in many other tissues."].</li>
+</ul>
+<h3 id="direct-experimental-support-for-catalysis-human-enzyme">Direct experimental support for catalysis (human enzyme)</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/1998338" title="Transient expression of this FAH cDNA in transfected CV-1 mammalian cells resulted in the synthesis of an immunoreactive protein comigrating with purified human liver FAH on SDS-PAGE and having enzymatic activity as shown by the hydrolysis of the natural substrate fumarylacetoacetate.">PMID:1998338</a> — TAS annotation to GO:0004334 (PINC). This is the human FAH cloning/expression paper; abstract-only cache but establishes human FAH catalyzes the FAA hydrolysis reaction and that the in vivo dimer is a homodimer.</p>
+<h2 id="pathway-placement-bp">Pathway placement / BP</h2>
+<ul>
+<li>UniProt PATHWAY: "Amino-acid degradation; L-phenylalanine degradation; acetoacetate and fumarate from L-phenylalanine: step 6/6." (UniPathway UPA00139/UER00341). L-Phe is first converted to L-Tyr (PAH), so FAH is the terminal step of both Tyr and Phe catabolism.</li>
+<li>Reactome R-HSA-71181 "FAH cleaves 4FAA": "This is the final step of tyrosine degradation."</li>
+<li>Tyrosine catabolic pathway (last enzyme): <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" title="HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the last enzyme in the tyrosine catabolic pathway.">PMID:9305902</a> — supports GO:0006572 (TAS).</li>
+</ul>
+<h3 id="homogentisate-catabolic-process-go1902000-iba">Homogentisate catabolic process (GO:1902000, IBA)</h3>
+<p>Homogentisate (2,5-dihydroxyphenylacetate) is the intermediate produced by HPD from<br />
+4-hydroxyphenylpyruvate and consumed by HGD in the tyrosine pathway, upstream of FAH.<br />
+FAH acts on 4-fumarylacetoacetate, three steps downstream of homogentisate, so it is part<br />
+of the same overall pathway but does not itself catabolize homogentisate. The IBA is a<br />
+pathway-level (whole-pathway) grouping propagated across the FAH family; keep as non-core<br />
+(over-broad relative to FAH's actual biochemical step).</p>
+<h2 id="disease-tyrosinemia-type-i-ht-1">Disease (Tyrosinemia type I / HT-1)</h2>
+<p>FAH deficiency causes hepatorenal tyrosinemia type I (TYRSN1, MIM:276700), the most severe<br />
+tyrosinemia [UniProt DISEASE]. Loss of the terminal step causes accumulation of upstream<br />
+toxic intermediates fumarylacetoacetate (FAA) and maleylacetoacetate (MAA), and the derived<br />
+metabolite succinylacetone (SA). FAA triggers hepatocyte apoptosis via mitochondrial<br />
+cytochrome c release; SA inhibits ALA dehydratase (porphyria-like crises). Leads to hepatic<br />
+necrosis/cirrhosis, hepatocellular carcinoma risk, and renal tubular dysfunction. Treated<br />
+with nitisinone (NTBC, an HPD inhibitor blocking the pathway upstream) plus Tyr/Phe-restricted<br />
+diet.<br />
+- dismech Tyrosinemia_Type_I.yaml: "FAH deficiency leads to accumulation of toxic intermediates including fumarylacetoacetate (FAA), maleylacetoacetate (MAA), and succinylacetone (SA). FAA directly injures hepatocytes through mitochondrial cytochrome c release with caspase-mediated apoptosis."<br />
+- Apoptosis mechanism <a href="https://pubmed.ncbi.nlm.nih.gov/9305902" title="accumulation of fumarylacetoacetate, maleylacetoacetate, or succinylacetone seems to trigger the endogenous process of apoptosis in hepatocytes that lack fumarylacetoacetate hydrolase activity.">PMID:9305902</a><br />
+- Many disease-causing loss-of-activity missense variants documented (e.g. N16I, A134D, C193R, D233V, W234G, R381G) [UniProt VARIANT features].</p>
+<h2 id="annotation-by-annotation-reasoning">Annotation-by-annotation reasoning</h2>
+<ul>
+<li>GO:0004334 fumarylacetoacetase activity — CORE MF. Three annotations (IBA, IEA GO_REF:0000120, TAS PMID:1998338). All ACCEPT.</li>
+<li>GO:0006572 L-tyrosine catabolic process — CORE BP (terminal step). IBA + TAS(PMID:9305902) ACCEPT; the GO_REF:0000107 Ensembl-Compara IEA is a redundant ortholog-transfer of the same correct term — ACCEPT (not over-broad).</li>
+<li>GO:0006559 L-phenylalanine catabolic process — Phe feeds into the Tyr pathway (PAH converts Phe→Tyr); FAH is the terminal step of Phe degradation per UniPathway. Correct but the phenylalanine framing is one step removed from FAH's direct substrate. Keep (ACCEPT/non-core) — both IBA and UniPathway IEA supported by UniProt PATHWAY statement.</li>
+<li>GO:1902000 homogentisate catabolic process — IBA, pathway-level grouping; FAH does not act on homogentisate directly. KEEP_AS_NON_CORE.</li>
+<li>GO:0003824 catalytic activity — IEA InterPro, uninformative parent of GO:0004334. MARK_AS_OVER_ANNOTATED (root-ish MF; more specific term exists and is annotated).</li>
+<li>GO:0009072 aromatic amino acid metabolic process — IEA InterPro, broad grouping BP; correct but non-core (Tyr/Phe catabolism captured more specifically). KEEP_AS_NON_CORE.</li>
+<li>GO:0005515 protein binding (x2 refs; IPI) — high-throughput binary interactome screens (PMID:25416956 Rolland/HuRI; PMID:32296183 Luck/HuRI reference map). Bare "protein binding", uninformative; interactors (TCF4, KRTAPs, ADAMTSL4, CHRDL2, SERTAD1, PLEKHF2) have no functional relationship to a cytosolic metabolic hydrolase — classic HT-Y2H artifacts. REMOVE per curation guideline against bare protein binding.</li>
+<li>GO:0070062 extracellular exosome (x2; HDA) — high-throughput proteomics of urinary/prostatic exosomes (PMID:23533145, PMID:19056867). FAH is a cytosolic liver/kidney enzyme; detection in urinary exosomes is a mass-spec catalog finding, not a functional localization. KEEP_AS_NON_CORE (do not remove HDA; keep as non-core secondary location).</li>
+<li>GO:0005829 cytosol (TAS Reactome) — CORE CC. ACCEPT.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P16930
+gene_symbol: FAH
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FAH encodes fumarylacetoacetase (fumarylacetoacetate hydrolase, EC 3.7.1.2), the enzyme
+  that catalyzes the fifth and final step of the cytosolic L-tyrosine and L-phenylalanine
+  catabolic pathway: the hydrolysis of 4-fumarylacetoacetate to fumarate plus acetoacetate.
+  It is a homodimer, with each subunit using a bound Ca(2+) and Mg(2+) ion as catalytic
+  cofactors, and is expressed mainly in liver and kidney with lower levels in other tissues.
+  By clearing 4-fumarylacetoacetate, FAH prevents accumulation of this reactive intermediate
+  and the upstream metabolite maleylacetoacetate, feeding fumarate into the citric acid cycle
+  and acetoacetate into ketone-body/lipid metabolism. Loss-of-function variants cause
+  hepatorenal tyrosinemia type I (TYRSN1), the most severe tyrosinemia, in which accumulated
+  fumarylacetoacetate, maleylacetoacetate, and the derived toxin succinylacetone drive
+  hepatocyte apoptosis, cirrhosis, hepatocellular carcinoma risk, and renal tubular
+  dysfunction.
+alternative_products:
+- name: &#39;1&#39;
+  id: P16930-1
+- name: &#39;2&#39;
+  id: P16930-2
+  sequence_note: VSP_055491
+existing_annotations:
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement of FAH in L-tyrosine catabolism. FAH is the
+      terminal (fifth) enzyme of the tyrosine degradation pathway, and this is a core
+      biological-process annotation.
+    action: ACCEPT
+    reason: &gt;-
+      FAH catalyzes the last step of tyrosine catabolism, hydrolyzing 4-fumarylacetoacetate
+      to fumarate and acetoacetate; this is well supported experimentally and is the defining
+      role of the gene. The IBA is consistent with the whole FAH family and with the direct
+      human evidence.
+    supported_by:
+    - reference_id: PMID:9305902
+      supporting_text: &gt;-
+        HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the
+        last enzyme in the tyrosine catabolic pathway.
+- term:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred fumarylacetoacetase (EC 3.7.1.2) activity. This is the
+      core molecular function of FAH.
+    action: ACCEPT
+    reason: &gt;-
+      Direct enzymatic activity is documented for human FAH and the term matches the
+      catalyzed reaction exactly (4-fumarylacetoacetate + H2O = acetoacetate + fumarate + H+).
+      The IBA is at the correct level of specificity.
+    supported_by:
+    - reference_id: PMID:1998338
+      supporting_text: &gt;-
+        having enzymatic activity as shown by the hydrolysis of the natural substrate
+        fumarylacetoacetate
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement in L-phenylalanine catabolism. Phenylalanine is
+      catabolized via conversion to tyrosine, so FAH is the terminal step of both pathways.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt places FAH as the final step (step 6/6) of L-phenylalanine degradation to
+      acetoacetate and fumarate (UniPathway UPA00139). The annotation is correct, though the
+      phenylalanine framing is one metabolic conversion removed from FAH&#39;s direct substrate;
+      the more direct role is captured by L-tyrosine catabolic process.
+    supported_by:
+    - reference_id: PMID:1998338
+      supporting_text: &gt;-
+        having enzymatic activity as shown by the hydrolysis of the natural substrate
+        fumarylacetoacetate
+- term:
+    id: GO:1902000
+    label: homogentisate catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred involvement in homogentisate catabolism. Homogentisate is a
+      tyrosine-pathway intermediate several steps upstream of FAH&#39;s substrate.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FAH acts on 4-fumarylacetoacetate, three enzymatic steps downstream of homogentisate
+      (which is ring-cleaved by HGD to maleylacetoacetate). This IBA reflects a pathway-level
+      grouping propagated across the FAH family rather than a direct role of FAH in
+      homogentisate breakdown. It is not wrong at the whole-pathway level but is broader than
+      FAH&#39;s actual biochemical step, so it is retained as non-core.
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the root molecular-function catalytic term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0003824 is the top-level catalytic activity term and is uninformative for FAH, whose
+      specific activity (fumarylacetoacetase, GO:0004334) is already annotated with stronger
+      evidence. It is not incorrect, but it is an over-general mapping superseded by the
+      specific EC 3.7.1.2 term.
+- term:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (combined IEA pipeline, keyed to RHEA:10244 / EC 3.7.1.2) to the
+      core fumarylacetoacetase activity term.
+    action: ACCEPT
+    reason: &gt;-
+      This IEA maps FAH to its correct catalyzed reaction via RHEA:10244 and EC 3.7.1.2, in
+      agreement with the IBA and TAS annotations to the same term. Redundant but correct.
+- term:
+    id: GO:0009072
+    label: aromatic amino acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the broad aromatic amino acid metabolic process
+      grouping term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Tyrosine and phenylalanine are aromatic amino acids, so FAH&#39;s catabolic role legitimately
+      falls under this grouping term. However it is more general than the specific tyrosine and
+      phenylalanine catabolic process annotations that better describe FAH, so it is retained
+      as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a high-throughput binary interactome (Y2H) screen; interactors
+      include TCF4 and keratin-associated proteins.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is an uninformative bare protein binding annotation from a genome-scale binary
+      interactome map (the human interactome network / HuRI project). The reported partners
+      (e.g. TCF4, keratin-associated proteins) have no plausible functional relationship to a
+      cytosolic tyrosine-catabolic hydrolase and are typical high-throughput Y2H hits. Per
+      curation guidelines this bare protein binding conveys no specific molecular function; it
+      is retained but flagged as an over-annotation (not removed, as it is an experimental IPI).
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from the HuRI binary reference interactome (Y2H); interactors
+      include ADAMTSL4, CHRDL2, KRTAP13-3, PLEKHF2, SERTAD1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      As with PMID:25416956, this is an uninformative bare protein binding annotation from a
+      systematic binary interactome screen. The partners are unrelated to FAH&#39;s enzymatic
+      function and are consistent with high-throughput screening artifacts. Retained but flagged
+      as an over-annotation (not removed, as it is an experimental IPI) per the guideline
+      discouraging bare protein binding.
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl-Compara ortholog-transfer IEA of tyrosine catabolic process from the mouse
+      ortholog (P35505).
+    action: ACCEPT
+    reason: &gt;-
+      This transfers a correct annotation (L-tyrosine catabolic process) from the mouse
+      ortholog Fah. It is redundant with the IBA and TAS annotations to the same term and is
+      at the appropriate level of specificity, so it is accepted despite being an
+      ortholog-transfer inference.
+- term:
+    id: GO:0006559
+    label: L-phenylalanine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway-derived electronic annotation to L-phenylalanine catabolic process
+      (UniPathway UPA00139).
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records FAH as step 6/6 of L-phenylalanine degradation to acetoacetate and
+      fumarate (UPA00139/UER00341). This IEA correctly reflects that pathway placement and is
+      consistent with the IBA to the same term.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of FAH in prostatic-secretion (urinary)
+      exosome preparations.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FAH was cataloged among ~900 proteins in a shotgun proteomic survey of urinary exosomes.
+      This is a bulk proteomics detection rather than a functional localization; FAH is
+      fundamentally a cytosolic liver/kidney enzyme. The annotation is retained as a non-core
+      secondary location observation.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        In pooled EPS-urine exosome samples, ~900 proteins were detected.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of FAH in human urinary exosome proteome.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      FAH was among 1132 proteins identified in a large-scale proteomic profile of human
+      urinary exosomes. As with PMID:23533145, this is a proteomic catalog detection, not a
+      functional site of action; kept as non-core relative to the core cytosolic localization.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &gt;-
+        the analysis identified 1132 proteins unambiguously
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71181
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable assertion (Reactome) that FAH acts in the cytosol, where the final step of
+      tyrosine degradation occurs.
+    action: ACCEPT
+    reason: &gt;-
+      FAH is a cytosolic enzyme catalyzing the terminal cytosolic step of tyrosine/phenylalanine
+      catabolism. This is the core subcellular localization and is well established.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71181
+      supporting_text: This is the final step of tyrosine degradation.
+- term:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  evidence_type: TAS
+  original_reference_id: PMID:1998338
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable assertion of fumarylacetoacetase activity from the human FAH cDNA cloning and
+      expression study, which demonstrated hydrolysis of the natural substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Expression of the human FAH cDNA yielded a protein with fumarylacetoacetase enzymatic
+      activity, directly supporting the core molecular function annotation.
+    supported_by:
+    - reference_id: PMID:1998338
+      supporting_text: &gt;-
+        having enzymatic activity as shown by the hydrolysis of the natural substrate
+        fumarylacetoacetate
+- term:
+    id: GO:0006572
+    label: L-tyrosine catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:9305902
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable assertion that FAH is the last enzyme of the tyrosine catabolic pathway,
+      based on the Fah-deficient mouse model of tyrosinemia type 1.
+    action: ACCEPT
+    reason: &gt;-
+      This annotation is directly supported: FAH encodes the last enzyme in tyrosine
+      catabolism, and its loss causes accumulation of toxic pathway intermediates. Core
+      biological process.
+    supported_by:
+    - reference_id: PMID:9305902
+      supporting_text: &gt;-
+        HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the
+        last enzyme in the tyrosine catabolic pathway.
+core_functions:
+- description: &gt;-
+    Fumarylacetoacetase catalyzing the terminal step of cytosolic tyrosine/phenylalanine
+    catabolism: hydrolysis of 4-fumarylacetoacetate to fumarate and acetoacetate.
+  molecular_function:
+    id: GO:0004334
+    label: fumarylacetoacetase activity
+  directly_involved_in:
+  - id: GO:0006572
+    label: L-tyrosine catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:1998338
+    supporting_text: &gt;-
+      having enzymatic activity as shown by the hydrolysis of the natural substrate
+      fumarylacetoacetate
+  - reference_id: PMID:9305902
+    supporting_text: &gt;-
+      HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the
+      last enzyme in the tyrosine catabolic pathway.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to orthologs
+    using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings:
+  - statement: &gt;-
+      FAH was among 1132 proteins identified in a large-scale proteomic profile of human
+      urinary exosomes; a bulk proteomics detection rather than a functional localization.
+    supporting_text: &gt;-
+      the analysis identified 1132 proteins unambiguously
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-verified. Supports HDA extracellular-exosome detection of FAH but is a
+      proteomic catalog, not evidence of functional localization for a cytosolic enzyme.
+- id: PMID:1998338
+  title: &#39;Cloning and expression of the cDNA encoding human fumarylacetoacetate hydrolase,
+    the enzyme deficient in hereditary tyrosinemia: assignment of the gene to chromosome
+    15.&#39;
+  findings:
+  - statement: &gt;-
+      Human FAH cDNA expressed in mammalian cells produces an enzymatically active protein
+      that hydrolyzes the natural substrate fumarylacetoacetate; the in vivo dimer is a
+      homodimer.
+    supporting_text: &gt;-
+      having enzymatic activity as shown by the hydrolysis of the natural substrate
+      fumarylacetoacetate
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-verified; establishes human FAH catalyzes the fumarylacetoacetate hydrolysis
+      reaction (core MF) and maps the gene to chromosome 15q23-q25.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions
+    in urine.
+  findings:
+  - statement: &gt;-
+      FAH was cataloged among ~900 proteins in a shotgun proteomic survey of prostatic-secretion
+      (urinary) exosomes.
+    supporting_text: &gt;-
+      In pooled EPS-urine exosome samples, ~900 proteins were detected.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-verified. Bulk exosome proteomics; supports HDA extracellular-exosome
+      detection but not a core functional localization.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings:
+  - statement: &gt;-
+      Genome-scale binary interactome (Y2H) map reporting FAH interactions with partners
+      unrelated to its enzymatic function.
+    supporting_text: A proteome-scale map of the human interactome network.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly cited high-throughput binary interactome screen. Yields only uninformative
+      bare protein binding with functionally unrelated partners; annotation recommended for
+      removal.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings:
+  - statement: &gt;-
+      HuRI binary reference interactome (Y2H) reporting FAH interactions with functionally
+      unrelated partners (e.g. ADAMTSL4, CHRDL2, KRTAPs, PLEKHF2, SERTAD1).
+    supporting_text: A reference map of the human binary protein interactome.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Correctly cited systematic binary interactome map; only supports bare protein binding
+      with unrelated partners, recommended for removal.
+- id: PMID:9305902
+  title: Complete rescue of lethal albino c14CoS mice by null mutation of 4-hydroxyphenylpyruvate
+    dioxygenase and induction of apoptosis of hepatocytes in these mice by in vivo retrieval
+    of the tyrosine catabolic pathway.
+  findings:
+  - statement: &gt;-
+      Fah encodes the last enzyme of the tyrosine catabolic pathway; its loss causes
+      accumulation of fumarylacetoacetate, maleylacetoacetate, and succinylacetone that
+      trigger hepatocyte apoptosis, the mouse model of tyrosinemia type 1.
+    supporting_text: &gt;-
+      HT1 is due to mutations in the fumarylacetoacetate hydrolase gene Fah, encoding the
+      last enzyme in the tyrosine catabolic pathway.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-verified. Establishes FAH&#39;s pathway position (terminal tyrosine-catabolic
+      enzyme) and the toxic-metabolite/apoptosis mechanism of tyrosinemia type 1.
+- id: Reactome:R-HSA-71181
+  title: FAH cleaves 4FAA
+  findings:
+  - statement: &gt;-
+      Reactome reaction: FAH (a cytosolic homodimer using Ca2+ and Mg2+ cofactors) catalyzes
+      the final step of tyrosine degradation, hydrolyzing 4-fumarylacetoacetate to fumarate
+      and acetoacetate.
+    supporting_text: This is the final step of tyrosine degradation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cached Reactome entry describing the FAH-catalyzed terminal reaction and cytosolic
+      localization; consistent with UniProt catalytic/cofactor/subunit annotations.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
