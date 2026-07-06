@@ -267,6 +267,13 @@ def validate_module_file(
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
 
+    # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
+    # paired with a ``title``) must match the fetched/cached publication title
+    # (normalized). Mismatches block; unfetchable references degrade to warnings.
+    title_errors, title_warnings = validate_reference_titles(doc)
+    errors.extend(title_errors)
+    warnings.extend(title_warnings)
+
     # Supporting-text snippets: every EvidenceItem literature quote (PMID/DOI
     # source_id paired with supporting_text) must be a verbatim (normalized)
     # substring of the cached publication. Mismatches block; unfetchable or
@@ -315,6 +322,66 @@ def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
             yield from iter_evidence_snippets(item)
 
 
+def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
+    """Yield ``(reference_id, title)`` for every literature reference with a title.
+
+    A reference is any mapping carrying a literature identifier -- ``id`` (top
+    level ``references:`` list) or ``source_id`` (inline ``EvidenceItem``) with a
+    ``PMID:``/``DOI:`` prefix -- alongside a non-empty ``title``. Non-literature
+    ids (``GO:``, ``file:``, ``PANTHER:``, local node ids, ``MODULE:...``) are
+    ignored: they have no fetchable publication title to check against.
+
+    >>> doc = {"references": [{"id": "PMID:1", "title": "A"}],
+    ...        "module": {"id": "notch", "label": "Notch",
+    ...                   "evidence": [{"source_id": "GO:1", "title": "grounding"}]}}
+    >>> list(iter_reference_titles(doc))
+    [('PMID:1', 'A')]
+    """
+    if isinstance(obj, dict):
+        ref_id = obj.get("id") or obj.get("source_id")
+        title = obj.get("title")
+        if (
+            isinstance(ref_id, str)
+            and isinstance(title, str)
+            and title.strip()
+            and ref_id.split(":", 1)[0].upper() in _LITERATURE_PREFIXES
+        ):
+            yield (ref_id, title)
+        for value in obj.values():
+            yield from iter_reference_titles(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            yield from iter_reference_titles(item)
+
+
+def _build_supporting_text_validator(publications_dir: Optional[Path]):
+    """Build linkml-reference-validator's SupportingTextValidator over the cache.
+
+    Returns ``(validator, publications_dir)`` or ``(None, publications_dir)`` when
+    the optional dependency is not installed, so callers degrade gracefully.
+    """
+    if publications_dir is None:
+        publications_dir = Path(__file__).resolve().parents[3] / "publications"
+    try:
+        from linkml_reference_validator.models import ReferenceValidationConfig
+        from linkml_reference_validator.validation.supporting_text_validator import (
+            SupportingTextValidator,
+        )
+    except ImportError:
+        return None, publications_dir
+    config = ReferenceValidationConfig(
+        cache_dir=publications_dir,
+        fetch_full_text=False,
+    )
+    return SupportingTextValidator(config), publications_dir
+
+
+def _is_unfetchable(message: str) -> bool:
+    """True when a validation failure is a fetch/availability problem, not a mismatch."""
+    lowered = message.lower()
+    return "could not fetch" in lowered or "no records found" in lowered
+
+
 def validate_supporting_text(
     doc: object,
     publications_dir: Optional[Path] = None,
@@ -335,29 +402,13 @@ def validate_supporting_text(
     """
     if not isinstance(doc, dict):
         return [], []
-
     snippets = list(iter_evidence_snippets(doc))
     if not snippets:
         return [], []
 
-    try:
-        from linkml_reference_validator.models import ReferenceValidationConfig
-        from linkml_reference_validator.validation.supporting_text_validator import (
-            SupportingTextValidator,
-        )
-    except ImportError:
+    validator, _ = _build_supporting_text_validator(publications_dir)
+    if validator is None:
         return [], []
-
-    if publications_dir is None:
-        publications_dir = (
-            Path(__file__).resolve().parents[3] / "publications"
-        )
-
-    config = ReferenceValidationConfig(
-        cache_dir=publications_dir,
-        fetch_full_text=False,
-    )
-    validator = SupportingTextValidator(config)
 
     errors: List[str] = []
     warnings: List[str] = []
@@ -366,10 +417,51 @@ def validate_supporting_text(
         if result.is_valid:
             continue
         message = str(getattr(result, "message", "") or "")
-        if "could not fetch" in message.lower() or "no records found" in message.lower():
+        if _is_unfetchable(message):
             warnings.append(f"Supporting text unverified ({source_id}): {message}")
         else:
             errors.append(f"Supporting text mismatch ({source_id}): {message}")
+    return errors, warnings
+
+
+def validate_reference_titles(
+    doc: object,
+    publications_dir: Optional[Path] = None,
+) -> Tuple[List[str], List[str]]:
+    """Verify every literature reference title against the cited publication.
+
+    For each ``PMID:``/``DOI:`` reference that carries a ``title`` (in the top
+    level ``references:`` list or an inline ``EvidenceItem``), the title is
+    compared (normalized) with the fetched/cached publication title using the
+    same matcher gene reviews use. Returns ``(errors, warnings)``:
+
+    - a title that does not match the publication is an **error** (blocks;
+      catches wrong PMIDs and stale/abbreviated titles);
+    - a reference that cannot be fetched or is not cached is a **warning**.
+
+    A no-op when the reference validator is not installed.
+    """
+    if not isinstance(doc, dict):
+        return [], []
+    refs = list(dict.fromkeys(iter_reference_titles(doc)))  # de-dupe, keep order
+    if not refs:
+        return [], []
+
+    validator, _ = _build_supporting_text_validator(publications_dir)
+    if validator is None:
+        return [], []
+
+    errors: List[str] = []
+    warnings: List[str] = []
+    for ref_id, title in refs:
+        result = validator.validate_title(ref_id, title)
+        if result.is_valid:
+            continue
+        message = str(getattr(result, "message", "") or "")
+        if _is_unfetchable(message):
+            warnings.append(f"Reference title unverified ({ref_id}): {message}")
+        else:
+            errors.append(f"Reference title mismatch ({ref_id}): {message}")
     return errors, warnings
 
 

@@ -328,3 +328,70 @@ def test_validate_supporting_text_flags_fabricated_quote():
     }
     errors, _ = validate_supporting_text(doc, publications_dir=PUBLICATIONS_DIR)
     assert any("mismatch" in e.lower() for e in errors), errors
+
+
+# --------------------------------------------------------------------------- #
+# reference title validation
+# --------------------------------------------------------------------------- #
+
+from ai_gene_review.validation.module_validator import (  # noqa: E402
+    iter_reference_titles,
+    validate_reference_titles,
+)
+
+
+def test_iter_reference_titles_only_literature():
+    """Only PMID/DOI ids/source_ids with a title are yielded; local ids ignored."""
+    doc = {
+        "id": "MODULE:x",
+        "title": "My module",  # MODULE: prefix -> ignored
+        "references": [{"id": "PMID:5", "title": "Real Paper"}],
+        "module": {
+            "id": "node1",  # local id -> ignored
+            "label": "n",
+            "evidence": [
+                {"source_id": "DOI:10.1/y", "title": "Doi Paper"},
+                {"source_id": "GO:0001", "title": "grounding"},  # ignored
+            ],
+        },
+    }
+    assert sorted(iter_reference_titles(doc)) == [
+        ("DOI:10.1/y", "Doi Paper"),
+        ("PMID:5", "Real Paper"),
+    ]
+
+
+def test_validate_reference_titles_no_literature_is_noop():
+    doc = {"references": [{"id": "GO:1", "title": "x"}]}
+    assert validate_reference_titles(doc) == ([], [])
+
+
+@pytest.mark.integration
+def test_validate_reference_titles_correct_passes():
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "references": [
+            {
+                "id": "PMID:10049358",
+                "title": "Bmp4 is required for the generation of primordial germ cells in the mouse embryo.",
+            }
+        ]
+    }
+    errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
+    assert errors == [], errors
+
+
+@pytest.mark.integration
+def test_validate_reference_titles_wrong_title_errors():
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "references": [
+            {"id": "PMID:10049358", "title": "An unrelated wrong title"}
+        ]
+    }
+    errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
+    assert any("title mismatch" in e.lower() for e in errors), errors

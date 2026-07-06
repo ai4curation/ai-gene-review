@@ -634,11 +634,13 @@ validate-modules:
         echo "Schema-validating $f"
         uv run linkml-validate --schema {{schema_path}} --target-class ModuleReview "$f" || rc=1
     done <<< "$files"
-    echo "Validating module term labels and supporting_text snippets..."
-    # module_validator also verifies every EvidenceItem literature quote:
-    # each PMID/DOI source_id paired with a supporting_text is checked verbatim
-    # (normalized substring) against the cached publications/PMID_*.md, using
-    # linkml-reference-validator's own matcher. Snippet mismatches are errors;
+    echo "Validating module term labels, reference titles, and supporting_text..."
+    # module_validator also verifies every literature reference (PMID/DOI):
+    #  - each title (references list or EvidenceItem) must match the cited
+    #    publication title (catches wrong PMIDs and stale/abbreviated titles);
+    #  - each supporting_text quote must be a verbatim (normalized) substring of
+    #    the cached publications/PMID_*.md.
+    # Both use linkml-reference-validator's own matcher. Mismatches are errors;
     # unfetchable/uncached references are advisory warnings.
     # shellcheck disable=SC2086
     uv run python -m ai_gene_review.validation.module_validator $files || rc=1
