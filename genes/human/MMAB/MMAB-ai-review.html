@@ -1,0 +1,4025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMAB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MMAB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96EY8" target="_blank" class="term-link">
+                        Q96EY8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MMAB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96EY8" data-a="DESCRIPTION: MMAB is the human mitochondrial ATP:cob(I)alamin a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MMAB is the human mitochondrial ATP:cob(I)alamin adenosyltransferase (ATR, cblB), a homotrimeric enzyme of the mitochondrial matrix that catalyses the final step of adenosylcobalamin (AdoCbl, coenzyme B12) synthesis. It transfers the 5&#39;-deoxyadenosyl group from ATP to reduced cob(I)alamin, producing adenosylcob(III)alamin plus inorganic triphosphate. Beyond catalysis, MMAB acts as an escort that delivers the newly made AdoCbl directly to methylmalonyl-CoA mutase (MMUT/MCM), the AdoCbl-dependent isomerase that converts (R)-methylmalonyl-CoA to succinyl-CoA; this hand-off is stimulated by ATP binding to MMAB and gated by the cblA G-protein chaperone MMAA. MMAB binds cobalamin in a base-off state and uses ATP-organized coordination chemistry to raise the cobalt redox potential and permit reduction to cob(I)alamin prior to adenosylation, and it can sacrificially cleave the newly formed cobalt-carbon bond to sequester the cofactor as tightly bound cob(II)alamin when the mutase is unavailable. Loss-of-function variants cause methylmalonic aciduria, cblB type, an autosomal recessive disorder of AdoCbl synthesis that is frequently responsive to vitamin B12.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred corrinoid (cob(I)alamin) adenosyltransferase activity, the established core molecular function of MMAB. This matches the direct experimental evidence and the UniProt catalytic activity assignment (Rhea:56796).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the correct core molecular function and is corroborated by multiple independent experimental annotations (EXP/IDA) plus the ARBA electronic assignment; the IBA is at the right level of specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of mitochondrial localization from the UniProt Subcellular Location vocabulary. MMAB carries a cleaved N-terminal mitochondrial transit peptide (residues 1-32) and acts in the mitochondrial matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment; consistent with the UniProt SUBCELLULAR LOCATION (Mitochondrion), the predicted transit peptide, and high-confidence mitochondrial proteomics. The more specific matrix location is captured by separate annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA), a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the target enzyme, MCM (or Mut)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA machine-learning electronic assignment of the core corrinoid adenosyltransferase activity, consistent with the experimental and phylogenetic evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; the ARBA mapping agrees with EXP/IDA/IBA evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                    GO:0009235
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0009235" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of involvement in cobalamin metabolism. MMAB performs the terminal step of adenosylcobalamin (coenzyme B12) synthesis, so it is correctly placed in cobalamin metabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct biological process at an appropriate grain for a human enzyme (humans do not perform de novo corrin ring biosynthesis; MMAB acts in cofactor conversion/tailoring of dietary B12).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a large-scale interactome perturbation study (IntAct interactor CBY2, Q8NA61-2). Provides no specific information about MMAB molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic protein binding derived from a high-throughput screen; the cited paper does not characterize MMAB function. Per curation policy, retained but marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a neurodegenerative-disease interactome map (IntAct interactors CALR/P27797, DLST/P36957, NEK7/Q8TDX7, OPTN/Q96CV9). Uninformative for molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a large-scale two-hybrid/AP-MS network; no functional MMAB characterization in the source. Retained but marked as over-annotated per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a proteome-scale interactome network (IntAct interactor DBT/P11182). Notably DBT (a mitochondrial 2-oxo acid dehydrogenase E2 subunit) is a plausible matrix neighbour, but the annotation itself conveys no specific function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a high-throughput interactome; uninformative molecular-function term. Retained but marked as over-annotated per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein binding from a multimodal cell-map study (IntAct interactor DBT/P11182). Duplicates the DBT interaction and conveys no specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a large-scale mapping resource; uninformative term. Retained but marked as over-annotated per policy.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                    GO:0009235
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9759218
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0009235" data-r="Reactome:R-HSA-9759218" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated involvement of MMAB in cobalamin metabolism, reflecting its role in the AdoCbl branch of the intracellular cobalamin trafficking/processing pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct biological process, well supported by the enzyme&#39;s characterized role in producing the AdoCbl cofactor from dietary cobalamin.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutations in any of these three proteins lead to isolated methylmalonic aciduria while sparing the MeCbl branch of the trafficking pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15913339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15913339
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Spectroscopic evidence for the formation of a four-coordinat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="PMID:15913339" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (spectroscopic) study of human ATR (MMAB) demonstrating cobalamin binding and the ATP-dependent coordination chemistry that underlies its adenosyltransferase function, forming a four-coordinate Co2+ cobalamin species that raises the redox potential toward the physiological range to enable cob(I)alamin formation prior to adenosylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence on the human enzyme for its corrinoid adenosyltransferase mechanism; supports the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15913339" target="_blank" class="term-link">
+                                        PMID:15913339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The human adenosyltransferase hATR converts exogenous cobalamin into coenzyme B12 by transferring the adenosyl group from cosubstrate ATP to a transiently formed Co1+cobalamin (Co1+Cbl) species.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30282455
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sacrificial Cobalt-Carbon Bond Homolysis in Coenzyme B(12) a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="PMID:30282455" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental study confirming that human ATR (MMAB) synthesizes AdoCbl by adenosylation of cob(I)alamin by ATP and directly delivers the product to methylmalonyl-CoA mutase; also demonstrates the sacrificial Co-C bond homolysis cofactor-conservation activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence on the human enzyme supporting corrinoid adenosyltransferase activity (the AdoCbl-synthesizing reaction).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" target="_blank" class="term-link">
+                                        PMID:30282455
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AdoCbl is synthesized by adenosyltransferase (ATR), which catalyzes the adenosylation of cob(I)alamin by ATP in a direct nucleophilic displacement reaction that leads to cobalt−carbon (Co−C) bond formation yielding AdoCbl and inorganic triphosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33797888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Redox-Linked Coordination Chemistry Directs Vitamin B(12) Tr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="PMID:33797888" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Review/primary account (Banerjee lab) describing the human adenosyltransferase (ATR/MMAB) homotrimer that catalyses adenosylation of cob(I)alamin by ATP, with detailed loop-dynamics and redox-linked coordination chemistry underlying the reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the core corrinoid adenosyltransferase activity of the human enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATR, an 81 kDa homotrimer with active sites housed at the subunit interfaces (Fig. 5A),62 catalyzes the adenosylation of cob(I)alamin by ATP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322125
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="Reactome:R-HSA-3322125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated corrinoid adenosyltransferase activity of MMAB, corresponding to the reaction MMAB adenosylates cob(I)alamin. Consistent with all experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, curated by Reactome and matching the experimental record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput assignment of MMAB to the mitochondrion from a quantitative high-confidence human mitochondrial proteome. Consistent with the transit peptide and matrix function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment, corroborating the UniProt localization and the enzyme&#39;s matrix role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA), a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the target enzyme, MCM (or Mut)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                    GO:0009235
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12514191
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human and bovine ATP:Cob(I)alamin aden...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0009235" data-r="PMID:12514191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence placing MMAB in cobalamin metabolism: the human ATR cDNA complemented an ATR-deficient bacterial mutant and its dysregulation was shown in cblB methylmalonic aciduria cell lines, establishing MMAB as the enzyme performing the terminal conversion of cobalamin to coenzyme B12.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported biological-process annotation from the defining functional study of MMAB.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We propose that inborn errors in the human ATR gene identified here result in methylmalonyl aciduria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12514191
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human and bovine ATP:Cob(I)alamin aden...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0016765" data-r="PMID:12514191" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that MMAB is a transferase transferring a (non-methyl) alkyl group — the 5&#39;-deoxyadenosyl group — but this is a parent term of the specific corrinoid adenosyltransferase activity (GO:0008817 is a subclass of GO:0016765). The specific term is warranted.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct in essence but too general: the transferred group is specifically the deoxyadenosyl moiety onto cob(I)alamin, which is captured precisely by GO:0008817 corrinoid adenosyltransferase activity (an is-a descendant of GO:0016765). Replace with the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    corrinoid adenosyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                    GO:0009235
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28497574
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein destabilization and loss of protein-protein interact...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0009235" data-r="PMID:28497574" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement placing MMAB in cobalamin metabolism: the paper describes MMAB as the adenosyltransferase that generates AdoCbl for delivery to methylmalonyl-CoA mutase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct biological process; the source explicitly frames MMAB as the AdoCbl-generating enzyme in the mitochondrial cobalamin pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link">
+                                        PMID:28497574
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                                    GO:0031419
+                                </a>
+                            </span>
+                            <span class="term-label">cobalamin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28497574
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein destabilization and loss of protein-protein interact...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0031419" data-r="PMID:28497574" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that MMAB binds cobalamin (adenosylcobalamin). MMAB binds the cofactor in a base-off state and holds the AdoCbl product prior to hand-off to the mutase; UniProt cites this reference for adenosylcobalamin-binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cobalamin binding is an integral, experimentally supported feature of MMAB&#39;s function as a B12 adenosyltransferase and escort.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link">
+                                        PMID:28497574
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                                    GO:0008817
+                                </a>
+                            </span>
+                            <span class="term-label">corrinoid adenosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12514191
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the human and bovine ATP:Cob(I)alamin aden...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0008817" data-r="PMID:12514191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of corrinoid (cob(I)alamin) adenosyltransferase activity for the human enzyme: recombinant human ATR produced measurable ATR activity and complemented an ATR-deficient bacterial mutant for Ado-B12-dependent growth.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard direct assay of the core molecular function on the human protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                        PMID:12514191
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Enzyme assays showed that expression strains produced 87 and 98 nmol/min/mg ATR activity, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322125
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005759" data-r="Reactome:R-HSA-3322125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated mitochondrial matrix localization for MMAB, the compartment where AdoCbl is synthesized and delivered to methylmalonyl-CoA mutase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and appropriately specific subcellular location, consistent with the matrix role of the AdoCbl-synthesis/delivery machinery.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA), a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the target enzyme, MCM (or Mut)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3159253
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005759" data-r="Reactome:R-HSA-3159253" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated mitochondrial matrix localization (from the MMAB adenosylates cob(I)alamin reaction). Duplicate compartment assignment; correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific location; consistent with the enzyme&#39;s matrix function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA), a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the target enzyme, MCM (or Mut)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17176040" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17176040
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structure of ATP-bound human ATP:cobalamin adenosyltransfera...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q96EY8" data-a="GO:0005524" data-r="PMID:17176040" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP binding is a defining feature of MMAB: it is the adenosyl-donor cosubstrate and ATP binding also organizes the high-affinity cobalamin pocket and gates cofactor delivery to the mutase. The ATP-bound human ATR crystal structure (PDB 2IDX) and UniProt ATP-binding features (residues 60-63, 68-69, 78, 190-194, 214) directly establish this. Present in UniProt (GO:0005524 IEA:UniProtKB-KW) but absent from the current GOA TSV, so added here.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Structurally and biochemically established, functionally central molecular function (ATP is the adenosyl donor) that is missing from the GOA set; added with the ATP-bound structure as evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                                        PMID:33797888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ATP binding organizes a high affinity cob(II)alamin pocket in human ATR.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyses the terminal step of adenosylcobalamin (coenzyme B12) synthesis, transferring the 5&#39;-deoxyadenosyl group from ATP to reduced cob(I)alamin to produce adenosylcob(III)alamin, and uses ATP as the adenosyl donor.</h3>
+                <span class="vote-buttons" data-g="Q96EY8" data-a="FUNCTION: Catalyses the terminal step of adenosylcobalamin (..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008817" target="_blank" class="term-link">
+                            corrinoid adenosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                cobalamin metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                                PMID:12514191
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion of cobalamins into Ado-B12.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" target="_blank" class="term-link">
+                                PMID:30282455
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AdoCbl is synthesized by adenosyltransferase (ATR), which catalyzes the adenosylation of cob(I)alamin by ATP in a direct nucleophilic displacement reaction that leads to cobalt−carbon (Co−C) bond formation yielding AdoCbl and inorganic triphosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds cobalamin (in a base-off state) and, in an ATP-dependent manner, holds the AdoCbl product and delivers it directly to methylmalonyl-CoA mutase, functioning as a cobalamin-binding cofactor escort in the mitochondrial matrix.</h3>
+                <span class="vote-buttons" data-g="Q96EY8" data-a="FUNCTION: Binds cobalamin (in a base-off state) and, in an A..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031419" target="_blank" class="term-link">
+                            cobalamin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009235" target="_blank" class="term-link">
+                                cobalamin metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" target="_blank" class="term-link">
+                                PMID:30282455
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ATR also delivers the AdoCbl product directly to MCM, thereby averting cofactor loss by release into solution.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link">
+                                PMID:28497574
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12514191" target="_blank" class="term-link">
+                            PMID:12514191
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of the human and bovine ATP:Cob(I)alamin adenosyltransferase cDNAs based on complementation of a bacterial mutant.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15913339" target="_blank" class="term-link">
+                            PMID:15913339
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Spectroscopic evidence for the formation of a four-coordinate Co2+ cobalamin species upon binding to the human ATP:cobalamin adenosyltransferase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28497574" target="_blank" class="term-link">
+                            PMID:28497574
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein destabilization and loss of protein-protein interaction are fundamental mechanisms in cblA-type methylmalonic aciduria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" target="_blank" class="term-link">
+                            PMID:30282455
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sacrificial Cobalt-Carbon Bond Homolysis in Coenzyme B(12) as a Cofactor Conservation Strategy.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" target="_blank" class="term-link">
+                            PMID:33797888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Redox-Linked Coordination Chemistry Directs Vitamin B(12) Trafficking.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17176040" target="_blank" class="term-link">
+                            PMID:17176040
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of ATP-bound human ATP:cobalamin adenosyltransferase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3159253
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MMAB adenosylates cob(I)alamin</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3322125
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective MMAB does not transfer adenosyl group from ATP to B12s</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9759218
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cobalamin (Cbl) metabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MMAB-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96EY8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mmab-q96ey8-curation-notes">MMAB (Q96EY8) — curation notes</h1>
+<p>Human MMAB / cblB, mitochondrial <strong>ATP:cob(I)alamin adenosyltransferase (ATR)</strong>. HGNC:19331. Chromosome 12.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>MMAB is the mitochondrial adenosyltransferase (ATR) that catalyses the <strong>final step of<br />
+  adenosylcobalamin (AdoCbl / coenzyme B12) synthesis</strong>: it transfers the 5'-deoxyadenosyl group<br />
+  from ATP to reduced cob(I)alamin, producing adenosylcob(III)alamin (AdoCbl) plus inorganic<br />
+  triphosphate. AdoCbl is the essential cofactor of methylmalonyl-CoA mutase (MMUT/MCM).</li>
+<li>UniProt CATALYTIC ACTIVITY (Rhea:56796): "cob(I)alamin-[corrinoid adenosyltransferase] + ATP =<br />
+    apo-[corrinoid adenosyltransferase] + adenosylcob(III)alamin + triphosphate" [ECO:0000269|PubMed:12514191].</li>
+<li>[PMID:12514191 abstract, "ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step<br />
+    in the conversion of cobalamins into Ado-B12"]. Human cDNA complemented an ATR-deficient bacterial<br />
+    mutant; recombinant enzyme showed 98 nmol/min/mg ATR activity.</li>
+<li><strong>Homotrimer</strong> with active sites at subunit interfaces; ATP-bound crystal structures (PMID:17176040,<br />
+  PDB 2IDX; also 6D5K/6D5X/7RUT). <a href="https://pubmed.ncbi.nlm.nih.gov/33797888" title="ATR, an 81 kDa homotrimer with active sites housed   at the subunit interfaces...catalyzes the adenosylation of cob(I)alamin by ATP">PMID:33797888</a>.</li>
+<li><strong>Escort / direct hand-off</strong>: ATR does not just synthesize AdoCbl, it delivers it directly to MCM<br />
+  (avoiding release into solution); transfer is stimulated by ATP binding to MMAB and gated by MMAA<br />
+  (cblA G-protein). <a href="https://pubmed.ncbi.nlm.nih.gov/30282455" title="ATR also delivers the AdoCbl product directly to MCM, thereby   averting cofactor loss by release into solution">PMID:30282455</a>; [PMID:28497574 abstract "gating the transfer of<br />
+  AdoCbl from MMAB to MUT"].</li>
+<li><strong>Cobalamin binding / coordination chemistry</strong>: ATR binds cobalamin in the base-off state; ATP<br />
+  binding organizes a high-affinity cob(II)alamin pocket and, via a 4-coordinate square-planar Co(II)<br />
+  state, raises the Co2+/1+ redox potential to allow reduction to cob(I)alamin before adenosylation.<br />
+  [PMID:15913339 abstract "the interaction between Co2+Cbl and hATR promotes partial conversion of the<br />
+  cofactor to its 'base-off' form...leading to the formation of an unprecedented Co2+Cbl species with<br />
+  spectroscopic signatures consistent with an essentially four-coordinate, square-planar Co2+ center"].<br />
+  UniProt cites PMID:28497574 for adenosylcobalamin-binding (GO:0031419 IDA).</li>
+<li><strong>Sacrificial homolysis / cofactor conservation</strong>: if MCM is unavailable, ATR homolytically cleaves<br />
+  the newly formed Co–C bond of AdoCbl (reverse of the SN2 making reaction) to give tightly-bound<br />
+  cob(II)alamin, sequestering the precious cofactor. <a href="https://pubmed.ncbi.nlm.nih.gov/30282455">PMID:30282455</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/33797888">PMID:33797888</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Mitochondrion / mitochondrial matrix. N-terminal transit peptide (1–32) cleaved. Supported by<br />
+  UniProt SUBCELLULAR LOCATION, Reactome, and high-confidence mitochondrial proteome<br />
+  [PMID:34800366, HTP mitochondrion].</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Methylmalonic aciduria, cblB type (MACB; MIM:251110)</strong> — autosomal recessive, defective AdoCbl<br />
+  synthesis; frequently vitamin B12-responsive (Orphanet 79311 "Vitamin B12-responsive methylmalonic<br />
+  acidemia type cblB"). Confirmed in dismech disorder KB Methylmalonic_Acidemia.yaml (MMAB listed<br />
+  under MMUT/AdoCbl pathway molecular-function deficiency; <a href="https://pubmed.ncbi.nlm.nih.gov/27653704" title="genes encoding the enzymes   responsible for the generation of 5-deoxyadenosylcobalamin (AdoCbl) cofactor of Mut (MMAA and MMAB)">PMID:27653704</a>).</li>
+</ul>
+<h2 id="goa-annotation-notes">GOA annotation notes</h2>
+<ul>
+<li>GO:0008817 corrinoid adenosyltransferase activity — core MF, multiple independent EXP/IDA + IBA + IEA. ACCEPT.</li>
+<li>GO:0016765 transferase activity, transferring alkyl or aryl groups (IDA, PMID:12514191) — correct<br />
+  but a <strong>parent</strong> of GO:0008817 (entailed_edge confirms GO:0008817 ⊆ GO:0016765). Too general → MODIFY to GO:0008817.</li>
+<li>GO:0009235 cobalamin metabolic process — BP; ACCEPT (multiple lines). MMAB acts in AdoCbl (coenzyme<br />
+  B12) synthesis; humans do not perform de novo corrin biosynthesis so "cobalamin metabolic process"<br />
+  is the right-grain BP (not GO:0009236 de novo biosynthetic).</li>
+<li>GO:0031419 cobalamin binding (IDA, PMID:28497574) — ACCEPT; ATR demonstrably binds AdoCbl/cobalamin.</li>
+<li>GO:0005739 mitochondrion (IEA + HTP) / GO:0005759 mitochondrial matrix (TAS Reactome) — ACCEPT.</li>
+<li>7 GO:0005515 protein binding IPIs (IntAct high-throughput interactome/proteome screens: CBY2, CALR,<br />
+  DBT, DLST, NEK7, OPTN, DBT). Uninformative bare protein binding; per policy MARK_AS_OVER_ANNOTATED<br />
+  (not REMOVE). None of the cited papers (25910212, 32814053, 33961781, 40205054) discuss MMAB function;<br />
+  they are large-scale networks reporting the interaction in supplementary data only.</li>
+<li>ATP binding (GO:0005524, UniProt-KW) is in UniProt DR but NOT in GOA TSV — add as NEW (structurally<br />
+  established, PMID:17176040 ATP-bound structure; UniProt BINDING features). MF.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<p>falcon deep-research file (MMAB-deep-research-falcon.md) was ABSENT at review time (polled up to 8 min).<br />
+Review grounded in UniProt (Q96EY8), seeded GOA TSV, cached publications PMID_*.md, and the dismech<br />
+disorder KB Methylmalonic_Acidemia.yaml.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96EY8
+gene_symbol: MMAB
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  MMAB is the human mitochondrial ATP:cob(I)alamin adenosyltransferase (ATR, cblB),
+  a homotrimeric enzyme of the mitochondrial matrix that catalyses the final step of
+  adenosylcobalamin (AdoCbl, coenzyme B12) synthesis. It transfers the 5&#39;-deoxyadenosyl
+  group from ATP to reduced cob(I)alamin, producing adenosylcob(III)alamin plus inorganic
+  triphosphate. Beyond catalysis, MMAB acts as an escort that delivers the newly made AdoCbl
+  directly to methylmalonyl-CoA mutase (MMUT/MCM), the AdoCbl-dependent isomerase that converts
+  (R)-methylmalonyl-CoA to succinyl-CoA; this hand-off is stimulated by ATP binding to MMAB and
+  gated by the cblA G-protein chaperone MMAA. MMAB binds cobalamin in a base-off state and uses
+  ATP-organized coordination chemistry to raise the cobalt redox potential and permit reduction
+  to cob(I)alamin prior to adenosylation, and it can sacrificially cleave the newly formed
+  cobalt-carbon bond to sequester the cofactor as tightly bound cob(II)alamin when the mutase is
+  unavailable. Loss-of-function variants cause methylmalonic aciduria, cblB type, an autosomal
+  recessive disorder of AdoCbl synthesis that is frequently responsive to vitamin B12.
+existing_annotations:
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred corrinoid (cob(I)alamin) adenosyltransferase activity, the
+      established core molecular function of MMAB. This matches the direct experimental evidence
+      and the UniProt catalytic activity assignment (Rhea:56796).
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct core molecular function and is corroborated by multiple independent
+      experimental annotations (EXP/IDA) plus the ARBA electronic assignment; the IBA is at the
+      right level of specificity.
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+        of cobalamins into Ado-B12.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic assignment of mitochondrial localization from the UniProt Subcellular Location
+      vocabulary. MMAB carries a cleaved N-terminal mitochondrial transit peptide (residues 1-32)
+      and acts in the mitochondrial matrix.
+    action: ACCEPT
+    reason: &gt;-
+      Correct compartment; consistent with the UniProt SUBCELLULAR LOCATION (Mitochondrion), the
+      predicted transit peptide, and high-confidence mitochondrial proteomics. The more specific
+      matrix location is captured by separate annotations.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA),
+        a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the
+        target enzyme, MCM (or Mut)
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ARBA machine-learning electronic assignment of the core corrinoid adenosyltransferase
+      activity, consistent with the experimental and phylogenetic evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; the ARBA mapping agrees with EXP/IDA/IBA evidence.
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+        of cobalamins into Ado-B12.
+- term:
+    id: GO:0009235
+    label: cobalamin metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment of involvement in cobalamin metabolism. MMAB performs the terminal step
+      of adenosylcobalamin (coenzyme B12) synthesis, so it is correctly placed in cobalamin
+      metabolic process.
+    action: ACCEPT
+    reason: &gt;-
+      Correct biological process at an appropriate grain for a human enzyme (humans do not perform
+      de novo corrin ring biosynthesis; MMAB acts in cofactor conversion/tailoring of dietary B12).
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+        of cobalamins into Ado-B12.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a large-scale interactome perturbation study (IntAct interactor
+      CBY2, Q8NA61-2). Provides no specific information about MMAB molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative generic protein binding derived from a high-throughput screen; the cited paper
+      does not characterize MMAB function. Per curation policy, retained but marked as over-annotated
+      rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a neurodegenerative-disease interactome map (IntAct interactors
+      CALR/P27797, DLST/P36957, NEK7/Q8TDX7, OPTN/Q96CV9). Uninformative for molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a large-scale two-hybrid/AP-MS network; no functional MMAB
+      characterization in the source. Retained but marked as over-annotated per policy.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a proteome-scale interactome network (IntAct interactor DBT/P11182).
+      Notably DBT (a mitochondrial 2-oxo acid dehydrogenase E2 subunit) is a plausible matrix
+      neighbour, but the annotation itself conveys no specific function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a high-throughput interactome; uninformative molecular-function
+      term. Retained but marked as over-annotated per policy.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein binding from a multimodal cell-map study (IntAct interactor DBT/P11182).
+      Duplicates the DBT interaction and conveys no specific molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a large-scale mapping resource; uninformative term. Retained but
+      marked as over-annotated per policy.
+- term:
+    id: GO:0009235
+    label: cobalamin metabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9759218
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome-curated involvement of MMAB in cobalamin metabolism, reflecting its role in the
+      AdoCbl branch of the intracellular cobalamin trafficking/processing pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Correct biological process, well supported by the enzyme&#39;s characterized role in producing
+      the AdoCbl cofactor from dietary cobalamin.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        Mutations in any of these three proteins lead to isolated methylmalonic aciduria while
+        sparing the MeCbl branch of the trafficking pathway.
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15913339
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (spectroscopic) study of human ATR (MMAB) demonstrating cobalamin binding and the
+      ATP-dependent coordination chemistry that underlies its adenosyltransferase function, forming a
+      four-coordinate Co2+ cobalamin species that raises the redox potential toward the physiological
+      range to enable cob(I)alamin formation prior to adenosylation.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence on the human enzyme for its corrinoid adenosyltransferase
+      mechanism; supports the core molecular function.
+    supported_by:
+    - reference_id: PMID:15913339
+      supporting_text: &gt;-
+        The human adenosyltransferase hATR converts exogenous cobalamin into coenzyme B12 by
+        transferring the adenosyl group from cosubstrate ATP to a transiently formed Co1+cobalamin
+        (Co1+Cbl) species.
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:30282455
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental study confirming that human ATR (MMAB) synthesizes AdoCbl by adenosylation of
+      cob(I)alamin by ATP and directly delivers the product to methylmalonyl-CoA mutase; also
+      demonstrates the sacrificial Co-C bond homolysis cofactor-conservation activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence on the human enzyme supporting corrinoid adenosyltransferase
+      activity (the AdoCbl-synthesizing reaction).
+    supported_by:
+    - reference_id: PMID:30282455
+      supporting_text: &gt;-
+        AdoCbl is synthesized by adenosyltransferase (ATR), which catalyzes the adenosylation of
+        cob(I)alamin by ATP in a direct nucleophilic displacement reaction that leads to
+        cobalt−carbon (Co−C) bond formation yielding AdoCbl and inorganic triphosphate
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: EXP
+  original_reference_id: PMID:33797888
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Review/primary account (Banerjee lab) describing the human adenosyltransferase (ATR/MMAB)
+      homotrimer that catalyses adenosylation of cob(I)alamin by ATP, with detailed loop-dynamics and
+      redox-linked coordination chemistry underlying the reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Supports the core corrinoid adenosyltransferase activity of the human enzyme.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        ATR, an 81 kDa homotrimer with active sites housed at the subunit interfaces (Fig. 5A),62
+        catalyzes the adenosylation of cob(I)alamin by ATP.
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322125
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome-curated corrinoid adenosyltransferase activity of MMAB, corresponding to the reaction
+      MMAB adenosylates cob(I)alamin. Consistent with all experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, curated by Reactome and matching the experimental record.
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+        of cobalamins into Ado-B12.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput assignment of MMAB to the mitochondrion from a quantitative high-confidence
+      human mitochondrial proteome. Consistent with the transit peptide and matrix function.
+    action: ACCEPT
+    reason: &gt;-
+      Correct compartment, corroborating the UniProt localization and the enzyme&#39;s matrix role.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA),
+        a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the
+        target enzyme, MCM (or Mut)
+- term:
+    id: GO:0009235
+    label: cobalamin metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12514191
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence placing MMAB in cobalamin metabolism: the human ATR cDNA
+      complemented an ATR-deficient bacterial mutant and its dysregulation was shown in cblB
+      methylmalonic aciduria cell lines, establishing MMAB as the enzyme performing the terminal
+      conversion of cobalamin to coenzyme B12.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported biological-process annotation from the defining functional study of MMAB.
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        We propose that inborn errors in the human ATR gene identified here result in methylmalonyl
+        aciduria.
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IDA
+  original_reference_id: PMID:12514191
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that MMAB is a transferase transferring a (non-methyl) alkyl group — the
+      5&#39;-deoxyadenosyl group — but this is a parent term of the specific corrinoid adenosyltransferase
+      activity (GO:0008817 is a subclass of GO:0016765). The specific term is warranted.
+    action: MODIFY
+    reason: &gt;-
+      Correct in essence but too general: the transferred group is specifically the deoxyadenosyl
+      moiety onto cob(I)alamin, which is captured precisely by GO:0008817 corrinoid adenosyltransferase
+      activity (an is-a descendant of GO:0016765). Replace with the specific term.
+    proposed_replacement_terms:
+    - id: GO:0008817
+      label: corrinoid adenosyltransferase activity
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+        of cobalamins into Ado-B12.
+- term:
+    id: GO:0009235
+    label: cobalamin metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:28497574
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable author statement placing MMAB in cobalamin metabolism: the paper describes MMAB as the
+      adenosyltransferase that generates AdoCbl for delivery to methylmalonyl-CoA mutase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct biological process; the source explicitly frames MMAB as the AdoCbl-generating enzyme
+      in the mitochondrial cobalamin pathway.
+    supported_by:
+    - reference_id: PMID:28497574
+      supporting_text: &gt;-
+        MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from
+        the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).
+- term:
+    id: GO:0031419
+    label: cobalamin binding
+  evidence_type: IDA
+  original_reference_id: PMID:28497574
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence that MMAB binds cobalamin (adenosylcobalamin). MMAB binds the cofactor in a
+      base-off state and holds the AdoCbl product prior to hand-off to the mutase; UniProt cites this
+      reference for adenosylcobalamin-binding.
+    action: ACCEPT
+    reason: &gt;-
+      Cobalamin binding is an integral, experimentally supported feature of MMAB&#39;s function as a B12
+      adenosyltransferase and escort.
+    supported_by:
+    - reference_id: PMID:28497574
+      supporting_text: &gt;-
+        MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from
+        the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).
+- term:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12514191
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration of corrinoid (cob(I)alamin) adenosyltransferase activity for
+      the human enzyme: recombinant human ATR produced measurable ATR activity and complemented an
+      ATR-deficient bacterial mutant for Ado-B12-dependent growth.
+    action: ACCEPT
+    reason: &gt;-
+      Gold-standard direct assay of the core molecular function on the human protein.
+    supported_by:
+    - reference_id: PMID:12514191
+      supporting_text: &gt;-
+        Enzyme assays showed that expression strains produced 87 and 98 nmol/min/mg ATR activity,
+        respectively.
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322125
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated mitochondrial matrix localization for MMAB, the compartment where AdoCbl is
+      synthesized and delivered to methylmalonyl-CoA mutase.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and appropriately specific subcellular location, consistent with the matrix role of the
+      AdoCbl-synthesis/delivery machinery.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA),
+        a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the
+        target enzyme, MCM (or Mut)
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3159253
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-curated mitochondrial matrix localization (from the MMAB adenosylates cob(I)alamin
+      reaction). Duplicate compartment assignment; correct.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific location; consistent with the enzyme&#39;s matrix function.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        In the matrix, adenosyltransferase (ATR, also known as MMAB or CblB) and CblA (or MMAA),
+        a G-protein chaperone, are recruited for the synthesis and delivery of AdoCbl to the
+        target enzyme, MCM (or Mut)
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:17176040
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ATP binding is a defining feature of MMAB: it is the adenosyl-donor cosubstrate and ATP binding
+      also organizes the high-affinity cobalamin pocket and gates cofactor delivery to the mutase.
+      The ATP-bound human ATR crystal structure (PDB 2IDX) and UniProt ATP-binding features
+      (residues 60-63, 68-69, 78, 190-194, 214) directly establish this. Present in UniProt (GO:0005524
+      IEA:UniProtKB-KW) but absent from the current GOA TSV, so added here.
+    action: NEW
+    reason: &gt;-
+      Structurally and biochemically established, functionally central molecular function (ATP is the
+      adenosyl donor) that is missing from the GOA set; added with the ATP-bound structure as evidence.
+    supported_by:
+    - reference_id: PMID:33797888
+      supporting_text: &gt;-
+        ATP binding organizes a high affinity cob(II)alamin pocket in human ATR.
+core_functions:
+- description: &gt;-
+    Catalyses the terminal step of adenosylcobalamin (coenzyme B12) synthesis, transferring the
+    5&#39;-deoxyadenosyl group from ATP to reduced cob(I)alamin to produce adenosylcob(III)alamin, and
+    uses ATP as the adenosyl donor.
+  molecular_function:
+    id: GO:0008817
+    label: corrinoid adenosyltransferase activity
+  supported_by:
+  - reference_id: PMID:12514191
+    supporting_text: &gt;-
+      ATP:cob(I)alamin adenosyltransferase (ATR) catalyzes the terminal step in the conversion
+      of cobalamins into Ado-B12.
+  - reference_id: PMID:30282455
+    supporting_text: &gt;-
+      AdoCbl is synthesized by adenosyltransferase (ATR), which catalyzes the adenosylation of
+      cob(I)alamin by ATP in a direct nucleophilic displacement reaction that leads to
+      cobalt−carbon (Co−C) bond formation yielding AdoCbl and inorganic triphosphate
+  directly_involved_in:
+  - id: GO:0009235
+    label: cobalamin metabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+- description: &gt;-
+    Binds cobalamin (in a base-off state) and, in an ATP-dependent manner, holds the AdoCbl product
+    and delivers it directly to methylmalonyl-CoA mutase, functioning as a cobalamin-binding cofactor
+    escort in the mitochondrial matrix.
+  molecular_function:
+    id: GO:0031419
+    label: cobalamin binding
+  supported_by:
+  - reference_id: PMID:30282455
+    supporting_text: &gt;-
+      ATR also delivers the AdoCbl product directly to MCM, thereby averting cofactor loss by
+      release into solution.
+  - reference_id: PMID:28497574
+    supporting_text: &gt;-
+      MMAA regulates the incorporation of the cofactor adenosylcobalamin (AdoCbl), generated from
+      the MMAB adenosyltransferase, into the destination enzyme methylmalonyl-CoA mutase (MUT).
+  directly_involved_in:
+  - id: GO:0009235
+    label: cobalamin metabolic process
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:12514191
+  title: Identification of the human and bovine ATP:Cob(I)alamin adenosyltransferase
+    cDNAs based on complementation of a bacterial mutant.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Defining functional study of human MMAB/ATR; directly establishes corrinoid adenosyltransferase
+      activity, the AdoCbl-synthesis role, and the link to cblB methylmalonic aciduria. Abstract-only
+      in cache but supporting quotes verified verbatim against the cached record.
+- id: PMID:15913339
+  title: Spectroscopic evidence for the formation of a four-coordinate Co2+ cobalamin
+    species upon binding to the human ATP:cobalamin adenosyltransferase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Spectroscopy of the human ATR mechanism (cobalamin binding, ATP-dependent coordination
+      chemistry); supports the adenosyltransferase activity and cobalamin binding.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome perturbation study; source of a generic protein-binding IPI (CBY2). Does
+      not characterize MMAB function.
+- id: PMID:28497574
+  title: Protein destabilization and loss of protein-protein interaction are fundamental
+    mechanisms in cblA-type methylmalonic aciduria.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primarily an MMAA (cblA) study, but assays MMAB adenosylcobalamin binding and the MMAB-&gt;MUT
+      AdoCbl transfer; UniProt cites it for MMAB adenosylcobalamin-binding. Abstract-only in cache;
+      supporting quotes verified verbatim.
+- id: PMID:30282455
+  title: Sacrificial Cobalt-Carbon Bond Homolysis in Coenzyme B(12) as a Cofactor
+    Conservation Strategy.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; directly documents MMAB/ATR AdoCbl synthesis, direct delivery to MCM, and
+      the sacrificial Co-C homolysis cofactor-conservation activity.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale neurodegenerative-disease interactome; source of generic protein-binding IPIs
+      (CALR, DLST, NEK7, OPTN). No functional MMAB characterization.
+- id: PMID:33797888
+  title: Redox-Linked Coordination Chemistry Directs Vitamin B(12) Trafficking.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Authoritative account of the mitochondrial B12 trafficking pathway; describes MMAB/ATR as the
+      homotrimeric adenosyltransferase and escort in the matrix. Full text available; quotes verified.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome; source of a generic protein-binding IPI (DBT). No functional MMAB
+      characterization.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence mitochondrial proteome supporting MMAB mitochondrial localization (HTP).
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Multimodal cell-map resource; source of a generic protein-binding IPI (DBT). No functional MMAB
+      characterization.
+- id: PMID:17176040
+  title: Structure of ATP-bound human ATP:cobalamin adenosyltransferase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure of ATP-bound human MMAB (PDB 2IDX), establishing the homotrimer and ATP
+      binding site; cited by UniProt for ATP-binding features and SUBUNIT. Used to support the NEW
+      ATP binding annotation.
+- id: Reactome:R-HSA-3159253
+  title: MMAB adenosylates cob(I)alamin
+  findings: []
+- id: Reactome:R-HSA-3322125
+  title: Defective MMAB does not transfer adenosyl group from ATP to B12s
+  findings: []
+- id: Reactome:R-HSA-9759218
+  title: Cobalamin (Cbl) metabolism
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
