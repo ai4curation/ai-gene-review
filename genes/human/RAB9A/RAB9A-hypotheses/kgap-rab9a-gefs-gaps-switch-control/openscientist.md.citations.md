@@ -42,7 +42,7 @@
 | PMID:27246931 | cached | missing | verify before reuse |
 | PMID:28051187 | cached | missing | verify before reuse |
 | PMID:37463208 | cached | missing | verify before reuse |
-| PMID:19490898 | not in raw report | missing | corrected RhoBTB3/Rab9 PMID; verify before reuse |
+| PMID:19490898 | not in raw report | present | corrected RhoBTB3/Rab9 PMID; verify before reuse |
 
 ## Detected DOIs
 
