@@ -1,0 +1,4303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBE1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GBE1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q04446" target="_blank" class="term-link">
+                        Q04446
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GBE1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q04446" data-a="DESCRIPTION: GBE1 is the human glycogen (1,4-alpha-glucan) bran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GBE1 is the human glycogen (1,4-alpha-glucan) branching enzyme (EC 2.4.1.18), a monomeric, cytosolic glycosyl hydrolase family 13 (GH13, GlgB subfamily) enzyme that acts in glycogen synthesis together with glycogenin and glycogen synthase. During glycogen biosynthesis it cleaves a segment of roughly six to seven glucose residues from the non-reducing end of a growing alpha-1,4-linked glucan chain and re-attaches it through an alpha-1,6-glucosidic linkage to an internal glucose, thereby introducing the branch points that define the compact, globular architecture of glycogen. Branching increases the solubility of the glycogen polymer and multiplies the number of non-reducing ends available to glycogen synthase and glycogen phosphorylase, regulating both the rate of synthesis and the accessibility of stored glucose. Loss of GBE1 activity causes the accumulation of a poorly branched, amylopectin-like polyglucosan. Recessive GBE1 deficiency causes glycogen storage disease type IV (GSD IV, Andersen disease), whose classic infantile hepatic form progresses to lethal cirrhosis, with additional neuromuscular subtypes; the milder late-onset adult polyglucosan body disease (APBD) presents after the fourth decade with neurogenic bladder, spastic paraparesis, and peripheral neuropathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the defining catalytic activity of GBE1, 1,4-alpha-glucan branching enzyme activity (EC 2.4.1.18). This is the core molecular function of the gene and is independently supported by direct enzymatic and structural characterization of the human protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The branching-enzyme activity is the well-established, conserved core function of GBE1 orthologs across eukaryotes and is directly demonstrated for the human enzyme by X-ray crystallography and activity assays.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen branching enzyme 1 (GBE1) plays an essential role in glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked glucose chains, to increase solubility of the glycogen polymer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing GBE1 activity in the cytoplasm. GBE1 is a soluble cytosolic enzyme that acts on cytosolic glycogen granules. The more specific term cytosol (GO:0005829) is also annotated and is preferred for the core cellular location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The essence is correct (GBE1 is a cytoplasmic enzyme), but the general cytoplasm term should be refined to the more informative cytosol (GO:0005829), which is separately supported and captures the actual soluble cytosolic localization.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    GO:0005978
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to glycogen biosynthetic process, the core biological process in which GBE1 participates by introducing branch points during glycogen synthesis. Directly supported for the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GBE1 is one of the three enzymes (with glycogenin and glycogen synthase) that build glycogen; branch formation is an essential, conserved step of glycogen biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In eukaryotes, glycogenin (EC 2.4.1.186) initiates the synthesis of the linear glucan chain (2), which is elongated by glycogen synthase (GYS, EC 2.4.1.11) (3), functioning in concert with glycogen branching enzyme (GBE, EC 2.4.1.18) to introduce side chains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation to the root-level term catalytic activity. GBE1 is a catalytic enzyme, so this is not wrong, but it is far less informative than the specific 1,4-alpha-glucan branching enzyme activity (GO:0003844) that is also annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but uninformatively general; should be replaced by the specific catalytic activity term GO:0003844, which is directly supported experimentally.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    1,4-alpha-glucan branching enzyme activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">functioning in concert with glycogen branching enzyme (GBE, EC 2.4.1.18) to introduce side chains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/UniRule + InterPro + EC 2.4.1.18) electronic annotation to the defining branching enzyme molecular function. Concordant with the experimental IDA/EXP and phylogenetic IBA annotations for the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This electronic annotation correctly captures the core catalytic activity of GBE1 and is fully consistent with direct experimental characterization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen branching enzyme 1 (GBE1) plays an essential role in glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked glucose chains</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation (Glyco_hydro_13_N domain, IPR004193) to O-glycosyl hydrolase activity. GBE1 belongs to the GH13 glycosyl hydrolase family and its reaction begins with an amylase-type hydrolytic cleavage of an alpha-1,4 glucan chain, but the biologically meaningful function is the coupled branching (transglucosylation) reaction, captured by GO:0003844. Standalone hydrolase annotation over-represents a partial mechanistic step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GH13 domain match legitimately confers a hydrolase-family signature, and GBE1 does perform an amylase-type hydrolytic cleavage as the first half-reaction; however, GBE1 is not a hydrolase in its physiological role (it transfers, rather than releases, the cleaved segment), so this domain-derived term over-annotates a mechanistic detail rather than the true molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the first reaction (amylase-type hydrolysis), GBE cleaves every 8–14 glucose residues of a glucan chain, an α-1,4-linked segment of more than six glucose units from the non-reducing end. In the second reaction (transglucosylation), it transfers the cleaved oligosaccharide (‘donor’), via an α-1,6-glucosidic linkage, to the C6 hydroxyl group of a glucose unit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation to the broad process carbohydrate metabolic process. Correct but general; GBE1&#39;s specific process is glycogen biosynthetic process (GO:0005978), which is separately annotated with experimental support.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is correct in essence but too general. It should be refined to the specific glycogen biosynthetic process (GO:0005978), which is directly supported.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    glycogen biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen branching enzyme 1 (GBE1) plays an essential role in glycogen biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    GO:0005978
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005978" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/UniRule + UniPathway UPA00164) electronic annotation to glycogen biosynthetic process, concordant with the experimental IDA and phylogenetic IBA annotations for the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core biological process of GBE1 and agrees with the direct experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GBE1) plays an essential role in glycogen biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043169" target="_blank" class="term-link">
+                                    GO:0043169
+                                </a>
+                            </span>
+                            <span class="term-label">cation binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0043169" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic annotation (alpha-amylase/branching_C domain, IPR006048) to cation binding. This is a generic prediction inherited from the broader alpha-amylase family, many members of which bind Ca2+/Cl-. There is no evidence that human GBE1 requires or binds a catalytic cation; the crystal structures and UniProt record describe no bound metal or cation-binding site, and the catalytic mechanism uses the conserved Asp357-Glu412-Asp481 triad without a metal cofactor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cation binding term is an over-propagated electronic inference from the alpha-amylase family signature. Human GBE1 has three high-resolution structures (PDB 4BZY, 5CLT, 5CLW) and detailed mechanistic analysis with no cation-binding site or metal-dependent activity reported, and UniProt annotates no cofactor; the term is therefore likely incorrect for this protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">this constellation of three acidic residues functions as the nucleophile (Asp357, hGBE1 numbering hereinafter), proton donor (Glu412) and transition state stabilizer (Asp481) in the active site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36217029
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the SARS-CoV-2-human contactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005515" data-r="PMID:36217029" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation from a proteome-scale SARS-CoV-2 host contactome, recording a binary interaction between GBE1 and the SARS-CoV-2 replicase polyprotein cleavage product (WITH/FROM UniProtKB:P0DTD1-PRO_0000449633, viral &#39;rep&#39;). This is a generic protein binding term supported only by a high-throughput viral-host interaction screen and is uninformative about GBE1&#39;s native molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The bare protein binding term is uninformative and derives from a xenobiotic viral-host interaction screen rather than a physiological binding partner; per curation guidelines this generic IPI is marked as over-annotated rather than retained as a core function. It is not removed because the interaction datum itself is a validly recorded experimental observation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link">
+                                        PMID:36217029
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the SARS-CoV-2-human contactome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005829" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/UniRule) electronic annotation placing GBE1 activity in the cytosol. This agrees with the Reactome TAS cytosol annotations and with GBE1&#39;s biology as a soluble cytosolic enzyme acting on cytosolic glycogen granules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core subcellular location of the active enzyme; concordant with independent Reactome and structural evidence that GBE1 is a soluble cytosolic protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6) branches</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    GO:0005978
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322077
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005978" data-r="Reactome:R-HSA-3322077" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation (Glycogen synthesis pathway) to glycogen biosynthetic process. GBE1 catalyzes the branch-formation reaction that is one of the three reactions unique to glycogen synthesis, making this a well-supported core process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based (TAS) support for GBE1&#39;s core role in glycogen biosynthesis; concordant with experimental IDA and IBA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3322077
+
+                                </span>
+
+                                <div class="support-text">the linear extension of the glucose oligomer catalyzed by glycogen synthase, and the formation of branches catalyzed by glycogen branching enzyme, are unique to glycogen synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8613547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatic and neuromuscular forms of glycogen storage disease ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="PMID:8613547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation to the defining branching enzyme molecular function, based on transient-expression GBE activity assays of wild-type and disease-mutant human GBE cDNA. GSD IV mutations (R515C, F257L, L224P) inactivated GBE activity while Y329S retained ~50%, directly linking this protein to branching enzyme activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration that the human GBE gene product possesses, and disease mutations abolish, 1,4-alpha-glucan branching enzyme activity; this is a core function annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link">
+                                        PMID:8613547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transient expression experiments showed that these mutations inactivated GBE activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3878762
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="Reactome:R-HSA-3878762" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation (from the GSD IV disease reaction, in which defective GBE1 fails to catalyze branch formation) to 1,4-alpha-glucan branching enzyme activity. Reinforces the core catalytic function via pathway knowledge.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based support for the branching enzyme activity as GBE1&#39;s core molecular function; consistent with experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6) branches on growing glycogen molecules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005737" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS annotation (by sequence similarity to UniProtKB:P32775, yeast GLC3 branching enzyme) placing GBE1 in the cytoplasm. Correct in essence, but the more specific and separately supported cytosol (GO:0005829) is the preferred core location term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GBE1 is indeed cytoplasmic, but the annotation should be refined to the more informative cytosol (GO:0005829), consistent with Reactome and the soluble nature of the enzyme.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    cytosol
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26199317
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of glycogen branching enzyme deficiency and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="PMID:26199317" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) annotation to 1,4-alpha-glucan branching enzyme activity, from structural and biochemical characterization of recombinant human GBE1 (PDB 4BZY/5CLT/5CLW) including activity measurements on wild-type and Y329S protein. This is the strongest evidence for the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Definitive experimental demonstration of the branching enzyme activity of the human protein, with an X-ray structure of the catalytic core and quantitative activity assays; core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The GBE1 structure reveals a conserved amylase core that houses the active centre for the branching reaction</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    GO:0005978
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26199317
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural basis of glycogen branching enzyme deficiency and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005978" data-r="PMID:26199317" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) annotation to glycogen biosynthetic process, from the structural/biochemical study establishing GBE1&#39;s essential branching role in glycogen biosynthesis. Core process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally grounded assignment of GBE1 to its core biological process; consistent with pathway and phylogenetic annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                        PMID:26199317
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen branching enzyme 1 (GBE1) plays an essential role in glycogen biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24837458
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The carbohydrate-binding domain of overexpressed STBD1 is im...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005515" data-r="PMID:24837458" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation (WITH/FROM UniProtKB:O95210, STBD1) recording that GBE1 co-immunoprecipitates with STBD1, a glycogen-associated carbohydrate-binding protein, in a study of STBD1&#39;s protein interactions. This is a physiologically plausible glycogen-hub interaction, but the bare protein binding term is uninformative about GBE1&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic protein binding term does not convey GBE1&#39;s function and is supported only by a co-immunoprecipitation in a study focused on STBD1; per curation guidelines the bare IPI is marked as over-annotated rather than removed, since the underlying interaction with a glycogen-associated protein is a validly recorded observation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link">
+                                        PMID:24837458
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">co-immunoprecipitation experiments demonstrated that HA–STBD1 could bind to FLAG-tagged Laforin, GBE1 and GDE</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry (HDA) detection of GBE1 in exosomes isolated from expressed prostatic secretions in urine. GBE1 is a soluble cytosolic glycogen-metabolizing enzyme; its detection in a large proteomic catalog of exosomes reflects the well-known tendency of abundant cytosolic proteins to appear in exosome/EV proteomes and does not indicate a functional extracellular localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a bulk-proteomics localization that conflicts with the strong, consistent cytosolic assignment of GBE1 from structure, Reactome, and orthology. It is retained as an over-annotation (common contaminant signal in exosome proteomes) rather than a core or functional cellular component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry (HDA) detection of GBE1 among 1132 proteins profiled in the human urinary exosome proteome. As above, this reflects the recurrent appearance of abundant cytosolic enzymes in exosome proteomes rather than a functional extracellular localization of the cytosolic branching enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bulk exosome-proteomics detection that contradicts the well-established cytosolic localization of GBE1; retained as an over-annotation rather than a core cellular component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we used LC-MS/MS to profile the proteome of human urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322005
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005829" data-r="Reactome:R-HSA-3322005" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch formation on polyGlc-GYG1 complexed with GYS1-a. Consistent with the soluble cytosolic localization of GBE1 acting on cytosolic glycogen granules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based support for the core cytosolic localization; concordant with structural and orthology evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322016
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005829" data-r="Reactome:R-HSA-3322016" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch formation on polyGlc-GYG2 complexed with GYS2-a (liver isozyme context). Consistent with GBE1&#39;s cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based support for the core cytosolic localization of GBE1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3322057
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005829" data-r="Reactome:R-HSA-3322057" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch formation on polyGlc-GYG1 complexed with GYS1-b. Consistent with GBE1&#39;s cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based support for the core cytosolic localization of GBE1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-3878762
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005829" data-r="Reactome:R-HSA-3878762" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation to cytosol, from the GSD IV disease reaction in which defective GBE1 fails to catalyze branch formation. Confirms the core cytosolic localization of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway-based support for the core cytosolic localization of GBE1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-3878762
+
+                                </span>
+
+                                <div class="support-text">Normally, cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules transfers terminal alpha(1,4) glucose blocks</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                                    GO:0003844
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-glucan branching enzyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8613547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatic and neuromuscular forms of glycogen storage disease ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0003844" data-r="PMID:8613547" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (TAS) annotation to 1,4-alpha-glucan branching enzyme activity, from the study characterizing GSD IV disease mutations by expression and GBE activity assays. Reinforces the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported statement of GBE1&#39;s core molecular function; the same paper provides direct experimental (EXP) evidence via activity assays.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link">
+                                        PMID:8613547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen storage disease type IV (GSD-IV) is an autosomal recessive disease resulting from deficient glycogen-branching enzyme (GBE) activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    GO:0005977
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8613547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatic and neuromuscular forms of glycogen storage disease ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0005977" data-r="PMID:8613547" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (TAS) annotation to the parent process glycogen metabolic process. Correct but more general than the specific glycogen biosynthetic process (GO:0005978) that GBE1 directly participates in, which is separately annotated with experimental support.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is correct in essence but too general; GBE1 acts specifically in glycogen biosynthesis (branch formation during synthesis), so the annotation should be refined to glycogen biosynthetic process (GO:0005978).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    glycogen biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link">
+                                        PMID:8613547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">resulting from deficient glycogen-branching enzyme (GBE) activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006091" target="_blank" class="term-link">
+                                    GO:0006091
+                                </a>
+                            </span>
+                            <span class="term-label">generation of precursor metabolites and energy</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8613547
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Hepatic and neuromuscular forms of glycogen storage disease ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q04446" data-a="GO:0006091" data-r="PMID:8613547" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (TAS) annotation to the very broad process generation of precursor metabolites and energy. This reflects glycogen&#39;s general role as an energy store, but the term is too general and not specific to GBE1&#39;s molecular contribution (branch formation during glycogen biosynthesis).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-general process term. GBE1&#39;s role is in building the glycogen store (a biosynthetic/anabolic step), not directly in energy generation; the annotation is better represented by glycogen biosynthetic process (GO:0005978).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                    glycogen biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link">
+                                        PMID:8613547
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glycogen storage disease type IV (GSD-IV) is an autosomal recessive disease resulting from deficient glycogen-branching enzyme (GBE) activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the formation of alpha-1,6-glucosidic branch points during glycogen biosynthesis by cleaving a segment from the non-reducing end of an alpha-1,4-linked glucan chain and transferring it to an internal glucose, increasing glycogen solubility and the number of non-reducing ends.</h3>
+                <span class="vote-buttons" data-g="Q04446" data-a="FUNCTION: Catalyzes the formation of alpha-1,6-glucosidic br..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003844" target="_blank" class="term-link">
+                            1,4-alpha-glucan branching enzyme activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005978" target="_blank" class="term-link">
+                                glycogen biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                                PMID:26199317
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Glycogen branching enzyme 1 (GBE1) plays an essential role in glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked glucose chains, to increase solubility of the glycogen polymer.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-3878762
+
+                        </span>
+
+                        <div class="finding-text">cytosolic glycogen branching enzyme (GBE1) associated with glycogen granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6) branches</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24837458" target="_blank" class="term-link">
+                            PMID:24837458
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The carbohydrate-binding domain of overexpressed STBD1 is important for its stability and protein-protein interactions.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26199317" target="_blank" class="term-link">
+                            PMID:26199317
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of glycogen branching enzyme deficiency and pharmacologic rescue by rational peptide design.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link">
+                            PMID:36217029
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the SARS-CoV-2-human contactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8613547" target="_blank" class="term-link">
+                            PMID:8613547
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Hepatic and neuromuscular forms of glycogen storage disease type IV caused by mutations in the same glycogen-branching enzyme gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3322005
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GBE1 catalyzes branch formation in polyGlc-GYG1 complexed with GYS1-a</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3322016
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GBE1 catalyzes branch formation in polyGlc-GYG2 complexed with GYS2-a</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3322057
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GBE1 catalyzes branch formation in polyGlc-GYG1 complexed with GYS1-b</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3322077
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycogen synthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-3878762
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective GBE1 does not catalyze branch formation in growing glycogen chains (liver)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q04446
+gene_symbol: GBE1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: GBE1 is the human glycogen (1,4-alpha-glucan) branching enzyme (EC 2.4.1.18),
+  a monomeric, cytosolic glycosyl hydrolase family 13 (GH13, GlgB subfamily) enzyme
+  that acts in glycogen synthesis together with glycogenin and glycogen synthase.
+  During glycogen biosynthesis it cleaves a segment of roughly six to seven glucose
+  residues from the non-reducing end of a growing alpha-1,4-linked glucan chain and
+  re-attaches it through an alpha-1,6-glucosidic linkage to an internal glucose, thereby
+  introducing the branch points that define the compact, globular architecture of
+  glycogen. Branching increases the solubility of the glycogen polymer and multiplies
+  the number of non-reducing ends available to glycogen synthase and glycogen phosphorylase,
+  regulating both the rate of synthesis and the accessibility of stored glucose. Loss
+  of GBE1 activity causes the accumulation of a poorly branched, amylopectin-like polyglucosan.
+  Recessive GBE1 deficiency causes glycogen storage disease type IV (GSD IV, Andersen
+  disease), whose classic infantile hepatic form progresses to lethal cirrhosis, with
+  additional neuromuscular subtypes; the milder late-onset adult polyglucosan body
+  disease (APBD) presents after the fourth decade with neurogenic bladder, spastic
+  paraparesis, and peripheral neuropathy.
+existing_annotations:
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) annotation to the defining catalytic activity of GBE1,
+      1,4-alpha-glucan branching enzyme activity (EC 2.4.1.18). This is the core molecular
+      function of the gene and is independently supported by direct enzymatic and
+      structural characterization of the human protein.
+    action: ACCEPT
+    reason: The branching-enzyme activity is the well-established, conserved core function
+      of GBE1 orthologs across eukaryotes and is directly demonstrated for the human
+      enzyme by X-ray crystallography and activity assays.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: Glycogen branching enzyme 1 (GBE1) plays an essential role
+        in glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked
+        glucose chains, to increase solubility of the glycogen polymer.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation placing GBE1 activity in the cytoplasm.
+      GBE1 is a soluble cytosolic enzyme that acts on cytosolic glycogen granules.
+      The more specific term cytosol (GO:0005829) is also annotated and is preferred
+      for the core cellular location.
+    action: MODIFY
+    reason: The essence is correct (GBE1 is a cytoplasmic enzyme), but the general
+      cytoplasm term should be refined to the more informative cytosol (GO:0005829),
+      which is separately supported and captures the actual soluble cytosolic localization.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+    proposed_replacement_terms:
+    - id: GO:0005829
+      label: cytosol
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules
+- term:
+    id: GO:0005978
+    label: glycogen biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation to glycogen biosynthetic process, the core
+      biological process in which GBE1 participates by introducing branch points during
+      glycogen synthesis. Directly supported for the human enzyme.
+    action: ACCEPT
+    reason: GBE1 is one of the three enzymes (with glycogenin and glycogen synthase)
+      that build glycogen; branch formation is an essential, conserved step of glycogen
+      biosynthesis.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: In eukaryotes, glycogenin (EC 2.4.1.186) initiates the synthesis
+        of the linear glucan chain (2), which is elongated by glycogen synthase (GYS,
+        EC 2.4.1.11) (3), functioning in concert with glycogen branching enzyme (GBE,
+        EC 2.4.1.18) to introduce side chains
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic annotation to the root-level term catalytic
+      activity. GBE1 is a catalytic enzyme, so this is not wrong, but it is far less
+      informative than the specific 1,4-alpha-glucan branching enzyme activity (GO:0003844)
+      that is also annotated.
+    action: MODIFY
+    reason: Correct but uninformatively general; should be replaced by the specific
+      catalytic activity term GO:0003844, which is directly supported experimentally.
+    proposed_replacement_terms:
+    - id: GO:0003844
+      label: 1,4-alpha-glucan branching enzyme activity
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: functioning in concert with glycogen branching enzyme (GBE,
+        EC 2.4.1.18) to introduce side chains
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated (ARBA/UniRule + InterPro + EC 2.4.1.18) electronic annotation
+      to the defining branching enzyme molecular function. Concordant with the experimental
+      IDA/EXP and phylogenetic IBA annotations for the same term.
+    action: ACCEPT
+    reason: This electronic annotation correctly captures the core catalytic activity
+      of GBE1 and is fully consistent with direct experimental characterization.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: Glycogen branching enzyme 1 (GBE1) plays an essential role
+        in glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked
+        glucose chains
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic annotation (Glyco_hydro_13_N domain, IPR004193)
+      to O-glycosyl hydrolase activity. GBE1 belongs to the GH13 glycosyl hydrolase
+      family and its reaction begins with an amylase-type hydrolytic cleavage of an
+      alpha-1,4 glucan chain, but the biologically meaningful function is the coupled
+      branching (transglucosylation) reaction, captured by GO:0003844. Standalone
+      hydrolase annotation over-represents a partial mechanistic step.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The GH13 domain match legitimately confers a hydrolase-family signature,
+      and GBE1 does perform an amylase-type hydrolytic cleavage as the first half-reaction;
+      however, GBE1 is not a hydrolase in its physiological role (it transfers, rather
+      than releases, the cleaved segment), so this domain-derived term over-annotates
+      a mechanistic detail rather than the true molecular function.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: In the first reaction (amylase-type hydrolysis), GBE cleaves
+        every 8–14 glucose residues of a glucan chain, an α-1,4-linked segment of
+        more than six glucose units from the non-reducing end. In the second reaction
+        (transglucosylation), it transfers the cleaved oligosaccharide (‘donor’),
+        via an α-1,6-glucosidic linkage, to the C6 hydroxyl group of a glucose unit
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro-based electronic annotation to the broad process carbohydrate
+      metabolic process. Correct but general; GBE1&#39;s specific process is glycogen
+      biosynthetic process (GO:0005978), which is separately annotated with experimental
+      support.
+    action: MODIFY
+    reason: The term is correct in essence but too general. It should be refined to
+      the specific glycogen biosynthetic process (GO:0005978), which is directly supported.
+    proposed_replacement_terms:
+    - id: GO:0005978
+      label: glycogen biosynthetic process
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: Glycogen branching enzyme 1 (GBE1) plays an essential role
+        in glycogen biosynthesis
+- term:
+    id: GO:0005978
+    label: glycogen biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Automated (ARBA/UniRule + UniPathway UPA00164) electronic annotation
+      to glycogen biosynthetic process, concordant with the experimental IDA and phylogenetic
+      IBA annotations for the same term.
+    action: ACCEPT
+    reason: Correctly captures the core biological process of GBE1 and agrees with
+      the direct experimental evidence.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: GBE1) plays an essential role in glycogen biosynthesis
+- term:
+    id: GO:0043169
+    label: cation binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic annotation (alpha-amylase/branching_C domain,
+      IPR006048) to cation binding. This is a generic prediction inherited from the
+      broader alpha-amylase family, many members of which bind Ca2+/Cl-. There is
+      no evidence that human GBE1 requires or binds a catalytic cation; the crystal
+      structures and UniProt record describe no bound metal or cation-binding site,
+      and the catalytic mechanism uses the conserved Asp357-Glu412-Asp481 triad without
+      a metal cofactor.
+    action: REMOVE
+    reason: The cation binding term is an over-propagated electronic inference from
+      the alpha-amylase family signature. Human GBE1 has three high-resolution structures
+      (PDB 4BZY, 5CLT, 5CLW) and detailed mechanistic analysis with no cation-binding
+      site or metal-dependent activity reported, and UniProt annotates no cofactor;
+      the term is therefore likely incorrect for this protein.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: this constellation of three acidic residues functions as the
+        nucleophile (Asp357, hGBE1 numbering hereinafter), proton donor (Glu412) and
+        transition state stabilizer (Asp481) in the active site
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36217029
+  qualifier: enables
+  review:
+    summary: IPI annotation from a proteome-scale SARS-CoV-2 host contactome, recording
+      a binary interaction between GBE1 and the SARS-CoV-2 replicase polyprotein cleavage
+      product (WITH/FROM UniProtKB:P0DTD1-PRO_0000449633, viral &#39;rep&#39;). This is a
+      generic protein binding term supported only by a high-throughput viral-host
+      interaction screen and is uninformative about GBE1&#39;s native molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The bare protein binding term is uninformative and derives from a xenobiotic
+      viral-host interaction screen rather than a physiological binding partner; per
+      curation guidelines this generic IPI is marked as over-annotated rather than
+      retained as a core function. It is not removed because the interaction datum
+      itself is a validly recorded experimental observation.
+    supported_by:
+    - reference_id: PMID:36217029
+      supporting_text: A proteome-scale map of the SARS-CoV-2-human contactome
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: is_active_in
+  review:
+    summary: Automated (ARBA/UniRule) electronic annotation placing GBE1 activity
+      in the cytosol. This agrees with the Reactome TAS cytosol annotations and with
+      GBE1&#39;s biology as a soluble cytosolic enzyme acting on cytosolic glycogen granules.
+    action: ACCEPT
+    reason: Correctly captures the core subcellular location of the active enzyme;
+      concordant with independent Reactome and structural evidence that GBE1 is a
+      soluble cytosolic protein.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6)
+        branches
+- term:
+    id: GO:0005978
+    label: glycogen biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322077
+  qualifier: involved_in
+  review:
+    summary: Reactome TAS annotation (Glycogen synthesis pathway) to glycogen biosynthetic
+      process. GBE1 catalyzes the branch-formation reaction that is one of the three
+      reactions unique to glycogen synthesis, making this a well-supported core process
+      annotation.
+    action: ACCEPT
+    reason: Authoritative pathway-based (TAS) support for GBE1&#39;s core role in glycogen
+      biosynthesis; concordant with experimental IDA and IBA annotations.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3322077
+      supporting_text: the linear extension of the glucose oligomer catalyzed by glycogen
+        synthase, and the formation of branches catalyzed by glycogen branching enzyme,
+        are unique to glycogen synthesis
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: EXP
+  original_reference_id: PMID:8613547
+  qualifier: enables
+  review:
+    summary: Experimental (EXP) annotation to the defining branching enzyme molecular
+      function, based on transient-expression GBE activity assays of wild-type and
+      disease-mutant human GBE cDNA. GSD IV mutations (R515C, F257L, L224P) inactivated
+      GBE activity while Y329S retained ~50%, directly linking this protein to branching
+      enzyme activity.
+    action: ACCEPT
+    reason: Direct experimental demonstration that the human GBE gene product possesses,
+      and disease mutations abolish, 1,4-alpha-glucan branching enzyme activity; this
+      is a core function annotation.
+    supported_by:
+    - reference_id: PMID:8613547
+      supporting_text: Transient expression experiments showed that these mutations
+        inactivated GBE activity.
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3878762
+  qualifier: enables
+  review:
+    summary: Reactome TAS annotation (from the GSD IV disease reaction, in which defective
+      GBE1 fails to catalyze branch formation) to 1,4-alpha-glucan branching enzyme
+      activity. Reinforces the core catalytic function via pathway knowledge.
+    action: ACCEPT
+    reason: Authoritative pathway-based support for the branching enzyme activity as
+      GBE1&#39;s core molecular function; consistent with experimental evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6)
+        branches on growing glycogen molecules
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: ISS annotation (by sequence similarity to UniProtKB:P32775, yeast GLC3
+      branching enzyme) placing GBE1 in the cytoplasm. Correct in essence, but the
+      more specific and separately supported cytosol (GO:0005829) is the preferred
+      core location term.
+    action: MODIFY
+    reason: GBE1 is indeed cytoplasmic, but the annotation should be refined to the
+      more informative cytosol (GO:0005829), consistent with Reactome and the soluble
+      nature of the enzyme.
+    proposed_replacement_terms:
+    - id: GO:0005829
+      label: cytosol
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1)
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: IDA
+  original_reference_id: PMID:26199317
+  qualifier: enables
+  review:
+    summary: Direct assay (IDA) annotation to 1,4-alpha-glucan branching enzyme activity,
+      from structural and biochemical characterization of recombinant human GBE1 (PDB
+      4BZY/5CLT/5CLW) including activity measurements on wild-type and Y329S protein.
+      This is the strongest evidence for the core molecular function.
+    action: ACCEPT
+    reason: Definitive experimental demonstration of the branching enzyme activity
+      of the human protein, with an X-ray structure of the catalytic core and quantitative
+      activity assays; core function.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: The GBE1 structure reveals a conserved amylase core that houses
+        the active centre for the branching reaction
+- term:
+    id: GO:0005978
+    label: glycogen biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:26199317
+  qualifier: involved_in
+  review:
+    summary: Direct assay (IDA) annotation to glycogen biosynthetic process, from
+      the structural/biochemical study establishing GBE1&#39;s essential branching role
+      in glycogen biosynthesis. Core process annotation.
+    action: ACCEPT
+    reason: Experimentally grounded assignment of GBE1 to its core biological process;
+      consistent with pathway and phylogenetic annotations.
+    supported_by:
+    - reference_id: PMID:26199317
+      supporting_text: Glycogen branching enzyme 1 (GBE1) plays an essential role
+        in glycogen biosynthesis
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24837458
+  qualifier: enables
+  review:
+    summary: IPI annotation (WITH/FROM UniProtKB:O95210, STBD1) recording that GBE1
+      co-immunoprecipitates with STBD1, a glycogen-associated carbohydrate-binding
+      protein, in a study of STBD1&#39;s protein interactions. This is a physiologically
+      plausible glycogen-hub interaction, but the bare protein binding term is uninformative
+      about GBE1&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The generic protein binding term does not convey GBE1&#39;s function and is
+      supported only by a co-immunoprecipitation in a study focused on STBD1; per
+      curation guidelines the bare IPI is marked as over-annotated rather than removed,
+      since the underlying interaction with a glycogen-associated protein is a validly
+      recorded observation.
+    supported_by:
+    - reference_id: PMID:24837458
+      supporting_text: co-immunoprecipitation experiments demonstrated that HA–STBD1
+        could bind to FLAG-tagged Laforin, GBE1 and GDE
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry (HDA) detection of GBE1 in exosomes
+      isolated from expressed prostatic secretions in urine. GBE1 is a soluble cytosolic
+      glycogen-metabolizing enzyme; its detection in a large proteomic catalog of
+      exosomes reflects the well-known tendency of abundant cytosolic proteins to
+      appear in exosome/EV proteomes and does not indicate a functional extracellular
+      localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is a bulk-proteomics localization that conflicts with the strong,
+      consistent cytosolic assignment of GBE1 from structure, Reactome, and orthology.
+      It is retained as an over-annotation (common contaminant signal in exosome proteomes)
+      rather than a core or functional cellular component.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: In-depth proteomic analyses of exosomes isolated from expressed
+        prostatic secretions in urine.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry (HDA) detection of GBE1 among 1132
+      proteins profiled in the human urinary exosome proteome. As above, this reflects
+      the recurrent appearance of abundant cytosolic enzymes in exosome proteomes
+      rather than a functional extracellular localization of the cytosolic branching
+      enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bulk exosome-proteomics detection that contradicts the well-established
+      cytosolic localization of GBE1; retained as an over-annotation rather than a
+      core cellular component.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: we used LC-MS/MS to profile the proteome of human urinary exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322005
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch
+      formation on polyGlc-GYG1 complexed with GYS1-a. Consistent with the soluble
+      cytosolic localization of GBE1 acting on cytosolic glycogen granules.
+    action: ACCEPT
+    reason: Authoritative pathway-based support for the core cytosolic localization;
+      concordant with structural and orthology evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322016
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch
+      formation on polyGlc-GYG2 complexed with GYS2-a (liver isozyme context). Consistent
+      with GBE1&#39;s cytosolic localization.
+    action: ACCEPT
+    reason: Authoritative pathway-based support for the core cytosolic localization
+      of GBE1.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3322057
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation to cytosol, from a reaction modeling GBE1 branch
+      formation on polyGlc-GYG1 complexed with GYS1-b. Consistent with GBE1&#39;s cytosolic
+      localization.
+    action: ACCEPT
+    reason: Authoritative pathway-based support for the core cytosolic localization
+      of GBE1.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with
+        glycogen granules
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-3878762
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation to cytosol, from the GSD IV disease reaction
+      in which defective GBE1 fails to catalyze branch formation. Confirms the core
+      cytosolic localization of the enzyme.
+    action: ACCEPT
+    reason: Authoritative pathway-based support for the core cytosolic localization
+      of GBE1.
+    supported_by:
+    - reference_id: Reactome:R-HSA-3878762
+      supporting_text: Normally, cytosolic glycogen branching enzyme (GBE1) associated
+        with glycogen granules transfers terminal alpha(1,4) glucose blocks
+- term:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  evidence_type: TAS
+  original_reference_id: PMID:8613547
+  qualifier: enables
+  review:
+    summary: Traceable author statement (TAS) annotation to 1,4-alpha-glucan branching
+      enzyme activity, from the study characterizing GSD IV disease mutations by expression
+      and GBE activity assays. Reinforces the core catalytic function.
+    action: ACCEPT
+    reason: Well-supported statement of GBE1&#39;s core molecular function; the same paper
+      provides direct experimental (EXP) evidence via activity assays.
+    supported_by:
+    - reference_id: PMID:8613547
+      supporting_text: Glycogen storage disease type IV (GSD-IV) is an autosomal recessive
+        disease resulting from deficient glycogen-branching enzyme (GBE) activity.
+- term:
+    id: GO:0005977
+    label: glycogen metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:8613547
+  qualifier: involved_in
+  review:
+    summary: Traceable author statement (TAS) annotation to the parent process glycogen
+      metabolic process. Correct but more general than the specific glycogen biosynthetic
+      process (GO:0005978) that GBE1 directly participates in, which is separately
+      annotated with experimental support.
+    action: MODIFY
+    reason: The term is correct in essence but too general; GBE1 acts specifically
+      in glycogen biosynthesis (branch formation during synthesis), so the annotation
+      should be refined to glycogen biosynthetic process (GO:0005978).
+    proposed_replacement_terms:
+    - id: GO:0005978
+      label: glycogen biosynthetic process
+    supported_by:
+    - reference_id: PMID:8613547
+      supporting_text: resulting from deficient glycogen-branching enzyme (GBE) activity
+- term:
+    id: GO:0006091
+    label: generation of precursor metabolites and energy
+  evidence_type: TAS
+  original_reference_id: PMID:8613547
+  qualifier: involved_in
+  review:
+    summary: Traceable author statement (TAS) annotation to the very broad process
+      generation of precursor metabolites and energy. This reflects glycogen&#39;s general
+      role as an energy store, but the term is too general and not specific to GBE1&#39;s
+      molecular contribution (branch formation during glycogen biosynthesis).
+    action: MODIFY
+    reason: Over-general process term. GBE1&#39;s role is in building the glycogen store
+      (a biosynthetic/anabolic step), not directly in energy generation; the annotation
+      is better represented by glycogen biosynthetic process (GO:0005978).
+    proposed_replacement_terms:
+    - id: GO:0005978
+      label: glycogen biosynthetic process
+    supported_by:
+    - reference_id: PMID:8613547
+      supporting_text: Glycogen storage disease type IV (GSD-IV) is an autosomal recessive
+        disease resulting from deficient glycogen-branching enzyme (GBE) activity.
+core_functions:
+- description: Catalyzes the formation of alpha-1,6-glucosidic branch points during
+    glycogen biosynthesis by cleaving a segment from the non-reducing end of an alpha-1,4-linked
+    glucan chain and transferring it to an internal glucose, increasing glycogen solubility
+    and the number of non-reducing ends.
+  molecular_function:
+    id: GO:0003844
+    label: 1,4-alpha-glucan branching enzyme activity
+  directly_involved_in:
+  - id: GO:0005978
+    label: glycogen biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:26199317
+    supporting_text: Glycogen branching enzyme 1 (GBE1) plays an essential role in
+      glycogen biosynthesis by generating α-1,6-glucosidic branches from α-1,4-linked
+      glucose chains, to increase solubility of the glycogen polymer.
+  - reference_id: Reactome:R-HSA-3878762
+    supporting_text: cytosolic glycogen branching enzyme (GBE1) associated with glycogen
+      granules transfers terminal alpha(1,4) glucose blocks to form alpha(1,6) branches
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Bulk urinary-exosome proteomics catalog; GBE1 appears among 1132
+      identified proteins. Supports only the (over-annotated) exosome localization,
+      not GBE1 function.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Bulk exosome proteomics from prostatic-secretion urine; supports
+      only the over-annotated extracellular exosome localization.
+- id: PMID:24837458
+  title: The carbohydrate-binding domain of overexpressed STBD1 is important for its
+    stability and protein-protein interactions.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Study of STBD1; GBE1 co-immunoprecipitates with STBD1 (Fig. 4A),
+      a glycogen-associated protein. Supports a plausible glycogen-hub interaction
+      but only the generic protein binding term.
+- id: PMID:26199317
+  title: Structural basis of glycogen branching enzyme deficiency and pharmacologic
+    rescue by rational peptide design.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Crystal structures of human GBE1 (PDB 4BZY/5CLT/5CLW) with mechanistic
+      and activity analysis; the definitive primary source for GBE1&#39;s branching enzyme
+      activity, monomeric state, catalytic triad, and disease mutations.
+- id: PMID:36217029
+  title: A proteome-scale map of the SARS-CoV-2-human contactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput viral-host interaction screen; records a GBE1-SARS-CoV-2
+      rep binary interaction. Supports only the generic (over-annotated) protein binding
+      term, not native function.
+- id: PMID:8613547
+  title: Hepatic and neuromuscular forms of glycogen storage disease type IV caused
+    by mutations in the same glycogen-branching enzyme gene.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary human GBE1 genetics/biochemistry paper; expression assays
+      show GSD IV mutations inactivate GBE activity. Supports core branching enzyme
+      activity and the GSD IV disease association.
+- id: Reactome:R-HSA-3322005
+  title: GBE1 catalyzes branch formation in polyGlc-GYG1 complexed with GYS1-a
+  findings: []
+- id: Reactome:R-HSA-3322016
+  title: GBE1 catalyzes branch formation in polyGlc-GYG2 complexed with GYS2-a
+  findings: []
+- id: Reactome:R-HSA-3322057
+  title: GBE1 catalyzes branch formation in polyGlc-GYG1 complexed with GYS1-b
+  findings: []
+- id: Reactome:R-HSA-3322077
+  title: Glycogen synthesis
+  findings: []
+- id: Reactome:R-HSA-3878762
+  title: Defective GBE1 does not catalyze branch formation in growing glycogen chains
+    (liver)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

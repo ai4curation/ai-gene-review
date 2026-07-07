@@ -1,0 +1,4810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGM1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGM1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P36871" target="_blank" class="term-link">
+                        P36871
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGM1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P36871" data-a="DESCRIPTION: Phosphoglucomutase-1 (PGM1; EC 5.4.2.2) is the maj..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Phosphoglucomutase-1 (PGM1; EC 5.4.2.2) is the major human phosphoglucomutase, a cytosolic Mg2+-dependent enzyme that catalyzes the reversible interconversion of alpha-D-glucose 1-phosphate and alpha-D-glucose 6-phosphate. Catalysis proceeds via an alpha-D-glucose 1,6-bisphosphate intermediate and a catalytic phosphoserine (Ser117), with the bound Mg2+ ion coordinated by Ser117 and three active-site aspartates. PGM1 sits at the junction of glycogen metabolism and glycolysis/gluconeogenesis. During glycogenolysis it converts the glucose-1-phosphate released by glycogen phosphorylase into glucose-6-phosphate for glycolysis (or, in liver after glucose-6-phosphatase, for blood glucose), and it runs in reverse to supply glucose-1-phosphate for glycogen synthesis. Its products also feed the nucleotide-sugar (UDP-glucose/UDP-galactose, Leloir), galactose, and pentose-phosphate pathways. The enzyme is a monomer of 562 residues belonging to the alpha-D-phosphohexomutase superfamily. Loss-of-function variants cause PGM1 deficiency (PGM1-CDG; congenital disorder of glycosylation type It / glycogen storage disease type XIV), a mixed glycogenosis and glycosylation disorder featuring cleft palate, hepatopathy, hypoglycemia, dilated cardiomyopathy, exercise intolerance, and abnormal transferrin glycosylation, and it is notably responsive to galactose supplementation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the diagnostic phosphoglucomutase molecular function to PGM1. This is the well-established, experimentally confirmed core catalytic activity of the enzyme and is at the correct level of specificity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The core molecular function is directly demonstrated experimentally (IDA/EXP, PMID:25288802, PMID:15378030) and the IBA call is consistent with the entire phosphohexomutase family. This is a core function of PGM1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the interconversion of glucose 1-phosphate and glucose 6-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of PGM1 activity to the cytosol, consistent with the cytoplasmic localization of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGM1 is a soluble cytoplasmic enzyme; the cytosol is where its metabolic reaction takes place. Supported by direct immunofluorescence (IDA, HPA) and the UniProt subcellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005975" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment placing PGM1 in carbohydrate metabolism, the broad process encompassing its role in interconverting glucose phosphates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general. It accurately captures PGM1&#39;s participation in carbohydrate metabolism; more specific processes (glucose metabolic process, glycogen metabolism, glycolysis/gluconeogenesis) are separately annotated. Retained as a broad, non-core parent term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the interconversion of glucose 1-phosphate and glucose 6-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0000287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic assignment of magnesium ion binding, the catalytic cofactor of PGM1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGM1 binds one Mg2+ per subunit as an essential catalytic cofactor; this is directly confirmed by crystallography (IDA, PMID:26972339) and the IEA mapping is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mg2+ serves as an electron-withdrawing group to facilitate phosphoryl transfer from phosphoserine 117</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (multi-method IEA, incl. RHEA:23536/EC:5.4.2.2 mapping) assignment of phosphoglucomutase activity to PGM1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with, and confirmed by, the experimental IDA/EXP annotations for the same term. The RHEA/EC mapping is correct for this enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible isomerization of alpha-D-glucose 1-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of cytoplasmic localization from the UniProt subcellular-location vocabulary.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-supported cytosolic localization of PGM1; a broader parent of cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic assignment of carbohydrate metabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA annotation for the same term; correct but general parent process. Retained as non-core broad context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the interconversion of glucose 1-phosphate and glucose 6-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016868" target="_blank" class="term-link">
+                                    GO:0016868
+                                </a>
+                            </span>
+                            <span class="term-label">intramolecular phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0016868" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based electronic assignment of the parent molecular-function class (intramolecular phosphotransferase) that subsumes phosphoglucomutase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the correct broad parent of GO:0004614 phosphoglucomutase activity (the reaction proceeds via intramolecular phosphoryl transfer through a glucose-1,6-bisphosphate intermediate). Accurate but redundant with the more specific phosphoglucomutase term; kept as a non-core general term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The reaction entails two consecutive phosphoryl transfers and proceeds via a bisphosphorylated intermediate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21044950
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genome-wide YFP fluorescence complementation screen identifi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005515" data-r="PMID:21044950" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct-curated protein-protein interaction (with TINF2, UniProtKB:Q9BSI4) captured by a genome-wide split-YFP fluorescence-complementation screen for telomere-signaling regulators.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#34;protein binding&#34; (GO:0005515) is uninformative about PGM1&#39;s molecular function. The interaction derives from a large-scale telomere-interactome screen that identified ~300 candidate binders and is not established as a functional partnership relevant to PGM1&#39;s enzymatic role; per curation policy this is marked as over-annotated rather than removed (it reflects a real IPI experiment).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link">
+                                        PMID:21044950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified over 300 proteins that associated with the six core telomeric proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (Human Protein Atlas) localization of PGM1 to the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the primary subcellular location of this soluble metabolic enzyme; a core cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15378030" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15378030
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of phosphoglucomutase 1 phosphorylation and activ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="PMID:15378030" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental demonstration of PGM1 catalytic (phosphoglucomutase) activity, whose regulation by PAK1-mediated phosphorylation is characterized in this study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for the core catalytic function; PAK1 phosphorylation of PGM1 was shown to enhance its enzymatic activity, confirming the activity being measured.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15378030" target="_blank" class="term-link">
+                                        PMID:15378030
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">selectively on threonine 466 significantly increased PGM enzymatic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30982613" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30982613
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Metabolic Map into the Pathomechanism and Treatment of P...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="PMID:30982613" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assignment of phosphoglucomutase activity in the study mapping the metabolic pathomechanism and galactose treatment of PGM1-CDG.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reinforces the core catalytic function; the paper explicitly describes PGM1 as the enzyme that interconverts glucose-6-P and glucose-1-P and studies the metabolic consequences of its deficiency.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30982613" target="_blank" class="term-link">
+                                        PMID:30982613
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes the metabolic enzyme that interconverts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033499" target="_blank" class="term-link">
+                                    GO:0033499
+                                </a>
+                            </span>
+                            <span class="term-label">beta-D-galactose catabolic process via UDP-galactose, Leloir pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30982613" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30982613
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Metabolic Map into the Pathomechanism and Treatment of P...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0033499" data-r="PMID:30982613" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence linking PGM1 to the Leloir/UDP-galactose route, based on the galactose-responsive metabolic rewiring seen in PGM1-CDG fibroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGM1&#39;s products (glucose-1-P/glucose-6-P) connect to the nucleotide-sugar and galactose (Leloir) pathways, and galactose treatment replenishes galactose-1-P, UDP-glucose, and UDP-galactose in PGM1-CDG. This is a real, pathway-adjacent role but peripheral to PGM1&#39;s core glucose-phosphate interconversion function, so it is retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30982613" target="_blank" class="term-link">
+                                        PMID:30982613
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UDP-glucose and UDP-galactose, the nucleotide sugars</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28882528" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28882528
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Impaired glycogen breakdown and synthesis in phosphoglucomut...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005980" data-r="PMID:28882528" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence that PGM1 deficiency blocks muscle glycogenolysis, placing PGM1 within glycogen catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported and biologically central; in glycogenolysis PGM1 converts the glucose-1-phosphate released by glycogen phosphorylase into glucose-6-phosphate. Severe PGM1 loss causes blocked muscle glycogenolysis mimicking McArdle disease, directly demonstrating this role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28882528" target="_blank" class="term-link">
+                                        PMID:28882528
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">severe loss of PGM1 activity causes blocked muscle</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798745
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005576" data-r="Reactome:R-HSA-6798745" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-derived localization arising from PGM1&#39;s presence in neutrophil tertiary (secretory) granules that are exocytosed during degranulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A secondary/extracellular localization reflecting the release of granule contents during neutrophil degranulation; not the site of PGM1&#39;s cytosolic catalytic function. Retained as non-core rather than removed because it derives from curated Reactome pathway data.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005576" data-r="Reactome:R-HSA-6800434" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-derived extracellular localization from exocytosis of ficolin-rich (granule) lumen proteins during neutrophil degranulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above, a secondary localization tied to neutrophil granule exocytosis rather than PGM1&#39;s core cytosolic metabolic role; kept as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904724" target="_blank" class="term-link">
+                                    GO:1904724
+                                </a>
+                            </span>
+                            <span class="term-label">tertiary granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798745
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:1904724" data-r="Reactome:R-HSA-6798745" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome localization of PGM1 to the tertiary (secretory) granule lumen of neutrophils.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects PGM1&#39;s presence in neutrophil secretory granules (degranulation pathway), a peripheral localization distinct from its principal cytosolic metabolic function; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904813" target="_blank" class="term-link">
+                                    GO:1904813
+                                </a>
+                            </span>
+                            <span class="term-label">ficolin-1-rich granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:1904813" data-r="Reactome:R-HSA-6800434" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome localization of PGM1 to the ficolin-1-rich granule lumen of neutrophils.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Peripheral granule localization from the neutrophil-degranulation pathway, not PGM1&#39;s core cytosolic site of action; retained as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26972339
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Induced Structural Disorder as a Molecular Mechanism for Enz...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0000287" data-r="PMID:26972339" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct (crystallographic) evidence that PGM1 binds one Mg2+ ion per subunit as an essential catalytic cofactor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Crystal structures show the Mg2+ ion coordinated in octahedral geometry by Ser117 and three aspartates, functioning as an electron-withdrawing group to facilitate phosphoryl transfer. Core cofactor of the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                        PMID:26972339
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mg2+ serves as an electron-withdrawing group to facilitate phosphoryl transfer from phosphoserine 117</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25288802
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compromised catalysis and potential folding defects in in vi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="PMID:25288802" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct enzymatic characterization of recombinant wild-type PGM1 (and disease variants), confirming phosphoglucomutase catalytic activity and its kinetic parameters.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In vitro biochemical characterization provides direct experimental support for the core catalytic function, with variants showing reduced kcat/Km; a defining core function of PGM1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link">
+                                        PMID:25288802
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role of the enzyme in glucose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006006" target="_blank" class="term-link">
+                                    GO:0006006
+                                </a>
+                            </span>
+                            <span class="term-label">glucose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25288802
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Compromised catalysis and potential folding defects in in vi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0006006" data-r="PMID:25288802" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence placing PGM1 within glucose metabolism, reflecting its central role in interconverting glucose phosphates.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGM1&#39;s reaction is a central node of glucose metabolism (breakdown and synthesis of glucose); this is a core biological-process annotation supported by the biochemical characterization of the enzyme and its deficiency phenotypes.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link">
+                                        PMID:25288802
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role of the enzyme in glucose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5609939
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005829" data-r="Reactome:R-HSA-5609939" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (curated) cytosolic localization of PGM1, in the reaction where defective PGM1 fails to isomerise G6P to G1P.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-established cytosolic localization; the reaction it participates in is cytosolic. A core cellular-component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of PGM1 in exosomes isolated from expressed prostatic secretions in urine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A proteomic detection of the abundant cytosolic enzyme in secreted exosomes; represents a secondary localization rather than PGM1&#39;s functional site. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of PGM1 among proteins profiled in human urinary exosomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above, a mass-spectrometry-based detection in exosomes; a common finding for abundant cytosolic enzymes and peripheral to PGM1&#39;s core function. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">profile the proteome of human urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9638125
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005829" data-r="Reactome:R-HSA-9638125" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (curated) cytosolic localization of PGM1 in the reaction where PGM1:Mg2+ isomerises G1P to G6P.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; the phosphoglucomutase reaction (G1P to G6P) is cytosolic and requires the bound Mg2+ cofactor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9638127
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005829" data-r="Reactome:R-HSA-9638127" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (curated) cytosolic localization of PGM1 in the reaction where PGM1:Mg2+ isomerises G6P to G1P (reverse direction).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; the reverse phosphoglucomutase reaction (G6P to G1P) is likewise cytosolic and Mg2+-dependent.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1530890" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1530890
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: complete human and rabbit mRNA sequenc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="PMID:1530890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assignment of phosphoglucomutase activity to the human PGM1 gene product characterized in the cDNA cloning study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Establishes the identity of the cloned human PGM1 as the polymorphic phosphoglucomutase (EC 5.4.2.2); supports the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1530890" target="_blank" class="term-link">
+                                        PMID:1530890
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">highly polymorphic human enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1530890" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1530890
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: complete human and rabbit mRNA sequenc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0005737" data-r="PMID:1530890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement assigning cytoplasmic localization to PGM1 in the cloning/mapping study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-established cytoplasmic/cytosolic localization of PGM1 (corroborated by IDA immunofluorescence and UniProt); accepted as a broad, correct localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGM1/PGM1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006006" target="_blank" class="term-link">
+                                    GO:0006006
+                                </a>
+                            </span>
+                            <span class="term-label">glucose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1530890" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1530890
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: complete human and rabbit mRNA sequenc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0006006" data-r="PMID:1530890" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement placing PGM1 in glucose metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IDA glucose-metabolic-process annotation and consistent with PGM1&#39;s central metabolic role; a correct core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link">
+                                        PMID:25288802
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role of the enzyme in glucose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                                    GO:0004614
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglucomutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8257433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: a gene with two promoters and a duplic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0004614" data-r="PMID:8257433" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (gene-structure study) affirming PGM1 as the phosphoglucomutase enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The study explicitly notes PGM1&#39;s central role in glycolysis and gluconeogenesis; supports the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link">
+                                        PMID:8257433
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role in glycolysis and gluconeogenesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8257433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: a gene with two promoters and a duplic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0006094" data-r="PMID:8257433" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement placing PGM1 in gluconeogenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> In gluconeogenesis/glycogen synthesis PGM1 runs in the G6P to G1P direction; the enzyme participates in glucose synthesis. A genuine biological role supported by the literature, retained as a core metabolic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link">
+                                        PMID:8257433
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role in glycolysis and gluconeogenesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8257433
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglucomutase 1: a gene with two promoters and a duplic...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P36871" data-a="GO:0006096" data-r="PMID:8257433" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement placing PGM1 in glycolysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGM1 feeds glycolysis by producing glucose-6-phosphate from the glucose-1-phosphate liberated during glycogenolysis, but it is not a core enzyme of the canonical glycolytic pathway itself (glucose to pyruvate). It is best regarded as an upstream/adjacent contributor, so it is kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link">
+                                        PMID:8257433
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">central role in glycolysis and gluconeogenesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Cytosolic Mg2+-dependent phosphoglucomutase that reversibly interconverts alpha-D-glucose 1-phosphate and alpha-D-glucose 6-phosphate, linking glycogen metabolism to glycolysis/gluconeogenesis.</h3>
+                <span class="vote-buttons" data-g="P36871" data-a="FUNCTION: Cytosolic Mg2+-dependent phosphoglucomutase that r..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                            phosphoglucomutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006006" target="_blank" class="term-link">
+                                glucose metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                                PMID:26972339
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">It catalyzes the interconversion of glucose 1-phosphate and glucose 6-phosphate</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>In glycogenolysis, converts the glucose-1-phosphate released by glycogen phosphorylase into glucose-6-phosphate, enabling glycogen breakdown.</h3>
+                <span class="vote-buttons" data-g="P36871" data-a="FUNCTION: In glycogenolysis, converts the glucose-1-phosphat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004614" target="_blank" class="term-link">
+                            phosphoglucomutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                glycogen catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28882528" target="_blank" class="term-link">
+                                PMID:28882528
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">severe loss of PGM1 activity causes blocked muscle</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1530890" target="_blank" class="term-link">
+                            PMID:1530890
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoglucomutase 1: complete human and rabbit mRNA sequences and direct mapping of this highly polymorphic marker on human chromosome 1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15378030" target="_blank" class="term-link">
+                            PMID:15378030
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of phosphoglucomutase 1 phosphorylation and activity by a signaling kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21044950" target="_blank" class="term-link">
+                            PMID:21044950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genome-wide YFP fluorescence complementation screen identifies new regulators for telomere signaling in human cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25288802" target="_blank" class="term-link">
+                            PMID:25288802
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Compromised catalysis and potential folding defects in in vitro studies of missense mutants associated with hereditary phosphoglucomutase 1 deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26972339" target="_blank" class="term-link">
+                            PMID:26972339
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Induced Structural Disorder as a Molecular Mechanism for Enzyme Dysfunction in Phosphoglucomutase 1 Deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28882528" target="_blank" class="term-link">
+                            PMID:28882528
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Impaired glycogen breakdown and synthesis in phosphoglucomutase 1 deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30982613" target="_blank" class="term-link">
+                            PMID:30982613
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Metabolic Map into the Pathomechanism and Treatment of PGM1-CDG.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8257433" target="_blank" class="term-link">
+                            PMID:8257433
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoglucomutase 1: a gene with two promoters and a duplicated first exon.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5609939
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective PGM1 does not isomerise G6P to G1P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798745
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of tertiary granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800434
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of ficolin-rich granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9638125
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PGM1:Mg2+ isomerises G1P to G6P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9638127
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PGM1:Mg2+ isomerises G6P to G1P</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGM1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P36871" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pgm1-human-uniprotkbp36871-review-notes">PGM1 (human, UniProtKB:P36871) review notes</h1>
+<h2 id="core-biology">Core biology</h2>
+<p>PGM1 = phosphoglucomutase-1 (EC 5.4.2.2), a cytosolic Mg2+-dependent enzyme that reversibly<br />
+interconverts alpha-D-glucose 1-phosphate (G1P) and alpha-D-glucose 6-phosphate (G6P) via an<br />
+alpha-D-glucose 1,6-bisphosphate intermediate, using a catalytic phosphoserine (Ser117).</p>
+<ul>
+<li>Reaction: alpha-D-glucose 1-phosphate = alpha-D-glucose 6-phosphate (RHEA:23536; ChEBI:58601 / 58225)<br />
+  [file:P36871 UniProt CATALYTIC ACTIVITY].</li>
+<li>Cofactor: binds 1 Mg2+ per subunit; coordinated in octahedral geometry by Ser117 + three<br />
+  aspartates (288, 290, 292) <a href="https://pubmed.ncbi.nlm.nih.gov/26972339">PMID:26972339</a>.</li>
+<li>Monomer [PMID:26972339 SUBUNIT].</li>
+<li>Cytoplasmic/cytosolic; 562 aa; alpha-D-phosphohexomutase superfamily.</li>
+<li>Activity regulation: Thr-467 phosphorylation by PAK1 enhances activity <a href="https://pubmed.ncbi.nlm.nih.gov/15378030">PMID:15378030</a>;<br />
+  glucose-1,6-bisP enhances Ser117 phosphorylation [PMID:25288802 / file:P36871].</li>
+</ul>
+<h2 id="metabolic-role">Metabolic role</h2>
+<p>Junction of glycogen metabolism and glycolysis/gluconeogenesis. In glycogenolysis converts the<br />
+G1P released by glycogen phosphorylase to G6P; runs in reverse for glycogen synthesis. Also feeds<br />
+nucleotide-sugar / galactose (Leloir) and pentose-phosphate pathways.<br />
+- "mediates the switch between glycolysis and gluconeogenesis" <a href="https://pubmed.ncbi.nlm.nih.gov/26972339">PMID:26972339</a>.<br />
+- "participates in both the breakdown and synthesis of glucose" [file:P36871 FUNCTION].</p>
+<h2 id="pgm1-cdg-cdg-type-it-gsd-xiv">PGM1-CDG (CDG type It / GSD XIV)</h2>
+<p>Deficiency causes a mixed glycogenosis + congenital disorder of glycosylation: cleft palate,<br />
+hepatopathy, hypoglycemia, dilated cardiomyopathy, exercise intolerance, abnormal transferrin<br />
+glycosylation. Notably galactose-responsive <a href="https://pubmed.ncbi.nlm.nih.gov/30982613">PMID:30982613</a>. Blocked muscle glycogenolysis<br />
+mimicking McArdle disease and impaired glycogen synthesis <a href="https://pubmed.ncbi.nlm.nih.gov/28882528">PMID:28882528</a>.</p>
+<h2 id="annotation-notes">Annotation notes</h2>
+<ul>
+<li>Many strong MF (IDA/EXP/IBA) supports for GO:0004614 phosphoglucomutase activity.</li>
+<li>GO:0000287 magnesium ion binding: IDA PMID:26972339 (crystal structures with Mg2+) + IEA.</li>
+<li>GO:0005515 protein binding (IPI PMID:21044950, TINF2/Q9BSI4): a genome-wide YFP-complementation<br />
+  telomere screen; bare "protein binding" not informative -&gt; MARK_AS_OVER_ANNOTATED (not REMOVE).</li>
+<li>Cytosol/cytoplasm CC well supported (IDA HPA, NAS, Reactome TAS).</li>
+<li>Extracellular region / exosome / granule lumen: secondary "moonlighting"/proteomic localizations<br />
+  (HDA exosome, Reactome neutrophil-degranulation granule lumen) -&gt; KEEP_AS_NON_CORE.</li>
+<li>BP: glucose metabolic process, carbohydrate metabolic process, glycolytic process,<br />
+  gluconeogenesis, glycogen catabolic process, Leloir/galactose catabolism all consistent with the<br />
+  central metabolic-hub role.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P36871
+gene_symbol: PGM1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Phosphoglucomutase-1 (PGM1; EC 5.4.2.2) is the major human phosphoglucomutase,
+  a cytosolic Mg2+-dependent enzyme that catalyzes the reversible interconversion of
+  alpha-D-glucose 1-phosphate and alpha-D-glucose 6-phosphate. Catalysis proceeds via
+  an alpha-D-glucose 1,6-bisphosphate intermediate and a catalytic phosphoserine (Ser117),
+  with the bound Mg2+ ion coordinated by Ser117 and three active-site aspartates. PGM1
+  sits at the junction of glycogen metabolism and glycolysis/gluconeogenesis. During
+  glycogenolysis it converts the glucose-1-phosphate released by glycogen phosphorylase
+  into glucose-6-phosphate for glycolysis (or, in liver after glucose-6-phosphatase,
+  for blood glucose), and it runs in reverse to supply glucose-1-phosphate for glycogen
+  synthesis. Its products also feed the nucleotide-sugar (UDP-glucose/UDP-galactose,
+  Leloir), galactose, and pentose-phosphate pathways. The enzyme is a monomer of 562
+  residues belonging to the alpha-D-phosphohexomutase superfamily. Loss-of-function
+  variants cause PGM1 deficiency (PGM1-CDG; congenital disorder of glycosylation type
+  It / glycogen storage disease type XIV), a mixed glycogenosis and glycosylation
+  disorder featuring cleft palate, hepatopathy, hypoglycemia, dilated cardiomyopathy,
+  exercise intolerance, and abnormal transferrin glycosylation, and it is notably
+  responsive to galactose supplementation.
+alternative_products:
+- name: &#39;1&#39;
+  id: P36871-1
+- name: &#39;2&#39;
+  id: P36871-2
+  sequence_note: VSP_004686
+- name: &#39;3&#39;
+  id: P36871-3
+  sequence_note: VSP_045204
+existing_annotations:
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) assignment of the diagnostic phosphoglucomutase molecular
+      function to PGM1. This is the well-established, experimentally confirmed core
+      catalytic activity of the enzyme and is at the correct level of specificity.
+    action: ACCEPT
+    reason: The core molecular function is directly demonstrated experimentally (IDA/EXP,
+      PMID:25288802, PMID:15378030) and the IBA call is consistent with the entire
+      phosphohexomutase family. This is a core function of PGM1.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: It catalyzes the interconversion of glucose 1-phosphate and
+        glucose 6-phosphate
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic assignment of PGM1 activity to the cytosol, consistent with
+      the cytoplasmic localization of the enzyme.
+    action: ACCEPT
+    reason: PGM1 is a soluble cytoplasmic enzyme; the cytosol is where its metabolic
+      reaction takes place. Supported by direct immunofluorescence (IDA, HPA) and
+      the UniProt subcellular location.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic assignment placing PGM1 in carbohydrate metabolism, the
+      broad process encompassing its role in interconverting glucose phosphates.
+    action: ACCEPT
+    reason: Correct but general. It accurately captures PGM1&#39;s participation in
+      carbohydrate metabolism; more specific processes (glucose metabolic process,
+      glycogen metabolism, glycolysis/gluconeogenesis) are separately annotated.
+      Retained as a broad, non-core parent term.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: It catalyzes the interconversion of glucose 1-phosphate and
+        glucose 6-phosphate
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic assignment of magnesium ion binding, the
+      catalytic cofactor of PGM1.
+    action: ACCEPT
+    reason: PGM1 binds one Mg2+ per subunit as an essential catalytic cofactor; this
+      is directly confirmed by crystallography (IDA, PMID:26972339) and the IEA mapping
+      is correct.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: Mg2+ serves as an electron-withdrawing group to facilitate
+        phosphoryl transfer from phosphoserine 117
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated (multi-method IEA, incl. RHEA:23536/EC:5.4.2.2 mapping) assignment
+      of phosphoglucomutase activity to PGM1.
+    action: ACCEPT
+    reason: Redundant with, and confirmed by, the experimental IDA/EXP annotations
+      for the same term. The RHEA/EC mapping is correct for this enzyme.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: Catalyzes the reversible isomerization of alpha-D-glucose 1-
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic assignment of cytoplasmic localization from the UniProt
+      subcellular-location vocabulary.
+    action: ACCEPT
+    reason: Consistent with the well-supported cytosolic localization of PGM1; a
+      broader parent of cytosol.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro-based electronic assignment of carbohydrate metabolic process.
+    action: ACCEPT
+    reason: Redundant with the IBA annotation for the same term; correct but general
+      parent process. Retained as non-core broad context.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: It catalyzes the interconversion of glucose 1-phosphate and
+        glucose 6-phosphate
+- term:
+    id: GO:0016868
+    label: intramolecular phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based electronic assignment of the parent molecular-function
+      class (intramolecular phosphotransferase) that subsumes phosphoglucomutase
+      activity.
+    action: ACCEPT
+    reason: This is the correct broad parent of GO:0004614 phosphoglucomutase activity
+      (the reaction proceeds via intramolecular phosphoryl transfer through a
+      glucose-1,6-bisphosphate intermediate). Accurate but redundant with the more
+      specific phosphoglucomutase term; kept as a non-core general term.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: The reaction entails two consecutive phosphoryl transfers and
+        proceeds via a bisphosphorylated intermediate
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21044950
+  qualifier: enables
+  review:
+    summary: IntAct-curated protein-protein interaction (with TINF2, UniProtKB:Q9BSI4)
+      captured by a genome-wide split-YFP fluorescence-complementation screen for
+      telomere-signaling regulators.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#34;protein binding&#34; (GO:0005515) is uninformative about PGM1&#39;s molecular
+      function. The interaction derives from a large-scale telomere-interactome screen
+      that identified ~300 candidate binders and is not established as a functional
+      partnership relevant to PGM1&#39;s enzymatic role; per curation policy this is marked
+      as over-annotated rather than removed (it reflects a real IPI experiment).
+    supported_by:
+    - reference_id: PMID:21044950
+      supporting_text: we identified over 300 proteins that associated with the six
+        core telomeric proteins
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence (Human Protein Atlas) localization of PGM1
+      to the cytosol.
+    action: ACCEPT
+    reason: Direct experimental evidence for the primary subcellular location of this
+      soluble metabolic enzyme; a core cellular-component annotation.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: EXP
+  original_reference_id: PMID:15378030
+  qualifier: enables
+  review:
+    summary: Experimental demonstration of PGM1 catalytic (phosphoglucomutase)
+      activity, whose regulation by PAK1-mediated phosphorylation is characterized
+      in this study.
+    action: ACCEPT
+    reason: Direct experimental support for the core catalytic function; PAK1
+      phosphorylation of PGM1 was shown to enhance its enzymatic activity, confirming
+      the activity being measured.
+    supported_by:
+    - reference_id: PMID:15378030
+      supporting_text: selectively on threonine 466 significantly increased PGM enzymatic
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:30982613
+  qualifier: enables
+  review:
+    summary: Direct assignment of phosphoglucomutase activity in the study mapping
+      the metabolic pathomechanism and galactose treatment of PGM1-CDG.
+    action: ACCEPT
+    reason: Reinforces the core catalytic function; the paper explicitly describes
+      PGM1 as the enzyme that interconverts glucose-6-P and glucose-1-P and studies
+      the metabolic consequences of its deficiency.
+    supported_by:
+    - reference_id: PMID:30982613
+      supporting_text: encodes the metabolic enzyme that interconverts
+- term:
+    id: GO:0033499
+    label: beta-D-galactose catabolic process via UDP-galactose, Leloir pathway
+  evidence_type: IMP
+  original_reference_id: PMID:30982613
+  qualifier: involved_in
+  review:
+    summary: Mutant-phenotype evidence linking PGM1 to the Leloir/UDP-galactose
+      route, based on the galactose-responsive metabolic rewiring seen in PGM1-CDG
+      fibroblasts.
+    action: KEEP_AS_NON_CORE
+    reason: PGM1&#39;s products (glucose-1-P/glucose-6-P) connect to the nucleotide-sugar
+      and galactose (Leloir) pathways, and galactose treatment replenishes
+      galactose-1-P, UDP-glucose, and UDP-galactose in PGM1-CDG. This is a real,
+      pathway-adjacent role but peripheral to PGM1&#39;s core glucose-phosphate
+      interconversion function, so it is retained as non-core.
+    supported_by:
+    - reference_id: PMID:30982613
+      supporting_text: UDP-glucose and UDP-galactose, the nucleotide sugars
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:28882528
+  qualifier: acts_upstream_of_or_within
+  review:
+    summary: Mutant-phenotype evidence that PGM1 deficiency blocks muscle
+      glycogenolysis, placing PGM1 within glycogen catabolism.
+    action: ACCEPT
+    reason: Well supported and biologically central; in glycogenolysis PGM1 converts
+      the glucose-1-phosphate released by glycogen phosphorylase into glucose-6-phosphate.
+      Severe PGM1 loss causes blocked muscle glycogenolysis mimicking McArdle disease,
+      directly demonstrating this role.
+    supported_by:
+    - reference_id: PMID:28882528
+      supporting_text: &#39;severe loss of PGM1 activity causes blocked muscle&#39;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798745
+  qualifier: located_in
+  review:
+    summary: Reactome-derived localization arising from PGM1&#39;s presence in neutrophil
+      tertiary (secretory) granules that are exocytosed during degranulation.
+    action: KEEP_AS_NON_CORE
+    reason: A secondary/extracellular localization reflecting the release of granule
+      contents during neutrophil degranulation; not the site of PGM1&#39;s cytosolic
+      catalytic function. Retained as non-core rather than removed because it derives
+      from curated Reactome pathway data.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: Reactome-derived extracellular localization from exocytosis of
+      ficolin-rich (granule) lumen proteins during neutrophil degranulation.
+    action: KEEP_AS_NON_CORE
+    reason: As above, a secondary localization tied to neutrophil granule exocytosis
+      rather than PGM1&#39;s core cytosolic metabolic role; kept as non-core.
+- term:
+    id: GO:1904724
+    label: tertiary granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798745
+  qualifier: located_in
+  review:
+    summary: Reactome localization of PGM1 to the tertiary (secretory) granule lumen
+      of neutrophils.
+    action: KEEP_AS_NON_CORE
+    reason: Reflects PGM1&#39;s presence in neutrophil secretory granules (degranulation
+      pathway), a peripheral localization distinct from its principal cytosolic
+      metabolic function; retained as non-core.
+- term:
+    id: GO:1904813
+    label: ficolin-1-rich granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: Reactome localization of PGM1 to the ficolin-1-rich granule lumen of
+      neutrophils.
+    action: KEEP_AS_NON_CORE
+    reason: Peripheral granule localization from the neutrophil-degranulation pathway,
+      not PGM1&#39;s core cytosolic site of action; retained as non-core.
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:26972339
+  qualifier: enables
+  review:
+    summary: Direct (crystallographic) evidence that PGM1 binds one Mg2+ ion per
+      subunit as an essential catalytic cofactor.
+    action: ACCEPT
+    reason: Crystal structures show the Mg2+ ion coordinated in octahedral geometry
+      by Ser117 and three aspartates, functioning as an electron-withdrawing group
+      to facilitate phosphoryl transfer. Core cofactor of the enzyme.
+    supported_by:
+    - reference_id: PMID:26972339
+      supporting_text: Mg2+ serves as an electron-withdrawing group to facilitate
+        phosphoryl transfer from phosphoserine 117
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25288802
+  qualifier: enables
+  review:
+    summary: Direct enzymatic characterization of recombinant wild-type PGM1 (and
+      disease variants), confirming phosphoglucomutase catalytic activity and its
+      kinetic parameters.
+    action: ACCEPT
+    reason: In vitro biochemical characterization provides direct experimental
+      support for the core catalytic function, with variants showing reduced
+      kcat/Km; a defining core function of PGM1.
+    supported_by:
+    - reference_id: PMID:25288802
+      supporting_text: central role of the enzyme in glucose metabolism
+- term:
+    id: GO:0006006
+    label: glucose metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:25288802
+  qualifier: involved_in
+  review:
+    summary: Direct evidence placing PGM1 within glucose metabolism, reflecting its
+      central role in interconverting glucose phosphates.
+    action: ACCEPT
+    reason: PGM1&#39;s reaction is a central node of glucose metabolism (breakdown and
+      synthesis of glucose); this is a core biological-process annotation supported
+      by the biochemical characterization of the enzyme and its deficiency phenotypes.
+    supported_by:
+    - reference_id: PMID:25288802
+      supporting_text: central role of the enzyme in glucose metabolism
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5609939
+  qualifier: located_in
+  review:
+    summary: Reactome (curated) cytosolic localization of PGM1, in the reaction where
+      defective PGM1 fails to isomerise G6P to G1P.
+    action: ACCEPT
+    reason: Consistent with the well-established cytosolic localization; the reaction
+      it participates in is cytosolic. A core cellular-component annotation.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry detection of PGM1 in exosomes isolated
+      from expressed prostatic secretions in urine.
+    action: KEEP_AS_NON_CORE
+    reason: A proteomic detection of the abundant cytosolic enzyme in secreted
+      exosomes; represents a secondary localization rather than PGM1&#39;s functional
+      site. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosome preparations were characterized by a shotgun proteomics
+        procedure
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of PGM1 among proteins profiled in
+      human urinary exosomes.
+    action: KEEP_AS_NON_CORE
+    reason: As above, a mass-spectrometry-based detection in exosomes; a common
+      finding for abundant cytosolic enzymes and peripheral to PGM1&#39;s core function.
+      Retained as non-core.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: profile the proteome of human urinary exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9638125
+  qualifier: located_in
+  review:
+    summary: Reactome (curated) cytosolic localization of PGM1 in the reaction where
+      PGM1:Mg2+ isomerises G1P to G6P.
+    action: ACCEPT
+    reason: Correct core localization; the phosphoglucomutase reaction (G1P to G6P) is
+      cytosolic and requires the bound Mg2+ cofactor.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9638127
+  qualifier: located_in
+  review:
+    summary: Reactome (curated) cytosolic localization of PGM1 in the reaction where
+      PGM1:Mg2+ isomerises G6P to G1P (reverse direction).
+    action: ACCEPT
+    reason: Correct core localization; the reverse phosphoglucomutase reaction
+      (G6P to G1P) is likewise cytosolic and Mg2+-dependent.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: IDA
+  original_reference_id: PMID:1530890
+  qualifier: enables
+  review:
+    summary: Direct assignment of phosphoglucomutase activity to the human PGM1 gene
+      product characterized in the cDNA cloning study.
+    action: ACCEPT
+    reason: Establishes the identity of the cloned human PGM1 as the polymorphic
+      phosphoglucomutase (EC 5.4.2.2); supports the core catalytic function.
+    supported_by:
+    - reference_id: PMID:1530890
+      supporting_text: highly polymorphic human enzyme
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: NAS
+  original_reference_id: PMID:1530890
+  qualifier: located_in
+  review:
+    summary: Non-traceable author statement assigning cytoplasmic localization to
+      PGM1 in the cloning/mapping study.
+    action: ACCEPT
+    reason: Consistent with the well-established cytoplasmic/cytosolic localization
+      of PGM1 (corroborated by IDA immunofluorescence and UniProt); accepted as a
+      broad, correct localization.
+    supported_by:
+    - reference_id: file:human/PGM1/PGM1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: [Isoform 1]: Cytoplasm&#39;
+- term:
+    id: GO:0006006
+    label: glucose metabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:1530890
+  qualifier: involved_in
+  review:
+    summary: Non-traceable author statement placing PGM1 in glucose metabolism.
+    action: ACCEPT
+    reason: Redundant with the IDA glucose-metabolic-process annotation and consistent
+      with PGM1&#39;s central metabolic role; a correct core biological process.
+    supported_by:
+    - reference_id: PMID:25288802
+      supporting_text: central role of the enzyme in glucose metabolism
+- term:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  evidence_type: TAS
+  original_reference_id: PMID:8257433
+  qualifier: enables
+  review:
+    summary: Traceable author statement (gene-structure study) affirming PGM1 as the
+      phosphoglucomutase enzyme.
+    action: ACCEPT
+    reason: The study explicitly notes PGM1&#39;s central role in glycolysis and
+      gluconeogenesis; supports the core catalytic function.
+    supported_by:
+    - reference_id: PMID:8257433
+      supporting_text: central role in glycolysis and gluconeogenesis
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: TAS
+  original_reference_id: PMID:8257433
+  qualifier: involved_in
+  review:
+    summary: Traceable author statement placing PGM1 in gluconeogenesis.
+    action: ACCEPT
+    reason: In gluconeogenesis/glycogen synthesis PGM1 runs in the G6P to G1P direction;
+      the enzyme participates in glucose synthesis. A genuine biological role
+      supported by the literature, retained as a core metabolic process.
+    supported_by:
+    - reference_id: PMID:8257433
+      supporting_text: central role in glycolysis and gluconeogenesis
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: TAS
+  original_reference_id: PMID:8257433
+  qualifier: involved_in
+  review:
+    summary: Traceable author statement placing PGM1 in glycolysis.
+    action: KEEP_AS_NON_CORE
+    reason: PGM1 feeds glycolysis by producing glucose-6-phosphate from the
+      glucose-1-phosphate liberated during glycogenolysis, but it is not a core
+      enzyme of the canonical glycolytic pathway itself (glucose to pyruvate).
+      It is best regarded as an upstream/adjacent contributor, so it is kept as
+      non-core.
+    supported_by:
+    - reference_id: PMID:8257433
+      supporting_text: central role in glycolysis and gluconeogenesis
+core_functions:
+- description: Cytosolic Mg2+-dependent phosphoglucomutase that reversibly interconverts
+    alpha-D-glucose 1-phosphate and alpha-D-glucose 6-phosphate, linking glycogen
+    metabolism to glycolysis/gluconeogenesis.
+  molecular_function:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  supported_by:
+  - reference_id: PMID:26972339
+    supporting_text: It catalyzes the interconversion of glucose 1-phosphate and glucose
+      6-phosphate
+  directly_involved_in:
+  - id: GO:0006006
+    label: glucose metabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+- description: In glycogenolysis, converts the glucose-1-phosphate released by glycogen
+    phosphorylase into glucose-6-phosphate, enabling glycogen breakdown.
+  molecular_function:
+    id: GO:0004614
+    label: phosphoglucomutase activity
+  supported_by:
+  - reference_id: PMID:28882528
+    supporting_text: &#39;severe loss of PGM1 activity causes blocked muscle&#39;
+  directly_involved_in:
+  - id: GO:0005980
+    label: glycogen catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1530890
+  title: &#39;Phosphoglucomutase 1: complete human and rabbit mRNA sequences and direct
+    mapping of this highly polymorphic marker on human chromosome 1.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Cloning/mapping of human PGM1 cDNA; identifies it as the highly
+      polymorphic phosphoglucomutase (EC 5.4.2.2). Supports enzyme identity and
+      chromosomal localization; abstract-only in cache.
+- id: PMID:15378030
+  title: Regulation of phosphoglucomutase 1 phosphorylation and activity by a signaling
+    kinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Demonstrates PGM1 catalytic activity and its enhancement by PAK1
+      phosphorylation (at Thr-466/Thr-467). Directly supports the phosphoglucomutase
+      molecular function.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Proteomic detection of PGM1 in urinary exosomes; supports a
+      peripheral extracellular-exosome localization, not core function.
+- id: PMID:21044950
+  title: Genome-wide YFP fluorescence complementation screen identifies new regulators
+    for telomere signaling in human cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Large-scale split-YFP telomere-interactome screen underlying the
+      IntAct PGM1-TINF2 interaction. Well-formed citation, but supports only a bare
+      protein-binding annotation of unclear functional relevance to PGM1.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Shotgun proteomics of prostatic-secretion exosomes; PGM1 among
+      ~900 detected proteins. Supports peripheral exosome localization only.
+- id: PMID:25288802
+  title: Compromised catalysis and potential folding defects in in vitro studies of
+    missense mutants associated with hereditary phosphoglucomutase 1 deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: In vitro biochemical characterization of WT and disease-variant
+      PGM1, confirming catalytic activity/kinetics and its central role in glucose
+      metabolism.
+- id: PMID:26972339
+  title: Induced Structural Disorder as a Molecular Mechanism for Enzyme Dysfunction
+    in Phosphoglucomutase 1 Deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: First WT and variant human PGM1 crystal structures; documents Mg2+
+      coordination, phosphoserine (Ser117) catalytic mechanism, monomeric state, and
+      reversible G1P/G6P interconversion. Full text available and verified.
+- id: PMID:28882528
+  title: Impaired glycogen breakdown and synthesis in phosphoglucomutase 1 deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Shows PGM1 deficiency blocks muscle glycogenolysis (McArdle-like
+      second wind) and may limit glycogen synthesis; supports the glycogen
+      catabolic-process role.
+- id: PMID:30982613
+  title: The Metabolic Map into the Pathomechanism and Treatment of PGM1-CDG.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Defines PGM1 as the enzyme interconverting glucose-6-P and
+      glucose-1-P; establishes galactose-responsive rewiring of nucleotide-sugar
+      (UDP-glucose/UDP-galactose, Leloir) metabolism in PGM1-CDG.
+- id: PMID:8257433
+  title: &#39;Phosphoglucomutase 1: a gene with two promoters and a duplicated first exon.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PGM1 gene-structure study; notes its central role in glycolysis and
+      gluconeogenesis. Supports enzyme identity and metabolic context.
+- id: Reactome:R-HSA-5609939
+  title: Defective PGM1 does not isomerise G6P to G1P
+  findings: []
+- id: Reactome:R-HSA-6798745
+  title: Exocytosis of tertiary granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-6800434
+  title: Exocytosis of ficolin-rich granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-9638125
+  title: PGM1:Mg2+ isomerises G1P to G6P
+  findings: []
+- id: Reactome:R-HSA-9638127
+  title: PGM1:Mg2+ isomerises G6P to G1P
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
