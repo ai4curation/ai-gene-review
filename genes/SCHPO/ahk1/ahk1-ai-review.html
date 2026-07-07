@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ahk1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ahk1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14260" target="_blank" class="term-link">
+                        O14260
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ahk1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14260" data-a="DESCRIPTION: ahk1 (SPAC7D4.03c; UniProt O14260) is a large (886..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ahk1 (SPAC7D4.03c; UniProt O14260) is a large (886-residue) fungal-specific protein of the UPF0592 family, defined by a single DUF1765 domain (Pfam PF08578; InterPro IPR013887; PANTHER PTHR37988). It is predicted to be a multi-pass membrane protein (three predicted transmembrane helices) and contains a disordered, low-complexity region near its N-terminus, but it carries no recognizable catalytic motif, consistent with a non-catalytic role. The DUF1765 domain has no experimentally assigned biochemical function. Its budding-yeast homolog, Saccharomyces cerevisiae Ahk1 (YDL073W), is an experimentally validated scaffold protein of the HKR1 sub-branch of the Hog1 osmostress-activated MAPK pathway that binds the Hkr1 cytoplasmic domain together with Sho1, Ste11 and Pbs2 and prevents aberrant cross-talk signalling to the Kss1 MAPK. On the basis of that orthology (shared UPF0592 domain family), the fission-yeast protein is proposed to be a putative MAP-kinase-cascade scaffold, though this role has not been tested in fission yeast. The gene is non-essential (ahk1 deletion is viable), and in genome-wide phenotypic screens its deletion is associated with altered stress responses (sensitivity or resistance to osmotic, cell-wall, and genotoxic agents) and abnormalities in mating and shmoo morphology, a fingerprint broadly compatible with a role in stress-responsive signalling. No direct molecular function, binding partner, localization, or specific pathway role has been demonstrated for the fission-yeast protein itself.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14260" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Low-resolution, prediction-based localization. UniProt predicts three transmembrane helices and annotates the protein as a multi-pass membrane protein by ECO:0000305 inference. This is consistent with the sequence but is not experimentally demonstrated in S. pombe, and the term is the generic root-level &#34;membrane&#34;. Retain as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by UniProt transmembrane-helix predictions but unverified experimentally and uninformative as to which membrane; a plausible prediction-based localization rather than a demonstrated core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    GO_REF:0000044
+
+                                </span>
+
+                                <div class="support-text">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14260" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level &#34;cellular_component&#34; with the ND (No biological Data) evidence code, a standard PomBase placeholder recording that no specific cellular component is known. It carries no biological content and should be retained only as a placeholder.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Root placeholder term with ND evidence; represents absence of specific localization knowledge rather than a substantive annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000165" target="_blank" class="term-link">
+                                    GO:0000165
+                                </a>
+                            </span>
+                            <span class="term-label">MAPK cascade</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26787842
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Scaffold Protein Ahk1, Which Associates with Hkr1, Sho1, Ste...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14260" data-a="GO:0000165" data-r="PMID:26787842" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Process annotation transferred by orthology (ISO, with-from SGD:S000002231) from S. cerevisiae AHK1, which is an experimentally validated scaffold in the Hog1 osmostress MAPK pathway. The orthology rests on the shared UPF0592/DUF1765 domain family (InterPro:IPR013887). The assignment is a plausible, curator-made transfer, but the involvement of the S. pombe protein in a MAPK cascade has not been demonstrated directly; the fission-yeast stress core (Wis1 to Sty1/Spc1) does not reproduce the budding-yeast Hkr1/Kss1 cross-talk architecture. Retain as a reasonable orthology-based hypothesis, but mark non-core and flag as a knowledge gap.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orthology-based (ISO) transfer from a verified S. cerevisiae scaffold; biologically plausible and consistent with the deletion stress/mating phenotype fingerprint, but unproven in S. pombe. Per PomBase reliability, retained rather than removed; treated as non-core because it is inferred, not demonstrated for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" target="_blank" class="term-link">
+                                        PMID:26787842
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal flow from Hkr1 to Kss1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005078" target="_blank" class="term-link">
+                                    GO:0005078
+                                </a>
+                            </span>
+                            <span class="term-label">MAP kinase scaffold activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O14260" data-a="GO:0005078" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The single molecular-function annotation, transferred by orthology (ISO, GO_REF:0000024, with-from SGD:S000002231) from S. cerevisiae AHK1. It is more informative than &#34;protein binding&#34; and captures the best available functional hypothesis: that ahk1 acts as a physical scaffold assembling components of a MAPK signalling module. However, the scaffold activity has never been tested for the S. pombe protein and no fission-yeast binding partners are known. Retain as a plausible orthology-based hypothesis; mark non-core and flag as a molecular-function knowledge gap.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orthology-based (ISO) transfer of an experimentally established S. cerevisiae molecular function; retained per PomBase reliability and because it is the most informative available MF term (preferable to protein binding), but it is inferred rather than demonstrated for S. pombe and so is treated as non-core with an explicit knowledge gap.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" target="_blank" class="term-link">
+                                        PMID:26787842
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we identified a protein, termed Ahk1 (Associated with Hkr1), that binds to Hkr1-cyto.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Putative non-catalytic scaffold/adaptor of a mitogen-activated protein kinase (MAPK) signalling module. This is inferred for ahk1 from its membership of the UPF0592/DUF1765 family (InterPro:IPR013887) shared with the experimentally validated S. cerevisiae scaffold Ahk1 (YDL073W), which assembles Hkr1, Sho1, Ste11 and Pbs2 in the Hog1 osmostress MAPK pathway. The absence of any catalytic motif in ahk1 is consistent with a scaffolding rather than an enzymatic role. Direct demonstration of scaffold activity, of binding partners, and of MAPK-pathway participation in S. pombe is lacking; this core function is therefore a well-motivated hypothesis, not an established fission-yeast activity.</h3>
+                <span class="vote-buttons" data-g="O14260" data-a="FUNCTION: Putative non-catalytic scaffold/adaptor of a mitog..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005078" target="_blank" class="term-link">
+                            MAP kinase scaffold activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000165" target="_blank" class="term-link">
+                                MAPK cascade
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" target="_blank" class="term-link">
+                                PMID:26787842
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal flow from Hkr1 to Kss1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                        <div class="finding-text">Manual transfer of experimentally-verified manual GO annotation data to orthologs</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" target="_blank" class="term-link">
+                            PMID:26787842
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Scaffold Protein Ahk1, Which Associates with Hkr1, Sho1, Ste11, and Pbs2, Inhibits Cross Talk Signaling from the Hkr1 Osmosensor to the Kss1 Mitogen-Activated Protein Kinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">S. cerevisiae Ahk1 is a scaffold protein of the HKR1 sub-branch of the Hog1 osmostress MAPK pathway that binds the cytoplasmic domain of the Hkr1 osmosensor and also binds Sho1, Ste11 and Pbs2, preventing incorrect signal flow from Hkr1 to the Kss1 MAPK.</div>
+
+                        <div class="finding-text">"Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal flow from Hkr1 to Kss1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe ahk1 physically associate with any component of the Sty1/Spc1 stress-activated MAPK pathway (Sty1, Wis1, Win1/Wis4) or with membrane osmosensors, and does its deletion alter stress-induced Sty1 activation?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Nishimura A, Tatebayashi K</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14260" data-a="Q: Does S. pombe ahk1 physically associate with any c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the biochemical activity of the DUF1765 domain, and is ahk1 a bona fide scaffold or does it have an as-yet-uncharacterized molecular function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14260" data-a="Q: What is the biochemical activity of the DUF1765 do..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct an endogenously tagged ahk1 strain; perform affinity purification-mass spectrometry to identify interactors, live-cell imaging to determine localization, and quantitative immunoblotting of phospho-Sty1 in wild-type vs ahk1-deletion cells across a panel of stresses (osmotic, cell-wall, oxidative, genotoxic).</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: ahk1 acts as a membrane-associated scaffold that contributes to Sty1/Spc1 activation under osmotic or cell-wall stress in S. pombe.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: interactome, localization, and signalling epistasis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14260" data-a="EXPERIMENT: Construct an endogenously tagged ahk1 strain; perf..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the structure of the ahk1 DUF1765 domain (experimentally or via AlphaFold-guided modelling) and test candidate activities biochemically; use structure-guided point mutants to link domain features to the deletion stress/mating phenotypes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The DUF1765 domain confers a defined, conserved molecular activity that underlies ahk1 function.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural biology and structure-function analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O14260" data-a="EXPERIMENT: Determine the structure of the ahk1 DUF1765 domain..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether S. pombe ahk1 (SPAC7D4.03c) actually functions as a MAP-kinase scaffold, or has any scaffold activity at all, has never been tested. The molecular function is inferred entirely from the S. cerevisiae ortholog via the shared UPF0592/DUF1765 domain family; no in vivo or in vitro assay of scaffold activity, and no identification of assembled kinase-module components, has been reported for the fission-yeast protein.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Scaffold activity in the Hog1 osmostress MAPK pathway is experimentally established for S. cerevisiae Ahk1 (YDL073W = SGD:S000002231), which binds Hkr1-cyto, Sho1, Ste11 and Pbs2; the S. pombe protein shares the defining UPF0592/DUF1765 domain (InterPro:IPR013887) and lacks any catalytic motif, so a scaffolding role is plausible but unproven.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether the propagated MAP-kinase scaffold activity (GO:0005078) annotation is valid for fission yeast, or whether ahk1 has a distinct (or no) signalling function despite family membership.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Affinity purification / mass spectrometry of tagged ahk1 in S. pombe to identify direct interactors, combined with epistasis and phospho-readout assays testing whether ahk1 contributes to Sty1/Spc1 (or other MAPK) activation under stress.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"In the budding yeast Saccharomyces cerevisiae, osmostress activates the Hog1 mitogen-activated protein kinase (MAPK), which regulates diverse osmoadaptive"</em> — PMID:26787842</li>
+
+                <li><em>"Manual transfer of experimentally-verified manual GO annotation data to orthologs"</em> — GO_REF:0000024</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct binding partners of ahk1 in S. pombe are unknown. It is undetermined whether it interacts with the fission-yeast stress-MAPK components (Sty1/Spc1, the MAPKK Wis1, the MAPKKKs Win1/Wis4, or membrane osmosensors such as Wsc1/Mtl2 and the Sho1-like adaptor), or with any other proteins.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In S. cerevisiae the orthologous Ahk1 binds a defined set of HKR1-subbranch proteins (Hkr1-cyto, Sho1, Ste11, Pbs2); the fission-yeast interactome of ahk1 has not been mapped beyond generic high-throughput interaction datasets.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying partners would confirm or refute pathway membership and reveal whether ahk1 couples a membrane sensor to a specific MAPK module in fission yeast.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Co-immunoprecipitation / proximity-labelling of endogenously tagged ahk1 followed by mass spectrometry, with validation of candidate interactions by reciprocal pulldown and genetic interaction analysis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"In addition to Hkr1-cyto binding, Ahk1 also bound to other signaling molecules in the HKR1 subbranch, including Sho1, Ste11, and Pbs2."</em> — PMID:26787842</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether ahk1 has a specific, non-redundant role in the S. pombe Sty1/Spc1 stress-activated MAPK pathway is undetermined. The budding-yeast function (preventing Hkr1-to-Kss1 cross-talk) may not map onto fission yeast, whose stress core (Wis1 to Sty1) lacks the multi-branch Hkr1/Kss1 architecture, so it is unclear which, if any, signalling event ahk1 controls.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> ahk1 deletion is viable and, in genome-wide screens, alters stress responses (osmotic/salt, cell-wall, and genotoxic agents) and mating/shmoo morphology; these are consistent with a stress-signalling contribution but do not localize ahk1 to a defined step or show it is non-redundant.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Placing ahk1 (or excluding it) within the Sty1/Spc1 pathway would resolve whether the orthology-based MAPK-cascade (GO:0000165) annotation reflects a real fission-yeast pathway role.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Targeted epistasis analysis of ahk1 deletion with sty1, wis1 and osmosensor mutants under defined stresses, measuring Sty1 phosphorylation and downstream (e.g. atf1/gpd1) responses.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Deletion of the AHK1 gene (in the absence of other Hog1 upstream branches) only partially inhibited osmostress-induced Hog1 activation."</em> — PMID:26787842</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular activity of the DUF1765 domain that defines the UPF0592 family, and hence the biochemical basis of any ahk1 function, is entirely unknown. DUF1765 is a domain of unknown function with no assigned catalytic or binding activity.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">ONTOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> ahk1 is a member of the UPF0592 family (Pfam PF08578 DUF1765; PANTHER PTHR37988) and lacks any recognizable enzymatic motif, but no structure-function study has assigned an activity to this domain in any organism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Assigning a biochemical activity to DUF1765 would provide a mechanistic basis for the family, potentially replacing the generic scaffold-by-orthology inference with a defined GO molecular-function term.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Structural characterization (e.g. AlphaFold-guided experimental structure) and biochemical assays of the DUF1765 domain; if a novel activity is found, a corresponding GO molecular function term may be required.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Belongs to the UPF0592 family."</em> — UniProt:O14260</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The subcellular localization of ahk1 in S. pombe has not been experimentally determined. The membrane / multi-pass membrane assignment is a sequence-based prediction (three predicted transmembrane helices) with no microscopy or fractionation evidence in fission yeast.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt predicts three transmembrane helices (residues 277-297, 374-394, 400-420) and annotates the protein as a multi-pass membrane protein by ECO:0000305 inference, but this has not been confirmed for the endogenous fission-yeast protein.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Localization would test the membrane prediction and indicate whether ahk1 acts at a specific membrane compartment (as a membrane-tethered scaffold) or elsewhere.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Live-cell imaging of endogenously tagged ahk1 and membrane-fractionation/topology assays in S. pombe.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Multi-pass membrane"</em> — UniProt:O14260</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ahk1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14260" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="research-notes-s-pombe-ahk1-spac7d403c-uniprot-o14260">Research notes: <em>S. pombe</em> ahk1 (SPAC7D4.03c / UniProt O14260)</h1>
+<h2 id="summary-of-task">Summary of task</h2>
+<p>AI GO-annotation review of the understudied fission-yeast gene <strong>ahk1</strong> (PomBase standard<br />
+name; systematic name <strong>SPAC7D4.03c</strong>; UniProt <strong>O14260</strong>, entry name YFP3_SCHPO). This is a<br />
+"dark gene": PomBase characterisation status is <strong>"biological role inferred"</strong> and all of its<br />
+functional GO annotations are transferred by orthology (ISO), not experimentally determined in<br />
+<em>S. pombe</em>.</p>
+<h2 id="identity-naming-verified">Identity / naming (verified)</h2>
+<ul>
+<li>PomBase gene page reports <code>name: ahk1</code>, <code>product: "MAP kinase cascade scaffold protein Ahk1"</code>,<br />
+<code>characterisation_status: "biological role inferred"</code>, <code>deletion_viability: viable</code>,<br />
+<code>taxonomic_distribution: fungi only</code> (PomBase JSON API, gene SPAC7D4.03c, latest dataset).</li>
+<li>UniProt O14260 (YFP3_SCHPO): <code>RecName: Full=UPF0592 membrane protein C7D4.03c</code>; 886 aa;<br />
+<code>PE 3: Inferred from homology</code>. Belongs to the <strong>UPF0592 family</strong> (<code>-!- SIMILARITY</code>, ECO:0000305).</li>
+<li>InterPro/domain content: <strong>Pfam PF08578 = DUF1765</strong>; <strong>PANTHER PTHR37988</strong> ("UPF0592 MEMBRANE<br />
+  PROTEIN C7D4.03C"); InterPro <strong>IPR013887 (UPF0592)</strong>. (from ahk1-uniprot.txt DR lines and<br />
+  PomBase interpro_matches).</li>
+</ul>
+<h2 id="domain-topology-reasoning-from-ahk1-uniprottxt">Domain / topology reasoning (from ahk1-uniprot.txt)</h2>
+<ul>
+<li>Predicted <strong>multi-pass membrane protein</strong>: three TRANSMEM helices at 277–297, 374–394, 400–420<br />
+  (all ECO:0000255, i.e. sequence-model predicted, not experimentally confirmed).</li>
+<li>SUBCELLULAR LOCATION: <code>Membrane; Multi-pass membrane protein</code> (ECO:0000305, inferred).</li>
+<li>A predicted disordered / low-complexity region at ~87–112 (MobiDB-lite).</li>
+<li>The single defining domain is DUF1765 (domain of unknown function); no catalytic motif, no<br />
+  recognizable kinase/phosphatase/enzymatic signature. Consistent with a non-catalytic<br />
+  scaffold/adaptor-type role rather than an enzyme.</li>
+</ul>
+<h2 id="the-orthology-basis-for-the-functional-annotations-key">The orthology basis for the functional annotations (KEY)</h2>
+<p>Both functional GO annotations on S. pombe ahk1 are <strong>ISO</strong> (inferred from sequence orthology),<br />
+with-from <strong>SGD:S000002231</strong>:<br />
+- GO:0005078 "MAP kinase scaffold activity" — ISO, GO_REF:0000024, with SGD:S000002231.<br />
+- GO:0000165 "MAPK cascade" — ISO, PMID:26787842, with SGD:S000002231.<br />
+- PomBase <code>ortholog_annotations</code> lists <strong>YDL073W</strong> (<em>S. cerevisiae</em> AHK1) as ortholog via<br />
+<strong>InterPro:IPR013887</strong> (the UPF0592 family), and <strong>SJAG_04503</strong> (<em>S. japonicus</em>) via<br />
+  PMID:21511999. PomBase orthogroup <code>SOG_0639</code>. (Note the curated <code>orthologs</code> list is empty; the<br />
+  cross-species relationship is captured as an InterPro-family-based ortholog_annotation, i.e. it<br />
+  is a domain-family/homology call, not a 1:1 syntenic ortholog assertion.)</p>
+<p><em>S. cerevisiae</em> AHK1 (YDL073W, SGD:S000002231) is a <strong>Verified ORF</strong> described by SGD as<br />
+"Scaffold protein in the HKR1 sub-branch of the Hog1p-signaling pathway; physically interacts with<br />
+the cytoplasmic domain of Hkr1p, and with Sho1p, Pbs2p, and Ste11p; prevents cross-talk signaling<br />
+from Hkr1p of the osmotic stress MAPK cascade to the Kss1p MAPK cascade; non-essential"<br />
+(yeastgenome.org locus S000002231).</p>
+<h3 id="the-single-primary-reference-abstract-only-in-cache">The single primary reference (abstract-only in cache)</h3>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/26787842" title="Scaffold Protein Ahk1, Which Associates with Hkr1, Sho1, Ste11, and Pbs2, Inhibits Cross Talk Signaling from the Hkr1 Osmosensor to the Kss1 Mitogen-Activated Protein Kinase.">PMID:26787842</a> is entirely about the <strong>budding-yeast (<em>S. cerevisiae</em>)</strong> Ahk1:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" title="Here, using a mass spectrometric method, we identified a protein, termed Ahk1   (Associated with Hkr1), that binds to Hkr1-cyto.">PMID:26787842</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" title="In addition to Hkr1-cyto binding, Ahk1 also bound to other signaling molecules   in the HKR1 subbranch, including Sho1, Ste11, and Pbs2.">PMID:26787842</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" title="Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect   signal flow from Hkr1 to Kss1.">PMID:26787842</a><br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/26787842" title="In the budding yeast Saccharomyces cerevisiae, osmostress activates the Hog1   mitogen-activated protein kinase (MAPK), which regulates diverse osmoadaptive responses.">PMID:26787842</a></p>
+<p>This paper does NOT assay the <em>S. pombe</em> protein. Cache marks <code>full_text_available: false</code><br />
+(abstract only). The paper is the experimental basis for the <em>S. cerevisiae</em> annotation that is<br />
+then transferred to <em>S. pombe</em> by ISO.</p>
+<h2 id="what-phenotype-data-exist-for-s-pombe-ahk1-all-from-genome-wide-high-throughput-screens">What phenotype data exist for <em>S. pombe</em> ahk1 (all from genome-wide / high-throughput screens)</h2>
+<p>17 single-locus (ahk1Δ) phenotypes are recorded in PomBase, all from systematic screens<br />
+(no gene-focused study). References and phenotype highlights:<br />
+- PMID:20473289 — genome-wide deletion set (Kim et al.). ahk1Δ <strong>viable</strong>.<br />
+- PMID:23697806 — cell-cycle/cell-shape genome-wide resource.<br />
+- PMID:28410370 — systematic screen of sexual-reproduction morphology (identifies mating/shmoo<br />
+  abnormalities): <strong>abnormal shmoo morphology (FYPO:0000357)</strong>, <strong>shmoo formation at cell side<br />
+  (FYPO:0006011)</strong>, <strong>promiscuous mating (FYPO:0006014)</strong>.<br />
+- PMID:34250083 — chronological lifespan barcode screen: <strong>loss of viability in stationary phase<br />
+  (FYPO:0000245)</strong> (ageing-associated).<br />
+- PMID:35820914 — yeast-ageing protease study.<br />
+- PMID:37787768 — broad phenomics/machine-learning functional profiling: stress sensitivities and<br />
+  resistances — sensitive to caffeine (FYPO:0000097), cycloheximide (FYPO:0000104), hydroxyurea<br />
+  (FYPO:0000088), tunicamycin (FYPO:0001457), KCl+SDS (FYPO:0007924); resistant to MMS<br />
+  (FYPO:0000725), vanadate (FYPO:0000830), lithium (FYPO:0001583), LiCl+SDS (FYPO:0009085),<br />
+  MgCl2+SDS (FYPO:0009087).</p>
+<p>Interpretation: the deletion phenotype fingerprint (osmotic/salt/cell-wall-stress, caffeine,<br />
+mating/shmoo abnormalities) is broadly <strong>consistent with</strong> a role in stress-responsive signaling,<br />
+which fits the orthology-based MAPK-scaffold assignment. But NONE of these screens establishes a<br />
+molecular mechanism, a direct binding partner, or a specific, non-redundant place in the Sty1/Spc1<br />
+(Hog1-like) SAPK pathway for the <em>S. pombe</em> protein.</p>
+<h2 id="known-vs-not-known">KNOWN vs NOT-KNOWN</h2>
+<p>KNOWN (or well-supported):<br />
+- Fungal-only protein of the UPF0592/DUF1765 family; large (886 aa); predicted multi-pass membrane<br />
+  protein with a disordered region. (UniProt, InterPro, PANTHER.)<br />
+- Non-essential (ahk1Δ viable). (PMID:20473289.)<br />
+- Deletion perturbs stress responses and sexual-reproduction morphology in genome-wide screens.<br />
+- Its <em>S. cerevisiae</em> homolog (AHK1/YDL073W) is an experimentally validated scaffold in the HKR1<br />
+  sub-branch of the Hog1 osmostress MAPK pathway. (PMID:26787842.)</p>
+<p>NOT KNOWN (the deliverable knowledge gaps):<br />
+- Whether <em>S. pombe</em> ahk1 actually functions as a MAPK scaffold, or is a scaffold at all — this is<br />
+  purely an orthology transfer via the shared UPF0592 domain family (IPR013887), never tested in<br />
+<em>S. pombe</em>.<br />
+- Its direct binding partners in <em>S. pombe</em> (does it bind Sty1/Spc1, Wis1, Win1/Wak1, Sho1-like<br />
+  components, or the Wsc1/Mtl2 osmosensors?). Unknown.<br />
+- Whether it has any specific, non-redundant role in the Sty1/Spc1 SAPK pathway (the pombe<br />
+  osmostress core is Wis1→Sty1; there is no exact Hkr1/Kss1 cross-talk architecture in pombe, so<br />
+  the budding-yeast "prevents Hkr1→Kss1 cross-talk" role may not map directly).<br />
+- Its precise molecular activity (DUF1765 has no assigned biochemical function).<br />
+- Its subcellular localization in <em>S. pombe</em> (membrane prediction only; not experimentally shown).</p>
+<h2 id="curation-reasoning-for-the-annotation-actions">Curation reasoning for the annotation actions</h2>
+<ul>
+<li>GO:0005078 MAP kinase scaffold activity (ISO): the only molecular-function annotation, and it is<br />
+  more informative than "protein binding". It is orthology-based and unproven in pombe, so KEEP but<br />
+  flag as inferred/non-core with an explicit knowledge gap; not REMOVE (it is a reasonable,<br />
+  curator-made ISO transfer from a verified budding-yeast scaffold, and PomBase is reliable).</li>
+<li>GO:0000165 MAPK cascade (ISO): same reasoning; a plausible, orthology-based process assignment;<br />
+  keep as non-core, flag as inferred.</li>
+<li>GO:0016020 membrane (IEA, UniProtKB-SubCell): supported by predicted TM helices; accept as a<br />
+  low-resolution, prediction-based localization (non-core).</li>
+<li>GO:0005575 cellular_component (ND, GO_REF:0000015): root "unknown" placeholder; standard<br />
+  PomBase practice; keep as-is (represents absence of specific CC knowledge).</li>
+</ul>
+<h2 id="provenance-sources-used">Provenance sources used</h2>
+<ul>
+<li>genes/SCHPO/ahk1/ahk1-uniprot.txt (UniProt O14260)</li>
+<li>genes/SCHPO/ahk1/ahk1-goa.tsv (QuickGO GOA)</li>
+<li>publications/PMID_26787842.md (abstract-only)</li>
+<li>PomBase JSON API for SPAC7D4.03c (name/product/status/phenotypes/orthologs/InterPro)</li>
+<li>OLS (FYPO + GO term labels/definitions)</li>
+<li>SGD locus S000002231 (S. cerevisiae AHK1 = YDL073W)</li>
+</ul>
+<h2 id="deep-research-note">Deep research note</h2>
+<p><code>scripts/deep_research_wrapper.py SCHPO SPAC7D4.03c falcon --fallback perplexity-lite</code> was run in<br />
+the foreground twice; it hung (exit 124 / 550s timeout) after emitting only the<br />
+"Using SPAC7D4.03c as gene symbol" line, producing no report. Per project policy, no<br />
+<code>-deep-research-*.md</code> file was fabricated; this review is grounded in UniProt + GOA + PomBase +<br />
+the cached publication, all with explicit provenance above.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14260
+gene_symbol: ahk1
+product_type: PROTEIN
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  ahk1 (SPAC7D4.03c; UniProt O14260) is a large (886-residue) fungal-specific protein of the
+  UPF0592 family, defined by a single DUF1765 domain (Pfam PF08578; InterPro IPR013887; PANTHER
+  PTHR37988). It is predicted to be a multi-pass membrane protein (three predicted transmembrane
+  helices) and contains a disordered, low-complexity region near its N-terminus, but it carries
+  no recognizable catalytic motif, consistent with a non-catalytic role. The DUF1765 domain has
+  no experimentally assigned biochemical function. Its budding-yeast homolog, Saccharomyces
+  cerevisiae Ahk1 (YDL073W), is an experimentally validated scaffold protein of the HKR1
+  sub-branch of the Hog1 osmostress-activated MAPK pathway that binds the Hkr1 cytoplasmic domain
+  together with Sho1, Ste11 and Pbs2 and prevents aberrant cross-talk signalling to the Kss1 MAPK.
+  On the basis of that orthology (shared UPF0592 domain family), the fission-yeast protein is
+  proposed to be a putative MAP-kinase-cascade scaffold, though this role has not been tested in
+  fission yeast. The gene is non-essential (ahk1 deletion is viable), and in genome-wide phenotypic
+  screens its deletion is associated with altered stress responses (sensitivity or resistance to
+  osmotic, cell-wall, and genotoxic agents) and abnormalities in mating and shmoo morphology, a
+  fingerprint broadly compatible with a role in stress-responsive signalling. No direct molecular
+  function, binding partner, localization, or specific pathway role has been demonstrated for the
+  fission-yeast protein itself.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings: []
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Standard GO reference documenting the ND (No biological Data) evidence code; supports the
+        root cellular_component placeholder annotation.
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        The GO reference describing curator-judged ISO transfer to orthologs; it is the basis for
+        the MAP-kinase scaffold activity (GO:0005078) annotation transferred from S. cerevisiae
+        AHK1 (SGD:S000002231). Correctly applied as a mechanism, but the transferred function
+        remains unverified in S. pombe.
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+    findings: []
+    reference_review:
+      relevance: LOW
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Standard UniProt SubCell-to-GO mapping reference; supports the low-resolution, prediction
+        based membrane (GO:0016020) annotation.
+  - id: PMID:26787842
+    title: Scaffold Protein Ahk1, Which Associates with Hkr1, Sho1, Ste11, and Pbs2,
+      Inhibits Cross Talk Signaling from the Hkr1 Osmosensor to the Kss1 Mitogen-Activated
+      Protein Kinase.
+    findings:
+      - statement: &gt;-
+          S. cerevisiae Ahk1 is a scaffold protein of the HKR1 sub-branch of the Hog1 osmostress
+          MAPK pathway that binds the cytoplasmic domain of the Hkr1 osmosensor and also binds
+          Sho1, Ste11 and Pbs2, preventing incorrect signal flow from Hkr1 to the Kss1 MAPK.
+        supporting_text: &gt;-
+          Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal
+          flow from Hkr1 to Kss1.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed-verified; the defining paper for the scaffold function, but it characterizes the
+        Saccharomyces cerevisiae protein (Ahk1/YDL073W = SGD:S000002231), not the S. pombe protein.
+        Cache is abstract-only (full_text_available: false). It is the experimental source for the
+        ISO annotations transferred to S. pombe ahk1, so it is highly relevant as the orthology
+        anchor, while the fission-yeast function itself remains inferred.
+existing_annotations:
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Low-resolution, prediction-based localization. UniProt predicts three transmembrane
+        helices and annotates the protein as a multi-pass membrane protein by ECO:0000305
+        inference. This is consistent with the sequence but is not experimentally demonstrated in
+        S. pombe, and the term is the generic root-level &#34;membrane&#34;. Retain as non-core.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Supported by UniProt transmembrane-helix predictions but unverified experimentally and
+        uninformative as to which membrane; a plausible prediction-based localization rather than
+        a demonstrated core function.
+      supported_by:
+        - reference_id: GO_REF:0000044
+          supporting_text: &gt;-
+            Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+  - term:
+      id: GO:0005575
+      label: cellular_component
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Root-level &#34;cellular_component&#34; with the ND (No biological Data) evidence code, a standard
+        PomBase placeholder recording that no specific cellular component is known. It carries no
+        biological content and should be retained only as a placeholder.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Root placeholder term with ND evidence; represents absence of specific localization
+        knowledge rather than a substantive annotation.
+  - term:
+      id: GO:0000165
+      label: MAPK cascade
+    evidence_type: ISO
+    original_reference_id: PMID:26787842
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Process annotation transferred by orthology (ISO, with-from SGD:S000002231) from
+        S. cerevisiae AHK1, which is an experimentally validated scaffold in the Hog1 osmostress
+        MAPK pathway. The orthology rests on the shared UPF0592/DUF1765 domain family
+        (InterPro:IPR013887). The assignment is a plausible, curator-made transfer, but the
+        involvement of the S. pombe protein in a MAPK cascade has not been demonstrated directly;
+        the fission-yeast stress core (Wis1 to Sty1/Spc1) does not reproduce the budding-yeast
+        Hkr1/Kss1 cross-talk architecture. Retain as a reasonable orthology-based hypothesis, but
+        mark non-core and flag as a knowledge gap.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Orthology-based (ISO) transfer from a verified S. cerevisiae scaffold; biologically
+        plausible and consistent with the deletion stress/mating phenotype fingerprint, but
+        unproven in S. pombe. Per PomBase reliability, retained rather than removed; treated as
+        non-core because it is inferred, not demonstrated for this gene.
+      supported_by:
+        - reference_id: PMID:26787842
+          supporting_text: &gt;-
+            Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal
+            flow from Hkr1 to Kss1.
+  - term:
+      id: GO:0005078
+      label: MAP kinase scaffold activity
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: enables
+    review:
+      summary: &gt;-
+        The single molecular-function annotation, transferred by orthology (ISO, GO_REF:0000024,
+        with-from SGD:S000002231) from S. cerevisiae AHK1. It is more informative than &#34;protein
+        binding&#34; and captures the best available functional hypothesis: that ahk1 acts as a
+        physical scaffold assembling components of a MAPK signalling module. However, the scaffold
+        activity has never been tested for the S. pombe protein and no fission-yeast binding
+        partners are known. Retain as a plausible orthology-based hypothesis; mark non-core and
+        flag as a molecular-function knowledge gap.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Orthology-based (ISO) transfer of an experimentally established S. cerevisiae molecular
+        function; retained per PomBase reliability and because it is the most informative available
+        MF term (preferable to protein binding), but it is inferred rather than demonstrated for
+        S. pombe and so is treated as non-core with an explicit knowledge gap.
+      supported_by:
+        - reference_id: PMID:26787842
+          supporting_text: &gt;-
+            we identified a protein, termed Ahk1 (Associated with Hkr1), that binds to Hkr1-cyto.
+core_functions:
+  - description: &gt;-
+      Putative non-catalytic scaffold/adaptor of a mitogen-activated protein kinase (MAPK)
+      signalling module. This is inferred for ahk1 from its membership of the UPF0592/DUF1765
+      family (InterPro:IPR013887) shared with the experimentally validated S. cerevisiae scaffold
+      Ahk1 (YDL073W), which assembles Hkr1, Sho1, Ste11 and Pbs2 in the Hog1 osmostress MAPK
+      pathway. The absence of any catalytic motif in ahk1 is consistent with a scaffolding rather
+      than an enzymatic role. Direct demonstration of scaffold activity, of binding partners, and
+      of MAPK-pathway participation in S. pombe is lacking; this core function is therefore a
+      well-motivated hypothesis, not an established fission-yeast activity.
+    molecular_function:
+      id: GO:0005078
+      label: MAP kinase scaffold activity
+    directly_involved_in:
+      - id: GO:0000165
+        label: MAPK cascade
+    supported_by:
+      - reference_id: PMID:26787842
+        supporting_text: &gt;-
+          Thus, Ahk1 is a scaffold protein in the HKR1 subbranch and prevents incorrect signal
+          flow from Hkr1 to Kss1.
+      - reference_id: GO_REF:0000024
+        supporting_text: &gt;-
+          Manual transfer of experimentally-verified manual GO annotation data to orthologs
+knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether S. pombe ahk1 (SPAC7D4.03c) actually functions as a MAP-kinase scaffold, or has any
+      scaffold activity at all, has never been tested. The molecular function is inferred entirely
+      from the S. cerevisiae ortholog via the shared UPF0592/DUF1765 domain family; no in vivo or
+      in vitro assay of scaffold activity, and no identification of assembled kinase-module
+      components, has been reported for the fission-yeast protein.
+    boundary: &gt;-
+      Scaffold activity in the Hog1 osmostress MAPK pathway is experimentally established for
+      S. cerevisiae Ahk1 (YDL073W = SGD:S000002231), which binds Hkr1-cyto, Sho1, Ste11 and Pbs2;
+      the S. pombe protein shares the defining UPF0592/DUF1765 domain (InterPro:IPR013887) and
+      lacks any catalytic motif, so a scaffolding role is plausible but unproven.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Determines whether the propagated MAP-kinase scaffold activity (GO:0005078) annotation is
+      valid for fission yeast, or whether ahk1 has a distinct (or no) signalling function despite
+      family membership.
+    resolution: &gt;-
+      Affinity purification / mass spectrometry of tagged ahk1 in S. pombe to identify direct
+      interactors, combined with epistasis and phospho-readout assays testing whether ahk1
+      contributes to Sty1/Spc1 (or other MAPK) activation under stress.
+    provenance:
+      - reference_id: PMID:26787842
+        supporting_text: &gt;-
+          In the budding yeast Saccharomyces cerevisiae, osmostress activates the Hog1
+          mitogen-activated protein kinase (MAPK), which regulates diverse osmoadaptive
+      - reference_id: GO_REF:0000024
+        supporting_text: &gt;-
+          Manual transfer of experimentally-verified manual GO annotation data to orthologs
+  - gap_statement: &gt;-
+      The direct binding partners of ahk1 in S. pombe are unknown. It is undetermined whether it
+      interacts with the fission-yeast stress-MAPK components (Sty1/Spc1, the MAPKK Wis1, the
+      MAPKKKs Win1/Wis4, or membrane osmosensors such as Wsc1/Mtl2 and the Sho1-like adaptor),
+      or with any other proteins.
+    boundary: &gt;-
+      In S. cerevisiae the orthologous Ahk1 binds a defined set of HKR1-subbranch proteins
+      (Hkr1-cyto, Sho1, Ste11, Pbs2); the fission-yeast interactome of ahk1 has not been mapped
+      beyond generic high-throughput interaction datasets.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Identifying partners would confirm or refute pathway membership and reveal whether ahk1
+      couples a membrane sensor to a specific MAPK module in fission yeast.
+    resolution: &gt;-
+      Co-immunoprecipitation / proximity-labelling of endogenously tagged ahk1 followed by mass
+      spectrometry, with validation of candidate interactions by reciprocal pulldown and
+      genetic interaction analysis.
+    provenance:
+      - reference_id: PMID:26787842
+        supporting_text: &gt;-
+          In addition to Hkr1-cyto binding, Ahk1 also bound to other signaling molecules in the
+          HKR1 subbranch, including Sho1, Ste11, and Pbs2.
+  - gap_statement: &gt;-
+      Whether ahk1 has a specific, non-redundant role in the S. pombe Sty1/Spc1 stress-activated
+      MAPK pathway is undetermined. The budding-yeast function (preventing Hkr1-to-Kss1 cross-talk)
+      may not map onto fission yeast, whose stress core (Wis1 to Sty1) lacks the multi-branch
+      Hkr1/Kss1 architecture, so it is unclear which, if any, signalling event ahk1 controls.
+    boundary: &gt;-
+      ahk1 deletion is viable and, in genome-wide screens, alters stress responses (osmotic/salt,
+      cell-wall, and genotoxic agents) and mating/shmoo morphology; these are consistent with a
+      stress-signalling contribution but do not localize ahk1 to a defined step or show it is
+      non-redundant.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Placing ahk1 (or excluding it) within the Sty1/Spc1 pathway would resolve whether the
+      orthology-based MAPK-cascade (GO:0000165) annotation reflects a real fission-yeast pathway
+      role.
+    resolution: &gt;-
+      Targeted epistasis analysis of ahk1 deletion with sty1, wis1 and osmosensor mutants under
+      defined stresses, measuring Sty1 phosphorylation and downstream (e.g. atf1/gpd1) responses.
+    provenance:
+      - reference_id: PMID:26787842
+        supporting_text: &gt;-
+          Deletion of the AHK1 gene (in the absence of other Hog1 upstream branches) only
+          partially inhibited osmostress-induced Hog1 activation.
+  - gap_statement: &gt;-
+      The molecular activity of the DUF1765 domain that defines the UPF0592 family, and hence the
+      biochemical basis of any ahk1 function, is entirely unknown. DUF1765 is a domain of unknown
+      function with no assigned catalytic or binding activity.
+    boundary: &gt;-
+      ahk1 is a member of the UPF0592 family (Pfam PF08578 DUF1765; PANTHER PTHR37988) and lacks
+      any recognizable enzymatic motif, but no structure-function study has assigned an activity
+      to this domain in any organism.
+    gap_kind:
+      - BIOLOGY
+      - ONTOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Assigning a biochemical activity to DUF1765 would provide a mechanistic basis for the
+      family, potentially replacing the generic scaffold-by-orthology inference with a defined GO
+      molecular-function term.
+    resolution: &gt;-
+      Structural characterization (e.g. AlphaFold-guided experimental structure) and biochemical
+      assays of the DUF1765 domain; if a novel activity is found, a corresponding GO molecular
+      function term may be required.
+    provenance:
+      - reference_id: UniProt:O14260
+        supporting_text: &gt;-
+          Belongs to the UPF0592 family.
+  - gap_statement: &gt;-
+      The subcellular localization of ahk1 in S. pombe has not been experimentally determined. The
+      membrane / multi-pass membrane assignment is a sequence-based prediction (three predicted
+      transmembrane helices) with no microscopy or fractionation evidence in fission yeast.
+    boundary: &gt;-
+      UniProt predicts three transmembrane helices (residues 277-297, 374-394, 400-420) and
+      annotates the protein as a multi-pass membrane protein by ECO:0000305 inference, but this
+      has not been confirmed for the endogenous fission-yeast protein.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: CC_DARK
+    status: OPEN
+    significance: &gt;-
+      Localization would test the membrane prediction and indicate whether ahk1 acts at a specific
+      membrane compartment (as a membrane-tethered scaffold) or elsewhere.
+    resolution: &gt;-
+      Live-cell imaging of endogenously tagged ahk1 and membrane-fractionation/topology assays in
+      S. pombe.
+    provenance:
+      - reference_id: UniProt:O14260
+        supporting_text: &gt;-
+          Multi-pass membrane
+suggested_questions:
+  - question: &gt;-
+      Does S. pombe ahk1 physically associate with any component of the Sty1/Spc1 stress-activated
+      MAPK pathway (Sty1, Wis1, Win1/Wis4) or with membrane osmosensors, and does its deletion
+      alter stress-induced Sty1 activation?
+    experts:
+      - Nishimura A
+      - Tatebayashi K
+  - question: &gt;-
+      What is the biochemical activity of the DUF1765 domain, and is ahk1 a bona fide scaffold or
+      does it have an as-yet-uncharacterized molecular function?
+suggested_experiments:
+  - hypothesis: &gt;-
+      ahk1 acts as a membrane-associated scaffold that contributes to Sty1/Spc1 activation under
+      osmotic or cell-wall stress in S. pombe.
+    description: &gt;-
+      Construct an endogenously tagged ahk1 strain; perform affinity purification-mass
+      spectrometry to identify interactors, live-cell imaging to determine localization, and
+      quantitative immunoblotting of phospho-Sty1 in wild-type vs ahk1-deletion cells across a
+      panel of stresses (osmotic, cell-wall, oxidative, genotoxic).
+    experiment_type: interactome, localization, and signalling epistasis
+  - hypothesis: &gt;-
+      The DUF1765 domain confers a defined, conserved molecular activity that underlies ahk1
+      function.
+    description: &gt;-
+      Determine the structure of the ahk1 DUF1765 domain (experimentally or via AlphaFold-guided
+      modelling) and test candidate activities biochemically; use structure-guided point mutants
+      to link domain features to the deletion stress/mating phenotypes.
+    experiment_type: structural biology and structure-function analysis
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
