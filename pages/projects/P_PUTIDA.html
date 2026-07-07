@@ -351,7 +351,7 @@
         <h1>P. putida Gene Annotation Review Project</h1>
 
         <p class="project-meta">
-            <span class="badge m-COMPLETE">COMPLETE</span>
+            <span class="badge m-IN_PROGRESS">IN_PROGRESS</span>
             <span class="badge tag t-BIOLOGY_DOMAIN">BIOLOGY_DOMAIN</span>
         </p>
 
@@ -377,6 +377,71 @@
 <li><strong>Genome:</strong> ~6.2 Mb, ~5,350 protein-coding genes</li>
 <li><strong>Key biology:</strong> Aromatic compound degradation, solvent tolerance, plant root colonization, polyhydroxyalkanoate (PHA) biosynthesis, rare earth element utilization</li>
 </ul>
+<h2 id="genome-wide-expansion">Genome-wide expansion</h2>
+<p>The next phase expands the project from selected genes to a pathway-by-pathway<br />
+review of the KT2440 reference proteome. The working pattern is manual pathway<br />
+hole filling: start with a curated module, ask which steps are satisfiable in<br />
+PSEPK from lightweight UniProt metadata, then review only the genes needed to<br />
+resolve missing, ambiguous, over-propagated, or biologically important steps.</p>
+<p>The detailed workplan is in<br />
+<a href="P_PUTIDA/P_PUTIDA_MODULE_PLAN.html">P_PUTIDA/P_PUTIDA_MODULE_PLAN.md</a>. It covers<br />
+the module order, triage rules, module-editing expectations, and the first-pass<br />
+metadata snapshot. This phase deliberately separates metadata discovery from<br />
+full gene-review seeding: the first pass uses UniProt REST TSV metadata only,<br />
+not full UniProt flat files, GOA downloads, PMID caches, or review YAML stubs.</p>
+<p>Lightweight data products:</p>
+<ul>
+<li><code>projects/P_PUTIDA/fetch_uniprot_metadata.py</code> downloads basic UniProt metadata<br />
+  for proteome <code>UP000000556</code>.</li>
+<li><code>projects/P_PUTIDA/data/psepk_uniprot_metadata.tsv</code> is the current metadata<br />
+  snapshot for triage and module clustering.</li>
+<li><code>projects/P_PUTIDA/data/psepk_uniprot_metadata.manifest.txt</code> records the<br />
+  query, fields, source URL, and retrieval timestamp.</li>
+<li><code>projects/P_PUTIDA/build_gene_list.py</code> derives a curator-facing gene list from<br />
+  the metadata snapshot.</li>
+<li><code>projects/P_PUTIDA/data/psepk_gene_list.tsv</code> is the current whole-proteome<br />
+  gene list for module bucketing and fetch planning.</li>
+<li><code>projects/P_PUTIDA/partition_pathways.py</code> joins the gene list to KEGG <code>ppu</code><br />
+  pathway mappings and assigns each gene to one primary pathway/module/unknown<br />
+  bucket.</li>
+<li><code>projects/P_PUTIDA/data/psepk_pathway_partition.tsv</code> is the current primary<br />
+  partition, one row per gene.</li>
+<li><code>projects/P_PUTIDA/data/psepk_pathway_membership.tsv</code> preserves overlapping<br />
+  KEGG and UniPathway memberships.</li>
+<li><code>projects/P_PUTIDA/data/psepk_pathway_buckets.tsv</code> summarizes the current<br />
+  pathway/module buckets.</li>
+<li><code>projects/P_PUTIDA/data/psepk_unknown_bucket.tsv</code> contains genes with unknown<br />
+  function or minimal pathway signal.</li>
+<li><code>projects/P_PUTIDA/data/psepk_orphan_bucket.tsv</code> contains EC/domain-family<br />
+  orphans that have some annotation signal but no current pathway bucket.</li>
+<li><code>projects/P_PUTIDA/build_pathway_worklist.py</code> builds the PR-oriented pathway<br />
+  queue from the bucket table.</li>
+<li><code>projects/P_PUTIDA/data/psepk_pathway_worklist.tsv</code> tracks module mapping,<br />
+  Falcon research status, gene review coverage, Asta coverage, and PR status<br />
+  per pathway/module bucket.</li>
+<li><code>projects/P_PUTIDA/extract_pathway_batch.py</code> extracts a per-pathway gene<br />
+  checklist from KEGG/UniPathway membership.</li>
+<li><code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md</code> is the first<br />
+  pilot pathway checklist.</li>
+</ul>
+<p>For gene-level first-pass research, use Asta as the default provider:</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>deep-research-asta<span class="w"> </span>PSEPK<span class="w"> </span>&lt;gene&gt;
+</code></pre></div>
+
+<p>For module-level research, use Falcon by default:</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-deep-research-falcon<span class="w"> </span>&lt;module&gt;
+</code></pre></div>
+
+<p>For PSEPK-specific pathway/module satisfiability research, use the taxon-aware<br />
+wrapper so the prompt includes the species constraint and local candidate genes<br />
+from the pathway partition:</p>
+<div class="codehilite"><pre><span></span><code>just<span class="w"> </span>module-pathway-deep-research-falcon<span class="w"> </span><span class="s2">&quot;&lt;module or module title&gt;&quot;</span><span class="w"> </span>&lt;pathway-or-bucket&gt;<span class="w"> </span>PSEPK
+</code></pre></div>
+
+<p>PaperBLAST can still be used opportunistically for protein-specific literature<br />
+lookup, but it is not the main workflow because the current wrapper is<br />
+Cloudflare-sensitive in this environment. Use <code>perplexity-lite</code> only as a<br />
+secondary fallback when Asta is unavailable or provider comparison is useful.</p>
 <h2 id="completed-reviews">Completed Reviews</h2>
 <h3 id="psepk-p-putida-kt2440-18-genes-reviewed">PSEPK (P. putida KT2440) — 18 genes reviewed</h3>
 <table>
@@ -1059,6 +1124,101 @@ or are differently named / fused in <em>Pseudomonas</em> (trpG, pheC, tyrA).</p>
 <li>Many genes are annotated by homology to <em>P. aeruginosa</em> (PSEAE), but functional divergence is common — P. putida is non-pathogenic while P. aeruginosa is an opportunistic pathogen. Virulence-associated annotations transferred by homology should be scrutinized.</li>
 <li>The REE/lanthanide biology is relatively recent science (post-2011). Annotations for <a href="../../genes/PSEPK/pedH/pedH-ai-review.html">pedH</a> and related genes may be incomplete or missing entirely.</li>
 </ul>
+<hr />
+<h1 id="status">STATUS</h1>
+<h2 id="genome-wide-pathwaymodule-curation">Genome-wide pathway/module curation</h2>
+<ul>
+<li>[x] Re-scope P_PUTIDA from selected-gene project to genome-wide pathway/module curation umbrella.</li>
+<li>[x] Confirm working species/proteome: PSEPK / <em>P. putida</em> KT2440 / UniProt proteome <code>UP000000556</code>.</li>
+<li>[x] Confirm research provider policy: Asta for gene-level first-pass research; Falcon for module-level research; PaperBLAST optional; <code>perplexity-lite</code> secondary fallback.</li>
+<li>[x] Create module-first workplan in <code>projects/P_PUTIDA/P_PUTIDA_MODULE_PLAN.md</code>.</li>
+<li>[x] Refresh lightweight UniProt metadata snapshot before module clustering.</li>
+<li>[x] Build whole-proteome gene list from UniProt metadata.</li>
+<li>[x] Cluster all PSEPK proteins into first-pass module buckets from EC, KEGG, BioCyc, UniPathway, GO, InterPro/Pfam/PANTHER, keywords, and protein names.</li>
+<li>[x] Add species-aware module/pathway deep-research wrapper for module satisfiability work.</li>
+<li>[x] Select first pilot module/pathway batch: KEGG <code>ppu00400</code> with <code>tryptophan_biosynthesis</code> as the seeded neutral module.</li>
+<li>[x] Complete Falcon module-level research for <code>tryptophan_biosynthesis</code>.</li>
+<li>[x] Complete Falcon module + pathway + PSEPK research for <code>ppu00400</code>.</li>
+<li>[x] Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG <code>ppu00400</code> members.</li>
+<li>[x] Open the first module/pathway PR for <code>ppu00400</code> / <code>tryptophan_biosynthesis</code>: <a href="https://github.com/ai4curation/ai-gene-review/pull/1874">PR #1874</a>.</li>
+<li>[ ] For each later module batch, full <code>fetch-gene</code> only the genes selected by module review.</li>
+<li>[ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.</li>
+</ul>
+<h1 id="notes_1">NOTES</h1>
+<h2 id="2026-07-05">2026-07-05</h2>
+<p>Started the genome-wide expansion plan. The curation unit is now a pathway/module<br />
+rather than an individual gene: use UniProt metadata to build the whole-proteome<br />
+map, use modules as expected pathway structure, and spend full gene-review effort<br />
+only where the module pass creates an actionable curation question.</p>
+<p>Updated provider policy: Asta is the normal gene-level first-pass research<br />
+provider for this organism; Falcon is the preferred module-level provider.<br />
+PaperBLAST remains useful as an opportunistic lookup, but not the main workflow.</p>
+<p>Fetched the UniProt-derived gene list for the KT2440 reference proteome:<br />
+<code>projects/P_PUTIDA/data/psepk_gene_list.tsv</code> has 5,527 protein records, all with<br />
+<code>PP_</code> ordered locus tags. The snapshot contains 742 reviewed entries, 4,785<br />
+unreviewed entries, 1,452 entries with EC numbers, and 26 suggested review-name<br />
+collisions that are disambiguated by accession in the <code>suggested_review_name</code><br />
+column.</p>
+<p>Partitioned the 5,527 genes into first-pass pathway/module buckets using<br />
+organism-specific KEGG <code>ppu</code> pathway mappings as the primary source, UniPathway<br />
+as a fallback pathway source, and UniProt metadata heuristics for non-pathway<br />
+systems and unknowns. Current output has 161 primary buckets and 5,673<br />
+many-to-many pathway memberships. Primary assignments: 1,724 KEGG-pathway genes,<br />
+40 UniPathway-fallback genes, 1,789 functional-module genes, 1,149 orphan genes<br />
+with EC/domain signal, and 825 unknown/minimal-signal genes.</p>
+<p>Added <code>scripts/module_pathway_taxon_deep_research_wrapper.py</code> and<br />
+<code>templates/module_pathway_taxon_research.md.j2</code> for module + pathway + taxon<br />
+deep research. For PSEPK, the wrapper resolves <code>projects/P_PUTIDA</code> automatically,<br />
+uses the local pathway partition to add candidate genes, and writes reports under<br />
+<code>projects/P_PUTIDA/deep-research/</code>.</p>
+<p>Built <code>projects/P_PUTIDA/data/psepk_pathway_worklist.tsv</code> with 161 pathway/module<br />
+bucket rows. Selected the first pilot batch: KEGG <code>ppu00400</code> ("Phenylalanine,<br />
+tyrosine and tryptophan biosynthesis") seeded by the existing neutral<br />
+<code>modules/tryptophan_biosynthesis.yaml</code> module. The generated checklist<br />
+<code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md</code> has 28 candidate<br />
+KEGG members, 20 genes whose primary bucket is <code>ppu00400</code>, 15 existing review<br />
+files, and 0 existing Asta research files.</p>
+<p>Attempted <code>just module-deep-research-falcon tryptophan_biosynthesis</code>, but the<br />
+command stalled in <code>uv</code> dependency/environment bootstrap before reaching<br />
+<code>deep-research-client</code> or the Falcon provider; the run was interrupted without<br />
+creating <code>modules/tryptophan_biosynthesis-deep-research-falcon.md</code>. The global<br />
+<code>deep-research-client</code> executable is not on PATH, so the configured execution<br />
+route remains blocked on <code>uv run</code> completing successfully.</p>
+<p>Later in the same local session, fixed the provider execution route by updating<br />
+the deep-research wrappers to call <code>uvx --from deep-research-client[cyberian]==0.2.7rc1
+deep-research-client</code> instead of bootstrapping the full project environment for<br />
+each run. Falcon is documented operationally as a long-running provider for this<br />
+project; the first completed Falcon module runs took about 22 minutes each.</p>
+<p>Completed Falcon research for the pilot:</p>
+<ul>
+<li><code>modules/tryptophan_biosynthesis-deep-research-falcon.md</code></li>
+<li><code>projects/P_PUTIDA/deep-research/PSEPK__tryptophan_biosynthesis__ppu00400-deep-research-falcon.md</code></li>
+</ul>
+<p>Fetched all missing review folders for the 28 KEGG <code>ppu00400</code> members and ran<br />
+Asta gene-level retrieval for all 28. The regenerated checklist<br />
+<code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md</code> now records 28<br />
+existing review files, 28 curated review files, and 28 Asta reports.</p>
+<p>Completed the first-pass curation of all <code>ppu00400</code> batch gene reviews. Newly<br />
+curated stubs included the <a href="../../genes/PSEPK/aroE/aroE-ai-review.html">aroE</a> paralogs, <a href="../../genes/PSEPK/aroQ/aroQ-ai-review.html">aroQ</a> paralogs, <a href="../../genes/PSEPK/aroF-I/aroF-I-ai-review.html">aroF-I</a>/aroF-II, <code>pabA</code><br />
+(treated as the TrpG-like anthranilate synthase amidotransferase component for<br />
+the tryptophan module), <code>quiA</code>, <code>amaC</code>, <code>PP_3768</code>, and <code>phhA</code>. The Falcon<br />
+module/taxon report recommends keeping the neutral <code>tryptophan_biosynthesis</code><br />
+module boundary strict at chorismate to L-tryptophan and treating upstream<br />
+shikimate genes, phenylalanine/tyrosine branch genes, and quinate-catabolic<br />
+genes as neighboring or shared-pathway context rather than core tryptophan<br />
+module members.</p>
+<p>Validation run on 2026-07-05 PDT / 2026-07-06 UTC:</p>
+<ul>
+<li><code>just validate PSEPK &lt;gene&gt;</code> for all 28 genes in<br />
+<code>projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.tsv</code></li>
+<li><code>uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/tryptophan_biosynthesis.yaml</code></li>
+</ul>
+<p>All validations passed. Remaining warnings are non-blocking and mostly note that<br />
+the gene reviews do not cite Asta reports directly; that is expected for this<br />
+light first pass because Asta is retained as retrieval context rather than used<br />
+as a hypothesis source unless it adds curation-changing evidence.</p>
+<p>Opened draft PR <a href="https://github.com/ai4curation/ai-gene-review/pull/1874">#1874</a><br />
+for the <code>ppu00400</code> / <code>tryptophan_biosynthesis</code> pilot batch.</p>
     </div>
 
     <footer>

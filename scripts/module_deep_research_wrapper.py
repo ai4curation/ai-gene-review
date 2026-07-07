@@ -12,6 +12,7 @@ so this wrapper can remain usable as a standalone script.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import shlex
 import subprocess
@@ -23,6 +24,7 @@ import yaml
 
 
 PROVIDERS = ("openai", "perplexity", "perplexity-lite", "falcon", "cyberian", "codex", "asta")
+DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
     "{module_summary}",
@@ -33,6 +35,15 @@ UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{{ module_outline }}",
     "{{ module_connections }}",
 )
+
+
+def deep_research_client_command() -> list[str]:
+    """Return the command prefix for invoking deep-research-client."""
+    override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
+    if override:
+        return shlex.split(override)
+    package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
+    return ["uvx", "--from", package, "deep-research-client"]
 
 
 def as_list(value: Any) -> list[Any]:
@@ -363,9 +374,7 @@ def build_deep_research_command(
     }
 
     cmd = [
-        "uv",
-        "run",
-        "deep-research-client",
+        *deep_research_client_command(),
         "research",
         "--template",
         str(template_path),
@@ -391,15 +400,27 @@ def command_for_log(cmd: list[str]) -> str:
     return shlex.join(safe_cmd)
 
 
-def run_deep_research(cmd: list[str], output_path: Path, *, dry_run: bool = False) -> int:
+def run_deep_research(
+    cmd: list[str],
+    output_path: Path,
+    *,
+    dry_run: bool = False,
+    timeout: int | None = None,
+) -> int:
     """Run deep-research-client unless dry-run is requested."""
     print(f"Output: {output_path}")
     print(f"Command: {command_for_log(cmd)}")
+    if timeout:
+        print(f"Timeout: {timeout}s")
     if dry_run:
         print("Dry run only; not running deep-research-client.")
         return 0
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(cmd)
+    try:
+        result = subprocess.run(cmd, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"Error: deep-research-client timed out after {timeout}s", file=sys.stderr)
+        return 124
     if result.returncode != 0:
         return result.returncode
     if output_contains_unresolved_placeholders(output_path):
@@ -451,6 +472,11 @@ def main() -> int:
         help="Print the deep-research-client command without running it",
     )
     parser.add_argument(
+        "--timeout",
+        type=int,
+        help="Timeout for deep-research-client subprocess in seconds",
+    )
+    parser.add_argument(
         "--extra-args",
         nargs=argparse.REMAINDER,
         help="Extra args to pass to deep-research-client",
@@ -472,7 +498,12 @@ def main() -> int:
 
     print(f"Module: {module_path}")
     print(f"Provider: {args.provider}")
-    return run_deep_research(cmd, output_path, dry_run=args.dry_run)
+    return run_deep_research(
+        cmd,
+        output_path,
+        dry_run=args.dry_run,
+        timeout=args.timeout,
+    )
 
 
 if __name__ == "__main__":

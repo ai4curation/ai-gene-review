@@ -12,8 +12,15 @@ import pytest
 import yaml
 
 from ai_gene_review.validation.module_validator import (
+    PaintAnnotationRow,
     compare_label,
+    iter_ancestral_node_uses,
+    iter_taxon_descriptors,
     iter_terms,
+    iter_typed_go_terms,
+    validate_paint_ptns,
+    validate_go_branches,
+    validate_taxon_context,
     validate_terms,
     validate_module_file,
     load_oak_adapter_map,
@@ -75,6 +82,291 @@ def test_iter_terms_ignores_node_and_annoton_ids():
         ],
     }
     assert list(iter_terms(doc)) == [("GO:0004586", "ODC activity")]
+
+
+def test_iter_terms_finds_direct_family_terms():
+    doc = {
+        "family": {
+            "family_terms": [
+                {"id": "PANTHER:PTHR1", "label": "family 1"},
+                {"id": "PANTHER:PTHR2", "label": "family 2"},
+            ]
+        }
+    }
+    assert list(iter_terms(doc)) == [
+        ("PANTHER:PTHR1", "family 1"),
+        ("PANTHER:PTHR2", "family 2"),
+    ]
+
+
+def test_iter_typed_go_terms_finds_only_known_branch_slots():
+    doc = {
+        "module": {
+            "concepts": [
+                {"preferred_term": "signaling", "term": {"id": "GO:1", "label": "x"}}
+            ],
+            "annotons": [
+                {
+                    "function": {"term": {"id": "GO:2", "label": "activity"}},
+                    "processes": [
+                        {"term": {"id": "GO:3", "label": "process"}},
+                    ],
+                    "locations": [
+                        {"term": {"id": "GO:4", "label": "location"}},
+                    ],
+                }
+            ],
+        }
+    }
+    found = [(t.path, t.curie, t.constraint.root_id) for t in iter_typed_go_terms(doc)]
+    assert found == [
+        ("$.module.annotons[0].function.term", "GO:2", "GO:0003674"),
+        ("$.module.annotons[0].processes[0].term", "GO:3", "GO:0008150"),
+        ("$.module.annotons[0].locations[0].term", "GO:4", "GO:0110165"),
+    ]
+
+
+# --------------------------------------------------------------------------- #
+# Taxon context validation
+# --------------------------------------------------------------------------- #
+
+
+def test_iter_taxon_descriptors_finds_taxa_and_taxon_slots():
+    doc = {
+        "module": {
+            "context": {"taxa": [{"preferred_term": "Mammalia"}]},
+            "annotons": [{"participant": {"taxon": {"preferred_term": "Homo sapiens"}}}],
+        }
+    }
+    found = [(path, descriptor["preferred_term"]) for path, descriptor in iter_taxon_descriptors(doc)]
+    assert found == [
+        ("$.module.context.taxa[0]", "Mammalia"),
+        ("$.module.annotons[0].participant.taxon", "Homo sapiens"),
+    ]
+
+
+def test_validate_taxon_context_rejects_experimental_system_label():
+    doc = {
+        "module": {
+            "context": {
+                "taxa": [
+                    {
+                        "preferred_term": "mammals (defined in human cell lines)",
+                    }
+                ]
+            }
+        }
+    }
+    errors = validate_taxon_context(doc)
+    assert len(errors) == 1
+    assert "taxon context must name an in-vivo taxon or clade" in errors[0]
+
+
+def test_validate_taxon_context_allows_cell_line_evidence_statement():
+    doc = {
+        "module": {
+            "context": {
+                "taxa": [
+                    {
+                        "preferred_term": "Mammalia",
+                        "term": {"id": "NCBITaxon:40674", "label": "Mammalia"},
+                    }
+                ]
+            }
+        },
+        "evidence": [
+            {
+                "source_id": "PMID:1",
+                "statement": "Genome-wide CRISPR screens in human cell-line systems defined the core mechanism.",
+            }
+        ],
+    }
+    assert validate_taxon_context(doc) == []
+
+
+# --------------------------------------------------------------------------- #
+# PANTHER/PAINT ancestral node validation
+# --------------------------------------------------------------------------- #
+
+
+def _paint_row(
+    *,
+    ptn="PANTHER:PTN000000001",
+    family="PTHR1",
+    go_id="GO:0003674",
+    aspect="F",
+    evidence="IBD",
+    negated=False,
+    seeds="UniProtKB:P1",
+):
+    return PaintAnnotationRow(
+        family=family,
+        node_curie=ptn,
+        go_id=go_id,
+        aspect=aspect,
+        evidence=evidence,
+        negated=negated,
+        seeds=seeds,
+        source_path=Path("PTHR1-paint.tsv"),
+    )
+
+
+def test_iter_ancestral_node_uses_collects_family_context():
+    doc = {
+        "annotons": [
+            {
+                "function": {
+                    "term": {"id": "GO:0003674", "label": "molecular_function"}
+                },
+                "locations": [
+                    {"term": {"id": "GO:0005829", "label": "cytosol"}},
+                ],
+                "participant": {
+                    "selector_type": "FAMILY",
+                    "family": {
+                        "term": {"id": "PANTHER:PTHR1", "label": "family"},
+                        "family_terms": [
+                            {"id": "PANTHER:PTHR2", "label": "related family"}
+                        ],
+                        "representative_members": [
+                            {
+                                "term": {
+                                    "id": "UniProtKB:P1",
+                                    "label": "representative",
+                                }
+                            }
+                        ],
+                        "ancestral_nodes": [
+                            {
+                                "term": {
+                                    "id": "PANTHER:PTN000000001",
+                                    "label": "node",
+                                },
+                                "evidence": [{"source_id": "GO_REF:0000033"}],
+                            }
+                        ],
+                    },
+                },
+            }
+        ]
+    }
+
+    uses = list(iter_ancestral_node_uses(doc))
+
+    assert len(uses) == 1
+    use = uses[0]
+    assert use.path == "$.annotons[0].participant.family.ancestral_nodes[0].term"
+    assert use.ptn_curie == "PANTHER:PTN000000001"
+    assert use.family_curie == "PANTHER:PTHR1"
+    assert use.family_term_curies == frozenset({"PANTHER:PTHR1", "PANTHER:PTHR2"})
+    assert use.representative_uniprot_accessions == frozenset({"P1"})
+    assert use.has_go_ref_0000033 is True
+    assert {(a.aspect, a.curie) for a in use.asserted_go_terms} == {
+        ("F", "GO:0003674"),
+        ("C", "GO:0005829"),
+    }
+
+
+def test_validate_paint_ptns_accepts_exact_positive_ibd():
+    doc = {
+        "function": {"term": {"id": "GO:0003674", "label": "molecular_function"}},
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "family"},
+            "representative_members": [
+                {"term": {"id": "UniProtKB:P1", "label": "representative"}}
+            ],
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    uses = list(iter_ancestral_node_uses(doc))
+    index = {"PANTHER:PTN000000001": [_paint_row()]}
+
+    errors, warnings = validate_paint_ptns(uses, index)
+
+    assert errors == []
+    assert warnings == []
+
+
+def test_validate_paint_ptns_requires_well_formed_ptn():
+    doc = {"ancestral_nodes": [{"term": {"id": "PANTHER:PTHR1", "label": "bad"}}]}
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), {})
+
+    assert warnings == []
+    assert len(errors) == 1
+    assert "PANTHER:PTN<digits>" in errors[0]
+
+
+def test_validate_paint_ptns_requires_positive_ibd():
+    doc = {
+        "ancestral_nodes": [
+            {
+                "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                "evidence": [{"source_id": "GO_REF:0000033"}],
+            }
+        ]
+    }
+    index = {
+        "PANTHER:PTN000000001": [
+            _paint_row(evidence="IRD", negated=True, go_id="GO:0008150", aspect="P")
+        ]
+    }
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert warnings == []
+    assert len(errors) == 1
+    assert "no positive non-negated IBD" in errors[0]
+
+
+def test_validate_paint_ptns_warns_on_no_exact_go_overlap():
+    doc = {
+        "function": {"term": {"id": "GO:0008150", "label": "biological_process"}},
+        "family": {
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {"PANTHER:PTN000000001": [_paint_row()]}
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "no exact GO overlap" in warnings[0]
+
+
+def test_validate_paint_ptns_accepts_any_declared_family_term():
+    doc = {
+        "family": {
+            "term": {"id": "PANTHER:PTHR1", "label": "family 1"},
+            "family_terms": [
+                {"id": "PANTHER:PTHR1", "label": "family 1"},
+                {"id": "PANTHER:PTHR2", "label": "family 2"},
+            ],
+            "ancestral_nodes": [
+                {
+                    "term": {"id": "PANTHER:PTN000000001", "label": "node"},
+                    "evidence": [{"source_id": "GO_REF:0000033"}],
+                }
+            ],
+        },
+    }
+    index = {"PANTHER:PTN000000001": [_paint_row(family="PTHR2")]}
+
+    errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
+
+    assert errors == []
+    assert warnings == []
 
 
 # --------------------------------------------------------------------------- #
@@ -173,6 +465,53 @@ def test_validate_terms_warns_on_unconfigured_prefix():
     errors, warnings = validate_terms(terms, {}, resolver)
     assert errors == []
     assert any("FOO" in w for w in warnings)
+
+
+# --------------------------------------------------------------------------- #
+# validate_go_branches (pure, injected resolver)
+# --------------------------------------------------------------------------- #
+
+
+def test_validate_go_branches_flags_wrong_known_slot_branch():
+    doc = {"function": {"term": {"id": "GO:0008150", "label": "biological_process"}}}
+
+    def branch_resolver(curie, root):
+        return "not_in_branch"
+
+    errors, warnings = validate_go_branches(
+        list(iter_typed_go_terms(doc)), branch_resolver
+    )
+    assert warnings == []
+    assert len(errors) == 1
+    assert "molecular function" in errors[0]
+    assert "GO:0008150" in errors[0]
+
+
+def test_validate_go_branches_ignores_generic_concepts():
+    doc = {"concepts": [{"term": {"id": "GO:0008150", "label": "biological_process"}}]}
+
+    def branch_resolver(curie, root):
+        raise AssertionError("generic concepts must not be branch-checked")
+
+    errors, warnings = validate_go_branches(
+        list(iter_typed_go_terms(doc)), branch_resolver
+    )
+    assert errors == []
+    assert warnings == []
+
+
+def test_validate_go_branches_requires_go_curie_in_known_slot():
+    doc = {"required_function": {"term": {"id": "CHEBI:1", "label": "chemical"}}}
+
+    def branch_resolver(curie, root):
+        raise AssertionError("non-GO terms should fail before branch lookup")
+
+    errors, warnings = validate_go_branches(
+        list(iter_typed_go_terms(doc)), branch_resolver
+    )
+    assert warnings == []
+    assert len(errors) == 1
+    assert "expected molecular function GO term" in errors[0]
 
 
 # --------------------------------------------------------------------------- #

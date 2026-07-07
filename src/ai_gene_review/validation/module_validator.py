@@ -1,4 +1,4 @@
-"""Term-label validation for module (``ModuleReview``) YAML files.
+"""Term-label, GO-branch, and PTN validation for module YAML files.
 
 The repository delegates gene-review term-label checking to the external
 ``linkml-term-validator``, but that tool only inspects slots bound to dynamic
@@ -27,6 +27,23 @@ It also enforces **bundle-scoped conformance**: any node declaring
 or an unresolvable template -- blocks validation, while declared
 ``WITH_DEVIATIONS`` deviations surface as advisory warnings.
 
+For direct terms in slots whose GO aspect is known, this validator also checks
+the expected GO branch: molecular-function slots (``function`` and
+``required_function``), biological-process slots (``processes``),
+cellular-location slots (``locations`` and context cellular components), and
+protein-complex slots. Generic descriptor terms remain ID/label-only checked.
+
+For PANTHER/PAINT ancestral nodes declared in ``family.ancestral_nodes``, this
+validator checks local ``interpro/panther/*/*-paint.tsv`` slices directly: a
+declared PTN must be a well-formed exact PTN id and must have a positive,
+non-negated IBD row. GO overlap, family consistency, GO_REF evidence, and
+representative seed overlap are currently advisory warnings so the validator can
+surface curation drift without making module validation brittle.
+
+Module taxon context is also checked for scope/provenance conflation: taxa must
+name in-vivo taxa or clades, not experimental systems such as cell lines. Cell
+line evidence belongs in evidence statements, not in ``context.taxa`` labels.
+
 It also runs an **advisory reaction-chaining check**: for each ``PRECEDES``
 connection it resolves both reactions' GO molecular-function terms to RHEA (via
 the GO->RHEA mapping) and warns when the upstream reaction's product is not the
@@ -35,12 +52,14 @@ override on the connection (e.g. ``KNOWLEDGE_GAP``, ``MAPPING_GAP``) acknowledge
 a real break and suppresses its warning.
 
 Structural (schema) validation is handled separately by ``linkml-validate``
-(see ``just validate-modules``); this module adds term-label, conformance, and
-chaining checking.
+(see ``just validate-modules``); this module adds term-label, GO-branch, PTN,
+taxon-scope, conformance, and chaining checking.
 """
 
 from __future__ import annotations
 
+import csv
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -55,6 +74,132 @@ import yaml
 # advisory so CI does not go red on flaky ontology fetches. Implemented as a
 # plain callable so it can be dependency-injected in tests without mocking.
 Resolver = Callable[[str], Tuple[str, Optional[str], Set[str]]]
+
+# A branch resolver answers: given a child GO id and required root GO id, return
+# "ok", "not_in_branch", "not_found", or "unavailable".
+BranchResolver = Callable[[str, str], str]
+
+PTN_ID_RE = re.compile(r"^PANTHER:PTN\d+$")
+PANTHER_FAMILY_RE = re.compile(r"^PANTHER:(PTHR\d+)(?::SF\d+)?$")
+TAXON_EXPERIMENTAL_SYSTEM_RE = re.compile(
+    r"\b("
+    r"defined\s+in|"
+    r"cell[-\s]?lines?|"
+    r"cell\s+culture|"
+    r"cultured\s+cells?|"
+    r"in\s+vitro|"
+    r"assays?\s+in|"
+    r"assayed\s+in|"
+    r"HEK[-\s]?293|"
+    r"293T|"
+    r"HeLa|"
+    r"K562|"
+    r"A549|"
+    r"U2OS|"
+    r"MCF[-\s]?7"
+    r")\b",
+    re.IGNORECASE,
+)
+
+PaintIndex = Dict[str, List["PaintAnnotationRow"]]
+_PAINT_INDEX_CACHE: Dict[Path, PaintIndex] = {}
+
+
+@dataclass(frozen=True)
+class GoBranchConstraint:
+    """Expected GO branch for a direct term in a known module slot."""
+
+    root_id: str
+    branch_label: str
+
+
+@dataclass(frozen=True)
+class TypedGoTerm:
+    """A direct GO term occurrence in a slot with a known expected branch."""
+
+    path: str
+    curie: str
+    label: str
+    constraint: GoBranchConstraint
+
+
+@dataclass(frozen=True)
+class ModuleGoAssertion:
+    """A nearby module GO assertion that an ancestral PTN may support."""
+
+    path: str
+    aspect: str
+    curie: str
+
+
+@dataclass(frozen=True)
+class AncestralNodeUse:
+    """A module use of a PANTHER/PAINT ancestral node."""
+
+    path: str
+    ptn_curie: str
+    family_curie: Optional[str]
+    family_term_curies: frozenset[str]
+    representative_uniprot_accessions: frozenset[str]
+    asserted_go_terms: Tuple[ModuleGoAssertion, ...]
+    has_go_ref_0000033: bool
+
+
+@dataclass(frozen=True)
+class PaintAnnotationRow:
+    """One row from a local ``*-paint.tsv`` PAINT slice."""
+
+    family: str
+    node_curie: str
+    go_id: str
+    aspect: str
+    evidence: str
+    negated: bool
+    seeds: str
+    source_path: Path
+
+    @property
+    def uniprot_seed_accessions(self) -> Set[str]:
+        """Return UniProtKB accessions from the PAINT seed field."""
+        accessions: Set[str] = set()
+        for seed in self.seeds.split("|"):
+            if seed.startswith("UniProtKB:"):
+                accessions.add(seed.split(":", 1)[1])
+        return accessions
+
+
+GO_BRANCH_CONSTRAINTS: Dict[str, GoBranchConstraint] = {
+    # MolecularFunctionDescriptor-bearing participant/function slots.
+    "function": GoBranchConstraint("GO:0003674", "molecular function"),
+    "required_function": GoBranchConstraint("GO:0003674", "molecular function"),
+    # BiologicalProcessDescriptor-bearing annoton slot.
+    "processes": GoBranchConstraint("GO:0008150", "biological process"),
+    # CellularComponentDescriptor-bearing location slots. Use GO:0110165 to
+    # mirror GOCellularLocationEnum, excluding protein-containing complexes.
+    "locations": GoBranchConstraint("GO:0110165", "cellular anatomical entity"),
+    "cellular_components": GoBranchConstraint(
+        "GO:0110165", "cellular anatomical entity"
+    ),
+    "source_location": GoBranchConstraint(
+        "GO:0110165", "cellular anatomical entity"
+    ),
+    "destination_location": GoBranchConstraint(
+        "GO:0110165", "cellular anatomical entity"
+    ),
+    # ProteinComplexDescriptor-bearing participant slot.
+    "protein_complex": GoBranchConstraint("GO:0032991", "protein-containing complex"),
+}
+
+GO_ASPECT_BY_SLOT: Dict[str, str] = {
+    "function": "F",
+    "required_function": "F",
+    "processes": "P",
+    "locations": "C",
+    "cellular_components": "C",
+    "source_location": "C",
+    "destination_location": "C",
+    "protein_complex": "C",
+}
 
 
 @dataclass
@@ -96,10 +241,415 @@ def iter_terms(obj: object) -> Iterator[Tuple[str, str]]:
                 and isinstance(value.get("label"), str)
             ):
                 yield (value["id"], value["label"])
+            if key == "family_terms":
+                for item in _as_list(value):
+                    if (
+                        isinstance(item, dict)
+                        and isinstance(item.get("id"), str)
+                        and isinstance(item.get("label"), str)
+                    ):
+                        yield (item["id"], item["label"])
             yield from iter_terms(value)
     elif isinstance(obj, list):
         for item in obj:
             yield from iter_terms(item)
+
+
+def _as_list(value: object) -> List[object]:
+    """Return ``value`` as a list, treating null as empty."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def iter_typed_go_terms(obj: object, path: str = "$") -> Iterator[TypedGoTerm]:
+    """Yield direct terms in module slots with known GO branch expectations.
+
+    Generic descriptor terms are intentionally not yielded here: ``concepts``,
+    ``substrates``, ``products``, ``cargo``, etc. can legitimately reference
+    terms from any GO aspect or from non-GO ontologies. Direct terms under
+    slots like ``function`` and ``processes`` have a known aspect and therefore
+    get branch-checked.
+
+    >>> doc = {"function": {"term": {"id": "GO:1", "label": "x"}}}
+    >>> [(t.path, t.curie, t.constraint.root_id) for t in iter_typed_go_terms(doc)]
+    [('$.function.term', 'GO:1', 'GO:0003674')]
+    >>> list(iter_typed_go_terms({"concepts": [{"term": {"id": "GO:1", "label": "x"}}]}))
+    []
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            child_path = f"{path}.{key}"
+            constraint = GO_BRANCH_CONSTRAINTS.get(key)
+            if constraint is not None:
+                values = _as_list(value)
+                for index, descriptor in enumerate(values):
+                    if not isinstance(descriptor, dict):
+                        continue
+                    descriptor_path = (
+                        f"{child_path}[{index}]" if isinstance(value, list) else child_path
+                    )
+                    term = descriptor.get("term")
+                    if (
+                        isinstance(term, dict)
+                        and isinstance(term.get("id"), str)
+                        and isinstance(term.get("label"), str)
+                    ):
+                        yield TypedGoTerm(
+                            path=f"{descriptor_path}.term",
+                            curie=term["id"],
+                            label=term["label"],
+                            constraint=constraint,
+                        )
+            yield from iter_typed_go_terms(value, child_path)
+    elif isinstance(obj, list):
+        for index, item in enumerate(obj):
+            yield from iter_typed_go_terms(item, f"{path}[{index}]")
+
+
+def iter_taxon_descriptors(obj: object, path: str = "$") -> Iterator[Tuple[str, dict]]:
+    """Yield every descriptor under module ``taxa``/``taxon`` slots.
+
+    Taxon context should describe the in-vivo biological scope of a module, not
+    the experimental system used to discover it.
+    """
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            child_path = f"{path}.{key}"
+            if key == "taxa":
+                for index, descriptor in enumerate(_as_list(value)):
+                    if isinstance(descriptor, dict):
+                        yield (
+                            f"{child_path}[{index}]"
+                            if isinstance(value, list)
+                            else child_path,
+                            descriptor,
+                        )
+            elif key == "taxon":
+                for index, descriptor in enumerate(_as_list(value)):
+                    if isinstance(descriptor, dict):
+                        yield (
+                            f"{child_path}[{index}]"
+                            if isinstance(value, list)
+                            else child_path,
+                            descriptor,
+                        )
+            yield from iter_taxon_descriptors(value, child_path)
+    elif isinstance(obj, list):
+        for index, item in enumerate(obj):
+            yield from iter_taxon_descriptors(item, f"{path}[{index}]")
+
+
+def _iter_direct_go_assertions(obj: object, path: str) -> Iterator[ModuleGoAssertion]:
+    """Yield direct GO assertions from known typed slots on one module object."""
+    if not isinstance(obj, dict):
+        return
+
+    for slot_name, aspect in GO_ASPECT_BY_SLOT.items():
+        if slot_name not in obj:
+            continue
+        value = obj[slot_name]
+        for index, descriptor in enumerate(_as_list(value)):
+            if not isinstance(descriptor, dict):
+                continue
+            descriptor_path = (
+                f"{path}.{slot_name}[{index}]"
+                if isinstance(value, list)
+                else f"{path}.{slot_name}"
+            )
+            term = descriptor.get("term")
+            if (
+                isinstance(term, dict)
+                and isinstance(term.get("id"), str)
+                and term["id"].startswith("GO:")
+            ):
+                yield ModuleGoAssertion(
+                    path=f"{descriptor_path}.term",
+                    aspect=aspect,
+                    curie=term["id"],
+                )
+
+
+def _direct_family_curie(family: dict) -> Optional[str]:
+    """Return the direct PANTHER family term id for a family descriptor."""
+    term = family.get("term")
+    if isinstance(term, dict) and isinstance(term.get("id"), str):
+        return term["id"]
+    return None
+
+
+def _family_term_curies(family: dict) -> frozenset[str]:
+    """Return PANTHER family ids accepted for a family descriptor."""
+    curies: Set[str] = set()
+    direct_curie = _direct_family_curie(family)
+    if direct_curie:
+        curies.add(direct_curie)
+
+    for family_term in _as_list(family.get("family_terms")):
+        if not isinstance(family_term, dict):
+            continue
+        curie = family_term.get("id")
+        if isinstance(curie, str):
+            curies.add(curie)
+    return frozenset(curies)
+
+
+def _representative_uniprot_accessions(family: dict) -> frozenset[str]:
+    """Return direct UniProtKB accessions from ``representative_members``."""
+    accessions: Set[str] = set()
+    for representative in _as_list(family.get("representative_members")):
+        if not isinstance(representative, dict):
+            continue
+        term = representative.get("term")
+        if not isinstance(term, dict):
+            continue
+        curie = term.get("id")
+        if isinstance(curie, str) and curie.startswith("UniProtKB:"):
+            accessions.add(curie.split(":", 1)[1])
+    return frozenset(accessions)
+
+
+def _has_go_ref_0000033(descriptor: dict) -> bool:
+    """True if a descriptor has a direct GO_REF:0000033 evidence item."""
+    for evidence in _as_list(descriptor.get("evidence")):
+        if isinstance(evidence, dict) and evidence.get("source_id") == "GO_REF:0000033":
+            return True
+    return False
+
+
+def iter_ancestral_node_uses(
+    obj: object,
+    path: str = "$",
+    ancestors: Tuple[Tuple[str, dict], ...] = (),
+) -> Iterator[AncestralNodeUse]:
+    """Yield every module use of ``family.ancestral_nodes`` with context.
+
+    The GO assertions collected here are intentionally *nearby* module
+    assertions: direct typed slots on enclosing annotons, complex units, or
+    protein-complex descriptors. They are used only for advisory PTN/GO overlap
+    warnings, not as hard validation.
+    """
+    if isinstance(obj, dict):
+        ancestral_nodes = obj.get("ancestral_nodes")
+        if isinstance(ancestral_nodes, list):
+            family_curie = _direct_family_curie(obj)
+            family_term_curies = _family_term_curies(obj)
+            representative_accessions = _representative_uniprot_accessions(obj)
+
+            asserted_terms: List[ModuleGoAssertion] = []
+            seen_assertions: Set[Tuple[str, str, str]] = set()
+            for ancestor_path, ancestor in reversed(ancestors):
+                for assertion in _iter_direct_go_assertions(ancestor, ancestor_path):
+                    key = (assertion.path, assertion.aspect, assertion.curie)
+                    if key not in seen_assertions:
+                        seen_assertions.add(key)
+                        asserted_terms.append(assertion)
+
+            for index, node_descriptor in enumerate(ancestral_nodes):
+                node_path = f"{path}.ancestral_nodes[{index}]"
+                ptn_curie = "<missing>"
+                if isinstance(node_descriptor, dict):
+                    term = node_descriptor.get("term")
+                    if isinstance(term, dict) and isinstance(term.get("id"), str):
+                        ptn_curie = term["id"]
+                yield AncestralNodeUse(
+                    path=f"{node_path}.term",
+                    ptn_curie=ptn_curie,
+                    family_curie=family_curie,
+                    family_term_curies=family_term_curies,
+                    representative_uniprot_accessions=representative_accessions,
+                    asserted_go_terms=tuple(asserted_terms),
+                    has_go_ref_0000033=(
+                        isinstance(node_descriptor, dict)
+                        and _has_go_ref_0000033(node_descriptor)
+                    ),
+                )
+
+        for key, value in obj.items():
+            yield from iter_ancestral_node_uses(
+                value,
+                f"{path}.{key}",
+                ancestors + ((path, obj),),
+            )
+    elif isinstance(obj, list):
+        for index, item in enumerate(obj):
+            yield from iter_ancestral_node_uses(item, f"{path}[{index}]", ancestors)
+
+
+def _paint_node_curie(node: str) -> str:
+    """Normalize a PAINT TSV node id to the module CURIE form."""
+    return node if node.startswith("PANTHER:") else f"PANTHER:{node}"
+
+
+def load_paint_index(panther_dir: Path) -> PaintIndex:
+    """Load local PANTHER PAINT TSV slices into a PTN-indexed mapping."""
+    panther_dir = Path(panther_dir)
+    try:
+        cache_key = panther_dir.resolve()
+    except OSError:
+        cache_key = panther_dir
+    if cache_key in _PAINT_INDEX_CACHE:
+        return _PAINT_INDEX_CACHE[cache_key]
+
+    index: PaintIndex = {}
+    if not panther_dir.exists():
+        _PAINT_INDEX_CACHE[cache_key] = index
+        return index
+
+    for tsv_path in sorted(panther_dir.glob("PTHR*/PTHR*-paint.tsv")):
+        with open(tsv_path, newline="") as handle:
+            reader = csv.DictReader(handle, delimiter="\t")
+            for row in reader:
+                node = row.get("node")
+                if not node:
+                    continue
+                node_curie = _paint_node_curie(node)
+                index.setdefault(node_curie, []).append(
+                    PaintAnnotationRow(
+                        family=str(row.get("family") or ""),
+                        node_curie=node_curie,
+                        go_id=str(row.get("go_id") or ""),
+                        aspect=str(row.get("aspect") or ""),
+                        evidence=str(row.get("evidence") or ""),
+                        negated=str(row.get("negated") or "").lower() == "true",
+                        seeds=str(row.get("seeds") or ""),
+                        source_path=tsv_path,
+                    )
+                )
+    _PAINT_INDEX_CACHE[cache_key] = index
+    return index
+
+
+def _panther_family_base(curie: Optional[str]) -> Optional[str]:
+    """Return the PTHR family id from a PANTHER family/subfamily CURIE."""
+    if curie is None:
+        return None
+    match = PANTHER_FAMILY_RE.match(curie)
+    if not match:
+        return None
+    return match.group(1)
+
+
+def _format_limited(values: Set[str], limit: int = 8) -> str:
+    """Format a set of short strings for validation messages."""
+    ordered = sorted(values)
+    if len(ordered) <= limit:
+        return ", ".join(ordered)
+    return ", ".join(ordered[:limit]) + f", ... (+{len(ordered) - limit} more)"
+
+
+def validate_paint_ptns(
+    uses: List[AncestralNodeUse],
+    paint_index: PaintIndex,
+) -> Tuple[List[str], List[str]]:
+    """Validate module PTN declarations against local PAINT IBD TSV rows."""
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    for use in uses:
+        if not PTN_ID_RE.match(use.ptn_curie):
+            errors.append(
+                f"{use.path}: expected ancestral node id PANTHER:PTN<digits>, "
+                f"got {use.ptn_curie}"
+            )
+            continue
+
+        rows = paint_index.get(use.ptn_curie, [])
+        if not rows:
+            errors.append(
+                f"{use.path}: {use.ptn_curie} not found in local "
+                "interpro/panther/*/*-paint.tsv PAINT index"
+            )
+            continue
+
+        positive_ibd_rows = [
+            row for row in rows if row.evidence == "IBD" and not row.negated
+        ]
+        if not positive_ibd_rows:
+            evidence_seen = _format_limited(
+                {
+                    f"{'NOT|' if row.negated else ''}{row.evidence}:{row.go_id}"
+                    for row in rows
+                }
+            )
+            errors.append(
+                f"{use.path}: {use.ptn_curie} has no positive non-negated IBD "
+                f"row in local PAINT TSVs; found {evidence_seen or 'no rows'}"
+            )
+            continue
+
+        if not use.has_go_ref_0000033:
+            warnings.append(
+                f"{use.path}: {use.ptn_curie} is backed by PAINT IBD rows but "
+                "the ancestral node descriptor lacks evidence source_id "
+                "GO_REF:0000033"
+            )
+
+        family_bases = {
+            base
+            for curie in use.family_term_curies
+            if (base := _panther_family_base(curie)) is not None
+        }
+        invalid_family_curies = {
+            curie
+            for curie in use.family_term_curies
+            if _panther_family_base(curie) is None
+        }
+        paint_families = {row.family for row in positive_ibd_rows if row.family}
+        if family_bases and not family_bases.intersection(paint_families):
+            warnings.append(
+                f"{use.path}: {use.ptn_curie} IBD rows belong to "
+                f"{_format_limited({f'PANTHER:{f}' for f in paint_families})}; "
+                "enclosing family terms are "
+                f"{_format_limited(set(use.family_term_curies))}. Document "
+                "cross-family scope if intentional."
+            )
+        elif invalid_family_curies:
+            warnings.append(
+                f"{use.path}: enclosing family ids "
+                f"{_format_limited(invalid_family_curies)} are not PANTHER "
+                "PTHR/PTHR:SF CURIEs, so family consistency was not checked "
+                "for those ids"
+            )
+
+        if use.asserted_go_terms:
+            supported = {
+                (row.aspect, row.go_id)
+                for row in positive_ibd_rows
+                if row.aspect and row.go_id
+            }
+            exact_matches = [
+                assertion
+                for assertion in use.asserted_go_terms
+                if (assertion.aspect, assertion.curie) in supported
+            ]
+            if not exact_matches:
+                asserted = {
+                    f"{assertion.aspect}:{assertion.curie}"
+                    for assertion in use.asserted_go_terms
+                }
+                ibd_terms = {f"{aspect}:{go_id}" for aspect, go_id in supported}
+                warnings.append(
+                    f"{use.path}: {use.ptn_curie} has no exact GO overlap with "
+                    f"nearby module GO assertions ({_format_limited(asserted)}); "
+                    f"positive IBD rows support {_format_limited(ibd_terms)}"
+                )
+
+        if use.representative_uniprot_accessions:
+            seed_accessions: Set[str] = set()
+            for row in positive_ibd_rows:
+                seed_accessions.update(row.uniprot_seed_accessions)
+            if not seed_accessions.intersection(use.representative_uniprot_accessions):
+                warnings.append(
+                    f"{use.path}: no representative UniProtKB accession "
+                    f"({_format_limited(set(use.representative_uniprot_accessions))}) "
+                    f"appears among IBD seed UniProtKB accessions "
+                    f"({_format_limited(seed_accessions) or 'none'})"
+                )
+
+    return errors, warnings
 
 
 def compare_label(
@@ -171,6 +721,66 @@ def validate_terms(
     return errors, warnings
 
 
+def validate_go_branches(
+    terms: List[TypedGoTerm],
+    branch_resolver: BranchResolver,
+) -> Tuple[List[str], List[str]]:
+    """Validate known-slot GO terms against their expected ontology branch."""
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    for term in terms:
+        if not term.curie.startswith("GO:"):
+            errors.append(
+                f"{term.path}: expected {term.constraint.branch_label} GO term "
+                f"under {term.constraint.root_id}, got {term.curie}"
+            )
+            continue
+
+        status = branch_resolver(term.curie, term.constraint.root_id)
+        if status == "ok":
+            continue
+        if status == "unavailable":
+            warnings.append(
+                f"Could not consult GO branch hierarchy for {term.curie} at "
+                f"{term.path}; branch not validated"
+            )
+            continue
+        if status == "not_found":
+            # Term-label validation already reports the missing id; avoid a
+            # redundant branch error for the same bad CURIE.
+            continue
+        errors.append(
+            f"{term.path}: expected {term.constraint.branch_label} GO term under "
+            f"{term.constraint.root_id}, got {term.curie} ({term.label})"
+        )
+
+    return errors, warnings
+
+
+def validate_taxon_context(doc: object) -> List[str]:
+    """Return errors for taxon labels that encode experimental systems."""
+    errors: List[str] = []
+    for path, descriptor in iter_taxon_descriptors(doc):
+        text_fields: List[Tuple[str, str]] = []
+        preferred_term = descriptor.get("preferred_term")
+        if isinstance(preferred_term, str):
+            text_fields.append(("preferred_term", preferred_term))
+        term = descriptor.get("term")
+        if isinstance(term, dict) and isinstance(term.get("label"), str):
+            text_fields.append(("term.label", term["label"]))
+
+        for field_name, text in text_fields:
+            if TAXON_EXPERIMENTAL_SYSTEM_RE.search(text):
+                errors.append(
+                    f"{path}.{field_name}: taxon context must name an in-vivo "
+                    f"taxon or clade, not an experimental system/provenance "
+                    f"label ({text!r}); put cell-line or assay evidence in "
+                    f"evidence statements"
+                )
+    return errors
+
+
 def load_oak_adapter_map(config_path: Path) -> Dict[str, Optional[str]]:
     """Load the prefix -> adapter mapping from an ``oak_config.yaml``."""
     with open(config_path) as f:
@@ -230,29 +840,106 @@ def _build_oak_resolver(adapter_map: Dict[str, Optional[str]]) -> Resolver:
     return resolve
 
 
+def _build_go_branch_resolver(adapter_map: Dict[str, Optional[str]]) -> BranchResolver:
+    """Build an OAK-backed GO branch resolver for known module slots."""
+    from oaklib import get_adapter  # imported lazily; heavy dependency
+
+    adapter_string = adapter_map.get("GO")
+    adapter = None
+    adapter_failed = False
+
+    def get_go_adapter():
+        nonlocal adapter, adapter_failed
+        if adapter_failed:
+            return None
+        if adapter is None:
+            if adapter_string is None:
+                adapter_failed = True
+                return None
+            try:
+                adapter = get_adapter(adapter_string)
+            except Exception:  # noqa: BLE001 - external system
+                adapter_failed = True
+                return None
+        return adapter
+
+    def resolve(curie: str, root_id: str) -> str:
+        go_adapter = get_go_adapter()
+        if go_adapter is None:
+            return "unavailable"
+        try:  # external system: ontology query may fail transiently
+            if go_adapter.label(curie) is None:
+                return "not_found"
+            if curie == root_id:
+                return "not_in_branch"
+            ancestors = set(
+                go_adapter.ancestors(curie, predicates=["rdfs:subClassOf"])
+            )
+            return "ok" if root_id in ancestors else "not_in_branch"
+        except Exception:  # noqa: BLE001 - external system
+            return "unavailable"
+
+    return resolve
+
+
+def _unavailable_go_branch_resolver(curie: str, root_id: str) -> str:
+    """Offline test helper used when only label resolution is injected."""
+    return "unavailable"
+
+
 def validate_module_file(
     path: Path,
     config_path: Optional[Path] = None,
     resolver: Optional[Resolver] = None,
+    branch_resolver: Optional[BranchResolver] = None,
+    paint_index: Optional[PaintIndex] = None,
+    panther_dir: Optional[Path] = None,
 ) -> ModuleValidationResult:
     """Validate term labels in a single module YAML file.
 
     ``resolver`` may be injected for testing; otherwise a real OAK-backed
     resolver is built from ``config_path`` (defaults to ``conf/oak_config.yaml``
-    relative to the repository root).
+    relative to the repository root). ``paint_index`` may also be injected for
+    PTN tests; otherwise local ``interpro/panther`` TSVs are loaded lazily only
+    when a module declares ancestral nodes.
     """
     path = Path(path)
+    project_root = Path(__file__).resolve().parents[3]
     if config_path is None:
-        config_path = Path(__file__).resolve().parents[3] / "conf" / "oak_config.yaml"
+        config_path = project_root / "conf" / "oak_config.yaml"
     adapter_map = load_oak_adapter_map(config_path)
 
     with open(path) as f:
         doc = yaml.safe_load(f)
 
     terms = list(iter_terms(doc))
+    typed_go_terms = list(iter_typed_go_terms(doc))
+    resolver_was_injected = resolver is not None
     if resolver is None:
         resolver = _build_oak_resolver(adapter_map)
     errors, warnings = validate_terms(terms, adapter_map, resolver)
+    errors.extend(validate_taxon_context(doc))
+    if branch_resolver is None:
+        branch_resolver = (
+            _unavailable_go_branch_resolver
+            if resolver_was_injected
+            else _build_go_branch_resolver(adapter_map)
+        )
+    branch_errors, branch_warnings = validate_go_branches(
+        typed_go_terms, branch_resolver
+    )
+    errors.extend(branch_errors)
+    warnings.extend(branch_warnings)
+
+    ptn_uses = list(iter_ancestral_node_uses(doc))
+    if ptn_uses:
+        if paint_index is None:
+            if panther_dir is None:
+                panther_dir = project_root / "interpro" / "panther"
+            paint_index = load_paint_index(panther_dir)
+        ptn_errors, ptn_warnings = validate_paint_ptns(ptn_uses, paint_index)
+        errors.extend(ptn_errors)
+        warnings.extend(ptn_warnings)
 
     # Conformance: verify every `conforms_to` bundle against its template motif.
     # Templates are sibling module files, so they are resolved from the file's
@@ -517,7 +1204,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Validate term labels in module (ModuleReview) YAML files."
+        description="Validate module (ModuleReview) YAML term labels, GO branches, and conformance."
     )
     parser.add_argument("files", nargs="+", type=Path, help="Module YAML files")
     parser.add_argument(
