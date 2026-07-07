@@ -589,3 +589,148 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     assert any(
         "conformance" in e.lower() and "template" in e.lower() for e in result.errors
     )
+
+
+# --------------------------------------------------------------------------- #
+# supporting_text snippet validation
+# --------------------------------------------------------------------------- #
+
+from ai_gene_review.validation.module_validator import (  # noqa: E402
+    iter_evidence_snippets,
+    validate_supporting_text,
+)
+
+PUBLICATIONS_DIR = PROJECT_ROOT / "publications"
+
+
+def test_iter_evidence_snippets_only_literature_with_text():
+    """Only PMID/DOI EvidenceItems carrying a non-empty quote are yielded."""
+    doc = {
+        "module": {
+            "annotons": [
+                {
+                    "evidence": [
+                        {"source_id": "PMID:123", "supporting_text": "a real quote"},
+                        {"source_id": "GO:0001", "supporting_text": "grounding, skip"},
+                        {"source_id": "PMID:999", "statement": "no quote here"},
+                        {"source_id": "DOI:10.1/x", "supporting_text": "doi quote"},
+                    ]
+                }
+            ]
+        }
+    }
+    got = sorted(iter_evidence_snippets(doc))
+    assert got == [("DOI:10.1/x", "doi quote"), ("PMID:123", "a real quote")]
+
+
+def test_validate_supporting_text_no_literature_is_noop():
+    doc = {"module": {"evidence": [{"source_id": "GO:1", "supporting_text": "x"}]}}
+    errors, warnings = validate_supporting_text(doc)
+    assert errors == [] and warnings == []
+
+
+@pytest.mark.integration
+def test_validate_supporting_text_verbatim_pass():
+    """A quote that is a verbatim substring of the cached abstract passes."""
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "module": {
+            "evidence": [
+                {
+                    "source_id": "PMID:10049358",
+                    "supporting_text": "Bmp4 homozygous null embryos contain no PGCs",
+                }
+            ]
+        }
+    }
+    errors, warnings = validate_supporting_text(doc, publications_dir=PUBLICATIONS_DIR)
+    assert errors == [], errors
+
+
+@pytest.mark.integration
+def test_validate_supporting_text_flags_fabricated_quote():
+    """A quote absent from the cached publication is a blocking error."""
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "module": {
+            "evidence": [
+                {
+                    "source_id": "PMID:10049358",
+                    "supporting_text": "this fabricated sentence appears in no abstract",
+                }
+            ]
+        }
+    }
+    errors, _ = validate_supporting_text(doc, publications_dir=PUBLICATIONS_DIR)
+    assert any("mismatch" in e.lower() for e in errors), errors
+
+
+# --------------------------------------------------------------------------- #
+# reference title validation
+# --------------------------------------------------------------------------- #
+
+from ai_gene_review.validation.module_validator import (  # noqa: E402
+    iter_reference_titles,
+    validate_reference_titles,
+)
+
+
+def test_iter_reference_titles_only_literature():
+    """Only PMID/DOI ids/source_ids with a title are yielded; local ids ignored."""
+    doc = {
+        "id": "MODULE:x",
+        "title": "My module",  # MODULE: prefix -> ignored
+        "references": [{"id": "PMID:5", "title": "Real Paper"}],
+        "module": {
+            "id": "node1",  # local id -> ignored
+            "label": "n",
+            "evidence": [
+                {"source_id": "DOI:10.1/y", "title": "Doi Paper"},
+                {"source_id": "GO:0001", "title": "grounding"},  # ignored
+            ],
+        },
+    }
+    assert sorted(iter_reference_titles(doc)) == [
+        ("DOI:10.1/y", "Doi Paper"),
+        ("PMID:5", "Real Paper"),
+    ]
+
+
+def test_validate_reference_titles_no_literature_is_noop():
+    doc = {"references": [{"id": "GO:1", "title": "x"}]}
+    assert validate_reference_titles(doc) == ([], [])
+
+
+@pytest.mark.integration
+def test_validate_reference_titles_correct_passes():
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "references": [
+            {
+                "id": "PMID:10049358",
+                "title": "Bmp4 is required for the generation of primordial germ cells in the mouse embryo.",
+            }
+        ]
+    }
+    errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
+    assert errors == [], errors
+
+
+@pytest.mark.integration
+def test_validate_reference_titles_wrong_title_errors():
+    pytest.importorskip("linkml_reference_validator")
+    if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
+        pytest.skip("cached publication PMID_10049358 not present")
+    doc = {
+        "references": [
+            {"id": "PMID:10049358", "title": "An unrelated wrong title"}
+        ]
+    }
+    errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
+    assert any("title mismatch" in e.lower() for e in errors), errors
