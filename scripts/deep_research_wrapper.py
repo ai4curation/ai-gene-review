@@ -8,6 +8,8 @@ This script:
 4. Handles output path construction
 """
 
+from __future__ import annotations
+
 import argparse
 import os
 import shlex

@@ -190,7 +190,7 @@ descriptions-status organism *args="":
 #   just deep-research-openai human TP53 --fallback perplexity-lite  # fallback on failure/timeout
 #   just deep-research-openai human CFAP300 --extra-args --param "model=gpt-4o"
 deep-research-openai organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openai {{args}}
 
 # Deep research using Perplexity (sonar models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -199,7 +199,7 @@ deep-research-openai organism gene_id *args="":
 #   just deep-research-perplexity METEA mxcE          # Looks up gene symbol from UniProt
 #   just deep-research-perplexity METEA C5B1I4 --alias mllA  # gene_symbol=mllA, gene_id=C5B1I4
 deep-research-perplexity organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity {{args}}
 
 # Quick Perplexity research with low reasoning effort
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -207,7 +207,7 @@ deep-research-perplexity organism gene_id *args="":
 #   just deep-research-perplexity-lite human TP53     # Fast research
 #   just deep-research-perplexity-lite ARATH BRI1 --alias brassinosteroid-receptor
 deep-research-perplexity-lite organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity-lite {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} perplexity-lite {{args}}
 
 # Deep research using Falcon (local models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -215,7 +215,7 @@ deep-research-perplexity-lite organism gene_id *args="":
 #   just deep-research-falcon human TP53
 #   just deep-research-falcon METEA C5B1I4 --alias mllA
 deep-research-falcon organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} falcon {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} falcon {{args}}
 
 # Deep research using Cyberian
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -223,7 +223,7 @@ deep-research-falcon organism gene_id *args="":
 #   just deep-research-cyberian human TP53
 #   just deep-research-cyberian METEA C5B1I4 --alias mllA
 deep-research-cyberian organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian {{args}}
 
 # Deep research using OpenScientist
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -231,7 +231,7 @@ deep-research-cyberian organism gene_id *args="":
 #   just deep-research-openscientist human TP53
 #   just deep-research-openscientist METEA C5B1I4 --alias mllA
 deep-research-openscientist organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openscientist {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} openscientist {{args}}
 
 # Deep research using Asta (fast provider; works like the other providers)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -239,7 +239,7 @@ deep-research-openscientist organism gene_id *args="":
 #   just deep-research-asta human TP53
 #   just deep-research-asta METEA C5B1I4 --alias mllA
 deep-research-asta organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} asta {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} asta {{args}}
 
 # Deep research using Codex via agentapi (yolo mode)
 # Uses cyberian provider with agent_type=codex for autonomous research
@@ -248,7 +248,7 @@ deep-research-asta organism gene_id *args="":
 #   just deep-research-codex human TP53
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
-    python3 scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
 
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
@@ -477,22 +477,22 @@ term-deep-research-codex concept *args="":
 #   just module-deep-research-openai modules/gluconeogenesis.yaml
 #   just module-deep-research-perplexity-lite peroxisome-lifecycle --dry-run
 module-deep-research-openai module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" openai {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" openai {{args}}
 
 module-deep-research-perplexity module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" perplexity {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity {{args}}
 
 module-deep-research-perplexity-lite module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" perplexity-lite {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" perplexity-lite {{args}}
 
 module-deep-research-falcon module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" falcon {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" falcon {{args}}
 
 module-deep-research-cyberian module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
 
 module-deep-research-codex module *args="":
-    python3 scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
 
 # Species/taxon-specific module + pathway research. This writes to the project
 # support folder when a project can be resolved, e.g. projects/P_PUTIDA/deep-research/.
@@ -500,10 +500,10 @@ module-deep-research-codex module *args="":
 #   just module-pathway-deep-research-falcon "central carbon metabolism" ppu00020 PSEPK --dry-run
 #   just module-pathway-deep-research falcon "aromatic compound catabolism" ppu01220 PSEPK
 module-pathway-deep-research provider module pathway organism *args="":
-    python3 scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" "{{provider}}" {{args}}
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" "{{provider}}" {{args}}
 
 module-pathway-deep-research-falcon module pathway organism *args="":
-    python3 scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
+    uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
 
 # Fetch a specific PMID
 fetch-pmid pmid output_dir="publications":
