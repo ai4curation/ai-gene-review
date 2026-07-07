@@ -784,20 +784,30 @@ def process_markdown_content(content: str) -> str:
 
 
 def is_slides_markdown(path: Path) -> bool:
-    """Return True for Marp slide-deck markdown (``*-slides.md``).
+    """Return True for Marp slide-deck markdown.
 
-    These decks are built by ``just gen-project-slides`` (Marp), not by the
-    project renderer. Rendering them as ordinary project pages produces a
-    mangled single-page HTML that overwrites the real deck, so they are excluded
-    from project-page collection.
+    Two naming conventions are recognized: ``*-slides.md`` (the
+    ``just gen-project-slides`` convention) and a bare ``slides.md`` (a
+    manually built Marp deck living alongside its ``slides.html``, e.g. under a
+    project's ``article/`` folder). Both are built with Marp, not by the project
+    renderer; rendering them as ordinary project pages produces a mangled
+    single-page HTML that overwrites the real deck, so they are excluded from
+    project-page collection.
 
     >>> is_slides_markdown(Path("projects/FOO/slides/FOO-slides.md"))
+    True
+    >>> is_slides_markdown(Path("projects/FOO/article/slides.md"))
     True
     >>> is_slides_markdown(Path("projects/FOO.md"))
     False
     """
     name = path.name.lower()
-    return name.endswith("-slides.md") or name.endswith("-slides.markdown")
+    return (
+        name.endswith("-slides.md")
+        or name.endswith("-slides.markdown")
+        or name == "slides.md"
+        or name == "slides.markdown"
+    )
 
 
 def project_bundle_markdown_files(md_path: Path, projects_dir: Path) -> List[Path]:

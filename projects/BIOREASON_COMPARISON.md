@@ -14,20 +14,23 @@ sidecars:
 
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against expert-curated AIGR gene reviews.
 
-**Paper drafts** based on this project live in [`BIOREASON_COMPARISON/article/`](BIOREASON_COMPARISON/article/): see [`manuscript.tex`](BIOREASON_COMPARISON/article/manuscript.tex) for the canonical full manuscript source (intended for ISMB 2026 Function-COSI), with PDF built locally via `cd projects/BIOREASON_COMPARISON && just pdf`; [`manuscript.md`](BIOREASON_COMPARISON/article/manuscript.md) is only a website bridge. Also see [`abstract.md`](BIOREASON_COMPARISON/article/abstract.md) (long-form) and [`short-abstract.md`](BIOREASON_COMPARISON/article/short-abstract.md) (250 words).
+**Bottom line:** across 139 expert-reviewed genes, BioReason-Pro's functional summaries mostly restate what InterPro domain annotations already say (overall correctness **3.7/5**, completeness **2.9/5**). It adds real value only for proteins with distinctive multi-domain architectures, and fails systematically on localization, pseudoenzymes, paralogs, and organism-specific biology.
 
-**Slide deck** (ISMB 2026 Function-COSI talk): [`slides.md`](BIOREASON_COMPARISON/article/slides.md) (Marp source) / [`slides.html`](BIOREASON_COMPARISON/article/slides.html) (rendered). Regenerate with `npx @marp-team/marp-cli@latest slides.md --html --allow-local-files` (add `--pdf` or `--pptx` on a machine with a browser).
+📄 **[Read the manuscript (PDF)](BIOREASON_COMPARISON/article/manuscript.pdf)** &nbsp;·&nbsp; 🖥 **[View the slide deck](BIOREASON_COMPARISON/article/slides.html)** &nbsp;·&nbsp; 📝 [Abstract](BIOREASON_COMPARISON/article/abstract.md)
 
-**Reproducible stats notebooks** (`uv`-managed): [`notebooks/`](BIOREASON_COMPARISON/notebooks/) recomputes the summary statistics below directly from the committed per-gene files (no hard-coded numbers). [`01_narrative_scores.ipynb`](BIOREASON_COMPARISON/notebooks/01_narrative_scores.ipynb) reproduces the ARGO139 RL narrative means, score distribution, per-organism means, and top/bottom performers; [`02_prediction_assessments.ipynb`](BIOREASON_COMPARISON/notebooks/02_prediction_assessments.ipynb) audits ARGO95 SFT per-term de Crécy-Lagard assessments. See the [notebooks README](BIOREASON_COMPARISON/notebooks/README.md).
-
-**Benchmark membership:** [`genes.csv`](BIOREASON_COMPARISON/genes.csv) is **ARGO139** (Annotation Review GO), the fixed 139-gene BioReason-Pro benchmark used for RL narrative review in the manuscript. **ARGO95** is the 95-gene ARGO139 subset with HuggingFace `wanglab/protein_catalogue` SFT GO-term predictions and is used for the primary SFT term review. ARGO139 composition is summarized in [`argo139-species-counts.csv`](BIOREASON_COMPARISON/argo139-species-counts.csv) and [`argo139-curation-context-counts.csv`](BIOREASON_COMPARISON/argo139-curation-context-counts.csv). Source provenance is enumerated in [`benchmark-cohorts.csv`](BIOREASON_COMPARISON/benchmark-cohorts.csv) and [`benchmark-genes.csv`](BIOREASON_COMPARISON/benchmark-genes.csv); mixed-source SFT availability and GO-GPT audit views are isolated in the [benchmark supplement](BIOREASON_COMPARISON/article/supplemental-benchmark-details.md).
-
-**Expert Synthetic Review recap:** [`recapitulation-experiment/claude-expt-1/`](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/) is **ESR-ECOLI-DET-Mini**, a 7-gene quick-check recap of the de Crécy-Lagard expert review of DeepECTransformer predictions. Dataset ID: [`10.5281/zenodo.20751016`](https://doi.org/10.5281/zenodo.20751016). Use `ESR-ECOLI-DET-Mini` as the canonical benchmark name; `ESR-ECOLI-DET-7` is a count-explicit alias. A future full `ESR-ECOLI-DET` benchmark should be extracted from the complete de Crécy-Lagard paper.
-
-**Interactive prediction evaluation tables:**
+**Explore the evaluations interactively:**
 - [BioReason-Pro SFT evaluation](BIOREASON_COMPARISON/sft-eval.html) — ARGO95, 198 genes, ~11k GO term predictions
 - [GO-GPT leaf evaluation](BIOREASON_COMPARISON/gogpt-eval.html) — ARGO139, 139 genes, ~6.3k GO term predictions
 - [DeepECTF evaluation (ESR-ECOLI-DET-Mini)](BIOREASON_COMPARISON/deepectf-eval.html) — 7 E. coli genes
+
+<details>
+<summary>Data, benchmarks, and reproducibility</summary>
+
+- **Benchmarks.** [`genes.csv`](BIOREASON_COMPARISON/genes.csv) is **ARGO139** (Annotation Review GO), the fixed 139-gene benchmark used for RL narrative review. **ARGO95** is the 95-gene subset with HuggingFace `wanglab/protein_catalogue` SFT GO-term predictions, used for the primary SFT term review. Composition and source provenance: [species counts](BIOREASON_COMPARISON/argo139-species-counts.csv), [curation-context counts](BIOREASON_COMPARISON/argo139-curation-context-counts.csv), [cohorts](BIOREASON_COMPARISON/benchmark-cohorts.csv), [per-gene sources](BIOREASON_COMPARISON/benchmark-genes.csv), and the [benchmark supplement](BIOREASON_COMPARISON/article/supplemental-benchmark-details.md).
+- **ESR-ECOLI-DET-Mini** ([recap experiment](BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/)): a 7-gene quick-check recap of the de Crécy-Lagard expert review of DeepECTransformer predictions. Dataset [`10.5281/zenodo.20751016`](https://doi.org/10.5281/zenodo.20751016). `ESR-ECOLI-DET-7` is a count-explicit alias.
+- **Reproducible stats notebooks** ([`notebooks/`](BIOREASON_COMPARISON/notebooks/)) recompute the summary statistics below directly from the committed per-gene files, with no hard-coded numbers.
+
+</details>
 
 ## Methods
 
@@ -178,6 +181,22 @@ BioReason assumes catalytic activity from conserved domains without checking whe
 - **pmp20** (SCHPO, 1/5): Predicted as a peroxidase, but has lost its resolving cysteine and functions as a molecular chaperone.
 
 Notably, the BioReason paper highlights CFAP61 as a correctly identified pseudoenzyme, but this success does not generalize to our test set.
+
+**Independent adjudication (OpenScientist).** Three predictions we had scored `UNC`
+(genuinely on the fence) were re-tested as blinded gene-function hypotheses by an
+independent OpenScientist agent (structure + comparative genomics; the suspected answer
+was withheld from the prompt). Two were pseudoenzyme over-annotations, resolving the
+`UNC` calls to `NPI` (full reports live under each gene's `*-hypotheses/` directory):
+- **MJ1511** (METJA) predicted as a thiol-disulfide oxidoreductase (GO:0016671):
+  **refuted** — no CxxC redox motif, no proton-relay histidines, and its two cysteines sit
+  ~36.5 Å apart in the AlphaFold model.
+- **cts2** (SCHPO) predicted to drive fungal cell-wall disassembly (GO:0031506):
+  **refuted** — GH18 catalytic glutamate replaced by asparagine (E166N); the *S. japonicus*
+  ortholog retains the intact motif.
+- **DCAF12L2** (human) predicted to target proteasomal degradation via CRL4 (GO:0043161):
+  **partially supported, kept as a lead** — the WD40 substrate-binding arm is intact but the
+  DDB1-binding interface is degenerate and DDB1 is absent from all 43 experimental interactors,
+  so the CRL4-assembly step is unconfirmed.
 
 ### 2. Localization defaults to cytoplasm
 
