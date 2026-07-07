@@ -1,0 +1,3508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>KHK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50053" target="_blank" class="term-link">
+                        P50053
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "KHK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50053" data-a="DESCRIPTION: Ketohexokinase (fructokinase; EC 2.7.1.3) catalyze..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ketohexokinase (fructokinase; EC 2.7.1.3) catalyzes the committed first step of dietary fructose catabolism (fructolysis), phosphorylating fructose to fructose-1-phosphate using ATP (beta-D-fructose plus ATP yields beta-D-fructose 1-phosphate plus ADP). It is a soluble cytosolic enzyme of the carbohydrate-kinase PfkB (ribokinase-like) family that acts as a homodimer, requires potassium, and is inhibited by ADP. Two catalytically active isoforms are produced by alternative splicing of two adjacent exons: KHK-C (the high-affinity, predominantly hepatic/renal/intestinal isoform responsible for the bulk of fructose phosphorylation in vivo) and KHK-A (widely but weakly expressed, lower fructose affinity, more thermostable, with no clearly defined physiological role). Fructose entering metabolism via KHK bypasses the phosphofructokinase-controlled regulatory step of glycolysis, so KHK-driven fructolysis is largely unregulated. Recessive loss of hepatic KHK activity causes essential fructosuria, a benign inborn error of metabolism characterized by elevated blood and urinary fructose after fructose, sucrose, or sorbitol ingestion.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005979" target="_blank" class="term-link">
+                                    GO:0005979
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of glycogen biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005979" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAN-GO phylogenetic (IBA) annotation placing KHK in regulation of glycogen biosynthesis. KHK produces fructose-1-phosphate, feeding hepatic carbohydrate flux that can be channeled toward glycogen, but KHK is a committed catabolic kinase, not a regulator of glycogen synthesis. There is no direct evidence that KHK regulates glycogen biosynthesis; this is a broad, indirect propagation across the ketohexokinase family. The current UniProt DR record shows the corresponding PAN-GO term as GO:0070873 (regulation of glycogen metabolic process), i.e. the family-level annotation is itself imprecise/indirect for KHK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> KHK&#39;s molecular function is fructose phosphorylation; any effect on glycogen is a downstream metabolic consequence of feeding the fructolysis product into hepatic carbohydrate metabolism, not a regulatory activity of KHK. Retaining as a core function would overstate KHK&#39;s role. Better captured as a non-core, indirect metabolic contribution.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">ROLE CONFLATION</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN001634026</span>
+
+                                    &middot; ketohexokinase PANTHER node
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                    <div class="propagation-comment">Family-level glycogen-regulation role reflects an indirect metabolic effect; KHK itself is the fructose-phosphorylating enzyme, not a regulator of glycogen synthesis.</div>
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1096353</span>
+
+                                    &middot; mouse Khk
+
+
+                                    <span class="badge">SUPPORTS SOURCE BUT NOT TARGET</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006000" target="_blank" class="term-link">
+                                    GO:0006000
+                                </a>
+                            </span>
+                            <span class="term-label">fructose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0006000" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KHK is the entry enzyme of fructose metabolism, phosphorylating fructose to fructose-1-phosphate; this IBA phylogenetic annotation correctly captures the core biological process for the ketohexokinase family.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by biochemistry (EC 2.7.1.3), by the enzyme&#39;s characterized catalytic activity, and by the essential-fructosuria disease phenotype. This is a core process for KHK. A more precise child term (GO:0006001 fructose catabolic process) is proposed in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation that KHK is active in the cytoplasm. KHK is a soluble cytosolic kinase with no membrane-targeting or organellar features, consistent with cytosolic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the Reactome cytosolic reaction and with the protein having no signal/transmembrane features. Cytosol (GO:0005829) is the more precise child; cytoplasm is acceptable and correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70333
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004454" target="_blank" class="term-link">
+                                    GO:0004454
+                                </a>
+                            </span>
+                            <span class="term-label">ketohexokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0004454" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Phylogenetic (IBA) assignment of ketohexokinase activity, the defining catalytic activity of KHK (EC 2.7.1.3; beta-D-fructose plus ATP yields beta-D-fructose 1-phosphate plus ADP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the central, experimentally established molecular function of the gene product, corroborated by direct enzymology (PMID:12941785) and structural studies (PMID:19237742).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004454" target="_blank" class="term-link">
+                                    GO:0004454
+                                </a>
+                            </span>
+                            <span class="term-label">ketohexokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0004454" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of ketohexokinase activity via ARBA/InterPro (IPR034093) and the RHEA:18145 / EC:2.7.1.3 mapping. Redundant with, and confirmed by, the experimental annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC/RHEA/InterPro mapping to ketohexokinase activity is correct and matches the experimentally validated function; recombinant assays confirm both isoforms are active.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link">
+                                        PMID:12941785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we show that both ketohexokinase isoforms are indeed active.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006000" target="_blank" class="term-link">
+                                    GO:0006000
+                                </a>
+                            </span>
+                            <span class="term-label">fructose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0006000" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (ARBA/InterPro, UniPathway UPA00202) of fructose metabolic process, matching the UniProt pathway annotation of carbohydrate metabolism / fructose metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process assignment consistent with the enzyme&#39;s characterized role in fructolysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation to bare &#34;protein binding&#34; from a proteome-scale human interactome map, recording an interaction with LHX9 (UniProtKB:Q9NQ69). The term &#34;protein binding&#34; conveys no specific molecular function, and the interaction (a high-throughput screen hit) has no established functional significance for KHK&#39;s catalytic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#34;protein binding&#34; is uninformative and should not be treated as a core function. The single high-throughput interactome hit (LHX9) is retained as an over-annotated, low-information annotation rather than removed, since it is an experimental IPI whose underlying dataset I cannot fully adjudicate.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004454" target="_blank" class="term-link">
+                                    GO:0004454
+                                </a>
+                            </span>
+                            <span class="term-label">ketohexokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12941785
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of normal and mutant recombinant human ketohexoki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0004454" data-r="PMID:12941785" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of ketohexokinase activity using recombinant human KHK. Both KHK-C and KHK-A isoforms were shown to be enzymatically active, with KHK-C the high-affinity fructose enzyme; the disease mutant G40R is null. This directly establishes the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard direct enzymatic evidence for ketohexokinase activity, including determination of kinetic parameters (KM for fructose and Mg-ATP) and characterization of disease-causing mutations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link">
+                                        PMID:12941785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we show that both ketohexokinase isoforms are indeed active. Ketohexokinase-A has much poorer substrate affinity than ketohexokinase-C for fructose but is considerably more thermostable.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19237742
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of alternatively spliced isoforms of human ketohe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005524" data-r="PMID:19237742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence (IDA) for ATP binding, from the crystal structure of KHK-A in a ternary complex with fructose and the ATP analogue AMP-PNP. ATP is the phosphate donor for the ketohexokinase reaction, so ATP binding is an integral part of the catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The co-crystal structure with AMP-PNP (a non-hydrolysable ATP analogue) directly demonstrates the nucleotide-binding site; consistent with UniProt ATP-binding residue features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">one fructose molecule and one molecule of AMP-PNP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006000" target="_blank" class="term-link">
+                                    GO:0006000
+                                </a>
+                            </span>
+                            <span class="term-label">fructose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12941785
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of normal and mutant recombinant human ketohexoki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0006000" data-r="PMID:12941785" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (IDA) placing KHK in fructose metabolism, from characterization of recombinant enzyme activity on fructose and the link of KHK deficiency to essential fructosuria.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, directly supported by the enzyme&#39;s assayed activity on fructose and its disease role. A more precise child term is proposed in core_functions (GO:0006001).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link">
+                                        PMID:12941785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Hepatic ketohexokinase deficiency causes the benign disorder essential fructosuria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19237742
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of alternatively spliced isoforms of human ketohe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0042802" data-r="PMID:19237742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KHK is a homodimer, established by gel filtration, native PAGE, and the crystal structures; &#34;identical protein binding&#34; captures the self-association. Real and structurally characterized, though it is a structural/quaternary property rather than the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by biophysical and crystallographic evidence that KHK exists as a dimer in solution with a defined dimer interface. Homodimerization is a genuine property but is not itself the core molecular function (see GO:0042803 for the more specific term).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Gel filtration and nondenaturing polyacrylamide gel electrophoresis (Bais et al., 1985 ▶; Raushel &amp; Cleland, 1977 ▶) have demonstrated that KHK is a dimer in solution.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19237742
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of alternatively spliced isoforms of human ketohe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0042803" data-r="PMID:19237742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> KHK forms a catalytically active homodimer with a dimer interface formed by extended four-stranded beta-sheets; one active site per subunit. This is the more informative term for the self-association captured also as identical protein binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the crystal structures of both isoforms and solution studies demonstrating dimerization. Well characterized quaternary structure; retained but secondary to the catalytic core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The KHK-A ternary-complex structure reveals the presence of one active site per subunit</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070061" target="_blank" class="term-link">
+                                    GO:0070061
+                                </a>
+                            </span>
+                            <span class="term-label">fructose binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19237742
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of alternatively spliced isoforms of human ketohe...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0070061" data-r="PMID:19237742" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence (IDA) for fructose binding, from the KHK-A ternary complex in which the fructose substrate is almost completely buried in the active site with all five hydroxyls hydrogen-bonded to protein residues. Fructose binding is the substrate-recognition component of the ketohexokinase catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The co-crystal structure directly resolves the bound fructose molecule and its interactions, consistent with UniProt fructose-binding residue features (Asp15, Gly41, Asn42, Asn45, Asp258).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All five hydroxyl groups of fructose form direct hydrogen bonds to protein residues</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5656459
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005829" data-r="Reactome:R-HSA-5656459" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation placing KHK in the cytosol, from the &#34;Defective KHK does not phosphorylate beta-D-fructose&#34; reaction (the essential-fructosuria variant reaction). KHK is a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with all other localization evidence (Reactome fructolysis reaction, IBA cytoplasm, IDA cytoplasm) and with the enzyme lacking targeting signals.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-5656459
+
+                                </span>
+
+                                <div class="support-text">the first step of fructose catabolism in the liver</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection (HDA) of KHK in human urinary exosomes. This is a proteomic identification, consistent with KHK&#39;s high expression in renal epithelium, but does not indicate that KHK functions in exosomes; it is not a site of catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bulk proteomic detection of a highly expressed cytosolic enzyme in exosomes is common and not indicative of a functional extracellular/vesicular role. Retained as non-core localization evidence rather than accepted as a core cellular component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">profile the proteome of human urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70333
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005829" data-r="Reactome:R-HSA-70333" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation placing KHK in the cytosol, from the &#34;KHK dimer phosphorylates Fru to Fru 1-P&#34; reaction. The enzyme is explicitly described as cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the Reactome fructolysis reaction, which describes cytosolic KHK catalyzing fructose phosphorylation; consistent with all other localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70333
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000054
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0005737" data-r="GO_REF:0000054" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA, LIFEdb GFP-fusion localization) placing KHK in the cytoplasm, consistent with it being a soluble cytosolic kinase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with all other localization evidence and with the absence of targeting signals. Cytosol (GO:0005829) is the more precise term but cytoplasm is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70333
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004454" target="_blank" class="term-link">
+                                    GO:0004454
+                                </a>
+                            </span>
+                            <span class="term-label">ketohexokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7833921" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7833921
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular basis of essential fructosuria: molecular cloning ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0004454" data-r="PMID:7833921" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation of ketohexokinase activity from the original cloning/mutational-analysis paper that defined the molecular basis of essential fructosuria, identifying KHK as hepatic fructokinase (EC 2.7.1.3) that catalyzes the first step of dietary fructose metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the direct enzymatic and structural evidence for ketohexokinase activity; this paper established KHK as the fructokinase whose deficiency causes essential fructosuria.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7833921" target="_blank" class="term-link">
+                                        PMID:7833921
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzyme catalyses the first step of metabolism of dietary fructose, conversion of fructose to fructose-1-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006001" target="_blank" class="term-link">
+                                    GO:0006001
+                                </a>
+                            </span>
+                            <span class="term-label">fructose catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12941785
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Properties of normal and mutant recombinant human ketohexoki...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P50053" data-a="GO:0006001" data-r="PMID:12941785" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed more precise process annotation. KHK catalyzes the committed, first step of fructose catabolism (fructolysis), phosphorylating fructose to fructose-1-phosphate; fructose catabolic process (GO:0006001) is the precise child of the existing fructose metabolic process (GO:0006000) annotations and better reflects KHK&#39;s committed catabolic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The existing GO:0006000 (fructose metabolic process) annotations are correct but general; KHK specifically initiates fructose catabolism, so the catabolic child term is a more informative representation of its biological process. Proposed as a refinement, not a replacement, of the accepted fructose-metabolic-process annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                        PMID:19237742
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7833921" target="_blank" class="term-link">
+                                        PMID:7833921
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This enzyme catalyses the first step of metabolism of dietary fructose, conversion of fructose to fructose-1-phosphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Ketohexokinase activity - phosphorylation of fructose to fructose-1-phosphate using ATP, the committed first step of fructose catabolism (fructolysis), performed by cytosolic KHK homodimers.</h3>
+                <span class="vote-buttons" data-g="P50053" data-a="FUNCTION: Ketohexokinase activity - phosphorylation of fruct..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004454" target="_blank" class="term-link">
+                            ketohexokinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006001" target="_blank" class="term-link">
+                                fructose catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link">
+                                PMID:12941785
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Here we show that both ketohexokinase isoforms are indeed active.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                                PMID:19237742
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000054.md" target="_blank" class="term-link">
+                            GO_REF:0000054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of intracellular localizations of expressed fusion proteins in living cells</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12941785" target="_blank" class="term-link">
+                            PMID:12941785
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Properties of normal and mutant recombinant human ketohexokinases and implications for the pathogenesis of essential fructosuria.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19237742" target="_blank" class="term-link">
+                            PMID:19237742
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structures of alternatively spliced isoforms of human ketohexokinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7833921" target="_blank" class="term-link">
+                            PMID:7833921
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular basis of essential fructosuria: molecular cloning and mutational analysis of human ketohexokinase (fructokinase).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5656459
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective KHK does not phosphorylate beta-D-fructose</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70333
+
+                    </span>
+                </div>
+
+                <div class="reference-title">KHK dimer phosphorylates Fru to Fru 1-P</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(KHK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P50053" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="khk-ketohexokinase-fructokinase-review-notes">KHK (Ketohexokinase / Fructokinase) — review notes</h1>
+<p>UniProt: P50053 (KHK_HUMAN). HGNC:6315. EC 2.7.1.3. Human, NCBITaxon:9606.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>KHK (ketohexokinase, a.k.a. hepatic fructokinase) catalyzes the <strong>committed first step of<br />
+dietary fructose catabolism (fructolysis)</strong>: fructose + ATP -&gt; fructose-1-phosphate + ADP.</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the phosphorylation of the ketose sugar fructose to<br />
+  fructose-1-phosphate." [file:P50053 CC FUNCTION, ECO:0000269|PubMed:12941785]</li>
+<li>Catalytic activity: "beta-D-fructose + ATP = beta-D-fructose 1-phosphate + ADP + H(+)";<br />
+  Rhea:RHEA:18145; EC=2.7.1.3. [file:P50053 CC CATALYTIC ACTIVITY]</li>
+<li>Pathway: "Carbohydrate metabolism; fructose metabolism." [file:P50053 CC PATHWAY;<br />
+  UniPathway:UPA00202]</li>
+<li>Requires potassium; inhibited by ADP. [file:P50053 CC ACTIVITY REGULATION]</li>
+<li>KM=0.8 mM for D-fructose (KHK-C, isoform C displayed); KM=0.15 mM for Mg-ATP; kcat 7.6/s.<br />
+  Isoform A: KM=7 mM for D-fructose (much lower affinity). [file:P50053 CC BIOPHYSICOCHEMICAL,<br />
+  CC MISCELLANEOUS Isoform A]</li>
+</ul>
+<h2 id="isoforms-alternative-splicing-of-two-adjacent-135-bp-exons">Isoforms (alternative splicing of two adjacent 135-bp exons)</h2>
+<ul>
+<li><strong>KHK-C</strong> (P50053-1, "central"; hepatic/renal/intestinal): high-affinity fructose enzyme,<br />
+  the physiologically dominant hepatic isoform.</li>
+<li><strong>KHK-A</strong> (P50053-2, "peripheral"): widely distributed, low expression, poorer fructose<br />
+  affinity, more thermostable; no defined physiological function.</li>
+<li>[PMID:12941785 abstract, "Alternative splicing of the ketohexokinase (fructokinase) gene<br />
+  generates a 'central' predominantly hepatic isoform (ketohexokinase-C) and a more widely<br />
+  distributed ketohexokinase-A. Only the abundant hepatic isoform is known to possess<br />
+  activity ... Here we show that both ketohexokinase isoforms are indeed active.<br />
+  Ketohexokinase-A has much poorer substrate affinity than ketohexokinase-C for fructose but<br />
+  is considerably more thermostable."]</li>
+<li>[PMID:19237742 full text, "Fructose catabolism is initiated by its phosphorylation to<br />
+  fructose 1-phosphate, which is performed by ketohexokinase (KHK)."]</li>
+</ul>
+<h2 id="structure-mechanism">Structure / mechanism</h2>
+<ul>
+<li>pfkB family of carbohydrate kinases (ribokinase-like fold). InterPro IPR034093 (KHK),<br />
+  IPR011611 (PfkB_dom), IPR029056 (Ribokinase-like). Pfam PF00294. [file:P50053 DR / CC SIMILARITY<br />
+  "Belongs to the carbohydrate kinase PfkB family."]</li>
+<li>Functions as a <strong>homodimer</strong>; dimer interface formed by extended four-stranded beta-sheets.<br />
+  [PMID:19237742 full text, "Gel filtration and nondenaturing polyacrylamide gel electrophoresis<br />
+  ... have demonstrated that KHK is a dimer in solution."; "The KHK-A ternary-complex structure<br />
+  reveals the presence of one active site per subunit"]</li>
+<li>Ternary complex (KHK-A + fructose + AMP-PNP): fructose almost completely buried, all five<br />
+  hydroxyls H-bond to Asp15/Gly41/Asn42/Asn45/Asp258; AMP-PNP at opposite end of cleft; gamma-<br />
+  phosphate tightly bound to GAGD motif (255-258). [PMID:19237742 full text]</li>
+<li>Cytosolic. [Reactome R-HSA-70333 "Cytosolic ketohexokinase (KHK, also known as fructokinase)<br />
+  catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and<br />
+  ADP."]</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Essential fructosuria</strong> (FRUCT, MIM:229800): benign inborn error caused by recessive KHK<br />
+  deficiency; persistent rise in blood fructose and urinary fructose excretion after fructose/<br />
+  sucrose/sorbitol. Disease alleles G40R (null, insoluble) and A43T (thermolabile).<br />
+  [PMID:7833921 abstract; PMID:12941785 abstract; file:P50053 CC DISEASE; Reactome R-HSA-5656459]</li>
+<li>Distinct from Hereditary Fructose Intolerance (HFI), which is ALDOB deficiency <strong>downstream</strong><br />
+  of KHK — HFI is where the Fru-1-P produced by KHK accumulates because aldolase B cannot cleave<br />
+  it. [~/repos/dismech/kb/disorders/Hereditary_Fructose_Intolerance.yaml]</li>
+<li>Note: fructose entering via KHK bypasses the phosphofructokinase (PFK-1) regulatory step of<br />
+  glycolysis, so KHK-driven fructolysis is essentially unregulated — relevant to fructose-driven<br />
+  metabolic disease (lipogenesis, hyperuricemia). [PMID:19237742 full text background:<br />
+  "the greatly increased fructose load in Western diets ... has been implicated in the development<br />
+  of adverse metabolic states, namely glucose intolerance, hyperlipidaemia, obesity, insulin<br />
+  resistance, diabetes and gout"]</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosol/cytoplasm (TAS Reactome, IBA, IDA LIFEdb). Consistent with a soluble cytosolic kinase.</li>
+<li>Extracellular exosome (HDA, PMID:19056867 urinary exosome proteomics): a high-throughput MS<br />
+  detection in urinary exosomes; KHK is renal/intestinal too. Not the site of catalytic function;<br />
+  KEEP_AS_NON_CORE (proteomic detection, not functional localization).</li>
+</ul>
+<h2 id="goa-annotation-notes-actions">GOA annotation notes (actions)</h2>
+<ul>
+<li>GO:0004454 ketohexokinase activity — core MF. IBA/IEA/IDA(PMID:12941785)/TAS(PMID:7833921) all<br />
+  ACCEPT (multiple orthogonal lines; EC 2.7.1.3 / RHEA:18145).</li>
+<li>GO:0006000 fructose metabolic process — core BP (IBA/IEA/IDA). ACCEPT. (Could be modified to the<br />
+  more precise GO:0006001 fructose catabolic process; captured in core_functions.)</li>
+<li>GO:0005524 ATP binding — MF, IDA PMID:19237742 (AMP-PNP co-crystal). ACCEPT.</li>
+<li>GO:0070061 fructose binding — MF, IDA PMID:19237742 (fructose co-crystal). ACCEPT.</li>
+<li>GO:0042802 identical protein binding + GO:0042803 protein homodimerization activity — IDA<br />
+  PMID:19237742 (KHK is a homodimer). ACCEPT (homodimerization is real and structurally<br />
+  characterized); homodimerization is not the <em>core</em> function but is well-supported.</li>
+<li>GO:0005515 protein binding — IPI PMID:25416956 (LHX9, high-throughput Y2H interactome). Bare<br />
+  "protein binding" is uninformative per curation policy -&gt; MARK_AS_OVER_ANNOTATED (not REMOVE;<br />
+  it is an experimental IPI).</li>
+<li>GO:0005979 regulation of glycogen biosynthetic process — IBA GO_REF:0000033 (PAN-GO). KHK<br />
+  produces Fru-1-P feeding hepatic carbohydrate/glycogen metabolism, but KHK is not a regulator of<br />
+  glycogen synthesis; this is a broad/indirect PAN-GO propagation -&gt; MARK_AS_OVER_ANNOTATED /<br />
+  KEEP_AS_NON_CORE. (UniProt DR shows the current PAN-GO term as GO:0070873 regulation of glycogen<br />
+  metabolic process + GO:0032868 response to insulin.)</li>
+<li>GO:0005737 cytoplasm (IBA, IDA) and GO:0005829 cytosol (TAS Reactome x2) — ACCEPT (cytosolic).</li>
+<li>GO:0070062 extracellular exosome — HDA PMID:19056867 -&gt; KEEP_AS_NON_CORE (proteomic detection).</li>
+</ul>
+<h2 id="references-cited">References cited</h2>
+<ul>
+<li>PMID:7833921 — cloning + essential fructosuria mutational basis (abstract-only cache).</li>
+<li>PMID:12941785 — recombinant WT/mutant KHK properties, both isoforms active (abstract-only cache).</li>
+<li>PMID:19237742 — crystal structures of KHK-A and KHK-C; full text available.</li>
+<li>PMID:19056867 — urinary exosome proteomics (abstract-only cache).</li>
+<li>PMID:25416956 — human interactome map (LHX9 interaction; full text available but does not quote KHK).</li>
+<li>Reactome R-HSA-70333 (reaction), R-HSA-5656459 (defective KHK), UniPathway UPA00202.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50053
+gene_symbol: KHK
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Ketohexokinase (fructokinase; EC 2.7.1.3) catalyzes the committed first step of dietary
+  fructose catabolism (fructolysis), phosphorylating fructose to fructose-1-phosphate using
+  ATP (beta-D-fructose plus ATP yields beta-D-fructose 1-phosphate plus ADP). It is a soluble
+  cytosolic enzyme of the carbohydrate-kinase PfkB (ribokinase-like) family that acts as a
+  homodimer, requires potassium, and is inhibited by ADP. Two catalytically active isoforms are
+  produced by alternative splicing of two adjacent exons: KHK-C (the high-affinity, predominantly
+  hepatic/renal/intestinal isoform responsible for the bulk of fructose phosphorylation in vivo)
+  and KHK-A (widely but weakly expressed, lower fructose affinity, more thermostable, with no
+  clearly defined physiological role). Fructose entering metabolism via KHK bypasses the
+  phosphofructokinase-controlled regulatory step of glycolysis, so KHK-driven fructolysis is
+  largely unregulated. Recessive loss of hepatic KHK activity causes essential fructosuria, a
+  benign inborn error of metabolism characterized by elevated blood and urinary fructose after
+  fructose, sucrose, or sorbitol ingestion.
+alternative_products:
+- name: C {ECO:0000269|PubMed:9799106} (Central,)
+  id: P50053-1
+- name: A {ECO:0000269|PubMed:9799106} (Peripheral)
+  id: P50053-2
+  sequence_note: VSP_004669
+existing_annotations:
+- term:
+    id: GO:0005979
+    label: regulation of glycogen biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: PAN-GO phylogenetic (IBA) annotation placing KHK in regulation of glycogen
+      biosynthesis. KHK produces fructose-1-phosphate, feeding hepatic carbohydrate flux that
+      can be channeled toward glycogen, but KHK is a committed catabolic kinase, not a regulator
+      of glycogen synthesis. There is no direct evidence that KHK regulates glycogen biosynthesis;
+      this is a broad, indirect propagation across the ketohexokinase family. The current
+      UniProt DR record shows the corresponding PAN-GO term as GO:0070873 (regulation of glycogen
+      metabolic process), i.e. the family-level annotation is itself imprecise/indirect for KHK.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: KHK&#39;s molecular function is fructose phosphorylation; any effect on glycogen is a
+      downstream metabolic consequence of feeding the fructolysis product into hepatic carbohydrate
+      metabolism, not a regulatory activity of KHK. Retaining as a core function would overstate
+      KHK&#39;s role. Better captured as a non-core, indirect metabolic contribution.
+    propagation_review:
+      root_cause: PROPAGATION_BAD
+      failure_modes:
+      - ROLE_CONFLATION
+      source_entities:
+      - source_id: PANTHER:PTN001634026
+        source_label: ketohexokinase PANTHER node
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+        comment: Family-level glycogen-regulation role reflects an indirect metabolic effect;
+          KHK itself is the fructose-phosphorylating enzyme, not a regulator of glycogen synthesis.
+      - source_id: MGI:MGI:1096353
+        source_label: mouse Khk
+        source_status: SUPPORTS_SOURCE_BUT_NOT_TARGET
+- term:
+    id: GO:0006000
+    label: fructose metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: KHK is the entry enzyme of fructose metabolism, phosphorylating fructose to
+      fructose-1-phosphate; this IBA phylogenetic annotation correctly captures the core biological
+      process for the ketohexokinase family.
+    action: ACCEPT
+    reason: Well supported by biochemistry (EC 2.7.1.3), by the enzyme&#39;s characterized catalytic
+      activity, and by the essential-fructosuria disease phenotype. This is a core process for KHK.
+      A more precise child term (GO:0006001 fructose catabolic process) is proposed in core_functions.
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) annotation that KHK is active in the cytoplasm. KHK is a soluble
+      cytosolic kinase with no membrane-targeting or organellar features, consistent with cytosolic
+      activity.
+    action: ACCEPT
+    reason: Consistent with the Reactome cytosolic reaction and with the protein having no
+      signal/transmembrane features. Cytosol (GO:0005829) is the more precise child; cytoplasm is
+      acceptable and correct.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70333
+      supporting_text: &#34;Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.&#34;
+- term:
+    id: GO:0004454
+    label: ketohexokinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Core molecular function. Phylogenetic (IBA) assignment of ketohexokinase activity,
+      the defining catalytic activity of KHK (EC 2.7.1.3; beta-D-fructose plus ATP yields
+      beta-D-fructose 1-phosphate plus ADP).
+    action: ACCEPT
+    reason: This is the central, experimentally established molecular function of the gene product,
+      corroborated by direct enzymology (PMID:12941785) and structural studies (PMID:19237742).
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).&#34;
+- term:
+    id: GO:0004454
+    label: ketohexokinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic assignment of ketohexokinase activity via ARBA/InterPro (IPR034093) and the
+      RHEA:18145 / EC:2.7.1.3 mapping. Redundant with, and confirmed by, the experimental annotations.
+    action: ACCEPT
+    reason: The EC/RHEA/InterPro mapping to ketohexokinase activity is correct and matches the
+      experimentally validated function; recombinant assays confirm both isoforms are active.
+    supported_by:
+    - reference_id: PMID:12941785
+      supporting_text: &#34;Here we show that both ketohexokinase isoforms are indeed active.&#34;
+- term:
+    id: GO:0006000
+    label: fructose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic assignment (ARBA/InterPro, UniPathway UPA00202) of fructose metabolic process,
+      matching the UniProt pathway annotation of carbohydrate metabolism / fructose metabolism.
+    action: ACCEPT
+    reason: Correct process assignment consistent with the enzyme&#39;s characterized role in fructolysis.
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: IPI annotation to bare &#34;protein binding&#34; from a proteome-scale human interactome map,
+      recording an interaction with LHX9 (UniProtKB:Q9NQ69). The term &#34;protein binding&#34; conveys no
+      specific molecular function, and the interaction (a high-throughput screen hit) has no
+      established functional significance for KHK&#39;s catalytic role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Per curation guidelines, bare &#34;protein binding&#34; is uninformative and should not be
+      treated as a core function. The single high-throughput interactome hit (LHX9) is retained as
+      an over-annotated, low-information annotation rather than removed, since it is an experimental
+      IPI whose underlying dataset I cannot fully adjudicate.
+- term:
+    id: GO:0004454
+    label: ketohexokinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12941785
+  qualifier: enables
+  review:
+    summary: Direct assay (IDA) of ketohexokinase activity using recombinant human KHK. Both KHK-C
+      and KHK-A isoforms were shown to be enzymatically active, with KHK-C the high-affinity fructose
+      enzyme; the disease mutant G40R is null. This directly establishes the core catalytic function.
+    action: ACCEPT
+    reason: Gold-standard direct enzymatic evidence for ketohexokinase activity, including
+      determination of kinetic parameters (KM for fructose and Mg-ATP) and characterization of
+      disease-causing mutations.
+    supported_by:
+    - reference_id: PMID:12941785
+      supporting_text: &#34;Here we show that both ketohexokinase isoforms are indeed active. Ketohexokinase-A has much poorer substrate affinity than ketohexokinase-C for fructose but is considerably more thermostable.&#34;
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:19237742
+  qualifier: enables
+  review:
+    summary: Direct structural evidence (IDA) for ATP binding, from the crystal structure of KHK-A
+      in a ternary complex with fructose and the ATP analogue AMP-PNP. ATP is the phosphate donor
+      for the ketohexokinase reaction, so ATP binding is an integral part of the catalytic function.
+    action: ACCEPT
+    reason: The co-crystal structure with AMP-PNP (a non-hydrolysable ATP analogue) directly
+      demonstrates the nucleotide-binding site; consistent with UniProt ATP-binding residue features.
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;one fructose molecule and one molecule of AMP-PNP&#34;
+- term:
+    id: GO:0006000
+    label: fructose metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12941785
+  qualifier: involved_in
+  review:
+    summary: Direct evidence (IDA) placing KHK in fructose metabolism, from characterization of
+      recombinant enzyme activity on fructose and the link of KHK deficiency to essential fructosuria.
+    action: ACCEPT
+    reason: Core biological process, directly supported by the enzyme&#39;s assayed activity on fructose
+      and its disease role. A more precise child term is proposed in core_functions (GO:0006001).
+    supported_by:
+    - reference_id: PMID:12941785
+      supporting_text: &#34;Hepatic ketohexokinase deficiency causes the benign disorder essential fructosuria.&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IDA
+  original_reference_id: PMID:19237742
+  qualifier: enables
+  review:
+    summary: KHK is a homodimer, established by gel filtration, native PAGE, and the crystal
+      structures; &#34;identical protein binding&#34; captures the self-association. Real and structurally
+      characterized, though it is a structural/quaternary property rather than the core catalytic
+      function.
+    action: ACCEPT
+    reason: Directly supported by biophysical and crystallographic evidence that KHK exists as a
+      dimer in solution with a defined dimer interface. Homodimerization is a genuine property but
+      is not itself the core molecular function (see GO:0042803 for the more specific term).
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;Gel filtration and nondenaturing polyacrylamide gel electrophoresis (Bais et al., 1985 ▶; Raushel &amp; Cleland, 1977 ▶) have demonstrated that KHK is a dimer in solution.&#34;
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:19237742
+  qualifier: enables
+  review:
+    summary: KHK forms a catalytically active homodimer with a dimer interface formed by extended
+      four-stranded beta-sheets; one active site per subunit. This is the more informative term for
+      the self-association captured also as identical protein binding.
+    action: ACCEPT
+    reason: Directly supported by the crystal structures of both isoforms and solution studies
+      demonstrating dimerization. Well characterized quaternary structure; retained but secondary
+      to the catalytic core function.
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;The KHK-A ternary-complex structure reveals the presence of one active site per subunit&#34;
+- term:
+    id: GO:0070061
+    label: fructose binding
+  evidence_type: IDA
+  original_reference_id: PMID:19237742
+  qualifier: enables
+  review:
+    summary: Direct structural evidence (IDA) for fructose binding, from the KHK-A ternary complex in
+      which the fructose substrate is almost completely buried in the active site with all five
+      hydroxyls hydrogen-bonded to protein residues. Fructose binding is the substrate-recognition
+      component of the ketohexokinase catalytic function.
+    action: ACCEPT
+    reason: The co-crystal structure directly resolves the bound fructose molecule and its
+      interactions, consistent with UniProt fructose-binding residue features (Asp15, Gly41, Asn42,
+      Asn45, Asp258).
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;All five hydroxyl groups of fructose form direct hydrogen bonds to protein residues&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5656459
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation placing KHK in the cytosol, from the &#34;Defective KHK does not
+      phosphorylate beta-D-fructose&#34; reaction (the essential-fructosuria variant reaction). KHK is a
+      soluble cytosolic enzyme.
+    action: ACCEPT
+    reason: Consistent with all other localization evidence (Reactome fructolysis reaction, IBA
+      cytoplasm, IDA cytoplasm) and with the enzyme lacking targeting signals.
+    supported_by:
+    - reference_id: Reactome:R-HSA-5656459
+      supporting_text: &#34;the first step of fructose catabolism in the liver&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput mass-spectrometry detection (HDA) of KHK in human urinary exosomes.
+      This is a proteomic identification, consistent with KHK&#39;s high expression in renal
+      epithelium, but does not indicate that KHK functions in exosomes; it is not a site of
+      catalytic activity.
+    action: KEEP_AS_NON_CORE
+    reason: Bulk proteomic detection of a highly expressed cytosolic enzyme in exosomes is common
+      and not indicative of a functional extracellular/vesicular role. Retained as non-core
+      localization evidence rather than accepted as a core cellular component.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &#34;profile the proteome of human urinary exosomes&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70333
+  qualifier: located_in
+  review:
+    summary: Reactome TAS annotation placing KHK in the cytosol, from the &#34;KHK dimer phosphorylates
+      Fru to Fru 1-P&#34; reaction. The enzyme is explicitly described as cytosolic.
+    action: ACCEPT
+    reason: Directly supported by the Reactome fructolysis reaction, which describes cytosolic KHK
+      catalyzing fructose phosphorylation; consistent with all other localization evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70333
+      supporting_text: &#34;Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000054
+  qualifier: located_in
+  review:
+    summary: Direct assay (IDA, LIFEdb GFP-fusion localization) placing KHK in the cytoplasm,
+      consistent with it being a soluble cytosolic kinase.
+    action: ACCEPT
+    reason: Consistent with all other localization evidence and with the absence of targeting
+      signals. Cytosol (GO:0005829) is the more precise term but cytoplasm is correct.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70333
+      supporting_text: &#34;Cytosolic ketohexokinase (KHK, also known as fructokinase) catalyzes the reaction of D-fructose (Fru) and ATP to form D-fructose 1-phosphate (Fru 1-P) and ADP.&#34;
+- term:
+    id: GO:0004454
+    label: ketohexokinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:7833921
+  qualifier: enables
+  review:
+    summary: TAS annotation of ketohexokinase activity from the original cloning/mutational-analysis
+      paper that defined the molecular basis of essential fructosuria, identifying KHK as hepatic
+      fructokinase (EC 2.7.1.3) that catalyzes the first step of dietary fructose metabolism.
+    action: ACCEPT
+    reason: Consistent with the direct enzymatic and structural evidence for ketohexokinase activity;
+      this paper established KHK as the fructokinase whose deficiency causes essential fructosuria.
+    supported_by:
+    - reference_id: PMID:7833921
+      supporting_text: &#34;This enzyme catalyses the first step of metabolism of dietary fructose, conversion of fructose to fructose-1-phosphate.&#34;
+- term:
+    id: GO:0006001
+    label: fructose catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:12941785
+  qualifier: involved_in
+  review:
+    summary: Proposed more precise process annotation. KHK catalyzes the committed, first step
+      of fructose catabolism (fructolysis), phosphorylating fructose to fructose-1-phosphate;
+      fructose catabolic process (GO:0006001) is the precise child of the existing fructose
+      metabolic process (GO:0006000) annotations and better reflects KHK&#39;s committed catabolic role.
+    action: NEW
+    reason: The existing GO:0006000 (fructose metabolic process) annotations are correct but
+      general; KHK specifically initiates fructose catabolism, so the catabolic child term is a
+      more informative representation of its biological process. Proposed as a refinement, not a
+      replacement, of the accepted fructose-metabolic-process annotations.
+    supported_by:
+    - reference_id: PMID:19237742
+      supporting_text: &#34;Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).&#34;
+    - reference_id: PMID:7833921
+      supporting_text: &#34;This enzyme catalyses the first step of metabolism of dietary fructose, conversion of fructose to fructose-1-phosphate.&#34;
+core_functions:
+- description: Ketohexokinase activity - phosphorylation of fructose to fructose-1-phosphate using
+    ATP, the committed first step of fructose catabolism (fructolysis), performed by cytosolic
+    KHK homodimers.
+  molecular_function:
+    id: GO:0004454
+    label: ketohexokinase activity
+  directly_involved_in:
+  - id: GO:0006001
+    label: fructose catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:12941785
+    supporting_text: &#34;Here we show that both ketohexokinase isoforms are indeed active.&#34;
+  - reference_id: PMID:19237742
+    supporting_text: &#34;Fructose catabolism is initiated by its phosphorylation to fructose 1-phosphate, which is performed by ketohexokinase (KHK).&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000054
+  title: Gene Ontology annotation based on curation of intracellular localizations
+    of expressed fusion proteins in living cells
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:12941785
+  title: Properties of normal and mutant recombinant human ketohexokinases and implications
+    for the pathogenesis of essential fructosuria.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary enzymology of recombinant human KHK; establishes ketohexokinase
+      activity (EC 2.7.1.3), that both KHK-A and KHK-C isoforms are active, kinetic parameters,
+      and the disease mechanism of essential fructosuria (G40R null, A43T thermolabile). Directly
+      supports the core catalytic function and fructose metabolic process annotations. Cached
+      entry is abstract-only (full_text_available false).
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: High-throughput urinary exosome proteomics; source of the extracellular exosome
+      HDA localization. Detection of a highly expressed cytosolic enzyme in exosomes, not a
+      functional localization. Abstract-only cache does not name KHK individually (part of the
+      1132-protein dataset).
+- id: PMID:19237742
+  title: Structures of alternatively spliced isoforms of human ketohexokinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full-text-available crystal structures of KHK-A and KHK-C and the KHK-A ternary
+      complex with fructose and AMP-PNP. Directly supports ATP binding, fructose binding,
+      homodimerization/identical protein binding, and the committed fructolysis role. Verified
+      against cached full text.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Proteome-scale Y2H interactome; source of the bare &#34;protein binding&#34; IPI
+      (KHK-LHX9, Q9NQ69). The cached full text does not mention KHK or LHX9 specifically (the
+      interaction lives in the supplementary dataset). Low information value for KHK&#39;s molecular
+      function; retained as over-annotated.
+- id: PMID:7833921
+  title: &#39;Molecular basis of essential fructosuria: molecular cloning and mutational
+    analysis of human ketohexokinase (fructokinase).&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original cloning and mutational analysis defining KHK as hepatic fructokinase
+      (EC 2.7.1.3) and the molecular basis of essential fructosuria (compound heterozygous G40R /
+      A43T). Supports ketohexokinase activity and disease role. Abstract-only cache.
+- id: Reactome:R-HSA-5656459
+  title: Defective KHK does not phosphorylate beta-D-fructose
+  findings: []
+- id: Reactome:R-HSA-70333
+  title: KHK dimer phosphorylates Fru to Fru 1-P
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
