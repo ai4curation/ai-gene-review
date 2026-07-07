@@ -1,0 +1,2285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cms1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cms1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O94465" target="_blank" class="term-link">
+                        O94465
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cms1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O94465" data-a="DESCRIPTION: Conserved, non-essential nuclear protein of the CM..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Conserved, non-essential nuclear protein of the CMS1/CMSS1 family (Pfam PF14617; PANTHER PTHR24030), with single-copy orthologs from fungi to vertebrates including Saccharomyces cerevisiae CMS1 and human CMSS1. Based on orthology to the strongly characterized budding-yeast factor, Cms1 is an accessory assembly factor of the nucleolar 90S pre-ribosome (small subunit processome) that acts in ribosomal small subunit (18S rRNA) biogenesis, where the budding-yeast ortholog associates with the 18S rRNA 3&#39; major domain of an early 90S carrying the H/ACA snoRNA snR83 and coordinates stepwise local assembly with timely snR83 release. The protein carries a degenerate, catalytically inactive helicase-like fold and a basic disordered patch, but no molecular activity has been experimentally demonstrated in any species. In Schizosaccharomyces pombe the protein itself is uncharacterized (UniProt evidence level: inferred from homology; PomBase characterisation status: biological role inferred): all functional annotations are orthology transfers and deletion is viable.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94465" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (IEA) subcellular-location annotation derived from the UniProt Swiss-Prot &#34;Nucleus&#34; keyword mapping (GO_REF:0000044). It is consistent with, but redundant to, the ISO nuclear annotation (is_active_in nucleus) transferred from the S. cerevisiae ortholog. The nuclear localization is itself a by-similarity inference (UniProt SUBCELLULAR LOCATION: Nucleus, ECO:0000250); no direct localization has been reported for the S. pombe protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A defensible location call but not a core function, and redundant with the ISO nucleus annotation. The physiologically relevant compartment is more precisely the nucleolus (site of 90S pre-ribosome assembly), but nucleus is a correct, conservative parent. Retained as a non-core localization annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94465" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function term with ND (No Data) evidence, used by PomBase as a placeholder because no specific molecular function is known for cms1. This accurately reflects the current state of knowledge: cms1 encodes a degenerate, catalytically inactive helicase-like fold and no molecular activity has been demonstrated. Even for the well-studied S. cerevisiae ortholog, a possible RNA-binding activity is explicitly hypothetical rather than measured.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND molecular_function annotation is appropriate and honest. No specific MF should be asserted: the only proposed activity (RNA binding via an inactive helicase domain) is speculative even for the budding-yeast ortholog and has not been biochemically demonstrated in any species. This is a genuine molecular- function knowledge gap (see knowledge_gaps).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">little is known about how the many different snoRNAs that modify the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030686" target="_blank" class="term-link">
+                                    GO:0030686
+                                </a>
+                            </span>
+                            <span class="term-label">90S preribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94465" data-a="GO:0030686" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Part_of the 90S preribosome (small subunit processome), transferred by orthology (ISO) from S. cerevisiae CMS1 (SGD:S000003993). This is well supported for the ortholog: budding-yeast Cms1 co-precipitates with many 90S factors and is detected on early 90S particles at the 18S rRNA 3&#39; major domain. cms1 is a single-copy member of a family conserved from fungi to human (human CMSS1), so the orthology transfer is reliable. PomBase names the product &#34;U3-containing 90S preribosome complex subunit Cms1&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A well-founded core annotation. Unlike a spurious ortholog transfer, this ISO is supported by strong experimental evidence in the closely related S. cerevisiae ortholog and by robust single-copy conservation across the CMS1/CMSS1 family. The 90S preribosome is the defining complex for this protein&#39;s inferred role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Cms1 co-precipitates with many 90S</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">detected Cms1 at the 18S rRNA 3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042274" target="_blank" class="term-link">
+                                    GO:0042274
+                                </a>
+                            </span>
+                            <span class="term-label">ribosomal small subunit biogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O94465" data-a="GO:0042274" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Involved_in ribosomal small subunit biogenesis, transferred by orthology (ISO) from S. cerevisiae CMS1 (SGD:S000003993). The ortholog is a non-essential early 90S / small-subunit-processome assembly factor that acts at the 18S rRNA 3&#39; major domain and coordinates local assembly with timely release of the H/ACA snoRNA snR83. This process assignment is the best-supported functional statement for cms1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The core biological process. Strongly supported for the S. cerevisiae ortholog and reliable to transfer given single-copy family conservation. The role is accessory/regulatory within 90S assembly rather than a distinct catalytic step, consistent with the protein&#39;s degenerate helicase-like fold and non-essentiality.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">restrict premature Rrp12-Enp1 binding but allows snR83 to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O94465" data-a="GO:0005634" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Is_active_in nucleus, transferred by orthology (ISO) from S. cerevisiae CMS1 (SGD:S000003993), consistent with UniProt&#39;s by-similarity Nucleus localization. The functionally relevant sub-compartment is the nucleolus, where 90S pre- ribosome assembly occurs, but nucleus is a correct conservative parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The nuclear localization is consistent with the protein&#39;s inferred role as a nucleolar 90S assembly factor and with the ortholog, and is retained as a supporting location rather than a core function. A nucleolus (GO:0005730) annotation would be more precise but is not asserted here in the absence of direct S. pombe localization data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                        PMID:36417864
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Accessory subunit of the nucleolar 90S pre-ribosome (small subunit processome) acting in ribosomal small subunit (18S rRNA) biogenesis. By orthology to the characterized S. cerevisiae factor, cms1 associates with the 18S rRNA 3&#39; major domain of an early 90S particle and helps coordinate stepwise local assembly with timely snR83 release; it is non-essential. No independent molecular activity is asserted: the protein has a catalytically inactive, degenerate helicase-like fold, and the only proposed activity (RNA binding) is hypothetical even for the budding-yeast ortholog (see knowledge_gaps).</h3>
+                <span class="vote-buttons" data-g="O94465" data-a="FUNCTION: Accessory subunit of the nucleolar 90S pre-ribosom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042274" target="_blank" class="term-link">
+                                ribosomal small subunit biogenesis
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030686" target="_blank" class="term-link">
+                            90S preribosome
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                PMID:36417864
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                                PMID:36417864
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Cms1 co-precipitates with many 90S</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36417864" target="_blank" class="term-link">
+                            PMID:36417864
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cms1 coordinates stepwise local 90S pre-ribosome assembly with timely snR83 release.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction, and the study reports a role for the CMS1/CMSS1-family factor Cms1 in this process.</div>
+
+                        <div class="finding-text">"Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cms1 is detected on an early 90S pre-ribosome at the 18S rRNA 3&#39; major domain carrying the H/ACA snoRNA snR83, and co-precipitates with many 90S factors.</div>
+
+                        <div class="finding-text">"detected Cms1 at the 18S rRNA 3"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cms1 is proposed to restrict premature Rrp12-Enp1 binding while allowing snR83 to act, coordinating stepwise local 90S assembly.</div>
+
+                        <div class="finding-text">"restrict premature Rrp12-Enp1 binding but allows snR83 to"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The mechanism by which the many snoRNAs that modify pre-rRNA are guided to their target sites during early ribosome assembly is largely unknown, framing Cms1 as a poorly understood coordinating factor.</div>
+
+                        <div class="finding-text">"little is known about how the many different snoRNAs that modify the"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the degenerate helicase-like CMS1/CMSS1 fold have any real RNA-binding (or other) biochemical activity, or is cms1 a purely structural/placeholder subunit of the early 90S?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="Q: Does the degenerate helicase-like CMS1/CMSS1 fold ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe cms1 localize to the nucleolus and associate with the 90S pre- ribosome as predicted from the S. cerevisiae ortholog, and does cms1 deletion impair 18S rRNA / small-subunit maturation in fission yeast?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="Q: Does S. pombe cms1 localize to the nucleolus and a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the snR83-coordination role of the budding-yeast ortholog conserved in S. pombe (i.e. does cms1 act with the fission-yeast H/ACA snoRNA that pseudouridylates the 18S 3&#39; major domain)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="Q: Is the snR83-coordination role of the budding-yeas..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Affinity purification of tagged S. pombe Cms1 followed by mass spectrometry and RNA identification (RIP/CLIP) to define its 90S partners and any bound rRNA/snoRNA.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="EXPERIMENT: Affinity purification of tagged S. pombe Cms1 foll..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> GFP/fluorescent tagging of cms1 to determine subcellular (nucleolar) localization in S. pombe.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="EXPERIMENT: GFP/fluorescent tagging of cms1 to determine subce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Northern/primer-extension analysis of pre-rRNA processing intermediates and polysome/40S profiling in a cms1 deletion strain to test the small-subunit- biogenesis role directly.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="EXPERIMENT: Northern/primer-extension analysis of pre-rRNA pro..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In vitro RNA-binding assays on recombinant Cms1 (and structure-guided mutants of the inactive helicase fold and the basic disordered patch) to test the proposed RNA-binding activity.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O94465" data-a="EXPERIMENT: In vitro RNA-binding assays on recombinant Cms1 (a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cms1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O94465" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cms1-spbc23g707c-uniprot-o94465-curation-notes">cms1 (SPBC23G7.07c, UniProt O94465) — curation notes</h1>
+<p>Fission yeast (<em>Schizosaccharomyces pombe</em>) gene, systematic name SPBC23G7.07c, standard name <strong>cms1</strong>.<br />
+Understudied ("dark") gene. This journal records what is KNOWN vs NOT-known, with inline provenance.</p>
+<blockquote>
+<p>Provenance note on deep research: the automated deep-research harness (<code>deep_research_wrapper.py</code><br />
+SCHPO cms1 falcon --fallback perplexity-lite<code>, and</code>just deep-research-falcon<code>) hung and timed out
+(&gt;550s, exit 124/no output) on two attempts and produced no report file. Per project guidance, this
+review is therefore grounded directly in the UniProt record, the QuickGO GOA TSV, the PomBase gene
+record (JSON API), the InterPro/PANTHER family data (PTHR24030), and the cached primary literature on
+the S. cerevisiae ortholog (publications/PMID_36417864.md). No</code>-deep-research-*.md` file was<br />
+fabricated.</p>
+</blockquote>
+<h2 id="identity-and-domain-reasoning-from-cms1-uniprottxt-interpro-pombase">Identity and domain reasoning (from cms1-uniprot.txt, InterPro, PomBase)</h2>
+<ul>
+<li>277 aa protein, MW ~31.6 kDa. UniProt evidence level <strong>PE 3 (Inferred from homology)</strong> — i.e. no<br />
+  direct protein-level experimental evidence for the <em>S. pombe</em> protein itself.</li>
+<li>UniProt RecName is simply "Protein cms1"; the only functional statements are inferred:</li>
+<li>FUNCTION: "May play a role in the regulation of DNA replication and cell cycle control." {ECO:0000250}<br />
+    (this is a legacy homology inference derived from the budding-yeast <em>CMS1</em> high-copy-suppressor-of-<em>MCM10</em><br />
+    history, NOT from any 90S ribosome work; see below).</li>
+<li>SUBCELLULAR LOCATION: Nucleus {ECO:0000250} (by similarity).</li>
+<li>SIMILARITY: "Belongs to the CMS1 family." {ECO:0000305}.</li>
+<li>Domain/family signatures: Pfam <strong>PF14617 (CMS1)</strong>, InterPro <strong>IPR032704 (Cms1)</strong>, PANTHER <strong>PTHR24030<br />
+  / PTHR24030:SF0 (PROTEIN CMSS1)</strong>. No catalytic-domain signature (no kinase, no methyltransferase,<br />
+  no active nuclease). The Pfam CMS1 domain corresponds to a degenerate/inactive helicase-like fold<br />
+  (see Lau et al. 2022 below).</li>
+<li>Sequence features (UniProt FT): a disordered region 28-68, with a polar-residue compositional bias<br />
+  (33-49) and a <strong>basic-residue compositional bias (53-68)</strong> — the stretch <code>KREKRKKQRQKQKERKRAK</code>. A basic<br />
+  disordered patch of this kind is a plausible (but unproven) nucleic-acid-contacting element, consistent<br />
+  with an RNP/ribosome-biogenesis context, but is not by itself an annotatable molecular function.</li>
+<li>PANTHER family PTHR24030 (interpro/panther/PTHR24030) is conserved from fungi to vertebrates; reviewed<br />
+  members include <em>S. cerevisiae</em> CMS1 (Q07897), human <strong>CMSS1</strong> (Q9BQ75, "Cms1 ribosomal small subunit<br />
+  homolog"), mouse/rat/zebrafish/Xenopus Cmss1, and <em>Thermochaetoides thermophila</em> CMS1. So cms1 is a<br />
+  genuinely conserved single-copy family member — unlike lineage-restricted orphans.</li>
+</ul>
+<h2 id="pombase-specific-facts-pombase-api-gene-spbc23g707c">PomBase-specific facts (PomBase API, gene SPBC23G7.07c)</h2>
+<ul>
+<li>PomBase product name: <strong>"U3-containing 90S preribosome complex subunit Cms1"</strong>.</li>
+<li>PomBase <code>characterisation_status</code>: <strong>"biological role inferred"</strong> — i.e. the pombe gene's role is<br />
+  inferred (from orthology), not directly demonstrated in <em>S. pombe</em>.</li>
+<li>GO annotations in PomBase mirror the GOA TSV: MF = ND (root, no data); BP = ribosomal small subunit<br />
+  biogenesis (GO:0042274); CC = 90S preribosome (GO:0030686) + nucleus (GO:0005634). All functional<br />
+  terms are ISO transfers from <em>S. cerevisiae</em> CMS1 (SGD:S000003993).</li>
+<li>Deletion phenotype: PomBase records a single-locus phenotype <strong>FYPO:0002060 "viable vegetative cell<br />
+  population"</strong> — cms1Δ is viable (non-essential), consistent with <em>S. cerevisiae</em> (below). Other<br />
+  phenotype terms are high-throughput deletion-collection screen hits (e.g. FYPO:0003743 "decreased<br />
+  cell population growth during glucose starvation"; FYPO:0001701 "sensitive to bortezomib";<br />
+  FYPO:0000763 "resistance to cadmium") — these are pleiotropic screen signals, not core-function-defining.</li>
+</ul>
+<h2 id="ortholog-evidence-the-source-of-the-iso-annotations">Ortholog evidence — the source of the ISO annotations</h2>
+<p>The ISO annotations are transferred from the <em>S. cerevisiae</em> ortholog <strong>CMS1</strong> (SGD:S000003993, Q07897).<br />
+The most informative primary study of that ortholog:</p>
+<p><strong>Lau B, Beine-Golovchuk O, Kornprobst M, Cheng J, Kressler D, Jády B, Kiss T, Beckmann R, Hurt E.<br />
+"Cms1 coordinates stepwise local 90S pre-ribosome assembly with timely snR83 release." Cell Rep. 2022;<br />
+41(8):111684. PMID:36417864</strong> (full text cached in publications/PMID_36417864.md). This paper is entirely<br />
+about <em>S. cerevisiae</em> Cms1 (no <em>S. pombe</em> data — grep found 0 "pombe" mentions), so it grounds the ORTHOLOG.</p>
+<p>Key verbatim-supported facts about <em>S. cerevisiae</em> Cms1:<br />
+- It is a bona fide <strong>90S pre-ribosome (small subunit processome) assembly factor</strong>:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36417864" title="CMS1 encodes a poorly characterized but conserved protein (human homolog CMSS1; Figure S2A)   that was initially found as a high-copy suppressor of MCM10 (Wang and Wu, 2001). However, based on other   analyses, it was implicated in 90S ribosome biogenesis">PMID:36417864</a>.<br />
+- It is <strong>conserved</strong> with a human homolog CMSS1:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36417864" title="Notably, both a human Cms1 (CMSS1; Figure S2A) and an snR83 homolog (called ACA4) exist">PMID:36417864</a>.<br />
+- It is <strong>nonessential</strong>:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36417864" title="... vulnerable mutations in Noc4 module subunits or in the Bms1-Rcl1 heterodimer can be   suppressed by disrupting CMS1 or NOP6, which both are nonessential factors implicated in the early 90S   assembly pathway">PMID:36417864</a>.<br />
+- It localizes to the 18S rRNA 3' major domain of an early 90S carrying the H/ACA snoRNA snR83 and<br />
+  coordinates local assembly with timely snR83 release (abstract).<br />
+- Proposed molecular activity is speculative/inactive-helicase-based RNA binding, NOT demonstrated:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/36417864" title="Via its inactive helicase domain, Cms1 might exert a specific RNA-binding activity toward   the H32-34 region of the 3′-major domain, thereby competing with Enp1-Rrp12 binding at a related site">PMID:36417864</a>.<br />
+  Note the hedging ("inactive helicase domain", "might exert") — no catalytic activity; MF remains open.</p>
+<h2 id="known-vs-not-known-for-s-pombe-cms1">KNOWN vs NOT-known for <em>S. pombe</em> cms1</h2>
+<p>KNOWN (well-supported, chiefly by orthology to a strongly characterized budding-yeast factor):<br />
+- Member of the conserved CMS1/CMSS1 family (Pfam PF14617; PANTHER PTHR24030), single-copy, fungi→human.<br />
+- By orthology, a nucleolar <strong>90S pre-ribosome / small-subunit-processome assembly factor</strong> involved in<br />
+<strong>ribosomal small subunit (18S rRNA) biogenesis</strong>; localizes to the nucleus.<br />
+- Non-essential in <em>S. pombe</em> (cms1Δ viable, FYPO:0002060) — matching <em>S. cerevisiae</em>.</p>
+<p>NOT-known (genuine gaps for the pombe protein):<br />
+- No direct experimental characterization of the <em>S. pombe</em> protein exists (PE 3; "biological role<br />
+  inferred"). All functional GO terms are ISO transfers.<br />
+- <strong>Molecular function is dark.</strong> No catalytic activity; the only proposed activity (RNA binding via a<br />
+  degenerate/inactive helicase fold) is a hypothesis even for the budding-yeast ortholog and has not been<br />
+  biochemically demonstrated in any species. The basic disordered patch (53-68) is a candidate<br />
+  nucleic-acid contact but unproven.<br />
+- The legacy UniProt FUNCTION line ("regulation of DNA replication and cell cycle control", by similarity)<br />
+  reflects the historical <em>MCM10</em> high-copy-suppressor origin of budding-yeast CMS1 and is superseded by<br />
+  the 90S-ribosome-biogenesis role; it is not independently supported as a <em>core</em> function.</p>
+<h2 id="curation-decisions-summary-see-cms1-ai-reviewyaml">Curation decisions (summary; see cms1-ai-review.yaml)</h2>
+<ul>
+<li>GO:0042274 ribosomal small subunit biogenesis (BP, ISO) — ACCEPT (core; ortholog strongly supports).</li>
+<li>GO:0030686 90S preribosome (CC, ISO, part_of) — ACCEPT (core; the defining complex).</li>
+<li>GO:0005634 nucleus (CC, ISO, is_active_in) — ACCEPT as location (specific compartment is nucleolar,<br />
+  but nucleus is defensible and consistent).</li>
+<li>GO:0005634 nucleus (CC, IEA, located_in, GO_REF:0000044 SubCell) — KEEP_AS_NON_CORE (redundant IEA<br />
+  duplicate of the ISO nuclear call; location, not core function).</li>
+<li>GO:0003674 molecular_function (ND) — ACCEPT (honestly reflects that MF is genuinely unknown; do not<br />
+  invent an MF).</li>
+</ul>
+<p>Core-function synthesis: cms1 is best represented as an accessory subunit of the 90S preribosome acting in<br />
+small-subunit biogenesis in the nucleus, with NO assertable molecular function (MF-dark). This is recorded<br />
+as a knowledge gap.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O94465
+gene_symbol: cms1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  Conserved, non-essential nuclear protein of the CMS1/CMSS1 family (Pfam PF14617;
+  PANTHER PTHR24030), with single-copy orthologs from fungi to vertebrates including
+  Saccharomyces cerevisiae CMS1 and human CMSS1. Based on orthology to the strongly
+  characterized budding-yeast factor, Cms1 is an accessory assembly factor of the
+  nucleolar 90S pre-ribosome (small subunit processome) that acts in ribosomal small
+  subunit (18S rRNA) biogenesis, where the budding-yeast ortholog associates with the
+  18S rRNA 3&#39; major domain of an early 90S carrying the H/ACA snoRNA snR83 and
+  coordinates stepwise local assembly with timely snR83 release. The protein carries a
+  degenerate, catalytically inactive helicase-like fold and a basic disordered patch,
+  but no molecular activity has been experimentally demonstrated in any species. In
+  Schizosaccharomyces pombe the protein itself is uncharacterized (UniProt evidence
+  level: inferred from homology; PomBase characterisation status: biological role
+  inferred): all functional annotations are orthology transfers and deletion is viable.
+existing_annotations:
+  - term:
+      id: GO:0005634
+      label: nucleus
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic (IEA) subcellular-location annotation derived from the UniProt
+        Swiss-Prot &#34;Nucleus&#34; keyword mapping (GO_REF:0000044). It is consistent with,
+        but redundant to, the ISO nuclear annotation (is_active_in nucleus) transferred
+        from the S. cerevisiae ortholog. The nuclear localization is itself a
+        by-similarity inference (UniProt SUBCELLULAR LOCATION: Nucleus, ECO:0000250);
+        no direct localization has been reported for the S. pombe protein.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        A defensible location call but not a core function, and redundant with the ISO
+        nucleus annotation. The physiologically relevant compartment is more precisely
+        the nucleolus (site of 90S pre-ribosome assembly), but nucleus is a correct,
+        conservative parent. Retained as a non-core localization annotation.
+  - term:
+      id: GO:0003674
+      label: molecular_function
+    evidence_type: ND
+    original_reference_id: GO_REF:0000015
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Root molecular_function term with ND (No Data) evidence, used by PomBase as a
+        placeholder because no specific molecular function is known for cms1. This
+        accurately reflects the current state of knowledge: cms1 encodes a degenerate,
+        catalytically inactive helicase-like fold and no molecular activity has been
+        demonstrated. Even for the well-studied S. cerevisiae ortholog, a possible
+        RNA-binding activity is explicitly hypothetical rather than measured.
+      action: ACCEPT
+      reason: &gt;-
+        The ND molecular_function annotation is appropriate and honest. No specific MF
+        should be asserted: the only proposed activity (RNA binding via an inactive
+        helicase domain) is speculative even for the budding-yeast ortholog and has not
+        been biochemically demonstrated in any species. This is a genuine molecular-
+        function knowledge gap (see knowledge_gaps).
+      supported_by:
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            little is known about how the many different snoRNAs that modify the
+  - term:
+      id: GO:0030686
+      label: 90S preribosome
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: part_of
+    review:
+      summary: &gt;-
+        Part_of the 90S preribosome (small subunit processome), transferred by orthology
+        (ISO) from S. cerevisiae CMS1 (SGD:S000003993). This is well supported for the
+        ortholog: budding-yeast Cms1 co-precipitates with many 90S factors and is
+        detected on early 90S particles at the 18S rRNA 3&#39; major domain. cms1 is a
+        single-copy member of a family conserved from fungi to human (human CMSS1), so
+        the orthology transfer is reliable. PomBase names the product &#34;U3-containing 90S
+        preribosome complex subunit Cms1&#34;.
+      action: ACCEPT
+      reason: &gt;-
+        A well-founded core annotation. Unlike a spurious ortholog transfer, this ISO is
+        supported by strong experimental evidence in the closely related S. cerevisiae
+        ortholog and by robust single-copy conservation across the CMS1/CMSS1 family.
+        The 90S preribosome is the defining complex for this protein&#39;s inferred role.
+      supported_by:
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            Cms1 co-precipitates with many 90S
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            detected Cms1 at the 18S rRNA 3
+  - term:
+      id: GO:0042274
+      label: ribosomal small subunit biogenesis
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Involved_in ribosomal small subunit biogenesis, transferred by orthology (ISO)
+        from S. cerevisiae CMS1 (SGD:S000003993). The ortholog is a non-essential early
+        90S / small-subunit-processome assembly factor that acts at the 18S rRNA 3&#39;
+        major domain and coordinates local assembly with timely release of the H/ACA
+        snoRNA snR83. This process assignment is the best-supported functional
+        statement for cms1.
+      action: ACCEPT
+      reason: &gt;-
+        The core biological process. Strongly supported for the S. cerevisiae ortholog
+        and reliable to transfer given single-copy family conservation. The role is
+        accessory/regulatory within 90S assembly rather than a distinct catalytic step,
+        consistent with the protein&#39;s degenerate helicase-like fold and non-essentiality.
+      supported_by:
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            restrict premature Rrp12-Enp1 binding but allows snR83 to
+  - term:
+      id: GO:0005634
+      label: nucleus
+    evidence_type: ISO
+    original_reference_id: GO_REF:0000024
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Is_active_in nucleus, transferred by orthology (ISO) from S. cerevisiae CMS1
+        (SGD:S000003993), consistent with UniProt&#39;s by-similarity Nucleus localization.
+        The functionally relevant sub-compartment is the nucleolus, where 90S pre-
+        ribosome assembly occurs, but nucleus is a correct conservative parent.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The nuclear localization is consistent with the protein&#39;s inferred role as a
+        nucleolar 90S assembly factor and with the ortholog, and is retained as a
+        supporting location rather than a core function. A nucleolus (GO:0005730)
+        annotation would be more precise but is not asserted here in the absence of
+        direct S. pombe localization data.
+      supported_by:
+        - reference_id: PMID:36417864
+          supporting_text: &gt;-
+            Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,
+core_functions:
+  - description: &gt;-
+      Accessory subunit of the nucleolar 90S pre-ribosome (small subunit processome)
+      acting in ribosomal small subunit (18S rRNA) biogenesis. By orthology to the
+      characterized S. cerevisiae factor, cms1 associates with the 18S rRNA 3&#39; major
+      domain of an early 90S particle and helps coordinate stepwise local assembly with
+      timely snR83 release; it is non-essential. No independent molecular activity is
+      asserted: the protein has a catalytically inactive, degenerate helicase-like fold,
+      and the only proposed activity (RNA binding) is hypothetical even for the
+      budding-yeast ortholog (see knowledge_gaps).
+    directly_involved_in:
+      - id: GO:0042274
+        label: ribosomal small subunit biogenesis
+    locations:
+      - id: GO:0005634
+        label: nucleus
+    in_complex:
+      id: GO:0030686
+      label: 90S preribosome
+    supported_by:
+      - reference_id: PMID:36417864
+        supporting_text: &gt;-
+          Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,
+      - reference_id: PMID:36417864
+        supporting_text: &gt;-
+          Cms1 co-precipitates with many 90S
+    knowledge_gaps:
+      - gap_statement: &gt;-
+          The molecular function of cms1 is undetermined: no catalytic activity, no
+          direct nucleic-acid- or protein-binding partner, and no biochemically
+          demonstrated activity are known for the protein in any species. Whether the
+          degenerate helicase-like CMS1 fold confers a real RNA-binding activity (as
+          hypothesized for the S. cerevisiae ortholog) is unproven.
+        boundary: &gt;-
+          What is established (chiefly by orthology to S. cerevisiae CMS1 and by
+          single-copy conservation across the fungi-to-human CMS1/CMSS1 family) is that
+          cms1 is a non-essential nuclear/nucleolar accessory factor of the 90S pre-
+          ribosome involved in small subunit (18S rRNA) biogenesis. The S. pombe protein
+          itself has no direct experimental characterization (UniProt PE 3; PomBase
+          &#34;biological role inferred&#34;); all functional GO terms are ISO transfers.
+        gap_kind:
+          - BIOLOGY
+          - CURATION
+        dark_aspect: MF_DARK
+        status: OPEN
+        significance: &gt;-
+          cms1/CMSS1 is a conserved-but-dark component of the ribosome-assembly
+          machinery; defining its molecular activity would clarify how snoRNA-guided
+          modification is temporally coordinated with 90S small-subunit assembly, a
+          process conserved from yeast to human.
+        resolution: &gt;-
+          Biochemical RNA-binding / activity assays on purified S. pombe (or ortholog)
+          Cms1 and its inactive-helicase fold; affinity-purification/CLIP to identify
+          direct RNA and protein partners on the 90S; GFP localization and cms1delta
+          pre-rRNA-processing phenotyping in S. pombe to confirm the transferred role.
+        provenance:
+          - reference_id: PMID:36417864
+            supporting_text: &gt;-
+              little is known about how the many different snoRNAs that modify the
+suggested_questions:
+  - question: &gt;-
+      Does the degenerate helicase-like CMS1/CMSS1 fold have any real RNA-binding (or
+      other) biochemical activity, or is cms1 a purely structural/placeholder subunit of
+      the early 90S?
+  - question: &gt;-
+      Does S. pombe cms1 localize to the nucleolus and associate with the 90S pre-
+      ribosome as predicted from the S. cerevisiae ortholog, and does cms1 deletion
+      impair 18S rRNA / small-subunit maturation in fission yeast?
+  - question: &gt;-
+      Is the snR83-coordination role of the budding-yeast ortholog conserved in S. pombe
+      (i.e. does cms1 act with the fission-yeast H/ACA snoRNA that pseudouridylates the
+      18S 3&#39; major domain)?
+suggested_experiments:
+  - description: &gt;-
+      Affinity purification of tagged S. pombe Cms1 followed by mass spectrometry and
+      RNA identification (RIP/CLIP) to define its 90S partners and any bound rRNA/snoRNA.
+  - description: &gt;-
+      GFP/fluorescent tagging of cms1 to determine subcellular (nucleolar) localization
+      in S. pombe.
+  - description: &gt;-
+      Northern/primer-extension analysis of pre-rRNA processing intermediates and
+      polysome/40S profiling in a cms1 deletion strain to test the small-subunit-
+      biogenesis role directly.
+  - description: &gt;-
+      In vitro RNA-binding assays on recombinant Cms1 (and structure-guided mutants of
+      the inactive helicase fold and the basic disordered patch) to test the proposed
+      RNA-binding activity.
+references:
+  - id: GO_REF:0000015
+    title: Use of the ND evidence code for Gene Ontology (GO) terms
+    findings: []
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+    findings: []
+  - id: PMID:36417864
+    title: Cms1 coordinates stepwise local 90S pre-ribosome assembly with timely snR83 release.
+    findings:
+      - statement: &gt;-
+          Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,
+          and the study reports a role for the CMS1/CMSS1-family factor Cms1 in this
+          process.
+        supporting_text: &gt;-
+          Ribosome synthesis begins in the nucleolus with 90S pre-ribosome construction,
+        reference_section_type: ABSTRACT
+      - statement: &gt;-
+          Cms1 is detected on an early 90S pre-ribosome at the 18S rRNA 3&#39; major domain
+          carrying the H/ACA snoRNA snR83, and co-precipitates with many 90S factors.
+        supporting_text: &gt;-
+          detected Cms1 at the 18S rRNA 3
+        reference_section_type: ABSTRACT
+      - statement: &gt;-
+          Cms1 is proposed to restrict premature Rrp12-Enp1 binding while allowing snR83
+          to act, coordinating stepwise local 90S assembly.
+        supporting_text: &gt;-
+          restrict premature Rrp12-Enp1 binding but allows snR83 to
+        reference_section_type: ABSTRACT
+      - statement: &gt;-
+          The mechanism by which the many snoRNAs that modify pre-rRNA are guided to
+          their target sites during early ribosome assembly is largely unknown, framing
+          Cms1 as a poorly understood coordinating factor.
+        supporting_text: &gt;-
+          little is known about how the many different snoRNAs that modify the
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed/PMC-verified primary study of the S. cerevisiae ortholog CMS1 (the ISO
+        source, SGD:S000003993). It establishes the 90S small-subunit-biogenesis role
+        transferred to S. pombe cms1 and (in its full text, cached) explicitly frames
+        CMS1 as poorly characterized with only a hypothetical molecular activity,
+        supporting both the accepted process/complex annotations and the MF knowledge
+        gap. The paper concerns S. cerevisiae, not S. pombe, so it grounds the ortholog,
+        not the pombe protein directly.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
