@@ -159,6 +159,12 @@ GTPase-activity review, the missing GEF/GAP).
 register is their queryable, schema-backed counterpart and will grow as gaps are recorded in the
 YAML.
 
+**Curation highlights from the dark-gene campaigns:** the batched reviews of understudied genes
+(50 *C. elegans*, 50 *S. cerevisiae*, 20 *S. pombe*) that populate this register also surfaced
+recurring, generalizable curation findings — identity corrections, pseudoenzyme calls, and
+family over-propagations caught before they became annotations. These are written up in
+[Dark-Gene Batch Reviews: Curation Highlights](FUNCTION_KNOWLEDGE_GAPS/dark-gene-curation-highlights.md).
+
 ## Worked example: the CFAP300 molecular-function gap
 
 CFAP300 (formerly C11orf70) is a dynein axonemal assembly factor; loss-of-function causes
