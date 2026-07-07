@@ -1,0 +1,14 @@
+| Gene Name | Protein Function/Description | Role in Cell Separation |
+|---|---|---|
+| adg1 | Cell surface glycoprotein; one of the Ace2-regulated Eng1-cluster genes (pqac-00000020, pqac-00000034) | Likely contributes to cell surface/cell wall remodeling needed for daughter-cell separation after septation (pqac-00000034, pqac-00000036) |
+| adg2 | Cell surface glycoprotein; Ace2-regulated Eng1-cluster member, also known as mug46 (pqac-00000020, pqac-00000034) | Likely functions at the cell surface/cell wall in the late cytokinetic program that enables physical separation of daughter cells (pqac-00000034, pqac-00000036) |
+| adg3 | β-glucosidase in the Eng1 cluster (pqac-00000020, pqac-00000034) | Presumed to help hydrolyze cell wall glucan components during septum dissolution and separation (pqac-00000034) |
+| agn1 | Glycosyl hydrolase / α-glucanase; previously shown to be an Ace2-regulated separation gene (pqac-00000020, pqac-00000034) | Enzymatic cell wall degradation/remodeling during separation of daughter cells (pqac-00000034, pqac-00000036) |
+| eng1 | Glycosyl hydrolase; endo-1,3-β-glucanase and representative gene of the Eng1 cluster (pqac-00000020, pqac-00000034) | Directly implicated in septum/cell wall glucan breakdown required for cell separation (pqac-00000034) |
+| cfh4 | Chitin synthase regulatory factor (pqac-00000020, pqac-00000034) | Likely coordinates septum/cell wall assembly-remodeling steps that must be properly regulated for separation to occur (pqac-00000034) |
+| mid2 | Anillin-family protein required for cell division and septin organization (pqac-00000020, pqac-00000034) | Supports cytokinetic organization and septin-dependent division structures that position or enable efficient cell separation (pqac-00000034, pqac-00000036) |
+| ace2 | Cell cycle transcription factor; master regulator of the Eng1 cluster, with cluster genes carrying Ace2-binding sites of consensus CCAGCC (pqac-00000020, pqac-00000034) | Activates the late cell-separation transcriptional program; overexpression upregulates, and deletion downregulates, Eng1-cluster genes (pqac-00000020, pqac-00000034, pqac-00000036) |
+| SPCC306.11 | Sequence orphan / unknown-function protein in the Eng1 cluster (pqac-00000020, pqac-00000034) | Uncharacterized, but co-regulation with established separation genes strongly suggests participation in the Ace2-controlled cell-separation pathway (pqac-00000034) |
+
+
+*Table: This table summarizes the nine Ace2-regulated genes in the S. pombe Eng1 cluster and their inferred roles in cell separation. It is useful for quickly locating adg2 within the broader late-cytokinesis and cell-wall-remodeling program.*
