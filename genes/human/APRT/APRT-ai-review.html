@@ -1,0 +1,4530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APRT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>APRT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P07741" target="_blank" class="term-link">
+                        P07741
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "APRT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P07741" data-a="DESCRIPTION: Adenine phosphoribosyltransferase (APRT; EC 2.4.2...." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Adenine phosphoribosyltransferase (APRT; EC 2.4.2.7) is the cytosolic enzyme of the purine salvage pathway that catalyzes the transfer of the phosphoribosyl group of 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to adenine, producing AMP and diphosphate. This single-step reaction recycles free adenine - notably the adenine released as a byproduct of polyamine biosynthesis, as well as adenine of dietary origin - into the adenine nucleotide pool at lower energetic cost than de novo synthesis. APRT is a homodimer belonging to the type I purine/pyrimidine phosphoribosyltransferase family and, like other type I PRTases, uses a magnesium-PRPP complex; it is expressed ubiquitously and acts in the cytosol. Loss of APRT function causes adenine phosphoribosyltransferase deficiency (APRTD), an autosomal recessive disorder in which unsalvaged adenine is instead oxidized by xanthine dehydrogenase to the highly insoluble 2,8-dihydroxyadenine (2,8-DHA); precipitation of 2,8-DHA in the urinary tract and renal parenchyma produces 2,8-DHA nephrolithiasis, crystalline nephropathy, and progressive renal failure.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                                    GO:0003999
+                                </a>
+                            </span>
+                            <span class="term-label">adenine phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0003999" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of APRT - transfer of the phosphoribosyl group of PRPP to adenine to form AMP (EC 2.4.2.7). Phylogenetically inferred and consistent with direct enzymatic and structural evidence for the human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining catalytic activity of APRT, supported by the crystal structure with AMP product and measured kinetics for the human enzyme, and conserved across the phosphoribosyltransferase family used for the IBA inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7) is present in all tissues and provides the only known mechanism for the metabolic salvage of adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> APRT is a soluble cytoplasmic/cytosolic enzyme; phylogenetic inference of a cytoplasmic location is correct but less precise than the cytosol annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt subcellular location (Cytoplasm) and with the more specific cytosol annotations from HPA and Ensembl. Correct as a broader location term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006168" target="_blank" class="term-link">
+                                    GO:0006168
+                                </a>
+                            </span>
+                            <span class="term-label">adenine salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0006168" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> APRT is the enzyme that salvages free adenine by converting it to AMP; adenine salvage is a core biological process for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly matches the established function - APRT provides the salvage route for adenine arising from polyamine biosynthesis and diet. Well supported experimentally and by phylogeny.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">provides the only known mechanism for the metabolic salvage of adenine resulting from the polyamine biosynthesis pathway or from dietary sources</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                    GO:0044209
+                                </a>
+                            </span>
+                            <span class="term-label">AMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0044209" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The product of the APRT reaction is AMP; the enzyme constitutes the AMP-from-adenine salvage step. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the pathway explicitly as AMP biosynthesis via salvage pathway (AMP from adenine, step 1/1), matching this term. Consistent with the IBA inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway; AMP from adenine: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002055" target="_blank" class="term-link">
+                                    GO:0002055
+                                </a>
+                            </span>
+                            <span class="term-label">adenine binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0002055" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Adenine is the small-molecule substrate of APRT; binding of adenine is a mechanistic component of the catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the human structure/kinetics (KM for adenine ~4 uM) and consistent with the enzyme&#39;s substrate specificity. A valid, informative substrate-binding term underpinning the catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KM=4 uM for adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016208" target="_blank" class="term-link">
+                                    GO:0016208
+                                </a>
+                            </span>
+                            <span class="term-label">AMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0016208" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AMP is the reaction product of APRT and is co-crystallized in the active site; product binding is a mechanistic component of catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The human enzyme was crystallized in complex with AMP, directly demonstrating AMP binding in the active-site pocket. Consistent with the IBA inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the recombinant human APRT was crystallized in complex with adenosine 5&#39;-monophosphate (AMP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                                    GO:0003999
+                                </a>
+                            </span>
+                            <span class="term-label">adenine phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0003999" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion (UniProt combined pipeline; RHEA:16609 / EC 2.4.2.7) of the core catalytic activity, in agreement with the experimental annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific; duplicates the experimentally supported core molecular function. Retained as a valid electronic corroboration.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.4.2.7 {ECO:0000269|PubMed:15196008}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion of cytoplasmic localization (UniProt-SubCell SL-0086), consistent with the curated subcellular location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the UniProt cytoplasm subcellular location and the more specific cytosol annotations. Correct broader location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006168" target="_blank" class="term-link">
+                                    GO:0006168
+                                </a>
+                            </span>
+                            <span class="term-label">adenine salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0006168" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assertion (IPR005764, adenine phosphoribosyltransferase) of adenine salvage, matching the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process term derived from the family-specific InterPro signature; duplicates the experimentally/phylogenetically supported adenine salvage role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">provides the only known mechanism for the metabolic salvage of adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901363" target="_blank" class="term-link">
+                                    GO:1901363
+                                </a>
+                            </span>
+                            <span class="term-label">heterocyclic compound binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:1901363" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general ARBA-derived binding term. APRT does bind heterocyclic compounds (adenine, AMP), but this high-level term is uninformative relative to the specific adenine binding / AMP binding annotations already present.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not incorrect (adenine and AMP are heterocyclic), but it is an overly generic parent term that adds no functional information beyond the specific substrate/product binding terms; per curation guidelines uninformative high-level binding terms should not be treated as representing gene function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KM=4 uM for adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput binary interactome (HuRI) IPI annotation; the interaction partner is TTC19 (UniProtKB:Q6DKK2). &#34;protein binding&#34; is an uninformative molecular function term and no specific adaptor/complex role for APRT is established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an experimentally derived interaction, so it is retained rather than removed, but bare &#34;protein binding&#34; conveys no specific molecular function and the TTC19 interaction has no established functional consequence for adenine salvage; it should not be treated as a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Yeast two-hybrid interactome (neurodegenerative-disease network) IPI annotation; the partner is SPRED1 (UniProtKB:Q7Z699). Bare &#34;protein binding&#34; is uninformative and no specific functional role is defined.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retained as an experimental interaction but the generic &#34;protein binding&#34; term adds no functional specificity for APRT and the interaction has no established biological consequence for its salvage function; not a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">systematic yeast two-hybrid interaction screening</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002055" target="_blank" class="term-link">
+                                    GO:0002055
+                                </a>
+                            </span>
+                            <span class="term-label">adenine binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0002055" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transfer (from mouse Aprt, P08030) of adenine binding, matching the enzyme&#39;s substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct substrate-binding term consistent with the IBA/experimental adenine binding evidence; duplicates a valid mechanistic MF component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KM=4 uM for adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005829" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transfer of cytosolic localization; APRT is a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IDA (HPA) cytosol annotation and the UniProt cytoplasmic location. Correct and specific.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032263" target="_blank" class="term-link">
+                                    GO:0032263
+                                </a>
+                            </span>
+                            <span class="term-label">GMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0032263" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transferred process annotation. APRT is specific for adenine and produces AMP; it does not act on guanine and has no role in GMP salvage (that is the function of HGPRT/HPRT1).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Incorrect electronic (IEA) inference. The APRT reaction (adenine + PRPP -&gt; AMP) does not generate or salvage GMP; GMP/guanine salvage is carried out by hypoxanthine-guanine phosphoribosyltransferase, a different enzyme. This appears to be an over-broad process transfer across the PRTase family and is biologically wrong for APRT.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway; AMP from adenine: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032264" target="_blank" class="term-link">
+                                    GO:0032264
+                                </a>
+                            </span>
+                            <span class="term-label">IMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0032264" data-r="GO_REF:0000107" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog-transferred process annotation. APRT is adenine-specific and produces AMP; it does not act on hypoxanthine and has no role in IMP salvage (that is the function of HGPRT/HPRT1).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Incorrect electronic (IEA) inference. The APRT reaction produces AMP from adenine, not IMP from hypoxanthine; IMP/hypoxanthine salvage is carried out by hypoxanthine-guanine phosphoribosyltransferase. Biologically wrong for APRT and an over-broad family-level process transfer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway; AMP from adenine: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                    GO:0044209
+                                </a>
+                            </span>
+                            <span class="term-label">AMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0044209" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt combined-pipeline electronic assertion (UniPathway UPA00588) of AMP salvage, matching the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific; duplicates the phylogenetically supported AMP salvage role and agrees with the UniProt AMP-from-adenine salvage pathway assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway; AMP from adenine: step 1/1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization (Human Protein Atlas) to the cytosol, the site of APRT catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) support for the correct, specific subcellular location of this soluble salvage enzyme; consistent with UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                                    GO:0003999
+                                </a>
+                            </span>
+                            <span class="term-label">adenine phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15196008
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Three-dimensional structure of human adenine phosphoribosylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0003999" data-r="PMID:15196008" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental determination of the catalytic activity of the recombinant human enzyme, including the crystal structure and kinetic parameters; this is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strongest evidence for the defining function of APRT - direct assay of adenine phosphoribosyltransferase (EC 2.4.2.7) activity on the human protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7) is present in all tissues and provides the only known mechanism for the metabolic salvage of adenine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9734193
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005829" data-r="Reactome:R-HSA-9734193" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion (Defective APRT does not convert adenine to AMP) placing APRT in the cytosol, the site of the salvage reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific location, consistent with the experimental (IDA) cytosol annotation and UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005576" data-r="Reactome:R-HSA-6798748" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation derived from the neutrophil-degranulation pathway (Exocytosis of secretory granule lumen proteins). APRT is detected in neutrophil granule proteomes but this is not its site of catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> APRT is a cytosolic salvage enzyme with no signal peptide and no secretory function; its appearance in the extracellular region reflects inclusion in a large neutrophil-degranulation proteome pathway rather than a genuine functional extracellular localization. Retained (not a demonstrably wrong IEA) but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034774" target="_blank" class="term-link">
+                                    GO:0034774
+                                </a>
+                            </span>
+                            <span class="term-label">secretory granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0034774" data-r="Reactome:R-HSA-6798748" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation from the neutrophil-degranulation pathway. Reflects detection of APRT in neutrophil granule preparations, not a bona fide functional localization of this cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the extracellular-region annotation, this is a consequence of APRT being catalogued in a neutrophil secretory-granule proteome pathway. APRT is a soluble cytosolic protein without a secretory route; not a core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of APRT in urinary/prostatic exosome preparations. A common finding for abundant cytosolic proteins; not a functional localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detection in a large exosome proteome (~900 proteins) reflects the well-known presence of abundant cytosolic enzymes in extracellular vesicle preparations rather than a specific functional role of APRT in exosomes. Retained as experimental but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of APRT among 1132 proteins profiled in human urinary exosomes; a mass-spectrometry catalogue rather than evidence of functional exosomal localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The same over-annotation pattern - abundant cytosolic APRT is captured in large-scale urinary exosome proteomes. Not a core or functional location for this salvage enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we used LC-MS/MS to profile the proteome of human urinary exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20458337
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MHC class II-associated proteins in B-cell exosomes and pote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0070062" data-r="PMID:20458337" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of APRT in the total proteome of purified B-cell-derived exosomes (539 proteins); a proteomic catalogue, not functional localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Third instance of the exosome-proteome over-annotation pattern. APRT is an abundant cytosolic enzyme routinely recovered in extracellular-vesicle preparations; this is not a core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                                        PMID:20458337
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">total proteome of highly purified B cell-derived exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-74213
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005829" data-r="Reactome:R-HSA-74213" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion (APRT catalyzes the conversion of adenine to AMP) placing the reaction in the cytosol, the correct functional location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific; consistent with the experimental cytosol annotation and UniProt cytoplasmic location, and it correctly assigns the catalytic reaction to the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/APRT/APRT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016208" target="_blank" class="term-link">
+                                    GO:0016208
+                                </a>
+                            </span>
+                            <span class="term-label">AMP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15196008
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Three-dimensional structure of human adenine phosphoribosylt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0016208" data-r="PMID:15196008" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural evidence of AMP binding - the human enzyme was crystallized in complex with its AMP product occupying the active-site pocket.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) support for product binding, a mechanistic component of the catalytic function; the co-crystal structure with AMP directly demonstrates binding.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                        PMID:15196008
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the active site pocket opens slightly to accommodate the AMP product</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16130169" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16130169
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomics of human umbilical vein endothelial cells applied...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0005737" data-r="PMID:16130169" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization asserted from a HUVEC proteomic study. Consistent with the soluble cytoplasmic nature of APRT, though less specific than the cytosol annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct broader location term, in agreement with UniProt and the cytosol annotations. The supporting proteomic study catalogued cytoplasmic endothelial proteins including APRT.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16130169" target="_blank" class="term-link">
+                                        PMID:16130169
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The overall functional characterization of the 162 identified proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                                    GO:0003999
+                                </a>
+                            </span>
+                            <span class="term-label">adenine phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3531209" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3531209
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human adenine phosphoribosyltransferase. Complete amino acid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07741" data-a="GO:0003999" data-r="PMID:3531209" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion of the core adenine phosphoribosyltransferase function, from the paper that established the complete amino acid sequence of the human erythrocyte enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supports the defining catalytic function of APRT; the reference characterizes the human enzyme and its family relationship to other phosphoribosyltransferases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3531209" target="_blank" class="term-link">
+                                        PMID:3531209
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human adenine phosphoribosyltransferase has sequence homology with xanthine-guanine phosphoribosyltransferase from Escherichia coli</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the salvage of free adenine by transferring the phosphoribosyl group of PRPP to adenine, producing AMP and diphosphate (EC 2.4.2.7), in the cytosol.</h3>
+                <span class="vote-buttons" data-g="P07741" data-a="FUNCTION: Catalyzes the salvage of free adenine by transferr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                            adenine phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006168" target="_blank" class="term-link">
+                                adenine salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                                PMID:15196008
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7) is present in all tissues and provides the only known mechanism for the metabolic salvage of adenine</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Recycles adenine into the adenine nucleotide pool by producing AMP, constituting the AMP-from-adenine salvage step of purine metabolism.</h3>
+                <span class="vote-buttons" data-g="P07741" data-a="FUNCTION: Recycles adenine into the adenine nucleotide pool ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                            adenine phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                AMP salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/APRT/APRT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway; AMP from adenine: step 1/1.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15196008" target="_blank" class="term-link">
+                            PMID:15196008
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Three-dimensional structure of human adenine phosphoribosyltransferase and its relation to DHA-urolithiasis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The recombinant human APRT was crystallized in complex with AMP, revealing a type I PRTase fold and providing the structural basis for DHA-urolithiasis-causing mutations. APRT is the only route for salvage of adenine from polyamine biosynthesis or diet.</div>
+
+                        <div class="finding-text">"In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7) is present in all tissues and provides the only known mechanism for the metabolic salvage of adenine resulting from the polyamine biosynthesis pathway or from dietary sources."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16130169" target="_blank" class="term-link">
+                            PMID:16130169
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomics of human umbilical vein endothelial cells applied to etoposide-induced apoptosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20458337" target="_blank" class="term-link">
+                            PMID:20458337
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MHC class II-associated proteins in B-cell exosomes and potential functional implications for exosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3531209" target="_blank" class="term-link">
+                            PMID:3531209
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human adenine phosphoribosyltransferase. Complete amino acid sequence of the erythrocyte enzyme.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Established the complete 179-residue amino acid sequence of human erythrocyte APRT, showing homology to E. coli xanthine-guanine phosphoribosyltransferase and an acetylated N-terminus.</div>
+
+                        <div class="finding-text">"Human adenine phosphoribosyltransferase has sequence homology with xanthine-guanine phosphoribosyltransferase from Escherichia coli"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798748
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of secretory granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-74213
+
+                    </span>
+                </div>
+
+                <div class="reference-title">APRT catalyzes the conversion of adenine to AMP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9734193
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective APRT does not convert adenine to AMP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(APRT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P07741" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="aprt-human-p07741-review-notes">APRT (human, P07741) review notes</h1>
+<h2 id="deep-research-status">Deep research status</h2>
+<ul>
+<li><code>just deep-research human APRT --provider falcon</code> was run but FAILED (exit 1, no output file produced).<br />
+  No <code>-deep-research-*.md</code> was fabricated. Review grounded in UniProt (<code>APRT-uniprot.txt</code>),<br />
+  seeded GOA (<code>APRT-goa.tsv</code>), and cached <code>publications/PMID_*.md</code>.</li>
+</ul>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>APRT = adenine phosphoribosyltransferase, EC 2.4.2.7, cytosolic purine SALVAGE enzyme.<br />
+  Reaction: adenine + PRPP -&gt; AMP + diphosphate (UniProt writes it reverse: AMP + PPi = PRPP + adenine,<br />
+  Rhea:16609). [file:APRT-uniprot.txt CATALYTIC ACTIVITY / PATHWAY]</li>
+<li>Provides "the only known mechanism for the metabolic salvage of adenine resulting from the polyamine<br />
+  biosynthesis pathway or from dietary sources" [PMID:15196008 abstract].</li>
+<li>Homodimer; cytoplasm/cytosol. KM adenine ~4 uM, PRPP ~8.9 uM. <a href="https://pubmed.ncbi.nlm.nih.gov/15196008">PMID:15196008</a></li>
+<li>Structure: 9 beta-strands, 6 alpha-helices, type I PRTase fold; crystallized with AMP product<br />
+  (PDB 1ZN7/1ZN8...). <a href="https://pubmed.ncbi.nlm.nih.gov/15196008">PMID:15196008</a></li>
+<li>Belongs to purine/pyrimidine phosphoribosyltransferase family (type I PRTase, PRTase_dom Pfam PF00156).</li>
+<li>Complete amino acid sequence of erythrocyte enzyme established; N-terminus acetylated; 179/180 residues,<br />
+  subunit ~19.5 kDa. <a href="https://pubmed.ncbi.nlm.nih.gov/3531209">PMID:3531209</a></li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>APRT deficiency (APRTD, MIM:614723): adenine not salvaged -&gt; oxidised by xanthine dehydrogenase to<br />
+  insoluble 2,8-dihydroxyadenine (DHA) -&gt; 2,8-DHA nephrolithiasis, interstitial nephritis, CKD/renal failure.<br />
+  Many APRTD missense variants documented (Japanese M136T = APRT*J most common; Icelandic D65V). [UniProt DISEASE, PMID:15196008]</li>
+</ul>
+<h2 id="mg-cofactor">Mg cofactor</h2>
+<ul>
+<li>Type I PRTases use a Mg2+-PRPP complex as substrate; Mg is the catalytic divalent cation.<br />
+  Annotate GO:0000287 magnesium ion binding as cofactor in core_functions (family-level / mechanistic).</li>
+</ul>
+<h2 id="annotation-specific-notes">Annotation-specific notes</h2>
+<ul>
+<li>MF GO:0003999: IBA + IEA + IDA(PMID:15196008) + TAS(PMID:3531209). Core, ACCEPT.</li>
+<li>BP GO:0006168 adenine salvage &amp; GO:0044209 AMP salvage: IBA + IEA. Core process. ACCEPT.</li>
+<li>GO:0002055 adenine binding, GO:0016208 AMP binding: substrate/product binding, mechanistic; IBA/IEA/IDA.<br />
+  ACCEPT (support the MF; keep as non-core molecular detail).</li>
+<li>GO:0032263 GMP salvage, GO:0032264 IMP salvage (IEA GO_REF:0000107, Ensembl ortholog transfer):<br />
+  APRT is adenine-specific (does NOT act on guanine/hypoxanthine -&gt; those are HPRT). These IEA<br />
+  ortholog-mapped process terms are wrong for APRT -&gt; REMOVE (clearly wrong IEA inference).</li>
+<li>GO:1901363 heterocyclic compound binding (IEA ARBA): far too generic / uninformative; adenine binding<br />
+  is the informative term. MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0005515 protein binding IPI (x2, TTC19/Q6DKK2 via PMID:32296183; SPRED1/Q7Z699 via PMID:32814053):<br />
+  bare protein binding, uninformative, high-throughput Y2H/interactome. Per policy do NOT REMOVE<br />
+  experimental IPI -&gt; MARK_AS_OVER_ANNOTATED.</li>
+<li>Cytoplasm/cytosol (GO:0005737, GO:0005829): correct location. ACCEPT the well-supported ones<br />
+  (IDA HPA, IBA); keep duplicates.</li>
+<li>GO:0070062 extracellular exosome (HDA x3): large-scale exosome proteomes; contaminant-type CC.<br />
+  MARK_AS_OVER_ANNOTATED (not functional localization).</li>
+<li>GO:0005576 extracellular region + GO:0034774 secretory granule lumen (Reactome neutrophil<br />
+  degranulation R-HSA-6798748): APRT appears in neutrophil granule proteome; not its functional site.<br />
+  MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P07741
+gene_symbol: APRT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Adenine phosphoribosyltransferase (APRT; EC 2.4.2.7) is the cytosolic
+  enzyme of the purine salvage pathway that catalyzes the transfer of the phosphoribosyl
+  group of 5-phospho-alpha-D-ribose 1-diphosphate (PRPP) to adenine, producing AMP
+  and diphosphate. This single-step reaction recycles free adenine - notably the adenine
+  released as a byproduct of polyamine biosynthesis, as well as adenine of dietary
+  origin - into the adenine nucleotide pool at lower energetic cost than de novo synthesis.
+  APRT is a homodimer belonging to the type I purine/pyrimidine phosphoribosyltransferase
+  family and, like other type I PRTases, uses a magnesium-PRPP complex; it is expressed
+  ubiquitously and acts in the cytosol. Loss of APRT function causes adenine phosphoribosyltransferase
+  deficiency (APRTD), an autosomal recessive disorder in which unsalvaged adenine is
+  instead oxidized by xanthine dehydrogenase to the highly insoluble 2,8-dihydroxyadenine
+  (2,8-DHA); precipitation of 2,8-DHA in the urinary tract and renal parenchyma produces
+  2,8-DHA nephrolithiasis, crystalline nephropathy, and progressive renal failure.
+alternative_products:
+- name: &#39;1&#39;
+  id: P07741-1
+- name: &#39;2&#39;
+  id: P07741-2
+  sequence_note: VSP_045705
+existing_annotations:
+- term:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Core molecular function of APRT - transfer of the phosphoribosyl group
+      of PRPP to adenine to form AMP (EC 2.4.2.7). Phylogenetically inferred and consistent
+      with direct enzymatic and structural evidence for the human enzyme.
+    action: ACCEPT
+    reason: This is the defining catalytic activity of APRT, supported by the crystal
+      structure with AMP product and measured kinetics for the human enzyme, and conserved
+      across the phosphoribosyltransferase family used for the IBA inference.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)
+        is present in all tissues and provides the only known mechanism for the metabolic
+        salvage of adenine
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: APRT is a soluble cytoplasmic/cytosolic enzyme; phylogenetic inference
+      of a cytoplasmic location is correct but less precise than the cytosol annotations.
+    action: ACCEPT
+    reason: Consistent with the UniProt subcellular location (Cytoplasm) and with
+      the more specific cytosol annotations from HPA and Ensembl. Correct as a broader
+      location term.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0006168
+    label: adenine salvage
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: APRT is the enzyme that salvages free adenine by converting it to AMP;
+      adenine salvage is a core biological process for this gene.
+    action: ACCEPT
+    reason: Directly matches the established function - APRT provides the salvage route
+      for adenine arising from polyamine biosynthesis and diet. Well supported experimentally
+      and by phylogeny.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: provides the only known mechanism for the metabolic salvage
+        of adenine resulting from the polyamine biosynthesis pathway or from dietary
+        sources
+- term:
+    id: GO:0044209
+    label: AMP salvage
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: The product of the APRT reaction is AMP; the enzyme constitutes the AMP-from-adenine
+      salvage step. Core biological process.
+    action: ACCEPT
+    reason: UniProt records the pathway explicitly as AMP biosynthesis via salvage
+      pathway (AMP from adenine, step 1/1), matching this term. Consistent with the
+      IBA inference.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway;
+        AMP from adenine: step 1/1.&#34;
+- term:
+    id: GO:0002055
+    label: adenine binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Adenine is the small-molecule substrate of APRT; binding of adenine is
+      a mechanistic component of the catalytic function.
+    action: ACCEPT
+    reason: Supported by the human structure/kinetics (KM for adenine ~4 uM) and consistent
+      with the enzyme&#39;s substrate specificity. A valid, informative substrate-binding
+      term underpinning the catalytic activity.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: KM=4 uM for adenine
+- term:
+    id: GO:0016208
+    label: AMP binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: AMP is the reaction product of APRT and is co-crystallized in the active
+      site; product binding is a mechanistic component of catalysis.
+    action: ACCEPT
+    reason: The human enzyme was crystallized in complex with AMP, directly demonstrating
+      AMP binding in the active-site pocket. Consistent with the IBA inference.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: the recombinant human APRT was crystallized in complex with
+        adenosine 5&#39;-monophosphate (AMP)
+- term:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic assertion (UniProt combined pipeline; RHEA:16609 / EC 2.4.2.7)
+      of the core catalytic activity, in agreement with the experimental annotation.
+    action: ACCEPT
+    reason: Correct and specific; duplicates the experimentally supported core molecular
+      function. Retained as a valid electronic corroboration.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;EC=2.4.2.7 {ECO:0000269|PubMed:15196008}&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Electronic assertion of cytoplasmic localization (UniProt-SubCell SL-0086),
+      consistent with the curated subcellular location.
+    action: ACCEPT
+    reason: Matches the UniProt cytoplasm subcellular location and the more specific
+      cytosol annotations. Correct broader location.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0006168
+    label: adenine salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO electronic assertion (IPR005764, adenine phosphoribosyltransferase)
+      of adenine salvage, matching the core biological process.
+    action: ACCEPT
+    reason: Correct process term derived from the family-specific InterPro signature;
+      duplicates the experimentally/phylogenetically supported adenine salvage role.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: provides the only known mechanism for the metabolic salvage
+        of adenine
+- term:
+    id: GO:1901363
+    label: heterocyclic compound binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: Very general ARBA-derived binding term. APRT does bind heterocyclic compounds
+      (adenine, AMP), but this high-level term is uninformative relative to the specific
+      adenine binding / AMP binding annotations already present.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The term is not incorrect (adenine and AMP are heterocyclic), but it is
+      an overly generic parent term that adds no functional information beyond the
+      specific substrate/product binding terms; per curation guidelines uninformative
+      high-level binding terms should not be treated as representing gene function.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: KM=4 uM for adenine
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: High-throughput binary interactome (HuRI) IPI annotation; the interaction
+      partner is TTC19 (UniProtKB:Q6DKK2). &#34;protein binding&#34; is an uninformative molecular
+      function term and no specific adaptor/complex role for APRT is established.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: This is an experimentally derived interaction, so it is retained rather
+      than removed, but bare &#34;protein binding&#34; conveys no specific molecular function
+      and the TTC19 interaction has no established functional consequence for adenine
+      salvage; it should not be treated as a core function.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: Yeast two-hybrid interactome (neurodegenerative-disease network) IPI annotation;
+      the partner is SPRED1 (UniProtKB:Q7Z699). Bare &#34;protein binding&#34; is uninformative
+      and no specific functional role is defined.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Retained as an experimental interaction but the generic &#34;protein binding&#34;
+      term adds no functional specificity for APRT and the interaction has no established
+      biological consequence for its salvage function; not a core function.
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: systematic yeast two-hybrid interaction screening
+- term:
+    id: GO:0002055
+    label: adenine binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: Ensembl-Compara ortholog-transfer (from mouse Aprt, P08030) of adenine
+      binding, matching the enzyme&#39;s substrate.
+    action: ACCEPT
+    reason: Correct substrate-binding term consistent with the IBA/experimental adenine
+      binding evidence; duplicates a valid mechanistic MF component.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: KM=4 uM for adenine
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: is_active_in
+  review:
+    summary: Ensembl-Compara ortholog-transfer of cytosolic localization; APRT is
+      a soluble cytosolic enzyme.
+    action: ACCEPT
+    reason: Consistent with the IDA (HPA) cytosol annotation and the UniProt cytoplasmic
+      location. Correct and specific.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0032263
+    label: GMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Ensembl-Compara ortholog-transferred process annotation. APRT is specific
+      for adenine and produces AMP; it does not act on guanine and has no role in GMP
+      salvage (that is the function of HGPRT/HPRT1).
+    action: REMOVE
+    reason: Incorrect electronic (IEA) inference. The APRT reaction (adenine + PRPP
+      -&gt; AMP) does not generate or salvage GMP; GMP/guanine salvage is carried out
+      by hypoxanthine-guanine phosphoribosyltransferase, a different enzyme. This appears
+      to be an over-broad process transfer across the PRTase family and is biologically
+      wrong for APRT.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway;
+        AMP from adenine: step 1/1.&#34;
+- term:
+    id: GO:0032264
+    label: IMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Ensembl-Compara ortholog-transferred process annotation. APRT is adenine-specific
+      and produces AMP; it does not act on hypoxanthine and has no role in IMP salvage
+      (that is the function of HGPRT/HPRT1).
+    action: REMOVE
+    reason: Incorrect electronic (IEA) inference. The APRT reaction produces AMP from
+      adenine, not IMP from hypoxanthine; IMP/hypoxanthine salvage is carried out by
+      hypoxanthine-guanine phosphoribosyltransferase. Biologically wrong for APRT and
+      an over-broad family-level process transfer.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway;
+        AMP from adenine: step 1/1.&#34;
+- term:
+    id: GO:0044209
+    label: AMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: UniProt combined-pipeline electronic assertion (UniPathway UPA00588) of
+      AMP salvage, matching the core biological process.
+    action: ACCEPT
+    reason: Correct and specific; duplicates the phylogenetically supported AMP salvage
+      role and agrees with the UniProt AMP-from-adenine salvage pathway assignment.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway;
+        AMP from adenine: step 1/1.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: Direct immunofluorescence localization (Human Protein Atlas) to the cytosol,
+      the site of APRT catalytic activity.
+    action: ACCEPT
+    reason: Experimental (IDA) support for the correct, specific subcellular location
+      of this soluble salvage enzyme; consistent with UniProt.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15196008
+  qualifier: enables
+  review:
+    summary: Direct experimental determination of the catalytic activity of the recombinant
+      human enzyme, including the crystal structure and kinetic parameters; this is
+      the core molecular function.
+    action: ACCEPT
+    reason: Strongest evidence for the defining function of APRT - direct assay of
+      adenine phosphoribosyltransferase (EC 2.4.2.7) activity on the human protein.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)
+        is present in all tissues and provides the only known mechanism for the metabolic
+        salvage of adenine
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9734193
+  qualifier: located_in
+  review:
+    summary: Reactome traceable assertion (Defective APRT does not convert adenine
+      to AMP) placing APRT in the cytosol, the site of the salvage reaction.
+    action: ACCEPT
+    reason: Correct and specific location, consistent with the experimental (IDA) cytosol
+      annotation and UniProt.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: Reactome annotation derived from the neutrophil-degranulation pathway
+      (Exocytosis of secretory granule lumen proteins). APRT is detected in neutrophil
+      granule proteomes but this is not its site of catalytic function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: APRT is a cytosolic salvage enzyme with no signal peptide and no secretory
+      function; its appearance in the extracellular region reflects inclusion in a
+      large neutrophil-degranulation proteome pathway rather than a genuine functional
+      extracellular localization. Retained (not a demonstrably wrong IEA) but flagged
+      as over-annotation.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0034774
+    label: secretory granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: Reactome annotation from the neutrophil-degranulation pathway. Reflects
+      detection of APRT in neutrophil granule preparations, not a bona fide functional
+      localization of this cytosolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: As with the extracellular-region annotation, this is a consequence of APRT
+      being catalogued in a neutrophil secretory-granule proteome pathway. APRT is
+      a soluble cytosolic protein without a secretory route; not a core location.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of APRT in urinary/prostatic exosome
+      preparations. A common finding for abundant cytosolic proteins; not a functional
+      localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Detection in a large exosome proteome (~900 proteins) reflects the well-known
+      presence of abundant cytosolic enzymes in extracellular vesicle preparations
+      rather than a specific functional role of APRT in exosomes. Retained as experimental
+      but flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosome preparations were characterized by a shotgun proteomics
+        procedure
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of APRT among 1132 proteins profiled
+      in human urinary exosomes; a mass-spectrometry catalogue rather than evidence
+      of functional exosomal localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The same over-annotation pattern - abundant cytosolic APRT is captured
+      in large-scale urinary exosome proteomes. Not a core or functional location
+      for this salvage enzyme.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: we used LC-MS/MS to profile the proteome of human urinary exosomes
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:20458337
+  qualifier: located_in
+  review:
+    summary: High-throughput proteomic detection of APRT in the total proteome of
+      purified B-cell-derived exosomes (539 proteins); a proteomic catalogue, not
+      functional localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Third instance of the exosome-proteome over-annotation pattern. APRT is
+      an abundant cytosolic enzyme routinely recovered in extracellular-vesicle preparations;
+      this is not a core location.
+    supported_by:
+    - reference_id: PMID:20458337
+      supporting_text: total proteome of highly purified B cell-derived exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-74213
+  qualifier: located_in
+  review:
+    summary: Reactome traceable assertion (APRT catalyzes the conversion of adenine
+      to AMP) placing the reaction in the cytosol, the correct functional location.
+    action: ACCEPT
+    reason: Correct and specific; consistent with the experimental cytosol annotation
+      and UniProt cytoplasmic location, and it correctly assigns the catalytic reaction
+      to the cytosol.
+    supported_by:
+    - reference_id: file:human/APRT/APRT-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm.&#34;
+- term:
+    id: GO:0016208
+    label: AMP binding
+  evidence_type: IDA
+  original_reference_id: PMID:15196008
+  qualifier: enables
+  review:
+    summary: Direct structural evidence of AMP binding - the human enzyme was crystallized
+      in complex with its AMP product occupying the active-site pocket.
+    action: ACCEPT
+    reason: Experimental (IDA) support for product binding, a mechanistic component
+      of the catalytic function; the co-crystal structure with AMP directly demonstrates
+      binding.
+    supported_by:
+    - reference_id: PMID:15196008
+      supporting_text: the active site pocket opens slightly to accommodate the AMP
+        product
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: TAS
+  original_reference_id: PMID:16130169
+  qualifier: located_in
+  review:
+    summary: Cytoplasmic localization asserted from a HUVEC proteomic study. Consistent
+      with the soluble cytoplasmic nature of APRT, though less specific than the cytosol
+      annotations.
+    action: ACCEPT
+    reason: Correct broader location term, in agreement with UniProt and the cytosol
+      annotations. The supporting proteomic study catalogued cytoplasmic endothelial
+      proteins including APRT.
+    supported_by:
+    - reference_id: PMID:16130169
+      supporting_text: The overall functional characterization of the 162 identified
+        proteins
+- term:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  evidence_type: TAS
+  original_reference_id: PMID:3531209
+  qualifier: enables
+  review:
+    summary: Traceable assertion of the core adenine phosphoribosyltransferase function,
+      from the paper that established the complete amino acid sequence of the human
+      erythrocyte enzyme.
+    action: ACCEPT
+    reason: Supports the defining catalytic function of APRT; the reference characterizes
+      the human enzyme and its family relationship to other phosphoribosyltransferases.
+    supported_by:
+    - reference_id: PMID:3531209
+      supporting_text: Human adenine phosphoribosyltransferase has sequence homology
+        with xanthine-guanine phosphoribosyltransferase from Escherichia coli
+core_functions:
+- description: Catalyzes the salvage of free adenine by transferring the phosphoribosyl
+    group of PRPP to adenine, producing AMP and diphosphate (EC 2.4.2.7), in the cytosol.
+  molecular_function:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  directly_involved_in:
+  - id: GO:0006168
+    label: adenine salvage
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:15196008
+    supporting_text: In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)
+      is present in all tissues and provides the only known mechanism for the metabolic
+      salvage of adenine
+- description: Recycles adenine into the adenine nucleotide pool by producing AMP,
+    constituting the AMP-from-adenine salvage step of purine metabolism.
+  molecular_function:
+    id: GO:0003999
+    label: adenine phosphoribosyltransferase activity
+  directly_involved_in:
+  - id: GO:0044209
+    label: AMP salvage
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/APRT/APRT-uniprot.txt
+    supporting_text: &#34;PATHWAY: Purine metabolism; AMP biosynthesis via salvage pathway;
+      AMP from adenine: step 1/1.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15196008
+  title: Three-dimensional structure of human adenine phosphoribosyltransferase and
+    its relation to DHA-urolithiasis.
+  findings:
+  - statement: The recombinant human APRT was crystallized in complex with AMP, revealing
+      a type I PRTase fold and providing the structural basis for DHA-urolithiasis-causing
+      mutations. APRT is the only route for salvage of adenine from polyamine biosynthesis
+      or diet.
+    supporting_text: In mammals, adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)
+      is present in all tissues and provides the only known mechanism for the metabolic
+      salvage of adenine resulting from the polyamine biosynthesis pathway or from
+      dietary sources.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; the crystallographic and kinetic study of the human
+      enzyme that directly establishes the catalytic activity, AMP binding, and disease
+      relevance. Abstract-only in cache but sufficient to anchor the core claims.
+- id: PMID:16130169
+  title: Proteomics of human umbilical vein endothelial cells applied to etoposide-induced
+    apoptosis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Large-scale HUVEC proteomic study; APRT is among the catalogued
+      cytoplasmic proteins. Source of the cytoplasm TAS annotation; contextual only.
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Urinary exosome proteome (1132 proteins); APRT detected as an abundant
+      cytosolic protein. Supports an over-annotated exosome localization, not function.
+- id: PMID:20458337
+  title: MHC class II-associated proteins in B-cell exosomes and potential functional
+    implications for exosome biogenesis.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: B-cell exosome proteome (539 proteins); APRT is a background cytosolic
+      constituent. Basis for an over-annotated exosome localization.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: EPS-urine exosome proteome (~900 proteins); APRT captured as an
+      abundant cytosolic protein. Over-annotated exosome localization, not function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: HuRI high-throughput binary interactome; source of an uninformative
+      protein binding IPI (partner TTC19). No functional consequence established for
+      APRT.
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Y2H neurodegenerative-disease interactome; source of an uninformative
+      protein binding IPI (partner SPRED1). No functional consequence established for
+      APRT.
+- id: PMID:3531209
+  title: Human adenine phosphoribosyltransferase. Complete amino acid sequence of
+    the erythrocyte enzyme.
+  findings:
+  - statement: Established the complete 179-residue amino acid sequence of human erythrocyte
+      APRT, showing homology to E. coli xanthine-guanine phosphoribosyltransferase
+      and an acetylated N-terminus.
+    supporting_text: Human adenine phosphoribosyltransferase has sequence homology
+      with xanthine-guanine phosphoribosyltransferase from Escherichia coli
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Foundational protein-sequence paper for human APRT; supports the
+      TAS molecular-function annotation and family membership.
+- id: Reactome:R-HSA-6798748
+  title: Exocytosis of secretory granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-74213
+  title: APRT catalyzes the conversion of adenine to AMP
+  findings: []
+- id: Reactome:R-HSA-9734193
+  title: Defective APRT does not convert adenine to AMP
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
