@@ -1,0 +1,3405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sel0 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sel0</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O13890" target="_blank" class="term-link">
+                        O13890
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">SPAC20G4.05c</span>
+
+                    <span class="badge">SelO</span>
+
+                    <span class="badge">Selenoprotein O</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sel0";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O13890" data-a="DESCRIPTION: sel0 (SPAC20G4.05c) is the fission yeast member of..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>sel0 (SPAC20G4.05c) is the fission yeast member of the SELO family (Pfam PF02696; InterPro IPR003846; HAMAP MF_00692 YdiU_SelO), predicted to be a mitochondrial protein AMPylase (protein adenylyltransferase). SELO-family enzymes adopt a protein-kinase-like (pseudokinase) fold but bind ATP in a &#34;flipped&#34; orientation and transfer AMP, rather than a phosphate, to serine, threonine and tyrosine residues of target proteins (AMPylation/adenylylation). The protein carries an N-terminal mitochondrial transit peptide, a conserved ATP-binding site and a Mg(2+)-dependent catalytic centre. In characterised orthologs (bacterial YdiU, budding yeast, human SELO), the enzyme localises to mitochondria, AMPylates proteins involved in redox homeostasis and metabolism, and contributes to the cellular response to oxidative stress; mammalian SELO additionally AMPylates mitochondrial metabolic enzymes such as glutamate dehydrogenase and pyruvate dehydrogenase. The activity, substrates and physiological role of the S. pombe protein itself have not been experimentally determined and are inferred from these orthologs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred SELO-family AMPylase (protein adenylyltransferase) activity. This is the core molecular function of the gene and is consistent with the Pfam SelO domain, conserved ATP-binding/Mg(2+) catalytic residues, and demonstrated activity of orthologs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> AMPylase activity (GO:0070733; synonym protein adenylyltransferase activity) is the defining function of the SELO family, demonstrated for bacterial, budding-yeast and human orthologs and phylogenetically propagated to the fission-yeast protein. It matches the UniProt EC 2.7.7.- / Rhea:54288 assignment and the conserved active-site residues. Retain as the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transfers AMP from</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">Pfam; PF02696; SelO; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred mitochondrial localization, consistent with the N-terminal mitochondrial transit peptide and the conserved mitochondrial localization of SELO orthologs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SELO orthologs localise to mitochondria and the S. pombe protein carries a UniProt mitochondrial transit peptide. Mitochondrion is the core cellular location where the AMPylase acts.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SelO pseudokinases localize</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt Subcellular Location keyword-mapping) annotation of mitochondrial localization; redundant with, and consistent with, the IBA and ISS mitochondrion annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location, derived from the UniProt mitochondrial subcellular-location assignment. Consistent with the transit peptide and ortholog data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (Rhea reaction mapping, RHEA:54288) annotation of AMPylase activity. Consistent with the SELO-family reaction (L-tyrosyl-[protein] + ATP = O-(5&#39;-adenylyl)-L-tyrosyl-[protein] + diphosphate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Rhea-mapped reaction matches the UniProt catalytic-activity annotation and the SELO-family AMPylation chemistry. Redundant with the IBA/ISS AMPylase annotations; retain as supporting evidence for the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">Xref=Rhea:RHEA:54288</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30270044
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein AMPylation by an Evolutionarily Conserved Pseudokina...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="PMID:30270044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AMPylase activity transferred by orthology (ISO) from a characterised SELO ortholog. The 2018 Sreelatha et al. paper is the primary demonstration of SELO-family AMPylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orthology-based transfer of the experimentally demonstrated SELO AMPylase activity is well justified given the conserved SelO domain and active site. Same core molecular function as the IBA/ISS/Rhea lines.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transfers AMP from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40849408" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40849408
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A repurposed AMP binding domain reveals mitochondrial protei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="PMID:40849408" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AMPylase activity transferred by orthology (ISO) from mammalian SELO, which AMPylates mitochondrial metabolic enzymes. Same core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The 2025 Gonzalez et al. study confirms mammalian mitochondrial SELO AMPylase activity and family conservation; orthology transfer to S. pombe sel0 is justified by the conserved SelO domain. Redundant with the other AMPylase lines.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40849408" target="_blank" class="term-link">
+                                        PMID:40849408
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SelO is conserved in E. coli and S. cerevisiae, where it catalyzes AMPylation to protect cells from oxidative damage and cell death</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9700395" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9700395
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Education and research: where are we going?
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="PMID:9700395" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> AMPylase-activity annotation whose cited reference (PMID:9700395) is a mis-attributed, unrelated 1998 veterinary editorial. The molecular function is correct for the gene, but this specific citation is spurious.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The AMPylase-activity assignment is correct and strongly supported by the other evidence lines (IBA, ISS, Rhea, PMID:30270044). The reference on THIS ISO row, PMID:9700395 (&#34;Education and research: where are we going?&#34;, Aust Vet J 1998), is a wrong-identifier citation with no relation to SelO/AMPylation and cannot itself support the annotation (flagged in reference_review as WRONG_IDENTIFIER). Per project policy the GOA source id is not rewritten; the annotation is accepted on the strength of the corroborating evidence and the citation problem is documented rather than used as grounds for removal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transfers AMP from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0005739" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of mitochondrial localization from human SELO (UniProtKB:Q08968). Consistent with the transit peptide and other mitochondrion annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location, transferred from the experimentally characterised human ortholog and supported by the N-terminal mitochondrial transit peptide.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                                    GO:0070733
+                                </a>
+                            </span>
+                            <span class="term-label">AMPylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0070733" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) transfer of AMPylase activity from human SELO (UniProtKB:Q08968). Same core molecular function as the other AMPylase lines.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Justified orthology-based transfer of the SELO AMPylase activity, consistent with the conserved SelO domain and active site. Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transfers AMP from</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O13890
+
+                                </span>
+
+                                <div class="support-text">Pfam; PF02696; SelO; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098869" target="_blank" class="term-link">
+                                    GO:0098869
+                                </a>
+                            </span>
+                            <span class="term-label">cellular oxidant detoxification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000111
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0098869" data-r="GO_REF:0000111" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator-inferred (IC) biological process, built on the ISS AMPylase-activity annotation. In characterised orthologs SELO AMPylates redox-homeostasis proteins and is required for the oxidative-stress response, so an oxidant- detoxification role is a reasonable inference for the fission-yeast protein, though it has not been demonstrated in S. pombe.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The oxidative-stress/redox role of SELO is well supported for orthologs (PMID:30270044: SELO AMPylates redox-homeostasis proteins and is necessary for the oxidative-stress response). For S. pombe sel0 this remains an inference (IC on top of ISS), with no fission-yeast phenotype reported. Retain as a plausible, non-core biological-process annotation rather than a demonstrated core function; the demonstrated/inferable core is the AMPylase activity and its mitochondrial location. Note also that in mammals the process is framed as metabolic regulation (PMID:40849408) as well as redox protection, so the exact pombe process is uncertain.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is necessary for the proper cellular response to oxidative</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018117" target="_blank" class="term-link">
+                                    GO:0018117
+                                </a>
+                            </span>
+                            <span class="term-label">protein adenylylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O13890" data-a="GO:0018117" data-r="GO_REF:0000024" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biological process directly enabled by the AMPylase activity: covalent addition of AMP to protein amino-acid side chains. Proposed as a NEW annotation to make explicit the process corresponding to the (inferred) molecular function; not currently in GOA for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0018117 (protein adenylylation) is the process counterpart of the SELO AMPylase activity (GO:0070733) and is directly entailed by it. Adding it makes the core function&#39;s process explicit. Inferred by sequence similarity to characterised SELO orthologs; like the MF, not yet demonstrated in S. pombe.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                        PMID:30270044
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transfers AMP from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mitochondrial protein AMPylase (protein adenylyltransferase): using ATP and Mg(2+), transfers an AMP moiety onto Ser/Thr/Tyr residues of target proteins (protein adenylylation). This is the conserved SELO-family activity inferred for sel0 from its SelO domain, conserved ATP-binding and Mg(2+)-coordinating residues, and the demonstrated activity of bacterial, budding-yeast and human orthologs. Direct demonstration in S. pombe is lacking.</h3>
+                <span class="vote-buttons" data-g="O13890" data-a="FUNCTION: Mitochondrial protein AMPylase (protein adenylyltr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070733" target="_blank" class="term-link">
+                            AMPylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0018117" target="_blank" class="term-link">
+                                protein adenylylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                                PMID:30270044
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">transfers AMP from</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:O13890
+
+                        </span>
+
+                        <div class="finding-text">Pfam; PF02696; SelO; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:O13890
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Mitochondrion</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000111.md" target="_blank" class="term-link">
+                            GO_REF:0000111
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotations Inferred by Curator (IC) using at least one Inferred by Sequence Similarity (ISS) annotation to support the inference</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30270044" target="_blank" class="term-link">
+                            PMID:30270044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein AMPylation by an Evolutionarily Conserved Pseudokinase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SELO is a highly conserved pseudokinase that transfers AMP from ATP to Ser, Thr and Tyr residues of protein substrates (AMPylation), localises to mitochondria, AMPylates proteins involved in redox homeostasis, and is required for the proper cellular response to oxidative stress.</div>
+
+                        <div class="finding-text">"SelO pseudokinases localize"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40849408" target="_blank" class="term-link">
+                            PMID:40849408
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A repurposed AMP binding domain reveals mitochondrial protein AMPylation as a regulator of cellular metabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Mammalian SELO is a mitochondrial AMPylase that regulates metabolic flux by AMPylating key mitochondrial proteins (glutamate dehydrogenase, pyruvate dehydrogenase); SELO is conserved in E. coli and S. cerevisiae, where it AMPylates to protect cells from oxidative damage and cell death.</div>
+
+                        <div class="finding-text">"SelO is conserved in E. coli and S. cerevisiae, where it catalyzes AMPylation to protect cells from oxidative damage and cell death"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9700395" target="_blank" class="term-link">
+                            PMID:9700395
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Education and research: where are we going?</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:O13890
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein adenylyltransferase SelO, mitochondrial (SELO_SCHPO)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt classifies O13890 in the SELO family with an N-terminal mitochondrial transit peptide, an ATP-binding site and a Mg(2+)-dependent catalytic centre; function is inferred from homology (PE 3).</div>
+
+                        <div class="finding-text">"Pfam; PF02696; SelO; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is recombinant S. pombe sel0 catalytically active as an AMPylase in vitro, and does it self-AMPylate as seen for other SELO-family members?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="Q: Is recombinant S. pombe sel0 catalytically active ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous AMPylation substrates of sel0 in fission-yeast mitochondria, and do they overlap with the redox and metabolic substrates seen in other species?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="Q: What are the endogenous AMPylation substrates of s..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does a sel0 deletion sensitise S. pombe to oxidative stress or alter mitochondrial/respiratory metabolism?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="Q: Does a sel0 deletion sensitise S. pombe to oxidati..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> In vitro AMPylation assay of purified recombinant sel0 (with [alpha-32P]ATP or an N6-modified ATP analog) against candidate substrates and generic substrates, with active-site mutants as controls, to test catalytic competence.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="EXPERIMENT: In vitro AMPylation assay of purified recombinant ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> AMPylation-enrichment proteomics (hinT- or antibody-based) on mitochondria from wild-type versus sel0-deletion S. pombe to identify endogenous substrates.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="EXPERIMENT: AMPylation-enrichment proteomics (hinT- or antibod..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Phenotypic characterisation of a sel0-deletion strain under oxidative stress (H2O2, diamide, paraquat) and respiratory-growth conditions, with complementation by wild-type and catalytically dead sel0.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="O13890" data-a="EXPERIMENT: Phenotypic characterisation of a sel0-deletion str..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether sel0 (SPAC20G4.05c) actually possesses AMPylase (protein adenylyltransferase) activity has not been tested in S. pombe; the activity is inferred entirely from orthologs. No in vitro assay or in vivo AMPylation readout has been reported for the fission-yeast protein.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> SELO-family AMPylase activity is experimentally established for bacterial (E. coli YdiU), S. cerevisiae and human SELO, and the S. pombe protein retains the SelO domain (Pfam PF02696), the ATP-binding site and the Mg(2+)-coordinating catalytic residues, so catalytic competence is plausible but unproven.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Confirms whether sel0 is a bona fide enzyme in fission yeast or a catalytically compromised family member, and validates the propagated GO AMPylase annotation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> In vitro AMPylation assay of recombinant sel0 with [alpha-32P]ATP or an ATP analog on candidate substrates, and detection of protein AMPylation in a S. pombe sel0-deletion vs wild-type background.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Inferred from homology"</em> — UniProt:O13890</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The in vivo substrate(s) of sel0 in S. pombe are unknown. It is undetermined which fission-yeast proteins (e.g. redox enzymes such as glutaredoxins, or mitochondrial metabolic enzymes) are AMPylated by sel0.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In orthologs, SELO AMPylates proteins involved in redox homeostasis (PMID:30270044) and mammalian SELO AMPylates mitochondrial metabolic enzymes including glutamate dehydrogenase and pyruvate dehydrogenase (PMID:40849408), but the S. pombe substrate repertoire has not been mapped.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying pombe substrates would define whether sel0 acts primarily in redox homeostasis, mitochondrial metabolic regulation, or another process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> AMPylation-enrichment proteomics (e.g. hinT- or antibody-based) comparing wild-type and sel0-deletion S. pombe mitochondria.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"AMPylation of key mitochondrial proteins including glutamate"</em> — PMID:40849408</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether sel0 functions in oxidant detoxification / the oxidative- stress response in S. pombe. The GO cellular oxidant detoxification annotation is a curator inference from orthologs, not a fission-yeast phenotype.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> SELO activity is necessary for the proper cellular response to oxidative stress in characterised orthologs (PMID:30270044) and protects E. coli and S. cerevisiae from oxidative damage (PMID:40849408); no oxidative-stress or other loss-of-function phenotype has been reported for a S. pombe sel0 deletion.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Establishes the physiological role of sel0 in fission yeast and whether the redox role of the family is conserved in this lineage.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Phenotypic analysis of a S. pombe sel0-deletion strain under oxidative and other stresses (e.g. H2O2, diamide, respiratory-growth conditions).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"is necessary for the proper cellular response to oxidative"</em> — PMID:30270044</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sel0-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O13890" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: Protein Adenylyltransferase SelO (SPAC20G4.05c) in *Schizosaccharomyces pombe*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">23 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T16:34:59.039396</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sel0-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-protein-adenylyltransferase-selo-spac20g405c-in-schizosaccharomyces-pombe">Comprehensive Research Report: Protein Adenylyltransferase SelO (SPAC20G4.05c) in <em>Schizosaccharomyces pombe</em></h1>
+<h2 id="gene-identity-and-nomenclature">Gene Identity and Nomenclature</h2>
+<p>The gene SPAC20G4.05c in <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843) encodes a mitochondrial protein adenylyltransferase of the SELO family (UniProt: O13890). This protein is the fission yeast ortholog of selenoprotein O (SelO/SELENOO), a highly conserved pseudokinase found across all domains of life. While direct literature on the <em>S. pombe</em> SelO is limited, extensive functional characterization has been performed on orthologs in <em>Escherichia coli</em>, <em>Saccharomyces cerevisiae</em> (where the ortholog is known as Fmp40), <em>Pseudomonas syringae</em>, and <em>Homo sapiens</em>, providing robust functional inference for the <em>S. pombe</em> protein. The S. pombe protein contains the hallmark SelO domain (IPR003846/PF02696) and belongs to the SELO protein family, consistent with its annotation.</p>
+<h2 id="enzymatic-function-protein-ampylation-adenylylation">Enzymatic Function: Protein AMPylation (Adenylylation)</h2>
+<h3 id="reaction-catalyzed">Reaction Catalyzed</h3>
+<p>SelO is a pseudokinase that catalyzes protein AMPylation — the covalent transfer of adenosine monophosphate (AMP) from ATP to serine, threonine, and tyrosine residues on protein substrates via a phosphodiester bond (sreelatha2018proteinampylationby pages 1-3, sreelatha2018proteinampylationby pages 4-7). This post-translational modification is distinct from conventional kinase-mediated phosphorylation. Rather than transferring the γ-phosphate of ATP (as canonical kinases do), SelO transfers the α-phosphate group together with the adenosine moiety, resulting in AMP attachment to the target protein with a characteristic mass shift of 329 Da (sreelatha2018proteinampylationby pages 4-7). The enzyme requires Mg²⁺ and Ca²⁺ as essential metal cofactors and utilizes ATP as its preferred co-substrate with a Km of approximately 2.0 mM (sreelatha2018proteinampylationby pages 4-7).</p>
+<h3 id="structural-basis-the-flipped-atp-mechanism">Structural Basis: The Flipped ATP Mechanism</h3>
+<p>The structural basis for SelO's adenylyltransferase activity was elucidated through X-ray crystallography of the <em>P. syringae</em> ortholog, solved at 2.27 Å resolution (sreelatha2018proteinampylationby pages 21-22). SelO adopts a canonical protein kinase-like fold with 12 β-strands and 22 α-helices, but with a critical difference: ATP binds in a "flipped" or inverted orientation in the active site compared to canonical kinases (pon2023redefiningpseudokinasesa pages 3-4, sreelatha2018proteinampylationby pages 3-4). In this unusual configuration, the γ-phosphate is buried between the N- and C-lobes with the adenosine moiety facing outward, while the α-, β-, and γ-phosphates occupy positions corresponding to the typical γ-, β-, and α-phosphates of standard protein kinases (sreelatha2018proteinampylationby pages 3-4). This inversion positions the α-phosphate for transfer to protein substrates rather than the γ-phosphate (sreelatha2018proteinampylationby pages 3-4). Key active site residues include K113, E136, R176, and R183, which coordinate nucleotide binding (sreelatha2018proteinampylationby pages 4-7). SelO lacks the canonical catalytic aspartate of protein kinases but contains a migrated aspartate (D252) that approaches the substrate from the opposite side compared to typical kinases like PKA (sreelatha2018proteinampylationby pages 10-11). The C-terminal domains (CTD1 and CTD2) play regulatory roles analogous to cyclin activation of CDK2, positioning the αC helix and bridging the activation loop to achieve the active conformation (sreelatha2018proteinampylationby pages 32-33).</p>
+<h3 id="substrate-specificity">Substrate Specificity</h3>
+<p>SelO AMPylates multiple mitochondrial proteins, with particular specificity for those involved in redox homeostasis and cellular metabolism. The following table summarizes experimentally characterized substrates across organisms:</p>
+<table>
+<thead>
+<tr>
+<th>Substrate</th>
+<th>Organism</th>
+<th>AMPylation Site</th>
+<th>Biological Function</th>
+<th>Reference</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Glutaredoxin A (GrxA/Grx)</td>
+<td><em>Escherichia coli</em>; conserved mechanism also supported in yeast</td>
+<td>Tyr13</td>
+<td>Thioredoxin-like redoxin that catalyzes deglutathionylation; SelO-mediated AMPylation inhibits Grx activity and helps maintain protein S-glutathionylation during oxidative stress</td>
+<td>(sreelatha2018proteinampylationby pages 7-8, sreelatha2018proteinampylationby pages 10-11)</td>
+</tr>
+<tr>
+<td>sucA (α-ketoglutarate dehydrogenase E1 component homolog)</td>
+<td>Bacteria</td>
+<td>Thr405</td>
+<td>Oxidative metabolism/TCA-linked enzyme component; identified as a SelO substrate connected to redox homeostasis and oxidative phosphorylation</td>
+<td>(sreelatha2018proteinampylationby pages 7-8, chatterjee2021ficandnonfic pages 6-6)</td>
+</tr>
+<tr>
+<td>Trx3 (thioredoxin 3)</td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Thr66</td>
+<td>Mitochondrial thioredoxin/redoxin; AMPylation at T66 is important for proper protein level and maturation during mitochondrial import</td>
+<td>(panja2024profilingofyeast pages 1-3, panja2024profilingofyeast pages 3-5)</td>
+</tr>
+<tr>
+<td>Prx1 (peroxiredoxin)</td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Not specified in available evidence</td>
+<td>Mitochondrial peroxiredoxin involved in peroxide detoxification/redox homeostasis; identified as an in vivo Fmp40/SelO-interacting substrate</td>
+<td>(panja2024profilingofyeast pages 1-3)</td>
+</tr>
+<tr>
+<td>Grx2 (glutaredoxin 2)</td>
+<td><em>Saccharomyces cerevisiae</em></td>
+<td>Not specified in available evidence</td>
+<td>Mitochondrial glutaredoxin involved in redox regulation/glutathione chemistry; reported as one of the few known yeast Fmp40/SelO substrates prior to global AMPylome profiling</td>
+<td>(panja2024profilingofyeast pages 13-15)</td>
+</tr>
+<tr>
+<td>Glutamate dehydrogenase</td>
+<td>Mammals (SelO/SELENOO study)</td>
+<td>Not specified in available evidence</td>
+<td>Mitochondrial metabolic enzyme; SelO substrate implicated in regulation of metabolic flux and linked to TCA/2-oxocarboxylic acid metabolism</td>
+<td>(gonzalez2025arepurposedamp pages 6-7, gonzalez2025arepurposedamp pages 1-2)</td>
+</tr>
+<tr>
+<td>Pyruvate dehydrogenase</td>
+<td>Mammals (SelO/SELENOO study)</td>
+<td>Not specified in available evidence</td>
+<td>Central mitochondrial enzyme linking glycolysis to the TCA cycle; identified as a SelO substrate involved in metabolic regulation by AMPylation</td>
+<td>(gonzalez2025arepurposedamp pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes experimentally reported SelO/Fmp40 substrates across organisms, the known AMPylation sites where available, and the biological roles of those target proteins. It is useful for comparing conserved redox-related targets with more recently identified metabolic substrates.</em></p>
+<p>The best-characterized substrate is glutaredoxin (GrxA), which is AMPylated at a conserved active-site tyrosine residue (Tyr13) (sreelatha2018proteinampylationby pages 7-8, sreelatha2018proteinampylationby pages 10-11). AMPylation of this residue inhibits glutaredoxin's deglutathionylation activity, likely by creating steric hindrance for glutathione binding (sreelatha2018proteinampylationby pages 10-11). In <em>S. cerevisiae</em>, the SelO ortholog Fmp40 additionally AMPylates thioredoxin 3 (Trx3) at Thr66, peroxiredoxin Prx1, and glutaredoxin Grx2 (panja2024profilingofyeast pages 1-3, panja2024profilingofyeast pages 13-15). Recent work identified approximately 124 mitochondrial proteins enriched as SelO substrates in mammalian cells, with gene ontology analysis revealing enrichment in TCA cycle and 2-oxocarboxylic acid metabolism pathways (gonzalez2025arepurposedamp pages 6-7). Notably, glutamate dehydrogenase and pyruvate dehydrogenase were identified as key mammalian SelO substrates, establishing a role in metabolic regulation beyond redox homeostasis (gonzalez2025arepurposedamp pages 1-2).</p>
+<p>A comprehensive profiling of the yeast mitochondrial "AMPylome" identified 169 AMPylated proteins across 318 distinct modification sites, with the majority occurring on threonine, serine, or tyrosine residues (55%), and significant lysine modifications also detected (31%) (panja2024profilingofyeast pages 13-15). Importantly, AMPylated proteins were also found in Fmp40-deleted cells, suggesting the existence of additional, as-yet-unidentified AMPylases in yeast mitochondria (panja2024profilingofyeast pages 13-15).</p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>SelO localizes to the mitochondria, consistent with the presence of an N-terminal mitochondrial targeting peptide that is cleaved upon import (sreelatha2018proteinampylationby pages 4-7). This mitochondrial localization has been confirmed across multiple organisms. In <em>S. cerevisiae</em>, SelO (Fmp40) was expressed with a GFP-myc tag and confirmed to localize to enriched mitochondrial fractions (sreelatha2018proteinampylationby pages 18-20). Human SelO similarly localizes to mitochondria, where it functions in both redox protection and metabolic regulation (chatterjee2021ficandnonfic pages 6-6). The <em>S. pombe</em> protein is annotated as a mitochondrial precursor (UniProt O13890), consistent with this conserved localization pattern.</p>
+<h2 id="biochemical-pathways-and-biological-function">Biochemical Pathways and Biological Function</h2>
+<h3 id="glutathionylationdeglutathionylation-regulation">Glutathionylation/Deglutathionylation Regulation</h3>
+<p>The primary characterized role of SelO is in regulating protein S-glutathionylation — a protective post-translational modification in which glutathione is conjugated to protein cysteine residues during oxidative stress. SelO AMPylates glutaredoxin, the enzyme responsible for removing glutathione from modified proteins (deglutathionylation) (sreelatha2018proteinampylationby pages 10-11, pon2023redefiningpseudokinasesa pages 3-4). By inhibiting glutaredoxin through AMPylation, SelO maintains elevated protein S-glutathionylation levels during oxidative stress, thereby protecting protein cysteine residues from irreversible overoxidation (sreelatha2018proteinampylationby pages 10-11, pon2023redefiningpseudokinasesa pages 3-4). This mechanism has been experimentally validated through immunoblot assays showing reduced S-glutathionylation levels in SelO-deficient <em>E. coli</em> and <em>S. cerevisiae</em> cells (sreelatha2018proteinampylationby pages 10-11).</p>
+<h3 id="redox-regulation-of-selo-activity">Redox Regulation of SelO Activity</h3>
+<p>SelO activity is itself regulated by the cellular redox state through an intramolecular disulfide bond formed between a cysteine residue in the activation loop and a C-terminal cysteine (or selenocysteine in vertebrates) (pon2023redefiningpseudokinasesa pages 3-4). The oxidized, disulfide-bonded form of SelO has reduced catalytic activity, while the reduced monomeric form exhibits significantly higher AMPylation activity (pon2023redefiningpseudokinasesa pages 3-4). The thioredoxin system, using NADPH as a reducing equivalent, can reduce SelO and activate it, creating a redox-sensitive regulatory switch (sreelatha2018proteinampylationby pages 7-8). In the reduced state, a salt bridge forms between a glutamate residue and a conserved lysine in the VAIK motif, indicating the catalytically active conformation (pon2023redefiningpseudokinasesa pages 3-4).</p>
+<h3 id="metabolic-regulation">Metabolic Regulation</h3>
+<p>Beyond redox homeostasis, recent work has expanded SelO's functional scope to include regulation of mitochondrial metabolism. Mammalian SelO AMPylates glutamate dehydrogenase and pyruvate dehydrogenase, key enzymes in the TCA cycle and pyruvate metabolism, thereby modulating metabolic flux (gonzalez2025arepurposedamp pages 6-7, gonzalez2025arepurposedamp pages 1-2). In <em>S. cerevisiae</em>, global AMPylome profiling revealed SelO/Fmp40 substrates spanning oxidative phosphorylation, TCA cycle metabolism, redox regulation, and mitochondrial DNA maintenance (panja2024profilingofyeast pages 13-15). AMPylation of thioredoxin 3 (Trx3) at Thr66 was found to be critical for proper Trx3 protein levels and maturation during mitochondrial import (panja2024profilingofyeast pages 1-3).</p>
+<h3 id="oxidative-stress-phenotypes">Oxidative Stress Phenotypes</h3>
+<p>Functional studies in yeast demonstrate that SelO is important for protection against oxidative stress. In <em>S. cerevisiae</em>, SelO/Fmp40 expression increases when cells are grown on non-fermentable carbon sources (glycerol, lactate, acetate) that require mitochondrial respiration and generate more reactive oxygen species (sreelatha2018proteinampylationby pages 8-10). SelO-deficient yeast exhibit decreased survival when challenged with hydrogen peroxide and show menadione-dependent growth defects (sreelatha2018proteinampylationby pages 8-10). These phenotypes are rescued by expression of wild-type SelO but not by catalytically inactive mutants, confirming that the AMPylation activity is essential for the protective function (sreelatha2018proteinampylationby pages 8-10). Yeast glutaredoxin mutants similarly show increased sensitivity to menadione and hydrogen peroxide, further linking SelO-mediated regulation of glutaredoxin to oxidative stress defense (sreelatha2018proteinampylationby pages 10-11).</p>
+<h2 id="evolutionary-conservation">Evolutionary Conservation</h2>
+<p>SelO is among the most highly conserved members of both the protein kinase superfamily and the selenoprotein family (sreelatha2018proteinampylationby pages 3-4). Jackhmmer searches against reference proteomes identified 3,427 SelO homolog sequences across diverse organisms (sreelatha2018proteinampylationby pages 21-22). The protein is found in bacteria (particularly Proteobacteria and Cyanobacteria), archaea, and eukaryotes (sreelatha2018proteinampylationby pages 3-4). Most eukaryotic phyla contain approximately one SelO gene per genome (sreelatha2018proteinampylationby pages 3-4).</p>
+<p>A key distinguishing feature across evolution is the identity of a critical C-terminal residue: in vertebrates and chordates, SelO contains a selenocysteine (Sec, the 21st amino acid) at this position, while in lower eukaryotes (including <em>S. pombe</em> and <em>S. cerevisiae</em>) and prokaryotes, an invariant cysteine occupies the equivalent position (sreelatha2018proteinampylationby pages 3-4, mukherjee2025theriseof pages 4-5). Selenocysteine has a lower pKa than cysteine and confers superior nucleophilicity and oxidoreductase efficiency at physiological pH (sreelatha2018proteinampylationby pages 3-4). The human genome encodes 25 selenoproteins containing selenocysteine, of which SelO is one (mukherjee2025theriseof pages 4-5). The <em>S. pombe</em> SPAC20G4.05c protein contains cysteine rather than selenocysteine, consistent with the absence of selenocysteine incorporation machinery in most fungi.</p>
+<h2 id="note-on-s-pombe-specific-literature">Note on <em>S. pombe</em>-Specific Literature</h2>
+<p>Direct experimental studies on the <em>S. pombe</em> SelO (SPAC20G4.05c) are not available in the published literature. The functional annotation presented here is based on robust evidence from orthologs in <em>E. coli</em>, <em>S. cerevisiae</em> (Fmp40), <em>P. syringae</em>, and <em>H. sapiens</em>, which share the conserved SelO domain (IPR003846) and demonstrate highly conserved enzymatic activity and biological function. Given the exceptional evolutionary conservation of SelO across all domains of life, including both yeast species, and the shared domain architecture, the <em>S. pombe</em> protein is very likely to function as a mitochondrial protein adenylyltransferase that AMPylates redox-related and metabolic substrates to protect against oxidative stress, analogous to its characterized orthologs.</p>
+<h2 id="summary">Summary</h2>
+<p>The <em>S. pombe</em> SPAC20G4.05c gene encodes a mitochondrial protein adenylyltransferase of the SELO family. The protein catalyzes AMPylation — the transfer of AMP from ATP to serine, threonine, and tyrosine residues on mitochondrial protein substrates — through a unique pseudokinase fold with an inverted ATP binding orientation. Its primary biological role is maintaining redox homeostasis by AMPylating and thereby inhibiting glutaredoxins, which preserves protective protein S-glutathionylation during oxidative stress. SelO is also emerging as a regulator of mitochondrial metabolic flux through AMPylation of key metabolic enzymes. The enzyme's own activity is regulated by a redox-sensitive intramolecular disulfide bond, creating a feedforward loop responsive to the cellular redox environment.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(sreelatha2018proteinampylationby pages 1-3): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 4-7): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 21-22): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pon2023redefiningpseudokinasesa pages 3-4): Alex Pon, Adam Osinski, and Anju Sreelatha. Redefining pseudokinases: a look at the untapped enzymatic potential of pseudokinases. IUBMB Life, 75:370-376, Jan 2023. URL: https://doi.org/10.1002/iub.2698, doi:10.1002/iub.2698. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 3-4): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 10-11): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 32-33): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 7-8): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chatterjee2021ficandnonfic pages 6-6): Bhaskar K. Chatterjee and Matthias C. Truttmann. Fic and non-fic ampylases: protein ampylation in metazoans. May 2021. URL: https://doi.org/10.1098/rsob.210009, doi:10.1098/rsob.210009. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(panja2024profilingofyeast pages 1-3): Chiranjit Panja, Suchismita Masanta, Aneta Wiesyk, Katarzyna Niedzwiecka, Emilia Baranowska, Dominik Cysewski, Marta Sipko, Anna Anielska-Mazur, Agata Malinowska, and Roza Kucharczyk. Profiling of yeast saccharomyces cerevisiae mitochondrial ampylome reveals a regulation of atp synthase coupling trough subunit δ. bioRxiv, Dec 2024. URL: https://doi.org/10.1101/2024.12.14.628500, doi:10.1101/2024.12.14.628500. This article has 0 citations.</p>
+</li>
+<li>
+<p>(panja2024profilingofyeast pages 3-5): Chiranjit Panja, Suchismita Masanta, Aneta Wiesyk, Katarzyna Niedzwiecka, Emilia Baranowska, Dominik Cysewski, Marta Sipko, Anna Anielska-Mazur, Agata Malinowska, and Roza Kucharczyk. Profiling of yeast saccharomyces cerevisiae mitochondrial ampylome reveals a regulation of atp synthase coupling trough subunit δ. bioRxiv, Dec 2024. URL: https://doi.org/10.1101/2024.12.14.628500, doi:10.1101/2024.12.14.628500. This article has 0 citations.</p>
+</li>
+<li>
+<p>(panja2024profilingofyeast pages 13-15): Chiranjit Panja, Suchismita Masanta, Aneta Wiesyk, Katarzyna Niedzwiecka, Emilia Baranowska, Dominik Cysewski, Marta Sipko, Anna Anielska-Mazur, Agata Malinowska, and Roza Kucharczyk. Profiling of yeast saccharomyces cerevisiae mitochondrial ampylome reveals a regulation of atp synthase coupling trough subunit δ. bioRxiv, Dec 2024. URL: https://doi.org/10.1101/2024.12.14.628500, doi:10.1101/2024.12.14.628500. This article has 0 citations.</p>
+</li>
+<li>
+<p>(gonzalez2025arepurposedamp pages 6-7): Abner Gonzalez, Alex Pon, Kelly A. Servage, Krzysztof Pawłowski, Yan Han, and Anju Sreelatha. A repurposed amp binding domain reveals mitochondrial protein ampylation as a regulator of cellular metabolism. Nature Communications, Aug 2025. URL: https://doi.org/10.1038/s41467-025-63014-z, doi:10.1038/s41467-025-63014-z. This article has 3 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(gonzalez2025arepurposedamp pages 1-2): Abner Gonzalez, Alex Pon, Kelly A. Servage, Krzysztof Pawłowski, Yan Han, and Anju Sreelatha. A repurposed amp binding domain reveals mitochondrial protein ampylation as a regulator of cellular metabolism. Nature Communications, Aug 2025. URL: https://doi.org/10.1038/s41467-025-63014-z, doi:10.1038/s41467-025-63014-z. This article has 3 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 18-20): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sreelatha2018proteinampylationby pages 8-10): Anju Sreelatha, Samantha S. Yee, Victor A. Lopez, Brenden C. Park, Lisa N. Kinch, Sylwia Pilch, Kelly A. Servage, Junmei Zhang, Jenny Jiou, Monika Karasiewicz-Urbańska, Małgorzata Łobocka, Nick V. Grishin, Kim Orth, Roza Kucharczyk, Krzysztof Pawłowski, Diana R. Tomchick, and Vincent S. Tagliabracci. Protein ampylation by an evolutionarily conserved pseudokinase. Cell, 175:809-821.e19, Oct 2018. URL: https://doi.org/10.1016/j.cell.2018.08.046, doi:10.1016/j.cell.2018.08.046. This article has 224 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mukherjee2025theriseof pages 4-5): Meghomukta Mukherjee and Anju Sreelatha. The rise of ampylation: from bacterial beginnings to modern implications in health and disease. Biochemical Society transactions, Jul 2025. URL: https://doi.org/10.1042/bst20253056, doi:10.1042/bst20253056. This article has 2 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sel0-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sreelatha2018proteinampylationby pages 4-7</li>
+<li>sreelatha2018proteinampylationby pages 21-22</li>
+<li>sreelatha2018proteinampylationby pages 3-4</li>
+<li>sreelatha2018proteinampylationby pages 10-11</li>
+<li>sreelatha2018proteinampylationby pages 32-33</li>
+<li>panja2024profilingofyeast pages 1-3</li>
+<li>panja2024profilingofyeast pages 13-15</li>
+<li>gonzalez2025arepurposedamp pages 1-2</li>
+<li>gonzalez2025arepurposedamp pages 6-7</li>
+<li>sreelatha2018proteinampylationby pages 18-20</li>
+<li>chatterjee2021ficandnonfic pages 6-6</li>
+<li>pon2023redefiningpseudokinasesa pages 3-4</li>
+<li>sreelatha2018proteinampylationby pages 7-8</li>
+<li>sreelatha2018proteinampylationby pages 8-10</li>
+<li>mukherjee2025theriseof pages 4-5</li>
+<li>sreelatha2018proteinampylationby pages 1-3</li>
+<li>panja2024profilingofyeast pages 3-5</li>
+<li>https://doi.org/10.1016/j.cell.2018.08.046,</li>
+<li>https://doi.org/10.1002/iub.2698,</li>
+<li>https://doi.org/10.1098/rsob.210009,</li>
+<li>https://doi.org/10.1101/2024.12.14.628500,</li>
+<li>https://doi.org/10.1038/s41467-025-63014-z,</li>
+<li>https://doi.org/10.1042/bst20253056,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sel0-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O13890" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sel0-spac20g405c-s-pombe-curation-notes">sel0 (SPAC20G4.05c) — S. pombe — curation notes</h1>
+<h2 id="identity-verified-from-uniprot-record">Identity (verified from UniProt record)</h2>
+<ul>
+<li>PomBase standard name: <strong>sel0</strong>; systematic name: <strong>SPAC20G4.05c</strong></li>
+<li>UniProt: <strong>O13890</strong> (<code>SELO_SCHPO</code>), 568 aa, <code>PE 3: Inferred from homology</code></li>
+<li>RecName: <strong>Protein adenylyltransferase SelO, mitochondrial</strong>; AltName: Selenoprotein O (SelO); EC 2.7.7.-</li>
+<li><strong>This is Selenoprotein O / SelO, NOT a Sel1-repeat / SEL1L-related ERAD protein.</strong> The task<br />
+  brief hypothesized a "Sel1-repeat / SEL1L-related" ERAD-adjacent protein; the UniProt record<br />
+  (Pfam PF02696 SelO, InterPro IPR003846 SelO, HAMAP MF_00692 YdiU_SelO, PANTHER PTHR32057<br />
+  "PROTEIN ADENYLYLTRANSFERASE SELO, MITOCHONDRIAL") unambiguously identifies it as a member<br />
+  of the <strong>SELO family</strong> of protein-tyrosine/Ser/Thr AMPylases (pseudokinase-fold<br />
+  nucleotidyltransferases). The "sel0" symbol = "SelO", not "Sel-zero" or a Sel1 relative.<br />
+  All ERAD/glycoprotein-QC framing from the brief is discarded as mistaken.</li>
+</ul>
+<h2 id="domain-sequence-reasoning-inline-from-sel0-uniprottxt">Domain / sequence reasoning (inline, from <code>sel0-uniprot.txt</code>)</h2>
+<ul>
+<li><strong>Pfam PF02696 (SelO)</strong> spanning the chain; <strong>InterPro IPR003846 (SelO)</strong>; <strong>HAMAP MF_00692<br />
+  (YdiU_SelO)</strong> — this is the bacterial-to-eukaryote-conserved SelO/YdiU family.</li>
+<li><strong>Pseudokinase (protein-kinase-like) fold</strong>: SelO adopts a protein-kinase-like fold but with<br />
+  ATP "flipped" in the active site, enabling AMP transfer instead of phosphotransfer<br />
+  [PMID:30270044 abstract, "The crystal structure of a SelO homolog reveals a protein / kinase-like fold with ATP flipped in the active site"].</li>
+<li><strong>ATP-binding site</strong>: multiple UniProt BINDING features for ATP (residues 120, 122, 123, 144,<br />
+  156, 157, 208, 215, 297) transferred by similarity from the bacterial homolog (Q87VB1) →<br />
+  supports GO:0005524 ATP binding.</li>
+<li><strong>Mg2+ cofactor / metal binding</strong>: BINDING features for Mg(2+) at 288 and 297; UniProt COFACTOR<br />
+  Mg(2+) → supports GO:0046872 metal ion binding. ACT_SITE 287 "Proton acceptor".</li>
+<li><strong>Mitochondrial targeting</strong>: N-terminal TRANSIT peptide (<code>FT TRANSIT 1..?  /note="Mitochondrion"</code>),<br />
+  KW Mitochondrion, Transit peptide → supports mitochondrial localization.</li>
+<li><strong>Disulfide bond</strong> KW: "Forms probably one or more intrachain disulfide bridges" (by similarity)<br />
+  — consistent with a redox-linked role, though the pombe disulfides are inferred not observed.</li>
+</ul>
+<h2 id="what-is-known-about-the-selo-family-orthologs-vs-not-known-for-s-pombe-sel0">What is KNOWN (about the SelO family / orthologs) vs NOT known for S. pombe sel0</h2>
+<h3 id="known-familyortholog-level-strong-homology-basis">KNOWN (family/ortholog level; strong homology basis)</h3>
+<ul>
+<li><strong>SelO is a protein AMPylase (adenylyltransferase)</strong>: transfers AMP from ATP to Ser/Thr/Tyr<br />
+  residues of target proteins. Demonstrated experimentally for the SelO family (bacterial homolog<br />
+  crystal structure + human/yeast enzymes) [PMID:30270044 abstract, "we show<br />
+  that the highly conserved pseudokinase selenoprotein-O (Sel / O) transfers AMP from / ATP to Ser, Thr, and Tyr residues on protein substrates (AM / Pylation)"].</li>
+<li><strong>SelO localizes to mitochondria</strong> [PMID:30270044 abstract, "SelO pseudokinases localize / to the mitochondria"; PMID:40849408, "Selenoprotein O (SelO), which is localized in the mitochondria"].</li>
+<li><strong>SelO AMPylates redox-homeostasis proteins and is required for the oxidative-stress response</strong><br />
+  [PMID:30270044 abstract, "and AMPylate proteins involved in redox homeostasis. Consequently, SelO activity / is necessary for the proper cellular response to oxidative / stress"].</li>
+<li><strong>Family is deeply conserved</strong> — bacteria (E. coli YdiU), S. cerevisiae, human — and in<br />
+  E. coli / S. cerevisiae SelO "catalyzes AMPylation to protect cells from oxidative damage and<br />
+  cell death" [PMID:40849408, "SelO is conserved in E. coli and S. cerevisiae, where it catalyzes AMPylation to protect cells from oxidative damage and cell death"].</li>
+<li><strong>Mammalian SelO substrates include mitochondrial metabolic enzymes</strong> (glutamate dehydrogenase,<br />
+  pyruvate dehydrogenase), regulating metabolic flux [PMID:40849408 abstract, "mammalian<br />
+  Selenoprotein O regulates metabolic flux through AMPylation of key mitochondrial proteins including glutamate / dehydrogenase and pyruvate dehydrogenase"].</li>
+</ul>
+<h3 id="not-known-specifically-for-s-pombe-sel0-knowledge-gaps">NOT known specifically for S. pombe sel0 (knowledge gaps)</h3>
+<ul>
+<li><strong>No S. pombe-specific experimental data.</strong> UniProt <code>PE 3: Inferred from homology</code>; every GOA<br />
+  annotation for O13890 is electronic/by-similarity (IBA, IEA, ISO, ISS) or curator inference (IC).<br />
+  Neither PMID:30270044 (E. coli/S. cerevisiae/human) nor PMID:40849408 (mammalian) assays the<br />
+  fission-yeast protein.</li>
+<li><strong>AMPylase activity of sel0 has not been demonstrated in vitro or in vivo in S. pombe</strong> — it is<br />
+  inferred from orthologs. Whether the pombe active site is catalytically competent is untested<br />
+  (though catalytic ACT_SITE 287 and the Mg2+/ATP residues appear conserved by the similarity<br />
+  transfer).</li>
+<li><strong>In-vivo substrates in S. pombe are unknown.</strong> The specific redox/metabolic proteins AMPylated<br />
+  in fission yeast, if any, have not been identified.</li>
+<li><strong>Loss-of-function phenotype in S. pombe is uncharacterized</strong> — no reported growth, oxidative-<br />
+  stress-sensitivity, or metabolic phenotype for a pombe sel0 deletion in the cached literature.</li>
+<li><strong>The biological role (oxidant detoxification vs metabolic regulation vs other) in S. pombe is<br />
+  inferred, not established.</strong> The GO:0098869 "cellular oxidant detoxification" annotation is an<br />
+  IC (Inferred by Curator) call built on the ISS AMPylase inference, not on a pombe phenotype.</li>
+</ul>
+<h2 id="reference-adjudication-notes">Reference adjudication notes</h2>
+<ul>
+<li><strong>PMID:30270044</strong> (Sreelatha et al. 2018, Cell) — foundational SelO-AMPylation paper. Abstract-<br />
+  only in cache (<code>full_text_available: false</code>) but the abstract itself contains the key claims.<br />
+  Relevance HIGH, correctness VERIFIED (PubMed title matches).</li>
+<li><strong>PMID:40849408</strong> (Gonzalez et al. 2025, Nat Commun) — full text cached. Confirms mammalian SelO<br />
+  mitochondrial AMPylation of metabolic enzymes; conservation statement. Relevance HIGH/MEDIUM,<br />
+  VERIFIED.</li>
+<li><strong>PMID:9700395</strong> — "Education and research: where are we going?" (Niethe G, Aust Vet J 1998,<br />
+  Editorial). This is a <strong>veterinary editorial with no connection to SelO or AMPylation</strong>. It<br />
+  appears in GOA as the reference for one ISO AMPylase annotation (WITH/FROM <code>UniProtKB:P31040</code>).<br />
+  This is a spurious/erroneous PMID in the GOA source (right-format id, wrong paper — it cannot<br />
+  support the AMPylase annotation). Per project policy I do NOT rewrite the GOA id, but I flag it<br />
+  via <code>reference_review</code> (correctness: WRONG_IDENTIFIER) and treat the annotation itself as still<br />
+  supportable on the strength of the other AMPylase-activity evidence lines. Note P31040 is<br />
+  succinate dehydrogenase flavoprotein (SDHA) — plausibly a SelO substrate/interactor context, but<br />
+  the <em>citation</em> is wrong regardless.</li>
+</ul>
+<h2 id="annotation-plan-10-goa-rows">Annotation plan (10 GOA rows)</h2>
+<ul>
+<li>GO:0070733 AMPylase activity — the molecular function. Multiple lines (IBA, IEA-Rhea, ISO×3,<br />
+  ISS). ACCEPT the family-level MF; this is the core function. Keep all lines (do not REMOVE<br />
+  by-similarity lines that are biologically sound).</li>
+<li>GO:0005739 mitochondrion — location (IBA, IEA-SubCell, ISS). ACCEPT; well supported by transit<br />
+  peptide + ortholog localization. Core location.</li>
+<li>GO:0005524 ATP binding — not in GOA rows list but present as UniProt DR (IEA-KW). (Only GOA rows<br />
+  are reviewed; ATP/metal binding appear in core_functions as supporting MFs.)</li>
+<li>GO:0098869 cellular oxidant detoxification (IC) — biological process; supported by ortholog<br />
+  phenotype (oxidative-stress response). KEEP_AS_NON_CORE / ACCEPT as a reasonable curator<br />
+  inference, but note it is inferred, not demonstrated in pombe.</li>
+</ul>
+<h2 id="falcon-deep-research">Falcon deep research</h2>
+<ul>
+<li><code>just deep-research-falcon SCHPO sel0</code> via <code>python3</code> (system 3.9.5) fails: wrapper uses<br />
+<code>dict | None</code> PEP-604 syntax needing py&gt;=3.10. Re-ran via <code>uv run python scripts/deep_research_wrapper.py</code><br />
+  (py3.12). Awaiting result; grounding here is from UniProt + GOA + the two primary papers so the<br />
+  review is complete regardless.</li>
+</ul>
+<h2 id="falcon-deep-research-completed">Falcon deep research (completed)</h2>
+<p><code>sel0-deep-research-falcon.md</code> completed (duration ~857s, 23 citations). The <code>just</code><br />
+wrapper reported "timed out after 600s" and the perplexity-lite fallback 401'd on quota,<br />
+but falcon itself wrote a genuine, cited report directly (its own timeout was null). Key<br />
+corroborating points (all consistent with the review; not used to add uncited claims):</p>
+<ul>
+<li>Confirms identity as the fission-yeast SELO-family ortholog; the S. cerevisiae ortholog<br />
+  is <strong>Fmp40</strong>. Direct S. pombe literature remains limited; function is inferred from<br />
+  E. coli, S. cerevisiae (Fmp40), P. syringae and human orthologs.</li>
+<li>Reiterates the flipped-ATP pseudokinase mechanism, Mg2+ cofactor, and Ser/Thr/Tyr<br />
+  AMPylation.</li>
+<li>Ortholog substrates span redox enzymes (glutaredoxins, thioredoxin Trx3, peroxiredoxin<br />
+  Prx1) and metabolic enzymes (glutamate dehydrogenase, pyruvate dehydrogenase) — supports<br />
+  the "redox homeostasis + metabolic regulation" framing and the substrate knowledge gap.</li>
+</ul>
+<p>The core review is grounded in UniProt + GOA + the two cached primary papers (PMID:30270044,<br />
+PMID:40849408); the falcon report is retained as supporting deep-research provenance.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O13890
+gene_symbol: sel0
+aliases:
+  - SPAC20G4.05c
+  - SelO
+  - Selenoprotein O
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  sel0 (SPAC20G4.05c) is the fission yeast member of the SELO family
+  (Pfam PF02696; InterPro IPR003846; HAMAP MF_00692 YdiU_SelO), predicted to be a
+  mitochondrial protein AMPylase (protein adenylyltransferase). SELO-family enzymes
+  adopt a protein-kinase-like (pseudokinase) fold but bind ATP in a &#34;flipped&#34;
+  orientation and transfer AMP, rather than a phosphate, to serine, threonine and
+  tyrosine residues of target proteins (AMPylation/adenylylation). The protein
+  carries an N-terminal mitochondrial transit peptide, a conserved ATP-binding site
+  and a Mg(2+)-dependent catalytic centre. In characterised orthologs (bacterial
+  YdiU, budding yeast, human SELO), the enzyme localises to mitochondria, AMPylates
+  proteins involved in redox homeostasis and metabolism, and contributes to the
+  cellular response to oxidative stress; mammalian SELO additionally AMPylates
+  mitochondrial metabolic enzymes such as glutamate dehydrogenase and pyruvate
+  dehydrogenase. The activity, substrates and physiological role of the S. pombe
+  protein itself have not been experimentally determined and are inferred from these
+  orthologs.
+references:
+  - id: GO_REF:0000024
+    title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+      by curator judgment of sequence similarity
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+      vocabulary mapping, accompanied by conservative changes to GO terms applied by
+      UniProt
+    findings: []
+  - id: GO_REF:0000111
+    title: Gene Ontology annotations Inferred by Curator (IC) using at least one Inferred
+      by Sequence Similarity (ISS) annotation to support the inference
+    findings: []
+  - id: GO_REF:0000116
+    title: Automatic Gene Ontology annotation based on Rhea mapping
+    findings: []
+  - id: PMID:30270044
+    title: Protein AMPylation by an Evolutionarily Conserved Pseudokinase.
+    findings:
+      - statement: &gt;-
+          SELO is a highly conserved pseudokinase that transfers AMP from ATP to Ser,
+          Thr and Tyr residues of protein substrates (AMPylation), localises to
+          mitochondria, AMPylates proteins involved in redox homeostasis, and is
+          required for the proper cellular response to oxidative stress.
+        reference_section_type: ABSTRACT
+        supporting_text: &gt;-
+          SelO pseudokinases localize
+        full_text_unavailable: true
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed title matches. Foundational paper defining SELO-family AMPylase
+        activity, mitochondrial localization, redox-protein substrates and the
+        oxidative-stress-response role. Assays E. coli YdiU, S. cerevisiae and human
+        SELO; does not assay S. pombe, so it supports the S. pombe annotations only
+        by homology (ISS/IBA/ISO). Cached record is abstract-only but the abstract
+        itself states the key claims.
+  - id: PMID:40849408
+    title: A repurposed AMP binding domain reveals mitochondrial protein AMPylation
+      as a regulator of cellular metabolism.
+    findings:
+      - statement: &gt;-
+          Mammalian SELO is a mitochondrial AMPylase that regulates metabolic flux by
+          AMPylating key mitochondrial proteins (glutamate dehydrogenase, pyruvate
+          dehydrogenase); SELO is conserved in E. coli and S. cerevisiae, where it
+          AMPylates to protect cells from oxidative damage and cell death.
+        reference_section_type: RESULTS
+        supporting_text: &gt;-
+          SelO is conserved in E. coli and S. cerevisiae, where it catalyzes AMPylation to protect cells from oxidative damage and cell death
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        PubMed title matches; full text cached. Mammalian study confirming
+        mitochondrial SELO AMPylation of metabolic enzymes and re-stating family
+        conservation (E. coli, S. cerevisiae). Relevant to S. pombe sel0 only at the
+        family/ortholog level (used as an ISO WITH/FROM source).
+  - id: PMID:9700395
+    title: &#39;Education and research: where are we going?&#39;
+    reference_review:
+      relevance: NONE
+      correctness: WRONG_IDENTIFIER
+      review_notes: &gt;-
+        This PMID resolves to a 1998 Australian Veterinary Journal editorial
+        (&#34;Education and research: where are we going?&#34;, Niethe G) that has no
+        connection to SelO, AMPylation, mitochondria or S. pombe. It appears in GOA
+        as the reference for one ISO AMPylase-activity annotation (WITH/FROM
+        UniProtKB:P31040, human SDHA). It is a spurious/erroneous identifier in the
+        GOA source and cannot support any annotation. Per project policy the GOA id
+        is not rewritten here; the AMPylase-activity annotation itself remains
+        supportable from the other evidence lines (IBA/ISS/Rhea and PMID:30270044).
+  - id: UniProt:O13890
+    title: Protein adenylyltransferase SelO, mitochondrial (SELO_SCHPO)
+    findings:
+      - statement: &gt;-
+          UniProt classifies O13890 in the SELO family with an N-terminal
+          mitochondrial transit peptide, an ATP-binding site and a Mg(2+)-dependent
+          catalytic centre; function is inferred from homology (PE 3).
+        reference_section_type: OTHER
+        supporting_text: &gt;-
+          Pfam; PF02696; SelO; 1.
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        UniProt record for the reviewed gene; domain, transit-peptide, ATP/Mg
+        binding-site and family assignments are the primary structural evidence used
+        in this review.
+existing_annotations:
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Phylogenetically inferred SELO-family AMPylase (protein adenylyltransferase)
+        activity. This is the core molecular function of the gene and is consistent
+        with the Pfam SelO domain, conserved ATP-binding/Mg(2+) catalytic residues,
+        and demonstrated activity of orthologs.
+      action: ACCEPT
+      reason: &gt;-
+        AMPylase activity (GO:0070733; synonym protein adenylyltransferase activity)
+        is the defining function of the SELO family, demonstrated for bacterial,
+        budding-yeast and human orthologs and phylogenetically propagated to the
+        fission-yeast protein. It matches the UniProt EC 2.7.7.- / Rhea:54288
+        assignment and the conserved active-site residues. Retain as the core
+        function.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            transfers AMP from
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            Pfam; PF02696; SelO; 1.
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: is_active_in
+    review:
+      summary: &gt;-
+        Phylogenetically inferred mitochondrial localization, consistent with the
+        N-terminal mitochondrial transit peptide and the conserved mitochondrial
+        localization of SELO orthologs.
+      action: ACCEPT
+      reason: &gt;-
+        SELO orthologs localise to mitochondria and the S. pombe protein carries a
+        UniProt mitochondrial transit peptide. Mitochondrion is the core cellular
+        location where the AMPylase acts.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            SelO pseudokinases localize
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            SUBCELLULAR LOCATION: Mitochondrion
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic (UniProt Subcellular Location keyword-mapping) annotation of
+        mitochondrial localization; redundant with, and consistent with, the IBA and
+        ISS mitochondrion annotations.
+      action: ACCEPT
+      reason: &gt;-
+        Correct location, derived from the UniProt mitochondrial subcellular-location
+        assignment. Consistent with the transit peptide and ortholog data.
+      supported_by:
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            SUBCELLULAR LOCATION: Mitochondrion
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000116
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Electronic (Rhea reaction mapping, RHEA:54288) annotation of AMPylase
+        activity. Consistent with the SELO-family reaction (L-tyrosyl-[protein] + ATP
+        = O-(5&#39;-adenylyl)-L-tyrosyl-[protein] + diphosphate).
+      action: ACCEPT
+      reason: &gt;-
+        The Rhea-mapped reaction matches the UniProt catalytic-activity annotation and
+        the SELO-family AMPylation chemistry. Redundant with the IBA/ISS AMPylase
+        annotations; retain as supporting evidence for the core function.
+      supported_by:
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            Xref=Rhea:RHEA:54288
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: ISO
+    original_reference_id: PMID:30270044
+    qualifier: enables
+    review:
+      summary: &gt;-
+        AMPylase activity transferred by orthology (ISO) from a characterised SELO
+        ortholog. The 2018 Sreelatha et al. paper is the primary demonstration of
+        SELO-family AMPylation.
+      action: ACCEPT
+      reason: &gt;-
+        Orthology-based transfer of the experimentally demonstrated SELO AMPylase
+        activity is well justified given the conserved SelO domain and active site.
+        Same core molecular function as the IBA/ISS/Rhea lines.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            transfers AMP from
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: ISO
+    original_reference_id: PMID:40849408
+    qualifier: enables
+    review:
+      summary: &gt;-
+        AMPylase activity transferred by orthology (ISO) from mammalian SELO, which
+        AMPylates mitochondrial metabolic enzymes. Same core molecular function.
+      action: ACCEPT
+      reason: &gt;-
+        The 2025 Gonzalez et al. study confirms mammalian mitochondrial SELO AMPylase
+        activity and family conservation; orthology transfer to S. pombe sel0 is
+        justified by the conserved SelO domain. Redundant with the other AMPylase
+        lines.
+      supported_by:
+        - reference_id: PMID:40849408
+          supporting_text: &gt;-
+            SelO is conserved in E. coli and S. cerevisiae, where it catalyzes AMPylation to protect cells from oxidative damage and cell death
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: ISO
+    original_reference_id: PMID:9700395
+    qualifier: enables
+    review:
+      summary: &gt;-
+        AMPylase-activity annotation whose cited reference (PMID:9700395) is a
+        mis-attributed, unrelated 1998 veterinary editorial. The molecular function
+        is correct for the gene, but this specific citation is spurious.
+      action: ACCEPT
+      reason: &gt;-
+        The AMPylase-activity assignment is correct and strongly supported by the
+        other evidence lines (IBA, ISS, Rhea, PMID:30270044). The reference on THIS
+        ISO row, PMID:9700395 (&#34;Education and research: where are we going?&#34;, Aust Vet
+        J 1998), is a wrong-identifier citation with no relation to SelO/AMPylation
+        and cannot itself support the annotation (flagged in reference_review as
+        WRONG_IDENTIFIER). Per project policy the GOA source id is not rewritten; the
+        annotation is accepted on the strength of the corroborating evidence and the
+        citation problem is documented rather than used as grounds for removal.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            transfers AMP from
+  - term:
+      id: GO:0005739
+      label: mitochondrion
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Sequence-similarity (ISS) transfer of mitochondrial localization from human
+        SELO (UniProtKB:Q08968). Consistent with the transit peptide and other
+        mitochondrion annotations.
+      action: ACCEPT
+      reason: &gt;-
+        Correct location, transferred from the experimentally characterised human
+        ortholog and supported by the N-terminal mitochondrial transit peptide.
+      supported_by:
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            SUBCELLULAR LOCATION: Mitochondrion
+  - term:
+      id: GO:0070733
+      label: AMPylase activity
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: enables
+    review:
+      summary: &gt;-
+        Sequence-similarity (ISS) transfer of AMPylase activity from human SELO
+        (UniProtKB:Q08968). Same core molecular function as the other AMPylase lines.
+      action: ACCEPT
+      reason: &gt;-
+        Justified orthology-based transfer of the SELO AMPylase activity, consistent
+        with the conserved SelO domain and active site. Core molecular function.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            transfers AMP from
+        - reference_id: UniProt:O13890
+          supporting_text: &gt;-
+            Pfam; PF02696; SelO; 1.
+  - term:
+      id: GO:0098869
+      label: cellular oxidant detoxification
+    evidence_type: IC
+    original_reference_id: GO_REF:0000111
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Curator-inferred (IC) biological process, built on the ISS AMPylase-activity
+        annotation. In characterised orthologs SELO AMPylates redox-homeostasis
+        proteins and is required for the oxidative-stress response, so an oxidant-
+        detoxification role is a reasonable inference for the fission-yeast protein,
+        though it has not been demonstrated in S. pombe.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        The oxidative-stress/redox role of SELO is well supported for orthologs
+        (PMID:30270044: SELO AMPylates redox-homeostasis proteins and is necessary for
+        the oxidative-stress response). For S. pombe sel0 this remains an inference
+        (IC on top of ISS), with no fission-yeast phenotype reported. Retain as a
+        plausible, non-core biological-process annotation rather than a demonstrated
+        core function; the demonstrated/inferable core is the AMPylase activity and
+        its mitochondrial location. Note also that in mammals the process is framed as
+        metabolic regulation (PMID:40849408) as well as redox protection, so the exact
+        pombe process is uncertain.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            is necessary for the proper cellular response to oxidative
+  - term:
+      id: GO:0018117
+      label: protein adenylylation
+    evidence_type: ISS
+    original_reference_id: GO_REF:0000024
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        The biological process directly enabled by the AMPylase activity: covalent
+        addition of AMP to protein amino-acid side chains. Proposed as a NEW
+        annotation to make explicit the process corresponding to the (inferred)
+        molecular function; not currently in GOA for this gene.
+      action: NEW
+      reason: &gt;-
+        GO:0018117 (protein adenylylation) is the process counterpart of the SELO
+        AMPylase activity (GO:0070733) and is directly entailed by it. Adding it makes
+        the core function&#39;s process explicit. Inferred by sequence similarity to
+        characterised SELO orthologs; like the MF, not yet demonstrated in S. pombe.
+      supported_by:
+        - reference_id: PMID:30270044
+          supporting_text: &gt;-
+            transfers AMP from
+core_functions:
+  - description: &gt;-
+      Mitochondrial protein AMPylase (protein adenylyltransferase): using ATP and
+      Mg(2+), transfers an AMP moiety onto Ser/Thr/Tyr residues of target proteins
+      (protein adenylylation). This is the conserved SELO-family activity inferred for
+      sel0 from its SelO domain, conserved ATP-binding and Mg(2+)-coordinating
+      residues, and the demonstrated activity of bacterial, budding-yeast and human
+      orthologs. Direct demonstration in S. pombe is lacking.
+    molecular_function:
+      id: GO:0070733
+      label: AMPylase activity
+    directly_involved_in:
+      - id: GO:0018117
+        label: protein adenylylation
+    locations:
+      - id: GO:0005739
+        label: mitochondrion
+    supported_by:
+      - reference_id: PMID:30270044
+        supporting_text: &gt;-
+          transfers AMP from
+      - reference_id: UniProt:O13890
+        supporting_text: &gt;-
+          Pfam; PF02696; SelO; 1.
+      - reference_id: UniProt:O13890
+        supporting_text: &gt;-
+          SUBCELLULAR LOCATION: Mitochondrion
+knowledge_gaps:
+  - gap_statement: &gt;-
+      Whether sel0 (SPAC20G4.05c) actually possesses AMPylase (protein
+      adenylyltransferase) activity has not been tested in S. pombe; the activity is
+      inferred entirely from orthologs. No in vitro assay or in vivo AMPylation
+      readout has been reported for the fission-yeast protein.
+    boundary: &gt;-
+      SELO-family AMPylase activity is experimentally established for bacterial
+      (E. coli YdiU), S. cerevisiae and human SELO, and the S. pombe protein retains
+      the SelO domain (Pfam PF02696), the ATP-binding site and the Mg(2+)-coordinating
+      catalytic residues, so catalytic competence is plausible but unproven.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Confirms whether sel0 is a bona fide enzyme in fission yeast or a
+      catalytically compromised family member, and validates the propagated GO
+      AMPylase annotation.
+    resolution: &gt;-
+      In vitro AMPylation assay of recombinant sel0 with [alpha-32P]ATP or an ATP
+      analog on candidate substrates, and detection of protein AMPylation in a
+      S. pombe sel0-deletion vs wild-type background.
+    provenance:
+      - reference_id: UniProt:O13890
+        supporting_text: &gt;-
+          Inferred from homology
+  - gap_statement: &gt;-
+      The in vivo substrate(s) of sel0 in S. pombe are unknown. It is undetermined
+      which fission-yeast proteins (e.g. redox enzymes such as glutaredoxins, or
+      mitochondrial metabolic enzymes) are AMPylated by sel0.
+    boundary: &gt;-
+      In orthologs, SELO AMPylates proteins involved in redox homeostasis
+      (PMID:30270044) and mammalian SELO AMPylates mitochondrial metabolic enzymes
+      including glutamate dehydrogenase and pyruvate dehydrogenase (PMID:40849408),
+      but the S. pombe substrate repertoire has not been mapped.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: RESIDUAL_SUBGAP
+    status: OPEN
+    significance: &gt;-
+      Identifying pombe substrates would define whether sel0 acts primarily in redox
+      homeostasis, mitochondrial metabolic regulation, or another process.
+    resolution: &gt;-
+      AMPylation-enrichment proteomics (e.g. hinT- or antibody-based) comparing
+      wild-type and sel0-deletion S. pombe mitochondria.
+    provenance:
+      - reference_id: PMID:40849408
+        supporting_text: &gt;-
+          AMPylation of key mitochondrial proteins including glutamate
+  - gap_statement: &gt;-
+      It is unknown whether sel0 functions in oxidant detoxification / the oxidative-
+      stress response in S. pombe. The GO cellular oxidant detoxification annotation
+      is a curator inference from orthologs, not a fission-yeast phenotype.
+    boundary: &gt;-
+      SELO activity is necessary for the proper cellular response to oxidative stress
+      in characterised orthologs (PMID:30270044) and protects E. coli and
+      S. cerevisiae from oxidative damage (PMID:40849408); no oxidative-stress or
+      other loss-of-function phenotype has been reported for a S. pombe sel0 deletion.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Establishes the physiological role of sel0 in fission yeast and whether the
+      redox role of the family is conserved in this lineage.
+    resolution: &gt;-
+      Phenotypic analysis of a S. pombe sel0-deletion strain under oxidative and
+      other stresses (e.g. H2O2, diamide, respiratory-growth conditions).
+    provenance:
+      - reference_id: PMID:30270044
+        supporting_text: &gt;-
+          is necessary for the proper cellular response to oxidative
+suggested_questions:
+  - question: &gt;-
+      Is recombinant S. pombe sel0 catalytically active as an AMPylase in vitro, and
+      does it self-AMPylate as seen for other SELO-family members?
+  - question: &gt;-
+      What are the endogenous AMPylation substrates of sel0 in fission-yeast
+      mitochondria, and do they overlap with the redox and metabolic substrates seen
+      in other species?
+  - question: &gt;-
+      Does a sel0 deletion sensitise S. pombe to oxidative stress or alter
+      mitochondrial/respiratory metabolism?
+suggested_experiments:
+  - description: &gt;-
+      In vitro AMPylation assay of purified recombinant sel0 (with [alpha-32P]ATP or
+      an N6-modified ATP analog) against candidate substrates and generic substrates,
+      with active-site mutants as controls, to test catalytic competence.
+  - description: &gt;-
+      AMPylation-enrichment proteomics (hinT- or antibody-based) on mitochondria from
+      wild-type versus sel0-deletion S. pombe to identify endogenous substrates.
+  - description: &gt;-
+      Phenotypic characterisation of a sel0-deletion strain under oxidative stress
+      (H2O2, diamide, paraquat) and respiratory-growth conditions, with
+      complementation by wild-type and catalytically dead sel0.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
