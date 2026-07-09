@@ -1,0 +1,4184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SC5D - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SC5D</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75845" target="_blank" class="term-link">
+                        O75845
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SC5D";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75845" data-a="DESCRIPTION: SC5D encodes lathosterol oxidase (sterol-C5-desatu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SC5D encodes lathosterol oxidase (sterol-C5-desaturase / delta7-sterol 5(6)-desaturase; EC 1.14.19.20), a non-heme di-iron oxidoreductase of the sterol desaturase family that is anchored as a multi-pass protein in the endoplasmic reticulum membrane. It introduces the C5-6 double bond into lathosterol, converting it to 7-dehydrocholesterol (7-DHC) using molecular oxygen and electrons delivered from cytochrome b5. This is the penultimate step of cholesterol biosynthesis (the Kandutsch-Russell arm), immediately upstream of DHCR7, which reduces 7-DHC to cholesterol; the enzyme can act on additional Delta(7)-sterols such as 5alpha-cholesta-7,24-dien-3beta-ol in the Bloch arm. The three conserved histidine-box motifs coordinate the di-iron center that constitutes the active site. Loss-of-function variants cause lathosterolosis, an autosomal recessive disorder with elevated lathosterol and a Smith-Lemli-Opitz-like multiple-malformation / dysmorphism phenotype with liver disease and lysosomal storage; the mouse knockout is perinatal-lethal with craniofacial and limb patterning defects consistent with impaired hedgehog signalling from cholesterol deficiency. Because its product 7-DHC is a highly reactive radical-trapping sterol, SC5D also indirectly modulates ferroptosis sensitivity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that SC5D acts in the endoplasmic reticulum membrane. This matches the experimentally determined subcellular location and the multi-pass membrane topology predicted from the sequence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SC5D is a sterol desaturase-family enzyme of cholesterol biosynthesis, a pathway localized to the ER membrane; the human protein was shown to be an integral ER membrane protein experimentally (PMID:10786622).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050046" target="_blank" class="term-link">
+                                    GO:0050046
+                                </a>
+                            </span>
+                            <span class="term-label">delta7-sterol 5(6)-desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0050046" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of the precise catalytic activity: SC5D introduces the C5(6) double bond into Delta(7)-sterols. This is the enzyme&#39;s core molecular function and is confirmed experimentally.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by cloning/complementation and by the UniProt CATALYTIC ACTIVITY (RHEA:54320/46556; EC 1.14.19.20). Represents the core MF of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                        PMID:10786622
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">introduce C5-6 double bond into lathosterol in cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000248" target="_blank" class="term-link">
+                                    GO:0000248
+                                </a>
+                            </span>
+                            <span class="term-label">C-5 sterol desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0000248" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference of C-5 sterol desaturase activity, the more general parent of the specific Delta(7)-sterol 5(6)-desaturase reaction. Correct family-level molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the sterol desaturase family assignment and experimental characterization; a valid, if slightly more general, statement of the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the sterol desaturase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005506" target="_blank" class="term-link">
+                                    GO:0005506
+                                </a>
+                            </span>
+                            <span class="term-label">iron ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005506" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference of iron ion binding. SC5D is a non-heme di-iron sterol desaturase whose three conserved histidine-box motifs coordinate the catalytic iron center; UniProt lists an Fe cation cofactor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported for this enzyme family: the His-box motifs (138-143, 151-155, 228-233) form the metal-binding active site and the cofactor is an Fe cation, so iron ion binding is an accurate molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=Fe cation</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The histidine box domains may contain the active site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt/rat-ortholog) transfer of ER membrane localization. Redundant with the experimental IDA and IBA ER-membrane annotations and consistent with the multi-pass membrane topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization, independently supported by the human IDA (PMID:10786622) and by the predicted transmembrane helices.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0008610" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO inference of the broad process &#34;lipid biosynthetic process&#34;. SC5D acts in cholesterol (a sterol lipid) biosynthesis, so this is correct but general relative to the specific cholesterol/sterol biosynthesis terms also annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong: cholesterol biosynthesis is-a lipid biosynthetic process. It is a broad parent, but per curation guidance broad correct IEA parents can be accepted; the more specific term (GO:0006695) captures the core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Steroid biosynthesis; cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050046" target="_blank" class="term-link">
+                                    GO:0050046
+                                </a>
+                            </span>
+                            <span class="term-label">delta7-sterol 5(6)-desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0050046" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt, via rat ortholog and RHEA/EC mapping) transfer of the precise Delta(7)-sterol 5(6)-desaturase activity. Redundant with the IBA and IDA/EXP annotations of the same activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core catalytic function backed by the RHEA reactions and EC 1.14.19.20 in the UniProt record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.14.19.20</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000248" target="_blank" class="term-link">
+                                    GO:0000248
+                                </a>
+                            </span>
+                            <span class="term-label">C-5 sterol desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0000248" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-Compara ortholog transfer (from rat) of C-5 sterol desaturase activity. Consistent with the experimental and phylogenetic annotations of the same family-level function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate family-level molecular function; redundant with the IBA/EXP annotations of GO:0000248.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the sterol desaturase family</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0006695" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt/UniPathway) transfer of cholesterol biosynthetic process. SC5D catalyzes the penultimate step of cholesterol biosynthesis, so this is the correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly matches the enzyme&#39;s role and the UniProt PATHWAY statement; independently supported by human IDA and disease evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Steroid biosynthesis; cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6807047
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0006695" data-r="Reactome:R-HSA-6807047" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) placement of SC5D in cholesterol biosynthesis via the desmosterol/Bloch pathway. Correct: SC5D also desaturates the Bloch-arm intermediate 5alpha-cholesta-7,24-dien-3beta-ol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SC5D participates in both the Bloch and Kandutsch-Russell arms; its Delta(7)-sterol 5(6)-desaturase activity applies to the corresponding Bloch intermediate. Core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Steroid biosynthesis; cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9969901
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0006695" data-r="Reactome:R-HSA-9969901" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) placement of SC5D in cholesterol biosynthesis from zymosterol (modified Kandutsch-Russell pathway), the lathosterol arm in which SC5D acts. Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the canonical arm containing the SC5D-catalyzed lathosterol -&gt; 7-dehydrocholesterol step; well supported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the penultimate step</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050046" target="_blank" class="term-link">
+                                    GO:0050046
+                                </a>
+                            </span>
+                            <span class="term-label">delta7-sterol 5(6)-desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38297129" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38297129
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    7-Dehydrocholesterol is an endogenous suppressor of ferropto...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0050046" data-r="PMID:38297129" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of Delta(7)-sterol 5(6)-desaturase activity from the Nature ferroptosis study, which characterized SC5D FUNCTION and CATALYTIC ACTIVITY as the enzyme producing 7-DHC. Confirms the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the precise reaction; underpins the UniProt CATALYTIC ACTIVITY entries. Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38297129" target="_blank" class="term-link">
+                                        PMID:38297129
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an unexpected prosurvival</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the penultimate step</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10786622
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of the mammalian sterol C5-desaturase and the e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="PMID:10786622" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) determination that SC5D is an integral endoplasmic reticulum membrane protein, from the cloning study that also demonstrated the enzymatic activity by yeast-mutant complementation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Primary experimental evidence for the ER-membrane location; the core cellular component for this enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                        PMID:10786622
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mammalian SC5D was presumed as an integral</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10786622
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of the mammalian sterol C5-desaturase and the e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0006695" data-r="PMID:10786622" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation to cholesterol biosynthetic process from the cloning/complementation study, which functionally showed SC5D introduces the C5-6 double bond into lathosterol in cholesterol biosynthesis. This is the correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support for SC5D&#39;s role in cholesterol biosynthesis. A more specific child term (GO:0033490, cholesterol biosynthetic process via lathosterol) is proposed separately as a NEW annotation to capture the precise lathosterol arm.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                        PMID:10786622
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">introduce C5-6 double bond into lathosterol in cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033490" target="_blank" class="term-link">
+                                    GO:0033490
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process via lathosterol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10786622
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of the mammalian sterol C5-desaturase and the e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0033490" data-r="PMID:10786622" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed more specific annotation: SC5D acts in the lathosterol arm of cholesterol biosynthesis, catalyzing lathosterol -&gt; 7-dehydrocholesterol. UniProt assigns this precise child term (GO:0033490, IDA:UniProtKB); it is not yet in GOA and is added here as a NEW, more informative annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sharper than the generic GO:0006695: the lathosterol-specific arm is the exact pathway context of the SC5D reaction, matching the UniProt IDA annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                        PMID:10786622
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">introduce C5-6 double bond into lathosterol in cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050046" target="_blank" class="term-link">
+                                    GO:0050046
+                                </a>
+                            </span>
+                            <span class="term-label">delta7-sterol 5(6)-desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10786622
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of the mammalian sterol C5-desaturase and the e...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0050046" data-r="PMID:10786622" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IDA) annotation of Delta(7)-sterol 5(6)-desaturase activity. The human cDNA functionally complemented a sterol-C5-desaturase-defective yeast mutant, directly demonstrating the catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the core catalytic function via yeast complementation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                        PMID:10786622
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">functional complementation of a defective yeast mutant proves that the human and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110076" target="_blank" class="term-link">
+                                    GO:0110076
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ferroptosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38297129" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38297129
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    7-Dehydrocholesterol is an endogenous suppressor of ferropto...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0110076" data-r="PMID:38297129" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss-of-function (IMP) evidence that SC5D negatively regulates ferroptosis. As a distal-cholesterol-biosynthesis enzyme, SC5D produces 7-DHC, a potent radical-trapping sterol that shields (phospho)lipids from autoxidation; loss of SC5D lowers 7-DHC and sensitizes cells to ferroptosis. This is a real but indirect, non-core role mediated by the 7-DHC product.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported experimentally, but the effect is a downstream/indirect consequence of SC5D&#39;s catalytic product (7-DHC) rather than a distinct molecular activity of SC5D itself; the core function is C5-sterol desaturation in cholesterol biosynthesis. Keep as a non-core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38297129" target="_blank" class="term-link">
+                                        PMID:38297129
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we now show that 7-DHC accumulation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0110076" target="_blank" class="term-link">
+                                    GO:0110076
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of ferroptosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/38297130" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:38297130
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    7-Dehydrocholesterol dictates ferroptosis sensitivity.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0110076" data-r="PMID:38297130" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss-of-function (IMP) evidence from a genome-wide CRISPR screen: SC5D is an anti-ferroptotic distal-cholesterol-biosynthesis gene. SC5D knockout increased ferroptosis susceptibility and lowered 7-DHC, and re-expression rescued the phenotype. Indirect, non-core role via the 7-DHC product.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported experimentally in this full-text study, but mechanistically the protection is conferred by the SC5D reaction product 7-DHC, not by an independent SC5D activity; keep as a non-core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38297130" target="_blank" class="term-link">
+                                        PMID:38297130
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">individual deletion of CYP51A1, MSMO1, EBP and SC5D in HEK293T cells increased the susceptibility to ferroptosis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/38297130" target="_blank" class="term-link">
+                                        PMID:38297130
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Re-expression of SC5D reversed the severity of ferroptosis induced by RSL3 in SC5D KO cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000248" target="_blank" class="term-link">
+                                    GO:0000248
+                                </a>
+                            </span>
+                            <span class="term-label">C-5 sterol desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12189593" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12189593
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lathosterolosis, a novel multiple-malformation/mental retard...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0000248" data-r="PMID:12189593" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of C-5 sterol desaturase activity based on the first human lathosterolosis patient, in whom the SC5D-catalyzed conversion of lathosterol to 7-dehydrocholesterol was blocked and the enzyme activity was deficient. Supports the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human patient data directly link SC5D to C-5 sterol desaturase activity (loss of activity blocks lathosterol -&gt; 7-DHC). Core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12189593" target="_blank" class="term-link">
+                                        PMID:12189593
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">showing a block in the conversion of lathosterol into</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12189593" target="_blank" class="term-link">
+                                        PMID:12189593
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">was deficient in the patient&#39;s</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000248" target="_blank" class="term-link">
+                                    GO:0000248
+                                </a>
+                            </span>
+                            <span class="term-label">C-5 sterol desaturase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12812989" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12812989
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Lathosterolosis: an inborn error of human and murine cholest...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0000248" data-r="PMID:12812989" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of C-5 sterol desaturase activity supported by the human patient and Sc5d-null mouse study, which established that lathosterol 5-desaturase catalyzes the conversion of lathosterol to 7-dehydrocholesterol in the next-to-last step of cholesterol synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Combined human and mouse loss-of-function evidence for the core catalytic function; elevated lathosterol and decreased cholesterol on enzyme loss.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12812989" target="_blank" class="term-link">
+                                        PMID:12812989
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the conversion of lathosterol to</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12812989" target="_blank" class="term-link">
+                                        PMID:12812989
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">had elevated lathosterol and decreased cholesterol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655852
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="Reactome:R-HSA-1655852" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) ER-membrane localization associated with expression of lathosterol oxidase (SC5D). Consistent with the experimental IDA and the multi-pass membrane topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the experimentally determined ER membrane location; correct core cellular component.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-195664
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="Reactome:R-HSA-195664" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) ER-membrane localization for the SC5D-catalyzed desaturation of cholesta-7,24-dien-3beta-ol (a Bloch-arm reaction). Consistent with the established ER location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cellular component; the reaction it is attached to takes place in the ER, as noted by Reactome, and matches the human IDA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6807053
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75845" data-a="GO:0005789" data-r="Reactome:R-HSA-6807053" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) ER-membrane localization for the SC5D reaction that desaturates lathosterol to 7-dehydrocholesterol. Consistent with the experimental and predicted ER-membrane location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cellular component; matches human IDA and topology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/SC5D/SC5D-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lathosterol oxidase / Delta(7)-sterol C5(6)-desaturase that introduces the C5-6 double bond into lathosterol to form 7-dehydrocholesterol, the penultimate step of cholesterol biosynthesis, acting in the endoplasmic reticulum membrane.</h3>
+                <span class="vote-buttons" data-g="O75845" data-a="FUNCTION: Lathosterol oxidase / Delta(7)-sterol C5(6)-desatu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050046" target="_blank" class="term-link">
+                            delta7-sterol 5(6)-desaturase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                cholesterol biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                                PMID:10786622
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">introduce C5-6 double bond into lathosterol in cholesterol biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SC5D/SC5D-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the penultimate step</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>C-5 sterol desaturase activity: family-level oxidoreductase function that installs the Delta(5) double bond of sterols, dependent on a non-heme di-iron center coordinated by conserved histidine-box motifs, driving the lathosterol arm of cholesterol biosynthesis.</h3>
+                <span class="vote-buttons" data-g="O75845" data-a="FUNCTION: C-5 sterol desaturase activity: family-level oxido..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000248" target="_blank" class="term-link">
+                            C-5 sterol desaturase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033490" target="_blank" class="term-link">
+                                cholesterol biosynthetic process via lathosterol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12812989" target="_blank" class="term-link">
+                                PMID:12812989
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the conversion of lathosterol to</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/SC5D/SC5D-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the sterol desaturase family</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/SC5D/SC5D-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry O75845 (SC5D_HUMAN), Lathosterol oxidase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10786622" target="_blank" class="term-link">
+                            PMID:10786622
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">cDNA cloning of the mammalian sterol C5-desaturase and the expression in yeast mutant.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12189593" target="_blank" class="term-link">
+                            PMID:12189593
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lathosterolosis, a novel multiple-malformation/mental retardation syndrome due to deficiency of 3beta-hydroxysteroid-delta5-desaturase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12812989" target="_blank" class="term-link">
+                            PMID:12812989
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lathosterolosis: an inborn error of human and murine cholesterol synthesis due to lathosterol 5-desaturase deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38297129" target="_blank" class="term-link">
+                            PMID:38297129
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">7-Dehydrocholesterol is an endogenous suppressor of ferroptosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38297130" target="_blank" class="term-link">
+                            PMID:38297130
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">7-Dehydrocholesterol dictates ferroptosis sensitivity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655852
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Lathosterol Oxidase (SC5D, SC5DL)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-195664
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cholesta-7,24-dien-3beta-ol is desaturated to form cholesta-5,7,24-trien-3beta-ol</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6807047
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cholesterol biosynthesis via desmosterol (Bloch pathway)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6807053
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SC5D desaturates LTHSOL to 7-dehydroCHOL</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9969901
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cholesterol biosynthesis from zymosterol (modified Kandutsch-Russell pathway)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is SC5D&#39;s role in modulating ferroptosis (via 7-DHC) physiologically relevant in normal tissues, or primarily a cancer-context phenomenon?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75845" data-a="Q: Is SC5D&#39;s role in modulating ferroptosis (via 7-DH..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent does SC5D contribute to the Bloch versus Kandutsch-Russell arms of cholesterol biosynthesis in different human tissues?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75845" data-a="Q: To what extent does SC5D contribute to the Bloch v..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute purified human SC5D with cytochrome b5 / cytochrome b5 reductase to measure the di-iron-dependent desaturation kinetics on lathosterol versus 5alpha-cholesta-7,24-dien-3beta-ol and confirm cofactor stoichiometry.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: SC5D is a non-heme di-iron desaturase that uses electrons from cytochrome b5 to desaturate multiple Delta(7)-sterol substrates.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O75845" data-a="EXPERIMENT: Reconstitute purified human SC5D with cytochrome b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Site-directed mutagenesis of the three histidine-box motifs to test their requirement for iron binding and catalysis, complementing the disease-variant (R29Q, Y46S, G211D) structure-function analysis.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The conserved histidine-box motifs coordinate the catalytic di-iron center and are essential for C5-sterol desaturase activity.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="O75845" data-a="EXPERIMENT: Site-directed mutagenesis of the three histidine-b..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SC5D-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O75845" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sc5d-lathosterol-oxidase-sterol-c5-desaturase-review-notes">SC5D (Lathosterol oxidase / sterol-C5-desaturase) — review notes</h1>
+<p>UniProtKB: O75845 (SC5D_HUMAN), 299 aa. HGNC:10547. EC 1.14.19.20.</p>
+<h2 id="function-verified">Function (verified)</h2>
+<p>SC5D is <strong>lathosterol oxidase / sterol-C5(6)-desaturase</strong>, a non-heme-iron,<br />
+multi-pass endoplasmic-reticulum-membrane oxidoreductase that introduces the<br />
+C5–6 double bond into lathosterol, producing 7-dehydrocholesterol (7-DHC). This<br />
+is the <strong>penultimate step</strong> of cholesterol biosynthesis (Kandutsch–Russell arm),<br />
+immediately upstream of DHCR7 which reduces 7-DHC to cholesterol.</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the penultimate step of the biosynthesis of<br />
+  cholesterol, the dehydrogenation of lathosterol into 7-dehydrocholesterol<br />
+  (7-DHC)" [file:human/SC5D/SC5D-uniprot.txt]. EC=1.14.19.20; belongs to the<br />
+  sterol desaturase family.</li>
+<li>Catalytic activity uses Fe(II)/Fe(III)-[cytochrome b5] and O2 (two-electron<br />
+  desaturation). Cofactor: Fe cation. Three histidine-box motifs (138–143,<br />
+  151–155, 228–233) form the di-iron active site.</li>
+<li>Topology: multi-pass membrane protein (4 predicted TM helices), ER membrane.</li>
+</ul>
+<h2 id="reaction-rhea-chebi">Reaction (RHEA / ChEBI)</h2>
+<p>lathosterol + 2 Fe(II)-[cyt b5] + O2 + 2 H+ = 7-dehydrocholesterol + 2 Fe(III)-[cyt b5] + 2 H2O (RHEA:46556; EC 1.14.19.20).<br />
+Also acts on 5α-cholesta-7,24-dien-3β-ol → 7-dehydrodesmosterol (RHEA:47184; Bloch-arm intermediate).</p>
+<h2 id="key-references-all-cached-abstract-only-unless-noted">Key references (all cached, abstract-only unless noted)</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10786622">PMID:10786622</a> Nishi et al. 2000 — cloned human+mouse SC5D cDNA; yeast-mutant<br />
+  functional complementation; "an enzyme that catalyzes the dehydrogenation to<br />
+  introduce C5-6 double bond into lathosterol in cholesterol biosynthesis ...<br />
+  Mammalian SC5D was presumed as an integral membrane protein". Source of<br />
+  RecName, EC, and ER subcellular location; UniProt IDA basis.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12189593">PMID:12189593</a> Brunetti-Pierri et al. 2002 — first human lathosterolosis<br />
+  patient; block in conversion of lathosterol → 7-DHC; SC5D activity deficient;<br />
+  R29Q + G211D. "novel defect of cholesterol biosynthesis."</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12812989">PMID:12812989</a> Krakowiak et al. 2003 — Sc5d−/− mouse (stillborn, elevated<br />
+  lathosterol, decreased cholesterol, cleft palate/micrognathia/limb defects,<br />
+  hedgehog-signalling phenotype) + human Y46S patient. "Lathosterol 5-desaturase<br />
+  catalyzes the conversion of lathosterol to 7-dehydrocholesterol in the next to<br />
+  last step of cholesterol synthesis."</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/38297129">PMID:38297129</a> Freitas et al. 2024 (Nature) — 7-DHC is an endogenous<br />
+  suppressor of ferroptosis (via DHCR7 axis); confirms SC5D FUNCTION/CATALYTIC<br />
+  ACTIVITY/PATHWAY in UniProt. Abstract-only in cache.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/38297130">PMID:38297130</a> Li et al. 2024 (Nature) — FULL TEXT cached. Genome-wide CRISPR<br />
+  screen: SC5D (with MSMO1/CYP51A1/EBP) is an anti-ferroptotic distal-CB gene;<br />
+  SC5D KO increases ferroptosis susceptibility, rescued by SC5D re-expression;<br />
+  SC5D deletion lowers 7-DHC. Supports GO:0110076 negative regulation of<br />
+  ferroptosis (IMP) and the "7-DHC synthesized by SC5D" statement.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Lathosterolosis (LATHOS, MIM:607330): autosomal recessive; elevated lathosterol;<br />
+SLOS-like multiple-malformation / dysmorphism syndrome with liver disease and<br />
+lysosomal storage. Caused by SC5D variants.</p>
+<h2 id="annotation-strategy">Annotation strategy</h2>
+<ul>
+<li>Core MF: GO:0000248 C-5 sterol desaturase activity + GO:0050046 delta7-sterol<br />
+  5(6)-desaturase activity (both accurate; 0050046 is the precise reaction).</li>
+<li>Core BP: cholesterol biosynthesis. GOA carries generic GO:0006695. UniProt DR<br />
+  also carries the more specific GO:0033490 (cholesterol biosynthetic process via<br />
+  lathosterol) IDA — a legitimate MODIFY target for the PMID:10786622 IDA, but<br />
+  I keep GOA ids and note this; core_functions uses GO:0006695.</li>
+<li>Core CC: GO:0005789 endoplasmic reticulum membrane.</li>
+<li>GO:0005506 iron ion binding (IEA/InterPro): ACCEPT — di-iron/His-box enzyme,<br />
+  cofactor Fe confirmed by UniProt.</li>
+<li>GO:0008610 lipid biosynthetic process (IEA): broad parent of cholesterol<br />
+  biosynthesis; ACCEPT as correct-but-general.</li>
+<li>GO:0110076 negative regulation of ferroptosis (IMP x2): ACCEPT but non-core —<br />
+  indirect, via 7-DHC product; secondary/moonlighting-adjacent role.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75845
+gene_symbol: SC5D
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  SC5D encodes lathosterol oxidase (sterol-C5-desaturase / delta7-sterol
+  5(6)-desaturase; EC 1.14.19.20), a non-heme di-iron oxidoreductase of the
+  sterol desaturase family that is anchored as a multi-pass protein in the
+  endoplasmic reticulum membrane. It introduces the C5-6 double bond into
+  lathosterol, converting it to 7-dehydrocholesterol (7-DHC) using molecular
+  oxygen and electrons delivered from cytochrome b5. This is the penultimate
+  step of cholesterol biosynthesis (the Kandutsch-Russell arm), immediately
+  upstream of DHCR7, which reduces 7-DHC to cholesterol; the enzyme can act on
+  additional Delta(7)-sterols such as 5alpha-cholesta-7,24-dien-3beta-ol in the
+  Bloch arm. The three conserved histidine-box motifs coordinate the di-iron
+  center that constitutes the active site. Loss-of-function variants cause
+  lathosterolosis, an autosomal recessive disorder with elevated lathosterol and
+  a Smith-Lemli-Opitz-like multiple-malformation / dysmorphism phenotype with
+  liver disease and lysosomal storage; the mouse knockout is perinatal-lethal
+  with craniofacial and limb patterning defects consistent with impaired
+  hedgehog signalling from cholesterol deficiency. Because its product 7-DHC is
+  a highly reactive radical-trapping sterol, SC5D also indirectly modulates
+  ferroptosis sensitivity.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that SC5D acts in the endoplasmic reticulum
+      membrane. This matches the experimentally determined subcellular location
+      and the multi-pass membrane topology predicted from the sequence.
+    action: ACCEPT
+    reason: &gt;-
+      SC5D is a sterol desaturase-family enzyme of cholesterol biosynthesis, a
+      pathway localized to the ER membrane; the human protein was shown to be an
+      integral ER membrane protein experimentally (PMID:10786622).
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0050046
+    label: delta7-sterol 5(6)-desaturase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of the precise catalytic activity: SC5D
+      introduces the C5(6) double bond into Delta(7)-sterols. This is the
+      enzyme&#39;s core molecular function and is confirmed experimentally.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by cloning/complementation and by the UniProt
+      CATALYTIC ACTIVITY (RHEA:54320/46556; EC 1.14.19.20). Represents the core
+      MF of the gene.
+    supported_by:
+    - reference_id: PMID:10786622
+      supporting_text: &#34;introduce C5-6 double bond into lathosterol in cholesterol biosynthesis&#34;
+- term:
+    id: GO:0000248
+    label: C-5 sterol desaturase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference of C-5 sterol desaturase activity, the
+      more general parent of the specific Delta(7)-sterol 5(6)-desaturase
+      reaction. Correct family-level molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the sterol desaturase family assignment and experimental
+      characterization; a valid, if slightly more general, statement of the
+      core catalytic function.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Belongs to the sterol desaturase family&#34;
+- term:
+    id: GO:0005506
+    label: iron ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO inference of iron ion binding. SC5D is a non-heme di-iron
+      sterol desaturase whose three conserved histidine-box motifs coordinate
+      the catalytic iron center; UniProt lists an Fe cation cofactor.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported for this enzyme family: the His-box motifs (138-143,
+      151-155, 228-233) form the metal-binding active site and the cofactor is
+      an Fe cation, so iron ion binding is an accurate molecular function.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Name=Fe cation&#34;
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;The histidine box domains may contain the active site&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt/rat-ortholog) transfer of ER membrane localization.
+      Redundant with the experimental IDA and IBA ER-membrane annotations and
+      consistent with the multi-pass membrane topology.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization, independently supported by the human IDA
+      (PMID:10786622) and by the predicted transmembrane helices.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO inference of the broad process &#34;lipid biosynthetic process&#34;.
+      SC5D acts in cholesterol (a sterol lipid) biosynthesis, so this is correct
+      but general relative to the specific cholesterol/sterol biosynthesis
+      terms also annotated.
+    action: ACCEPT
+    reason: &gt;-
+      Not wrong: cholesterol biosynthesis is-a lipid biosynthetic process. It is
+      a broad parent, but per curation guidance broad correct IEA parents can be
+      accepted; the more specific term (GO:0006695) captures the core process.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Steroid biosynthesis; cholesterol biosynthesis&#34;
+- term:
+    id: GO:0050046
+    label: delta7-sterol 5(6)-desaturase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (UniProt, via rat ortholog and RHEA/EC mapping) transfer of the
+      precise Delta(7)-sterol 5(6)-desaturase activity. Redundant with the IBA
+      and IDA/EXP annotations of the same activity.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core catalytic function backed by the RHEA reactions and EC
+      1.14.19.20 in the UniProt record.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;EC=1.14.19.20&#34;
+- term:
+    id: GO:0000248
+    label: C-5 sterol desaturase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Ensembl-Compara ortholog transfer (from rat) of C-5 sterol desaturase
+      activity. Consistent with the experimental and phylogenetic annotations of
+      the same family-level function.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate family-level molecular function; redundant with the IBA/EXP
+      annotations of GO:0000248.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Belongs to the sterol desaturase family&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt/UniPathway) transfer of cholesterol biosynthetic
+      process. SC5D catalyzes the penultimate step of cholesterol biosynthesis,
+      so this is the correct core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Directly matches the enzyme&#39;s role and the UniProt PATHWAY statement;
+      independently supported by human IDA and disease evidence.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Steroid biosynthesis; cholesterol biosynthesis&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6807047
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) placement of SC5D in cholesterol biosynthesis via the
+      desmosterol/Bloch pathway. Correct: SC5D also desaturates the Bloch-arm
+      intermediate 5alpha-cholesta-7,24-dien-3beta-ol.
+    action: ACCEPT
+    reason: &gt;-
+      SC5D participates in both the Bloch and Kandutsch-Russell arms; its
+      Delta(7)-sterol 5(6)-desaturase activity applies to the corresponding
+      Bloch intermediate. Core biological process.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Steroid biosynthesis; cholesterol biosynthesis&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9969901
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) placement of SC5D in cholesterol biosynthesis from
+      zymosterol (modified Kandutsch-Russell pathway), the lathosterol arm in
+      which SC5D acts. Correct core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      This is the canonical arm containing the SC5D-catalyzed lathosterol -&gt;
+      7-dehydrocholesterol step; well supported.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Catalyzes the penultimate step&#34;
+- term:
+    id: GO:0050046
+    label: delta7-sterol 5(6)-desaturase activity
+  evidence_type: EXP
+  original_reference_id: PMID:38297129
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of Delta(7)-sterol 5(6)-desaturase activity
+      from the Nature ferroptosis study, which characterized SC5D FUNCTION and
+      CATALYTIC ACTIVITY as the enzyme producing 7-DHC. Confirms the core
+      catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the precise reaction; underpins the UniProt
+      CATALYTIC ACTIVITY entries. Core molecular function.
+    supported_by:
+    - reference_id: PMID:38297129
+      supporting_text: &#34;an unexpected prosurvival&#34;
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Catalyzes the penultimate step&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:10786622
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) determination that SC5D is an integral endoplasmic
+      reticulum membrane protein, from the cloning study that also demonstrated
+      the enzymatic activity by yeast-mutant complementation.
+    action: ACCEPT
+    reason: &gt;-
+      Primary experimental evidence for the ER-membrane location; the core
+      cellular component for this enzyme.
+    supported_by:
+    - reference_id: PMID:10786622
+      supporting_text: &#34;Mammalian SC5D was presumed as an integral&#34;
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:10786622
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation to cholesterol biosynthetic process from the
+      cloning/complementation study, which functionally showed SC5D introduces
+      the C5-6 double bond into lathosterol in cholesterol biosynthesis. This is
+      the correct core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental support for SC5D&#39;s role in cholesterol biosynthesis.
+      A more specific child term (GO:0033490, cholesterol biosynthetic process
+      via lathosterol) is proposed separately as a NEW annotation to capture the
+      precise lathosterol arm.
+    supported_by:
+    - reference_id: PMID:10786622
+      supporting_text: &#34;introduce C5-6 double bond into lathosterol in cholesterol biosynthesis&#34;
+- term:
+    id: GO:0033490
+    label: cholesterol biosynthetic process via lathosterol
+  evidence_type: IDA
+  original_reference_id: PMID:10786622
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed more specific annotation: SC5D acts in the lathosterol arm of
+      cholesterol biosynthesis, catalyzing lathosterol -&gt; 7-dehydrocholesterol.
+      UniProt assigns this precise child term (GO:0033490, IDA:UniProtKB); it is
+      not yet in GOA and is added here as a NEW, more informative annotation.
+    action: NEW
+    reason: &gt;-
+      Sharper than the generic GO:0006695: the lathosterol-specific arm is the
+      exact pathway context of the SC5D reaction, matching the UniProt IDA
+      annotation.
+    supported_by:
+    - reference_id: PMID:10786622
+      supporting_text: &#34;introduce C5-6 double bond into lathosterol in cholesterol biosynthesis&#34;
+- term:
+    id: GO:0050046
+    label: delta7-sterol 5(6)-desaturase activity
+  evidence_type: IDA
+  original_reference_id: PMID:10786622
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IDA) annotation of Delta(7)-sterol 5(6)-desaturase activity.
+      The human cDNA functionally complemented a sterol-C5-desaturase-defective
+      yeast mutant, directly demonstrating the catalytic activity.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration of the core catalytic function via
+      yeast complementation.
+    supported_by:
+    - reference_id: PMID:10786622
+      supporting_text: &#34;functional complementation of a defective yeast mutant proves that the human and&#34;
+- term:
+    id: GO:0110076
+    label: negative regulation of ferroptosis
+  evidence_type: IMP
+  original_reference_id: PMID:38297129
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Loss-of-function (IMP) evidence that SC5D negatively regulates ferroptosis.
+      As a distal-cholesterol-biosynthesis enzyme, SC5D produces 7-DHC, a potent
+      radical-trapping sterol that shields (phospho)lipids from autoxidation;
+      loss of SC5D lowers 7-DHC and sensitizes cells to ferroptosis. This is a
+      real but indirect, non-core role mediated by the 7-DHC product.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported experimentally, but the effect is a downstream/indirect
+      consequence of SC5D&#39;s catalytic product (7-DHC) rather than a distinct
+      molecular activity of SC5D itself; the core function is C5-sterol
+      desaturation in cholesterol biosynthesis. Keep as a non-core process.
+    supported_by:
+    - reference_id: PMID:38297129
+      supporting_text: &#34;we now show that 7-DHC accumulation&#34;
+- term:
+    id: GO:0110076
+    label: negative regulation of ferroptosis
+  evidence_type: IMP
+  original_reference_id: PMID:38297130
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Loss-of-function (IMP) evidence from a genome-wide CRISPR screen: SC5D is
+      an anti-ferroptotic distal-cholesterol-biosynthesis gene. SC5D knockout
+      increased ferroptosis susceptibility and lowered 7-DHC, and re-expression
+      rescued the phenotype. Indirect, non-core role via the 7-DHC product.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Well supported experimentally in this full-text study, but mechanistically
+      the protection is conferred by the SC5D reaction product 7-DHC, not by an
+      independent SC5D activity; keep as a non-core biological process.
+    supported_by:
+    - reference_id: PMID:38297130
+      supporting_text: &#34;individual deletion of CYP51A1, MSMO1, EBP and SC5D in HEK293T cells increased the susceptibility to ferroptosis&#34;
+    - reference_id: PMID:38297130
+      supporting_text: &#34;Re-expression of SC5D reversed the severity of ferroptosis induced by RSL3 in SC5D KO cells&#34;
+- term:
+    id: GO:0000248
+    label: C-5 sterol desaturase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12189593
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of C-5 sterol desaturase activity based on
+      the first human lathosterolosis patient, in whom the SC5D-catalyzed
+      conversion of lathosterol to 7-dehydrocholesterol was blocked and the
+      enzyme activity was deficient. Supports the core catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      Human patient data directly link SC5D to C-5 sterol desaturase activity
+      (loss of activity blocks lathosterol -&gt; 7-DHC). Core molecular function.
+    supported_by:
+    - reference_id: PMID:12189593
+      supporting_text: &#34;showing a block in the conversion of lathosterol into&#34;
+    - reference_id: PMID:12189593
+      supporting_text: &#34;was deficient in the patient&#39;s&#34;
+- term:
+    id: GO:0000248
+    label: C-5 sterol desaturase activity
+  evidence_type: EXP
+  original_reference_id: PMID:12812989
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of C-5 sterol desaturase activity supported
+      by the human patient and Sc5d-null mouse study, which established that
+      lathosterol 5-desaturase catalyzes the conversion of lathosterol to
+      7-dehydrocholesterol in the next-to-last step of cholesterol synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Combined human and mouse loss-of-function evidence for the core catalytic
+      function; elevated lathosterol and decreased cholesterol on enzyme loss.
+    supported_by:
+    - reference_id: PMID:12812989
+      supporting_text: &#34;catalyzes the conversion of lathosterol to&#34;
+    - reference_id: PMID:12812989
+      supporting_text: &#34;had elevated lathosterol and decreased cholesterol&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655852
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) ER-membrane localization associated with expression of
+      lathosterol oxidase (SC5D). Consistent with the experimental IDA and the
+      multi-pass membrane topology.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the experimentally determined ER membrane location; correct
+      core cellular component.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-195664
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) ER-membrane localization for the SC5D-catalyzed desaturation
+      of cholesta-7,24-dien-3beta-ol (a Bloch-arm reaction). Consistent with the
+      established ER location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core cellular component; the reaction it is attached to takes place
+      in the ER, as noted by Reactome, and matches the human IDA.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6807053
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) ER-membrane localization for the SC5D reaction that
+      desaturates lathosterol to 7-dehydrocholesterol. Consistent with the
+      experimental and predicted ER-membrane location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core cellular component; matches human IDA and topology.
+    supported_by:
+    - reference_id: file:human/SC5D/SC5D-uniprot.txt
+      supporting_text: &#34;Endoplasmic reticulum membrane&#34;
+core_functions:
+- description: &gt;-
+    Lathosterol oxidase / Delta(7)-sterol C5(6)-desaturase that introduces the
+    C5-6 double bond into lathosterol to form 7-dehydrocholesterol, the
+    penultimate step of cholesterol biosynthesis, acting in the endoplasmic
+    reticulum membrane.
+  molecular_function:
+    id: GO:0050046
+    label: delta7-sterol 5(6)-desaturase activity
+  directly_involved_in:
+  - id: GO:0006695
+    label: cholesterol biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:10786622
+    supporting_text: &#34;introduce C5-6 double bond into lathosterol in cholesterol biosynthesis&#34;
+  - reference_id: file:human/SC5D/SC5D-uniprot.txt
+    supporting_text: &#34;Catalyzes the penultimate step&#34;
+- description: &gt;-
+    C-5 sterol desaturase activity: family-level oxidoreductase function that
+    installs the Delta(5) double bond of sterols, dependent on a non-heme di-iron
+    center coordinated by conserved histidine-box motifs, driving the lathosterol
+    arm of cholesterol biosynthesis.
+  molecular_function:
+    id: GO:0000248
+    label: C-5 sterol desaturase activity
+  directly_involved_in:
+  - id: GO:0033490
+    label: cholesterol biosynthetic process via lathosterol
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:12812989
+    supporting_text: &#34;catalyzes the conversion of lathosterol to&#34;
+  - reference_id: file:human/SC5D/SC5D-uniprot.txt
+    supporting_text: &#34;Belongs to the sterol desaturase family&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is SC5D&#39;s role in modulating ferroptosis (via 7-DHC) physiologically
+    relevant in normal tissues, or primarily a cancer-context phenomenon?
+- question: &gt;-
+    To what extent does SC5D contribute to the Bloch versus Kandutsch-Russell
+    arms of cholesterol biosynthesis in different human tissues?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute purified human SC5D with cytochrome b5 / cytochrome b5 reductase
+    to measure the di-iron-dependent desaturation kinetics on lathosterol versus
+    5alpha-cholesta-7,24-dien-3beta-ol and confirm cofactor stoichiometry.
+  hypothesis: &gt;-
+    SC5D is a non-heme di-iron desaturase that uses electrons from cytochrome b5
+    to desaturate multiple Delta(7)-sterol substrates.
+- description: &gt;-
+    Site-directed mutagenesis of the three histidine-box motifs to test their
+    requirement for iron binding and catalysis, complementing the disease-variant
+    (R29Q, Y46S, G211D) structure-function analysis.
+  hypothesis: &gt;-
+    The conserved histidine-box motifs coordinate the catalytic di-iron center
+    and are essential for C5-sterol desaturase activity.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/SC5D/SC5D-uniprot.txt
+  title: UniProtKB entry O75845 (SC5D_HUMAN), Lathosterol oxidase
+  findings: []
+- id: PMID:10786622
+  title: cDNA cloning of the mammalian sterol C5-desaturase and the expression in
+    yeast mutant.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning and yeast-complementation study establishing SC5D catalytic
+      activity and ER-membrane localization; source of the UniProt RecName, EC
+      number, and subcellular location. Abstract-only in cache but claims
+      confirmed against the UniProt record.
+- id: PMID:12189593
+  title: Lathosterolosis, a novel multiple-malformation/mental retardation syndrome
+    due to deficiency of 3beta-hydroxysteroid-delta5-desaturase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      First human lathosterolosis patient (R29Q, G211D); documents block in
+      lathosterol to 7-DHC conversion and deficient SC5D activity.
+- id: PMID:12812989
+  title: &#39;Lathosterolosis: an inborn error of human and murine cholesterol synthesis
+    due to lathosterol 5-desaturase deficiency.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Sc5d-null mouse and human Y46S patient; states SC5D catalyzes the
+      next-to-last step of cholesterol synthesis; elevated lathosterol / reduced
+      cholesterol on loss.
+- id: PMID:38297129
+  title: 7-Dehydrocholesterol is an endogenous suppressor of ferroptosis.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Nature study characterizing SC5D function/catalytic activity/pathway and
+      the anti-ferroptotic role of its product 7-DHC. Abstract-only in cache; the
+      ferroptosis role is indirect (via 7-DHC), hence treated as non-core.
+- id: PMID:38297130
+  title: 7-Dehydrocholesterol dictates ferroptosis sensitivity.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; genome-wide CRISPR screen shows SC5D is an
+      anti-ferroptotic distal-cholesterol-biosynthesis gene whose product 7-DHC
+      suppresses ferroptosis. Supports GO:0110076 as a non-core role.
+- id: Reactome:R-HSA-1655852
+  title: Expression of Lathosterol Oxidase (SC5D, SC5DL)
+  findings: []
+- id: Reactome:R-HSA-195664
+  title: Cholesta-7,24-dien-3beta-ol is desaturated to form cholesta-5,7,24-trien-3beta-ol
+  findings: []
+- id: Reactome:R-HSA-6807047
+  title: Cholesterol biosynthesis via desmosterol (Bloch pathway)
+  findings: []
+- id: Reactome:R-HSA-6807053
+  title: SC5D desaturates LTHSOL to 7-dehydroCHOL
+  findings: []
+- id: Reactome:R-HSA-9969901
+  title: Cholesterol biosynthesis from zymosterol (modified Kandutsch-Russell pathway)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
