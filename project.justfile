@@ -1149,6 +1149,12 @@ render-all:
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
 
+# Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
+render-bioreason-eval:
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
+    uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
     uv run ai-gene-review render-projects --all

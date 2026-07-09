@@ -20,11 +20,13 @@ from ai_gene_review.render_projects import (
 
 
 class TestSlidesExclusion:
-    """Marp slide decks (``*-slides.md``) must not be rendered as plain pages.
+    """Marp slide decks must not be rendered as plain pages.
 
-    They have their own build pipeline (``just gen-project-slides``); rendering
-    them through the project renderer produced a mangled single-page output that
-    overwrote the real deck on every run.
+    Decks are named either ``*-slides.md`` (the ``just gen-project-slides``
+    convention) or bare ``slides.md`` (a manually built Marp deck living
+    alongside its ``slides.html``). Rendering either through the project
+    renderer produced a mangled single-page output that overwrote the real
+    deck on every run, so both are excluded from project-page collection.
     """
 
     @pytest.mark.parametrize(
@@ -34,7 +36,8 @@ class TestSlidesExclusion:
             ("FOO-slides.markdown", True),
             ("FOO.md", False),
             ("FOO-pathway.md", False),
-            ("slides.md", False),
+            ("slides.md", True),
+            ("slides.markdown", True),
         ],
     )
     def test_is_slides_markdown(self, tmp_path, name, expected):
@@ -43,11 +46,17 @@ class TestSlidesExclusion:
     def test_bundle_excludes_marp_slides(self, tmp_path):
         projects = tmp_path / "projects"
         (projects / "FOO" / "slides").mkdir(parents=True)
+        (projects / "FOO" / "article").mkdir(parents=True)
         foo = projects / "FOO.md"
         foo.write_text("---\ntitle: FOO\n---\n# FOO\n")
         (projects / "FOO" / "sub.md").write_text("# sub\n")
         (projects / "FOO" / "slides" / "FOO-slides.md").write_text(
             "---\nmarp: true\n---\n# deck\n"
+        )
+        # A bare ``slides.md`` deck (built manually to slides.html) must also be
+        # excluded so its rendered plain page does not overwrite the real deck.
+        (projects / "FOO" / "article" / "slides.md").write_text(
+            "---\nmarp: true\n---\n# bare deck\n"
         )
 
         names = {p.name for p in project_bundle_markdown_files(foo, projects)}
@@ -55,6 +64,7 @@ class TestSlidesExclusion:
         assert "FOO.md" in names
         assert "sub.md" in names
         assert "FOO-slides.md" not in names
+        assert "slides.md" not in names
 
 
 class TestBuildSymbolToSpeciesIndex:
