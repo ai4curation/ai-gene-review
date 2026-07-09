@@ -1,0 +1,4070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADSS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ADSS1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8N142" target="_blank" class="term-link">
+                        Q8N142
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ADSS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8N142" data-a="DESCRIPTION: Muscle (basic/M-type) isozyme of adenylosuccinate ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Muscle (basic/M-type) isozyme of adenylosuccinate synthetase (AMPSase 1; synonym ADSSL1; EC 6.3.4.4), a cytosolic homodimeric enzyme predominantly expressed in skeletal muscle and heart. It catalyzes the first, committed step of the IMP-to-AMP branch of purine metabolism, the Mg2+-dependent, GTP-driven condensation of IMP with L-aspartate to form N6-(1,2-dicarboxyethyl)-AMP (adenylosuccinate/S-AMP), GDP and phosphate; adenylosuccinate lyase (ADSL) then cleaves S-AMP to AMP and fumarate. Together with ADSL, ADSS1 also runs the AMP-regenerating limb of the muscle purine nucleotide cycle, which interconverts IMP and AMP and contributes to muscle energetics (glycolysis) and ammoniagenesis. The paralog ADSS2 is the liver/ubiquitous (acidic) isozyme. Biallelic loss-of-function variants in ADSS1 cause adenylosuccinate synthetase 1 (ADSSL1)-related distal myopathy (MPD5), an autosomal recessive adolescent/adult-onset distal myopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004019" target="_blank" class="term-link">
+                                    GO:0004019
+                                </a>
+                            </span>
+                            <span class="term-label">adenylosuccinate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0004019" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred adenylosuccinate synthase activity, the defining molecular function of ADSS1 and the entire adenylosuccinate synthetase family. This is directly confirmed experimentally for the human protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core, well-supported molecular function. The IBA is grounded in a broad set of orthologs (E. coli purA, yeast, mouse muscle/non-muscle isozymes) and is confirmed for the human enzyme by direct assay (PMID:15786719) and by a mutation study (PMID:26506222).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Recombinant AdSSL1 protein possesses typical enzymatic activity to catalyze adenylosuccinate formation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytoplasmic localization, consistent with the experimentally observed cytoplasmic localization of the human protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Adenylosuccinate synthetase is a soluble cytosolic enzyme across the family; the human protein was directly observed in the cytoplasm when overexpressed (PMID:15786719). Cytosol (GO:0005829) is the more precise term captured elsewhere.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044208" target="_blank" class="term-link">
+                                    GO:0044208
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0044208" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred role in de novo AMP biosynthesis. ADSS1 catalyzes step 1 of 2 of the conversion of IMP to AMP, the first committed step of the de novo AMP branch of purine metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a core biological process for the gene, matching the UniProt-annotated pathway (AMP biosynthesis via the de novo pathway, AMP from IMP, step 1 of 2). Well supported by orthology and by the enzyme&#39;s characterized reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Purine metabolism; AMP biosynthesis via de novo pathway; AMP from IMP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046040" target="_blank" class="term-link">
+                                    GO:0046040
+                                </a>
+                            </span>
+                            <span class="term-label">IMP metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0046040" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred involvement in IMP metabolism. IMP is the direct substrate of adenylosuccinate synthase, consumed in the first committed step of AMP synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate; ADSS1 consumes IMP (with GTP and aspartate) and, as part of the purine nucleotide cycle, contributes to IMP/AMP interconversion. Broader than the specific catalytic function but a correct process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which catalyzes the first committed step in AMP synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0000166" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based inference of nucleotide binding. ADSS1 binds GTP (and its product GDP) and IMP as substrates; nucleotide binding is a general parent of these specific activities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general. The enzyme has a P-loop NTPase fold and documented GTP/IMP binding sites (UniProt BINDING features). More specific GTP binding (GO:0005525) is also annotated. Retained as an accurate, if broad, molecular-function annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Nucleotide-binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rule-based inference of magnesium ion binding. Adenylosuccinate synthase is a Mg2+-dependent enzyme that binds one Mg2+ ion per subunit, coordinating the GTP/phosphoryl-transfer chemistry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by UniProt cofactor and binding-site annotations (Mg2+ bound at residues 43 and 70), consistent with the conserved catalytic mechanism of the family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004019" target="_blank" class="term-link">
+                                    GO:0004019
+                                </a>
+                            </span>
+                            <span class="term-label">adenylosuccinate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0004019" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/UniRule/InterPro/RHEA/EC) inference of the core adenylosuccinate synthase activity, duplicating the experimentally and phylogenetically supported molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function (EC 6.3.4.4; RHEA 15753), consistent with the IDA, IMP, and IBA annotations for the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Recombinant AdSSL1 protein possesses typical enzymatic activity to catalyze adenylosuccinate formation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005525" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference of GTP binding. GTP is a required co-substrate of the adenylosuccinate synthase reaction, providing the energy for the ligation and being converted to GDP + phosphate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported; UniProt documents multiple GTP-binding regions (residues 42-48, 70-72, 337, 363-365, 445-448) and the reaction consumes GTP. Also independently annotated NAS from PMID:15786719.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N(6)-(1,2-dicarboxyethyl)-AMP + GDP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference of cytoplasmic localization, matching the experimental cytoplasmic localization and the cytosol annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt subcellular location (Cytoplasm) and the direct experimental observation in PMID:15786719.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006164" target="_blank" class="term-link">
+                                    GO:0006164
+                                </a>
+                            </span>
+                            <span class="term-label">purine nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0006164" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based inference of involvement in purine nucleotide biosynthesis. ADSS1 acts in the IMP-to-AMP branch, producing the purine nucleotide AMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general parent of the more specific AMP biosynthesis terms; retained as an accurate process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which catalyzes the first committed step in AMP synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006167" target="_blank" class="term-link">
+                                    GO:0006167
+                                </a>
+                            </span>
+                            <span class="term-label">AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0006167" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference of involvement in AMP biosynthesis, the direct downstream product process of the adenylosuccinate synthase reaction (via ADSL cleavage of S-AMP to AMP). Also independently supported by IDA (PMID:15786719).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; the enzyme catalyzes the committed step producing the AMP precursor adenylosuccinate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which catalyzes the first committed step in AMP synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044208" target="_blank" class="term-link">
+                                    GO:0044208
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0044208" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (UniRule/UniPathway) inference of the de novo AMP biosynthetic process, matching the IBA annotation and the UniProt pathway assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific core process (de novo AMP-from-IMP pathway, step 1 of 2).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">AMP biosynthesis via de novo pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520, the paralog ADSS2). &#34;Protein binding&#34; is uninformative as a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The bare GO:0005515 term conveys no specific function. The recorded partner is the paralog ADSS2, consistent with the UniProt-documented ADSS1-ADSS2 interaction, but this is a large-scale interactome dataset that does not establish a discrete functional MF for ADSS1. Per curation policy, retained (not removed) but flagged as over-annotation; the informative function is captured by GO:0004019.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q8N142; P30520: ADSS2; NbExp=4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520, the paralog ADSS2). Uninformative bare protein-binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above, a high-throughput interactome mapping to the paralog ADSS2. Retained per policy but flagged as over-annotation; adds no specific molecular function beyond the adenylosuccinate synthase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q8N142; P30520: ADSS2; NbExp=4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520, the paralog ADSS2). Uninformative bare protein-binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above, a multimodal cell-map / interactome dataset mapping to ADSS2. Retained per policy but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q8N142; P30520: ADSS2; NbExp=4</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                    GO:0044209
+                                </a>
+                            </span>
+                            <span class="term-label">AMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0044209" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl-orthology inference of involvement in AMP salvage. ADSS1 in muscle operates the AMP-regenerating limb of the purine nucleotide cycle (IMP to AMP), which recycles the purine nucleotide pool.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary and precise characterization of ADSS1 is de novo AMP biosynthesis (AMP from IMP, step 1 of 2). AMP salvage (reuse of preformed adenine/adenosine) is not the enzyme&#39;s committed-step chemistry; the overlap is via the purine nucleotide cycle that regenerates AMP from IMP. Kept as it is not strictly wrong, but flagged as a less precise, orthology-transferred process; GO:0044208 is the accurate term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">which interconverts IMP and AMP to regulate the nucleotide levels</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004019" target="_blank" class="term-link">
+                                    GO:0004019
+                                </a>
+                            </span>
+                            <span class="term-label">adenylosuccinate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26506222" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26506222
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ADSSL1 mutation relevant to autosomal recessive adolescent o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0004019" data-r="PMID:26506222" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Adenylosuccinate synthase activity inferred from mutant phenotype; disease variants in ADSSL1 reduce catalytic activity, confirming that the wild-type protein provides this function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct genetic/functional evidence. Both MPD5 mutations (p.D304N and p.I350fs) decreased enzymatic activity, and the D261N variant characterized in UniProt shows decreased adenylosuccinate synthase activity, tying the human gene product&#39;s core catalytic function to disease.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26506222" target="_blank" class="term-link">
+                                        PMID:26506222
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both the D304N and I350fs mutations in ADSSL1 led to decreased enzymatic activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-111524
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005829" data-r="Reactome:R-HSA-111524" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization asserted by Reactome for the adenylosuccinate synthase reaction, consistent with the soluble cytosolic nature of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the precise cellular component for this soluble enzyme, agreeing with the experimental cytoplasm localization (PMID:15786719) and UniProt subcellular location. This is the preferred specific location term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-111524
+
+                                </span>
+
+                                <div class="support-text">Two isoforms of adenylosuccinate synthetase, ADSS and ADSSL1, catalyze the reaction of IMP, aspartate, and GTP to form adenylosuccinate, GDP, and orthophosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0002376" target="_blank" class="term-link">
+                                    GO:0002376
+                                </a>
+                            </span>
+                            <span class="term-label">immune system process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0002376" data-r="PMID:15786719" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable author statement based on the observation that AdSSL1 is expressed in hematopoietic/leukemia cell lines in a stimulation-dependent manner. This is an expression correlation, not an established immune function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ADSS1 is fundamentally a purine-metabolism enzyme predominantly expressed in muscle; the immune-system link rests only on expression in leukemia cells after stimulation, with no demonstrated mechanistic immune role. Kept as a non-core, weakly-supported process rather than a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">After stimulation, leukemia cells express AdSSL1 in a time-dependent manner</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004019" target="_blank" class="term-link">
+                                    GO:0004019
+                                </a>
+                            </span>
+                            <span class="term-label">adenylosuccinate synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0004019" data-r="PMID:15786719" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of recombinant human AdSSL1 demonstrating adenylosuccinate synthase activity (adenylosuccinate formation). This is the primary experimental evidence for the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong direct experimental support for the defining catalytic activity of the gene product.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Recombinant AdSSL1 protein possesses typical enzymatic activity to catalyze adenylosuccinate formation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005525" data-r="PMID:15786719" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement of GTP binding, reflecting the conserved GTP-dependent mechanism of adenylosuccinate synthetase; GTP is a co-substrate of the reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the well-characterized GTP-dependent catalytic mechanism and the multiple GTP-binding regions annotated in UniProt; also independently supported by IEA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N(6)-(1,2-dicarboxyethyl)-AMP + GDP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0005737" data-r="PMID:15786719" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental observation that overexpressed AdSSL1 localizes to the cytoplasm in COS-7 cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct localization evidence for the human protein; cytosol (GO:0005829) is the more granular equivalent captured from Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006167" target="_blank" class="term-link">
+                                    GO:0006167
+                                </a>
+                            </span>
+                            <span class="term-label">AMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0006167" data-r="PMID:15786719" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence linking ADSS1 to AMP biosynthesis via its characterized adenylosuccinate-forming activity, the committed step in AMP synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, directly supported by the enzyme assay and the description of AdSSL1 as catalyzing the first committed step in AMP synthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                        PMID:15786719
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">which catalyzes the first committed step in AMP synthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042301" target="_blank" class="term-link">
+                                    GO:0042301
+                                </a>
+                            </span>
+                            <span class="term-label">phosphate ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15786719
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and characterization of a novel muscle ade...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q8N142" data-a="GO:0042301" data-r="PMID:15786719" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author statement of phosphate ion binding. Phosphate is a reaction product and the enzyme binds the phosphate groups of its GTP/GDP and IMP ligands, but a standalone phosphate-ion-binding molecular function is not informative for this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The enzyme&#39;s phosphate handling is part of GTP binding and the ligase catalytic mechanism (phosphate is released as a product). A discrete phosphate-ion-binding MF annotation adds little and risks over-representing an incidental feature; the informative functions are GO:0004019 and GO:0005525. Kept (not wrong) but flagged.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ADSS1/ADSS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">N(6)-(1,2-dicarboxyethyl)-AMP + GDP + phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the first committed step of AMP biosynthesis from IMP - the Mg2+-dependent, GTP-driven condensation of IMP with L-aspartate to yield adenylosuccinate (N6-(1,2-dicarboxyethyl)-AMP), GDP and phosphate (EC 6.3.4.4) - as the muscle isozyme of adenylosuccinate synthetase.</h3>
+                <span class="vote-buttons" data-g="Q8N142" data-a="FUNCTION: Catalyzes the first committed step of AMP biosynth..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004019" target="_blank" class="term-link">
+                            adenylosuccinate synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044208" target="_blank" class="term-link">
+                                &#39;de novo&#39; AMP biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006167" target="_blank" class="term-link">
+                                AMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                                PMID:15786719
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Recombinant AdSSL1 protein possesses typical enzymatic activity to catalyze adenylosuccinate formation.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26506222" target="_blank" class="term-link">
+                                PMID:26506222
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both the D304N and I350fs mutations in ADSSL1 led to decreased enzymatic activity.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15786719" target="_blank" class="term-link">
+                            PMID:15786719
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and characterization of a novel muscle adenylosuccinate synthetase, AdSSL1, from human bone marrow stromal cells.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human AdSSL1 is the muscle isozyme of adenylosuccinate synthetase that catalyzes the first committed step in AMP synthesis; recombinant protein has typical adenylosuccinate synthase activity and the protein localizes to the cytoplasm.</div>
+
+                        <div class="finding-text">"Recombinant AdSSL1 protein possesses typical enzymatic activity to catalyze adenylosuccinate formation."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26506222" target="_blank" class="term-link">
+                            PMID:26506222
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ADSSL1 mutation relevant to autosomal recessive adolescent onset distal myopathy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Biallelic ADSSL1 mutations cause autosomal recessive adolescent-onset distal myopathy (MPD5); the mutations decrease adenylosuccinate synthase enzymatic activity.</div>
+
+                        <div class="finding-text">"Both the D304N and I350fs mutations in ADSSL1 led to decreased enzymatic activity."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-111524
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IMP + L-Aspartate + GTP =&gt; Adenylosuccinate + GDP + Pi [ADSS]</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Adenylosuccinate synthetase isoforms (including ADSSL1) catalyze the reaction of IMP, aspartate, and GTP to form adenylosuccinate, GDP and orthophosphate in the cytosol.</div>
+
+                        <div class="finding-text">"Two isoforms of adenylosuccinate synthetase, ADSS and ADSSL1, catalyze the reaction of IMP, aspartate, and GTP to form adenylosuccinate, GDP, and orthophosphate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ADSS1/ADSS1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q8N142 (PURA1_HUMAN, ADSS1) - adenylosuccinate synthetase isozyme 1</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">ADSS1 catalyzes the Mg2+-dependent, GTP-dependent reaction of IMP with L-aspartate to form adenylosuccinate, GDP and phosphate, the first committed step (step 1 of 2) of the de novo AMP-from-IMP pathway; it is a cytoplasmic homodimer that interacts with the paralog ADSS2.</div>
+
+                        <div class="finding-text">"N(6)-(1,2-dicarboxyethyl)-AMP + GDP"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ADSS1 have non-catalytic or muscle-specific regulatory roles beyond the purine nucleotide cycle that explain the tissue-restricted, distal-predominant myopathy phenotype, given the ubiquitously expressed paralog ADSS2?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8N142" data-a="Q: Does ADSS1 have non-catalytic or muscle-specific r..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the observed expression of AdSSL1 in stimulated leukemia/hematopoietic cells associated with any genuine immune function, or purely a metabolic response?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q8N142" data-a="Q: Is the observed expression of AdSSL1 in stimulated..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Steady-state kinetic characterization of purified recombinant human ADSS1 (Km for IMP, L-aspartate, GTP; Mg2+ dependence) compared with ADSS2, to quantify the muscle isozyme&#39;s catalytic properties.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The muscle isozyme ADSS1 has kinetic properties distinct from ADSS2 that suit the high purine-nucleotide-cycle flux of skeletal muscle.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8N142" data-a="EXPERIMENT: Steady-state kinetic characterization of purified ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Muscle-specific Adss1 knockout or knock-in of the MPD5 D304N variant in mouse to test whether purine nucleotide cycle disruption drives the distal myopathy phenotype.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of ADSS1 catalytic activity impairs the muscle purine nucleotide cycle, causing the distal myopathy seen in MPD5 patients.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q8N142" data-a="EXPERIMENT: Muscle-specific Adss1 knockout or knock-in of the ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ADSS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8N142" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="adss1-q8n142-pura1_human-review-notes">ADSS1 (Q8N142 / PURA1_HUMAN) review notes</h1>
+<p>Deep research: falcon provider is out of credits (HTTP 402); no <code>-deep-research-falcon.md</code><br />
+was generated. Review grounded in the cached UniProt record, the seeded GOA, and cached<br />
+<code>publications/PMID_*.md</code>. No content was fabricated as deep research.</p>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>ADSS1 = adenylosuccinate synthetase isozyme 1, the <strong>muscle (basic / M-type) isozyme</strong><br />
+  (synonym ADSSL1). Paralog <strong>ADSS2</strong> (P30520) is the liver/ubiquitous ("acidic") isozyme.</li>
+<li>EC 6.3.4.4; RHEA:15753. HGNC:20093; chromosome 14. UniProt PE 1 (protein-level evidence).</li>
+<li>457 aa homodimer; belongs to the adenylosuccinate synthetase family (HAMAP MF_03126);<br />
+  P-loop NTPase fold with three Gene3D domains (CDD cd03108 AdSS).</li>
+</ul>
+<h2 id="reaction-function">Reaction / function</h2>
+<ul>
+<li>Catalyses the <strong>first committed step of AMP synthesis from IMP</strong>:<br />
+  IMP + L-aspartate + GTP = N6-(1,2-dicarboxyethyl)-AMP (adenylosuccinate / S-AMP)</li>
+<li>GDP + phosphate + 2 H+ [UniProt CATALYTIC ACTIVITY; RHEA:15753].<br />
+  Mg2+-dependent (binds 1 Mg2+ per subunit) [UniProt COFACTOR].</li>
+<li>Adenylosuccinate lyase (ADSL) then cleaves S-AMP -&gt; AMP + fumarate (second step).</li>
+<li>PATHWAY: "Purine metabolism; AMP biosynthesis via de novo pathway; AMP from IMP:<br />
+  step 1/2" [UniProt PATHWAY; UniPathway UPA00075/UER00335].</li>
+<li>Component of the <strong>purine nucleotide cycle (PNC)</strong> which interconverts IMP and AMP to<br />
+  regulate nucleotide levels; contributes to glycolysis and ammoniagenesis in muscle<br />
+  [UniProt FUNCTION, ECO:0000269|PubMed:26506222].</li>
+</ul>
+<h2 id="key-experimental-evidence">Key experimental evidence</h2>
+<ul>
+<li>PMID:15786719 (Sun et al. 2005) — cloned human AdSSL1 from bone marrow stromal cells;<br />
+  "catalyzes the first committed step in AMP synthesis"; recombinant protein "possesses<br />
+  typical enzymatic activity to catalyze adenylosuccinate formation" (IDA GO:0004019);<br />
+  "Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm" (IDA cytoplasm);<br />
+  "predominantly expressed in skeletal muscle and cardiac tissue". Abstract-only in cache.<br />
+  This paper is also the NAS source for GTP binding, phosphate ion binding, and<br />
+  "immune system process" (leukemia-cell expression framing).</li>
+<li>PMID:26506222 (Park et al. 2016, Ann Neurol) — compound-het ADSSL1 mutations<br />
+  (p.D304N and p.I350fs) cause autosomal-recessive adolescent-onset distal myopathy (MPD5,<br />
+  MIM 617030). "Both the D304N and I350fs mutations in ADSSL1 led to decreased enzymatic<br />
+  activity." D261N (=D304N in another numbering) VARIANT: decreased activity/stability.<br />
+  IMP GO:0004019 by IMP (mutation -&gt; loss of catalytic activity). Abstract-only in cache.</li>
+</ul>
+<h2 id="cellular-location">Cellular location</h2>
+<ul>
+<li>Cytoplasm / cytosol [UniProt SUBCELLULAR LOCATION Cytoplasm; Reactome R-HSA-111524 cytosol TAS].</li>
+</ul>
+<h2 id="interactions-ipi-go0005515-protein-binding">Interactions (IPI, GO:0005515 protein binding)</h2>
+<ul>
+<li>Three IntAct proteome-scale IPIs (PMID:28514442, 33961781, 40205054) all with<br />
+  WITH/FROM = UniProtKB:P30520 (ADSS2). UniProt INTERACTION records the ADSS1–ADSS2<br />
+  interaction (NbExp=4). Cached texts are the large interactome papers and do not name<br />
+  ADSS1 in the body. Per curation policy, bare <code>protein binding</code> IPIs -&gt; MARK_AS_OVER_ANNOTATED<br />
+  (uninformative MF term), not REMOVE.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<ul>
+<li>Core MF: GO:0004019 adenylosuccinate synthase activity (IBA/IEA/IMP/IDA) — ACCEPT.</li>
+<li>GTP binding GO:0005525, Mg2+ binding GO:0000287, nucleotide binding GO:0000166 — molecular<br />
+  detail of the catalytic mechanism; ACCEPT (nucleotide binding is a general parent of GTP<br />
+  binding — keep, non-core-ish but accurate).</li>
+<li>BP: 'de novo' AMP biosynthetic process GO:0044208, AMP biosynthetic process GO:0006167,<br />
+  purine nucleotide biosynthetic process GO:0006164 — ACCEPT (directly involved).</li>
+<li>IMP metabolic process GO:0046040 — ACCEPT (IMP is the substrate).</li>
+<li>AMP salvage GO:0044209 (IEA, Ensembl orthology) — ADSS1 is a <em>de novo</em> AMP biosynthesis<br />
+  enzyme; in muscle it runs the PNC AMP-regenerating limb, which is functionally part of<br />
+  purine salvage/recycling. Keep but MARK_AS_OVER_ANNOTATED — "salvage" (reuse of preformed<br />
+  bases/nucleosides) is not the precise process; the committed IMP-&gt;AMP step is de novo.</li>
+<li>cytoplasm GO:0005737 / cytosol GO:0005829 — ACCEPT.</li>
+<li>immune system process GO:0002376 (NAS, PMID:15786719) — based on leukemia-cell expression;<br />
+  no functional immune role established. KEEP_AS_NON_CORE (weak, expression-based).</li>
+<li>phosphate ion binding GO:0042301 (NAS) — phosphate is a <em>product</em>, and the enzyme binds<br />
+  GTP/GDP phosphates; MARK_AS_OVER_ANNOTATED (not an informative standalone MF).</li>
+<li>protein binding GO:0005515 x3 — MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8N142
+gene_symbol: ADSS1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Muscle (basic/M-type) isozyme of adenylosuccinate synthetase (AMPSase 1;
+  synonym ADSSL1; EC 6.3.4.4), a cytosolic homodimeric enzyme predominantly expressed
+  in skeletal muscle and heart. It catalyzes the first, committed step of the IMP-to-AMP
+  branch of purine metabolism, the Mg2+-dependent, GTP-driven condensation of IMP with
+  L-aspartate to form N6-(1,2-dicarboxyethyl)-AMP (adenylosuccinate/S-AMP), GDP and phosphate;
+  adenylosuccinate lyase (ADSL) then cleaves S-AMP to AMP and fumarate. Together with ADSL,
+  ADSS1 also runs the AMP-regenerating limb of the muscle purine nucleotide cycle, which
+  interconverts IMP and AMP and contributes to muscle energetics (glycolysis) and
+  ammoniagenesis. The paralog ADSS2 is the liver/ubiquitous (acidic) isozyme. Biallelic
+  loss-of-function variants in ADSS1 cause adenylosuccinate synthetase 1 (ADSSL1)-related
+  distal myopathy (MPD5), an autosomal recessive adolescent/adult-onset distal myopathy.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q8N142-1
+- name: &#39;2&#39;
+  id: Q8N142-2
+  sequence_note: VSP_008421
+existing_annotations:
+- term:
+    id: GO:0004019
+    label: adenylosuccinate synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetically inferred adenylosuccinate synthase activity, the defining
+      molecular function of ADSS1 and the entire adenylosuccinate synthetase family.
+      This is directly confirmed experimentally for the human protein.
+    action: ACCEPT
+    reason: This is the core, well-supported molecular function. The IBA is grounded in a
+      broad set of orthologs (E. coli purA, yeast, mouse muscle/non-muscle isozymes) and is
+      confirmed for the human enzyme by direct assay (PMID:15786719) and by a mutation study
+      (PMID:26506222).
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Recombinant AdSSL1 protein possesses typical enzymatic activity to
+        catalyze adenylosuccinate formation.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred cytoplasmic localization, consistent with the
+      experimentally observed cytoplasmic localization of the human protein.
+    action: ACCEPT
+    reason: Adenylosuccinate synthetase is a soluble cytosolic enzyme across the family;
+      the human protein was directly observed in the cytoplasm when overexpressed
+      (PMID:15786719). Cytosol (GO:0005829) is the more precise term captured elsewhere.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.
+- term:
+    id: GO:0044208
+    label: &#34;&#39;de novo&#39; AMP biosynthetic process&#34;
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetically inferred role in de novo AMP biosynthesis. ADSS1 catalyzes
+      step 1 of 2 of the conversion of IMP to AMP, the first committed step of the de novo
+      AMP branch of purine metabolism.
+    action: ACCEPT
+    reason: This is a core biological process for the gene, matching the UniProt-annotated
+      pathway (AMP biosynthesis via the de novo pathway, AMP from IMP, step 1 of 2). Well
+      supported by orthology and by the enzyme&#39;s characterized reaction.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: Purine metabolism; AMP biosynthesis via de novo pathway; AMP
+        from IMP
+- term:
+    id: GO:0046040
+    label: IMP metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetically inferred involvement in IMP metabolism. IMP is the direct
+      substrate of adenylosuccinate synthase, consumed in the first committed step of
+      AMP synthesis.
+    action: ACCEPT
+    reason: Accurate; ADSS1 consumes IMP (with GTP and aspartate) and, as part of the
+      purine nucleotide cycle, contributes to IMP/AMP interconversion. Broader than the
+      specific catalytic function but a correct process annotation.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: which catalyzes the first committed step in AMP synthesis
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based inference of nucleotide binding. ADSS1 binds GTP (and its
+      product GDP) and IMP as substrates; nucleotide binding is a general parent of these
+      specific activities.
+    action: ACCEPT
+    reason: Correct but general. The enzyme has a P-loop NTPase fold and documented GTP/IMP
+      binding sites (UniProt BINDING features). More specific GTP binding (GO:0005525) is
+      also annotated. Retained as an accurate, if broad, molecular-function annotation.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: Nucleotide-binding
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: Rule-based inference of magnesium ion binding. Adenylosuccinate synthase is
+      a Mg2+-dependent enzyme that binds one Mg2+ ion per subunit, coordinating the
+      GTP/phosphoryl-transfer chemistry.
+    action: ACCEPT
+    reason: Supported by UniProt cofactor and binding-site annotations (Mg2+ bound at
+      residues 43 and 70), consistent with the conserved catalytic mechanism of the family.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: Binds 1 Mg(2+) ion per subunit.
+- term:
+    id: GO:0004019
+    label: adenylosuccinate synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated (ARBA/UniRule/InterPro/RHEA/EC) inference of the core adenylosuccinate
+      synthase activity, duplicating the experimentally and phylogenetically supported
+      molecular function.
+    action: ACCEPT
+    reason: Correct core molecular function (EC 6.3.4.4; RHEA 15753), consistent with the
+      IDA, IMP, and IBA annotations for the same term.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Recombinant AdSSL1 protein possesses typical enzymatic activity to
+        catalyze adenylosuccinate formation.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated inference of GTP binding. GTP is a required co-substrate of the
+      adenylosuccinate synthase reaction, providing the energy for the ligation and being
+      converted to GDP + phosphate.
+    action: ACCEPT
+    reason: Well supported; UniProt documents multiple GTP-binding regions (residues 42-48,
+      70-72, 337, 363-365, 445-448) and the reaction consumes GTP. Also independently
+      annotated NAS from PMID:15786719.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: N(6)-(1,2-dicarboxyethyl)-AMP + GDP
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Automated inference of cytoplasmic localization, matching the experimental
+      cytoplasmic localization and the cytosol annotation.
+    action: ACCEPT
+    reason: Consistent with UniProt subcellular location (Cytoplasm) and the direct
+      experimental observation in PMID:15786719.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.
+- term:
+    id: GO:0006164
+    label: purine nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro-based inference of involvement in purine nucleotide biosynthesis.
+      ADSS1 acts in the IMP-to-AMP branch, producing the purine nucleotide AMP.
+    action: ACCEPT
+    reason: Correct but general parent of the more specific AMP biosynthesis terms; retained
+      as an accurate process annotation.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: which catalyzes the first committed step in AMP synthesis
+- term:
+    id: GO:0006167
+    label: AMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Automated inference of involvement in AMP biosynthesis, the direct downstream
+      product process of the adenylosuccinate synthase reaction (via ADSL cleavage of S-AMP
+      to AMP). Also independently supported by IDA (PMID:15786719).
+    action: ACCEPT
+    reason: Core biological process; the enzyme catalyzes the committed step producing the
+      AMP precursor adenylosuccinate.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: which catalyzes the first committed step in AMP synthesis
+- term:
+    id: GO:0044208
+    label: &#34;&#39;de novo&#39; AMP biosynthetic process&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Automated (UniRule/UniPathway) inference of the de novo AMP biosynthetic
+      process, matching the IBA annotation and the UniProt pathway assignment.
+    action: ACCEPT
+    reason: Correct and specific core process (de novo AMP-from-IMP pathway, step 1 of 2).
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: AMP biosynthesis via de novo pathway
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520,
+      the paralog ADSS2). &#34;Protein binding&#34; is uninformative as a molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The bare GO:0005515 term conveys no specific function. The recorded partner is
+      the paralog ADSS2, consistent with the UniProt-documented ADSS1-ADSS2 interaction, but
+      this is a large-scale interactome dataset that does not establish a discrete functional
+      MF for ADSS1. Per curation policy, retained (not removed) but flagged as
+      over-annotation; the informative function is captured by GO:0004019.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: &#34;Q8N142; P30520: ADSS2; NbExp=4&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520,
+      the paralog ADSS2). Uninformative bare protein-binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: As above, a high-throughput interactome mapping to the paralog ADSS2. Retained
+      per policy but flagged as over-annotation; adds no specific molecular function beyond
+      the adenylosuccinate synthase activity.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: &#34;Q8N142; P30520: ADSS2; NbExp=4&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: IntAct proteome-scale interaction annotation (WITH/FROM UniProtKB:P30520,
+      the paralog ADSS2). Uninformative bare protein-binding term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: As above, a multimodal cell-map / interactome dataset mapping to ADSS2. Retained
+      per policy but flagged as over-annotation.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: &#34;Q8N142; P30520: ADSS2; NbExp=4&#34;
+- term:
+    id: GO:0044209
+    label: AMP salvage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: Ensembl-orthology inference of involvement in AMP salvage. ADSS1 in muscle
+      operates the AMP-regenerating limb of the purine nucleotide cycle (IMP to AMP), which
+      recycles the purine nucleotide pool.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The primary and precise characterization of ADSS1 is de novo AMP biosynthesis
+      (AMP from IMP, step 1 of 2). AMP salvage (reuse of preformed adenine/adenosine) is not
+      the enzyme&#39;s committed-step chemistry; the overlap is via the purine nucleotide cycle
+      that regenerates AMP from IMP. Kept as it is not strictly wrong, but flagged as a less
+      precise, orthology-transferred process; GO:0044208 is the accurate term.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: which interconverts IMP and AMP to regulate the nucleotide levels
+- term:
+    id: GO:0004019
+    label: adenylosuccinate synthase activity
+  evidence_type: IMP
+  original_reference_id: PMID:26506222
+  qualifier: enables
+  review:
+    summary: Adenylosuccinate synthase activity inferred from mutant phenotype; disease
+      variants in ADSSL1 reduce catalytic activity, confirming that the wild-type protein
+      provides this function.
+    action: ACCEPT
+    reason: Direct genetic/functional evidence. Both MPD5 mutations (p.D304N and p.I350fs)
+      decreased enzymatic activity, and the D261N variant characterized in UniProt shows
+      decreased adenylosuccinate synthase activity, tying the human gene product&#39;s core
+      catalytic function to disease.
+    supported_by:
+    - reference_id: PMID:26506222
+      supporting_text: Both the D304N and I350fs mutations in ADSSL1 led to decreased
+        enzymatic activity.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-111524
+  qualifier: located_in
+  review:
+    summary: Cytosolic localization asserted by Reactome for the adenylosuccinate synthase
+      reaction, consistent with the soluble cytosolic nature of the enzyme.
+    action: ACCEPT
+    reason: Cytosol is the precise cellular component for this soluble enzyme, agreeing with
+      the experimental cytoplasm localization (PMID:15786719) and UniProt subcellular
+      location. This is the preferred specific location term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-111524
+      supporting_text: Two isoforms of adenylosuccinate synthetase, ADSS and ADSSL1, catalyze
+        the reaction of IMP, aspartate, and GTP to form adenylosuccinate, GDP, and
+        orthophosphate
+- term:
+    id: GO:0002376
+    label: immune system process
+  evidence_type: NAS
+  original_reference_id: PMID:15786719
+  qualifier: involved_in
+  review:
+    summary: Non-traceable author statement based on the observation that AdSSL1 is
+      expressed in hematopoietic/leukemia cell lines in a stimulation-dependent manner.
+      This is an expression correlation, not an established immune function.
+    action: KEEP_AS_NON_CORE
+    reason: ADSS1 is fundamentally a purine-metabolism enzyme predominantly expressed in
+      muscle; the immune-system link rests only on expression in leukemia cells after
+      stimulation, with no demonstrated mechanistic immune role. Kept as a non-core,
+      weakly-supported process rather than a core function.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: After stimulation, leukemia cells express AdSSL1 in a time-dependent
+        manner
+- term:
+    id: GO:0004019
+    label: adenylosuccinate synthase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15786719
+  qualifier: enables
+  review:
+    summary: Direct assay of recombinant human AdSSL1 demonstrating adenylosuccinate
+      synthase activity (adenylosuccinate formation). This is the primary experimental
+      evidence for the core molecular function.
+    action: ACCEPT
+    reason: Strong direct experimental support for the defining catalytic activity of the
+      gene product.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Recombinant AdSSL1 protein possesses typical enzymatic activity to
+        catalyze adenylosuccinate formation.
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: NAS
+  original_reference_id: PMID:15786719
+  qualifier: enables
+  review:
+    summary: Author statement of GTP binding, reflecting the conserved GTP-dependent
+      mechanism of adenylosuccinate synthetase; GTP is a co-substrate of the reaction.
+    action: ACCEPT
+    reason: Consistent with the well-characterized GTP-dependent catalytic mechanism and
+      the multiple GTP-binding regions annotated in UniProt; also independently supported by
+      IEA.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: N(6)-(1,2-dicarboxyethyl)-AMP + GDP
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:15786719
+  qualifier: located_in
+  review:
+    summary: Direct experimental observation that overexpressed AdSSL1 localizes to the
+      cytoplasm in COS-7 cells.
+    action: ACCEPT
+    reason: Direct localization evidence for the human protein; cytosol (GO:0005829) is the
+      more granular equivalent captured from Reactome.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: Overexpressed AdSSL1 protein in COS-7 cells locates in cytoplasm.
+- term:
+    id: GO:0006167
+    label: AMP biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:15786719
+  qualifier: involved_in
+  review:
+    summary: Direct evidence linking ADSS1 to AMP biosynthesis via its characterized
+      adenylosuccinate-forming activity, the committed step in AMP synthesis.
+    action: ACCEPT
+    reason: Core biological process, directly supported by the enzyme assay and the
+      description of AdSSL1 as catalyzing the first committed step in AMP synthesis.
+    supported_by:
+    - reference_id: PMID:15786719
+      supporting_text: which catalyzes the first committed step in AMP synthesis
+- term:
+    id: GO:0042301
+    label: phosphate ion binding
+  evidence_type: NAS
+  original_reference_id: PMID:15786719
+  qualifier: enables
+  review:
+    summary: Author statement of phosphate ion binding. Phosphate is a reaction product
+      and the enzyme binds the phosphate groups of its GTP/GDP and IMP ligands, but a
+      standalone phosphate-ion-binding molecular function is not informative for this
+      enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The enzyme&#39;s phosphate handling is part of GTP binding and the ligase catalytic
+      mechanism (phosphate is released as a product). A discrete phosphate-ion-binding MF
+      annotation adds little and risks over-representing an incidental feature; the
+      informative functions are GO:0004019 and GO:0005525. Kept (not wrong) but flagged.
+    supported_by:
+    - reference_id: file:human/ADSS1/ADSS1-uniprot.txt
+      supporting_text: N(6)-(1,2-dicarboxyethyl)-AMP + GDP
+        + phosphate
+core_functions:
+- description: Catalyzes the first committed step of AMP biosynthesis from IMP - the
+    Mg2+-dependent, GTP-driven condensation of IMP with L-aspartate to yield
+    adenylosuccinate (N6-(1,2-dicarboxyethyl)-AMP), GDP and phosphate (EC 6.3.4.4) - as the
+    muscle isozyme of adenylosuccinate synthetase.
+  molecular_function:
+    id: GO:0004019
+    label: adenylosuccinate synthase activity
+  directly_involved_in:
+  - id: GO:0044208
+    label: &#34;&#39;de novo&#39; AMP biosynthetic process&#34;
+  - id: GO:0006167
+    label: AMP biosynthetic process
+  supported_by:
+  - reference_id: PMID:15786719
+    supporting_text: Recombinant AdSSL1 protein possesses typical enzymatic activity to
+      catalyze adenylosuccinate formation.
+  - reference_id: PMID:26506222
+    supporting_text: Both the D304N and I350fs mutations in ADSSL1 led to decreased
+      enzymatic activity.
+  locations:
+  - id: GO:0005829
+    label: cytosol
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:15786719
+  title: Molecular cloning and characterization of a novel muscle adenylosuccinate
+    synthetase, AdSSL1, from human bone marrow stromal cells.
+  findings:
+  - statement: Human AdSSL1 is the muscle isozyme of adenylosuccinate synthetase that
+      catalyzes the first committed step in AMP synthesis; recombinant protein has typical
+      adenylosuccinate synthase activity and the protein localizes to the cytoplasm.
+    supporting_text: Recombinant AdSSL1 protein possesses typical enzymatic activity to
+      catalyze adenylosuccinate formation.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; primary characterization of human ADSS1/AdSSL1
+      (activity, cytoplasmic localization, muscle-predominant expression). Abstract-only in
+      cache but the abstract directly supports the enzymatic and localization annotations.
+- id: PMID:26506222
+  title: ADSSL1 mutation relevant to autosomal recessive adolescent onset distal myopathy.
+  findings:
+  - statement: Biallelic ADSSL1 mutations cause autosomal recessive adolescent-onset distal
+      myopathy (MPD5); the mutations decrease adenylosuccinate synthase enzymatic activity.
+    supporting_text: Both the D304N and I350fs mutations in ADSSL1 led to decreased
+      enzymatic activity.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; establishes the disease link (MPD5) and provides
+      mutant-phenotype (IMP) evidence for the catalytic function. Abstract-only in cache;
+      the abstract supports the activity and disease claims.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Proteome-scale interactome study; source of an IntAct IPI protein-binding
+      annotation (partner ADSS2). Does not establish a specific molecular function for ADSS1.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Proteome-scale interactome study; source of an IntAct IPI protein-binding
+      annotation (partner ADSS2). Uninformative bare protein-binding evidence for ADSS1.
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Multimodal cell-map / interactome study; source of an IntAct IPI
+      protein-binding annotation (partner ADSS2). Uninformative bare protein-binding evidence.
+- id: Reactome:R-HSA-111524
+  title: IMP + L-Aspartate + GTP =&gt; Adenylosuccinate + GDP + Pi [ADSS]
+  findings:
+  - statement: Adenylosuccinate synthetase isoforms (including ADSSL1) catalyze the reaction
+      of IMP, aspartate, and GTP to form adenylosuccinate, GDP and orthophosphate in the
+      cytosol.
+    supporting_text: Two isoforms of adenylosuccinate synthetase, ADSS and ADSSL1, catalyze
+      the reaction of IMP, aspartate, and GTP to form adenylosuccinate, GDP, and
+      orthophosphate
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction for the adenylosuccinate synthase step; source of the
+      cytosol (TAS) localization. Title left exactly as fetched.
+- id: file:human/ADSS1/ADSS1-uniprot.txt
+  title: UniProt entry Q8N142 (PURA1_HUMAN, ADSS1) - adenylosuccinate synthetase isozyme 1
+  findings:
+  - statement: ADSS1 catalyzes the Mg2+-dependent, GTP-dependent reaction of IMP with
+      L-aspartate to form adenylosuccinate, GDP and phosphate, the first committed step
+      (step 1 of 2) of the de novo AMP-from-IMP pathway; it is a cytoplasmic homodimer that
+      interacts with the paralog ADSS2.
+    supporting_text: N(6)-(1,2-dicarboxyethyl)-AMP + GDP
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProt record; primary source for reaction, cofactor, pathway,
+      subcellular location, and the ADSS1-ADSS2 interaction used in this review.
+suggested_questions:
+- question: Does ADSS1 have non-catalytic or muscle-specific regulatory roles beyond the
+    purine nucleotide cycle that explain the tissue-restricted, distal-predominant myopathy
+    phenotype, given the ubiquitously expressed paralog ADSS2?
+- question: Is the observed expression of AdSSL1 in stimulated leukemia/hematopoietic cells
+    associated with any genuine immune function, or purely a metabolic response?
+suggested_experiments:
+- description: Steady-state kinetic characterization of purified recombinant human ADSS1
+    (Km for IMP, L-aspartate, GTP; Mg2+ dependence) compared with ADSS2, to quantify the
+    muscle isozyme&#39;s catalytic properties.
+  hypothesis: The muscle isozyme ADSS1 has kinetic properties distinct from ADSS2 that suit
+    the high purine-nucleotide-cycle flux of skeletal muscle.
+- description: Muscle-specific Adss1 knockout or knock-in of the MPD5 D304N variant in mouse
+    to test whether purine nucleotide cycle disruption drives the distal myopathy phenotype.
+  hypothesis: Loss of ADSS1 catalytic activity impairs the muscle purine nucleotide cycle,
+    causing the distal myopathy seen in MPD5 patients.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPDH1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>IMPDH1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P20839" target="_blank" class="term-link">
+                        P20839
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "IMPDH1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P20839" data-a="DESCRIPTION: Inosine-5&#39;-monophosphate dehydrogenase 1 (IMPDH1; ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Inosine-5&#39;-monophosphate dehydrogenase 1 (IMPDH1; EC 1.1.1.205) catalyses the NAD+-dependent oxidation of inosine 5&#39;-monophosphate (IMP) to xanthosine 5&#39;-monophosphate (XMP) (IMP + NAD+ + H2O -&gt; XMP + NADH + H+), the first committed and rate-limiting step of de novo guanine-nucleotide (GMP) biosynthesis; XMP is subsequently aminated to GMP by GMP synthase (GMPS). The enzyme is a cytosolic homotetramer built from a catalytic (beta/alpha)8 TIM-barrel domain plus a regulatory subdomain of two tandem CBS (Bateman) domains, uses a monovalent cation (K+) cofactor, and can assemble into higher-order filaments (&#34;rods and rings&#34;/cytoophidia). IMPDH1 is broadly expressed but strongly enriched in retinal photoreceptors; a reported single-stranded nucleic-acid-binding activity mediated by the CBS subdomain suggests an additional, less well-defined role in nucleic-acid metabolism. Because guanine-nucleotide supply is coupled to cell proliferation, IMPDH is a validated target of immunosuppressive (mycophenolic acid, mizoribine), antiviral (ribavirin) and antitumour drugs. Dominant IMPDH1 mutations, many clustered in the CBS subdomain, cause retinitis pigmentosa 10 (RP10) and Leber congenital amaurosis (LCA11), degenerative diseases of the retina.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytoplasmic localization. IMPDH1 is a soluble cytosolic enzyme, consistent with its role in the cytosolic de novo purine pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA is_active_in cytoplasm is correct and consistent with the UniProt subcellular location and with the more specific IDA cytosol annotation. This is a core localization for the enzyme&#39;s catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                                    GO:0003938
+                                </a>
+                            </span>
+                            <span class="term-label">IMP dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003938" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP dehydrogenase activity (EC 1.1.1.205) is the defining, experimentally and phylogenetically well-supported molecular function of IMPDH1: NAD+-dependent oxidation of IMP to XMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function. Supported by the enzyme name, EC number, catalytic-activity reaction in UniProt, and by direct biochemical characterization of human type I IMPDH; the IBA is at the correct level of specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link">
+                                        PMID:1969416
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006183" target="_blank" class="term-link">
+                                    GO:0006183
+                                </a>
+                            </span>
+                            <span class="term-label">GTP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0006183" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMPDH1 contributes to GTP biosynthesis only indirectly: it makes XMP (-&gt;GMP), and GMP is subsequently phosphorylated (GMP-&gt;GDP-&gt;GTP) by other enzymes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct committed step catalysed by IMPDH1 produces XMP en route to GMP, not GTP. GTP biosynthesis is several enzymatic steps downstream, so this term overstates the enzyme&#39;s direct role. It is biologically defensible as a broader pathway contribution but is not the core function; the more precise BP terms are XMP/GMP biosynthetic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link">
+                                        PMID:1969416
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMPDH1 binds the nucleotide cofactor NAD+ and the nucleotide substrate IMP; a generic &#34;nucleotide binding&#34; annotation captures this but at a very shallow level.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is not wrong but is uninformative given that the specific ligands (NAD+, IMP) and the catalytic activity are known. Replace with the specific cofactor-binding molecular function NAD binding (GO:0051287); the catalytic activity term already covers IMP as substrate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    NAD binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level catalytic activity term derived from an InterPro domain mapping. IMPDH1 is an enzyme, so this is true but maximally uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;catalytic activity&#34; is the top of the MF catalytic branch and adds nothing beyond the specific, well-established IMP dehydrogenase activity. Replace with GO:0003938 (IMP dehydrogenase activity).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                                    IMP dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                                    GO:0003938
+                                </a>
+                            </span>
+                            <span class="term-label">IMP dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003938" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniRule/RHEA/EC-based) assertion of the core IMP dehydrogenase activity, duplicating the IBA and TAS annotations of the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific core molecular function; the IEA mapping from EC 1.1.1.205 / RHEA:11708 is well grounded. Duplicate of GO:0003938 by other evidence codes, which is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization transferred electronically, ultimately reflecting the reported nuclear pool of IMPDH linked to its nucleic-acid-binding activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IMPDH is detected in the nucleus (PMID:14766016), but the enzyme&#39;s core catalytic role in de novo GMP synthesis operates in the cytosol. Nuclear localization relates to the moonlighting single-stranded nucleic-acid-binding activity and is a non-core feature.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link">
+                                        PMID:14766016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IMPDH is found in the nucleus of human cells, as</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic cytoplasmic localization, consistent with the enzyme&#39;s soluble cytosolic distribution.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; duplicates the IBA/IDA cytoplasm and IDA cytosol annotations. The cytosol is where IMPDH1 performs its catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006164" target="_blank" class="term-link">
+                                    GO:0006164
+                                </a>
+                            </span>
+                            <span class="term-label">purine nucleotide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0006164" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad &#34;purine nucleotide biosynthetic process&#34; from an InterPro mapping. IMPDH1 does act in de novo purine (guanine) nucleotide biosynthesis, but this is a high-level parent term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct branch but too general; the specific, well-defined role is in guanosine (GMP)/XMP biosynthesis. Replace with the more precise GMP biosynthetic process (GO:0006177), which is the committed step catalysed by IMPDH1.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006177" target="_blank" class="term-link">
+                                    GMP biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">step in the de novo synthesis of guanine nucleotides</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006177" target="_blank" class="term-link">
+                                    GO:0006177
+                                </a>
+                            </span>
+                            <span class="term-label">GMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0006177" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GMP biosynthetic process, the pathway in which IMPDH1 catalyses the committed, rate-limiting step (IMP -&gt; XMP -&gt; GMP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the correct, appropriately specific core biological process for IMPDH1. The enzyme makes XMP, the immediate committed precursor of GMP, in the de novo guanine-nucleotide pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">step in the de novo synthesis of guanine nucleotides</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent oxidoreductase activity from an InterPro mapping. IMPDH1 is an NAD+-dependent oxidoreductase, but this is a broad ancestor of its specific activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but too general; the specific dehydrogenase activity is IMP dehydrogenase activity (GO:0003938), a descendant of oxidoreductase activity. Replace with the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                                    IMP dehydrogenase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0046872" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Metal-ion binding assigned by UniRule. IMPDH1 requires a monovalent cation (K+) cofactor, with several structurally defined K+ binding sites at the tetramer interface.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic &#34;metal ion binding&#34; understates the specific, functionally important requirement for a monovalent cation (potassium). Replace with potassium ion binding (GO:0030955), which the UniProt COFACTOR and K+ BINDING site annotations support.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030955" target="_blank" class="term-link">
+                                    potassium ion binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=K(+)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097294" target="_blank" class="term-link">
+                                    GO:0097294
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; XMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0097294" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> &#39;de novo&#39; XMP biosynthetic process is the most precise biological process for the reaction IMPDH1 actually catalyses: IMP -&gt; XMP is the single committed step of de novo XMP synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly matches the UniProt pathway annotation (&#34;XMP biosynthesis via de novo pathway; XMP from IMP: step 1/1&#34;) and the catalytic reaction. This is arguably the single most accurate BP term for IMPDH1 and a core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">XMP biosynthesis via de novo pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence localization (HPA) to the cytosol, the compartment where IMPDH1 carries out de novo GMP synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) cytosolic localization is the most specific and accurate core location, consistent with the soluble cytosolic purine pathway and the broader cytoplasm annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005576" data-r="Reactome:R-HSA-6798748" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular localization inferred from a Reactome neutrophil-degranulation exocytosis event (secretory granule proteins), not from a dedicated function of IMPDH1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IMPDH1 is a soluble cytosolic enzyme. Its appearance in the extracellular region derives from bulk proteomic detection of the neutrophil granule/secretome and does not reflect a genuine secreted function. This is a bystander over-annotation, not a core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005576" data-r="Reactome:R-HSA-6798751" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate extracellular-region localization from a Reactome azurophil-granule exocytosis event.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same rationale as the other extracellular-region Reactome annotations: IMPDH1 is cytosolic, and its granule-lumen/extracellular assignment reflects neutrophil-degranulation proteomics rather than a genuine secreted role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005576" data-r="Reactome:R-HSA-6800434" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate extracellular-region localization from a Reactome ficolin-rich granule exocytosis event.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the other Reactome degranulation-derived localizations, this reflects bulk granule/secretome proteomics rather than a genuine extracellular function of the cytosolic enzyme IMPDH1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034774" target="_blank" class="term-link">
+                                    GO:0034774
+                                </a>
+                            </span>
+                            <span class="term-label">secretory granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798748
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0034774" data-r="Reactome:R-HSA-6798748" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Secretory granule lumen localization from the Reactome neutrophil-degranulation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosolic IMPDH1 is detected in neutrophil granule proteomes, but this is a bystander/contaminant-type localization from degranulation datasets rather than a genuine granule-lumen residence relevant to its enzymatic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035578" target="_blank" class="term-link">
+                                    GO:0035578
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0035578" data-r="Reactome:R-HSA-6798751" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Azurophil granule lumen localization from the Reactome neutrophil-degranulation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As above: derives from neutrophil granule proteomics of the cytosolic enzyme IMPDH1 and does not reflect a core, functionally meaningful granule-lumen localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904813" target="_blank" class="term-link">
+                                    GO:1904813
+                                </a>
+                            </span>
+                            <span class="term-label">ficolin-1-rich granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:1904813" data-r="Reactome:R-HSA-6800434" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ficolin-1-rich granule lumen localization from the Reactome neutrophil-degranulation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same bystander-proteomics rationale: cytosolic IMPDH1 appearing in a granule lumen dataset does not constitute a genuine, core subcellular location for the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73794
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005829" data-r="Reactome:R-HSA-73794" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization asserted by the Reactome IMP -&gt; XMP reaction, the core catalytic event of IMPDH1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization tied directly to the catalytic reaction; consistent with the IDA cytosol and cytoplasm annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73794
+
+                                </span>
+
+                                <div class="support-text">IMP dehydrogenase 1 and 2 (IMPDH1,2) catalyze the irreversible dehydrogenation of inosine 5&#39;-monophosphate (IMP) to form xanthosine 5&#39;-monophosphate (XMP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9678749
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005829" data-r="Reactome:R-HSA-9678749" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization from the Reactome &#34;IMPDH tetramers bind IMPDH inhibitors&#34; reaction (drug-binding context).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cytosol is the correct core compartment for IMPDH1; the annotation arises from a drug/inhibitor-binding reaction but the localization itself is accurate and duplicates the other cytosol annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9748945
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005829" data-r="Reactome:R-HSA-9748945" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization from the Reactome &#34;IMPDH tetramers dehydrogenate 6TIMP to 6TXMP&#34; reaction (thiopurine metabolism context).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization. The reaction reflects IMPDH turnover of a thiopurine metabolite, but the cytosolic assignment is accurate and duplicates the other cytosol annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14766016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003676" data-r="PMID:14766016" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct demonstration that IMPDH (both human isoforms) binds single-stranded nucleic acids with nanomolar affinity via its CBS subdomain, with ~100 nucleotides bound per tetramer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a genuine, experimentally supported moonlighting activity of IMPDH1 mediated by the regulatory CBS (Bateman) subdomain, and several RP10/LCA disease variants alter this nucleic-acid affinity. However, the enzyme&#39;s core function is IMP dehydrogenase catalysis; the nucleic-acid-binding role is regulatory/moonlighting and best retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link">
+                                        PMID:14766016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">bind single-stranded nucleic acids with nanomolar affinity via the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14766016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003677" data-r="PMID:14766016" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMPDH was shown by immunoprecipitation to bind DNA (and RNA) in vivo, an extension of its single-stranded nucleic-acid-binding activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported (IDA) but represents the moonlighting nucleic-acid interaction rather than a sequence-specific transcription-factor-type DNA binding. It is a non-core, regulatory activity distinct from the enzyme&#39;s committed metabolic role; retained as non-core per curation policy for experimental annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link">
+                                        PMID:14766016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">immunoprecipitation experiments show that IMPDH binds both RNA and DNA in vivo</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14766016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005634" data-r="PMID:14766016" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct detection of IMPDH in the nucleus of human cells, consistent with its nucleic-acid-binding activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported nuclear pool, but the enzyme&#39;s core catalytic function in de novo GMP synthesis is cytosolic. Nuclear localization is tied to the moonlighting nucleic-acid-binding role and is non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link">
+                                        PMID:14766016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IMPDH is found in the nucleus of human cells, as</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14766016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0005737" data-r="PMID:14766016" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct localization of IMPDH to the cytoplasm, its principal compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) cytoplasmic localization corroborates the core cytosolic residence where IMPDH1 catalyses IMP -&gt; XMP; consistent with the IDA cytosol and IBA/IEA cytoplasm annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                                    GO:0003938
+                                </a>
+                            </span>
+                            <span class="term-label">IMP dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1969416
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Two distinct cDNAs for human IMP dehydrogenase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P20839" data-a="GO:0003938" data-r="PMID:1969416" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement (original cloning paper) that the two human IMPDH cDNAs encode IMP dehydrogenase, the rate-limiting enzyme of de novo guanine nucleotide synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function supported by the foundational cloning/characterization paper for human IMPDH1 (type I). Duplicates GO:0003938 by other evidence codes, which is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link">
+                                        PMID:1969416
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD+-dependent oxidation of inosine 5&#39;-monophosphate (IMP) to xanthosine 5&#39;-monophosphate (XMP), the committed and rate-limiting step of de novo guanine-nucleotide biosynthesis, performed in the cytosol.</h3>
+                <span class="vote-buttons" data-g="P20839" data-a="FUNCTION: NAD+-dependent oxidation of inosine 5&#39;-monophospha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                            IMP dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097294" target="_blank" class="term-link">
+                                &#39;de novo&#39; XMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link">
+                                PMID:1969416
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Committed step of de novo GMP biosynthesis: by producing XMP, IMPDH1 supplies the immediate precursor that GMP synthase aminates to GMP, thereby providing guanine nucleotides for the cell.</h3>
+                <span class="vote-buttons" data-g="P20839" data-a="FUNCTION: Committed step of de novo GMP biosynthesis: by pro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003938" target="_blank" class="term-link">
+                            IMP dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006177" target="_blank" class="term-link">
+                                GMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">step in the de novo synthesis of guanine nucleotides</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14766016" target="_blank" class="term-link">
+                            PMID:14766016
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids in vitro and in vivo.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1969416" target="_blank" class="term-link">
+                            PMID:1969416
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Two distinct cDNAs for human IMP dehydrogenase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798748
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of secretory granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798751
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800434
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of ficolin-rich granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73794
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IMP + H2O + NAD+ =&gt; XMP + NADH + H+ [IMPDH1,2]</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9678749
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IMPDH tetramers bind IMPDH inhibitors</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9748945
+
+                    </span>
+                </div>
+
+                <div class="reference-title">IMPDH tetramers dehydrogenate 6TIMP to 6TXMP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/IMPDH1/IMPDH1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P20839 (IMDH1_HUMAN) curated entry</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is the single-stranded nucleic-acid-binding activity of the CBS subdomain a physiologically regulated function of IMPDH1 in photoreceptors, and does its disruption (as by RP10/LCA CBS-domain variants) cause disease independently of catalytic activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P20839" data-a="Q: Is the single-stranded nucleic-acid-binding activi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of IMPDH1 filament (&#34;rods and rings&#34;/ cytoophidia) assembly for guanine-nucleotide homeostasis in the retina?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P20839" data-a="Q: What is the functional significance of IMPDH1 fila..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Separate-of-function IMPDH1 alleles that abolish catalysis while preserving nucleic-acid binding (and vice versa) expressed in photoreceptor models, to test whether RP10/LCA phenotypes arise from loss of catalysis, loss/alteration of nucleic-acid binding, or a dominant-negative filament defect.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P20839" data-a="EXPERIMENT: Separate-of-function IMPDH1 alleles that abolish c..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Cryo-EM and cellular imaging of retina-specific IMPDH1 isoforms to determine how the extended N-terminal retinal isoforms modulate filament assembly and GTP/GDP-dependent allosteric regulation.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P20839" data-a="EXPERIMENT: Cryo-EM and cellular imaging of retina-specific IM..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(IMPDH1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P20839" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="impdh1-human-p20839-review-notes">IMPDH1 (human, P20839) review notes</h1>
+<h2 id="verified-biology-grounded-in-uniprot-p20839-goa-cached-pmids-reactome">Verified biology (grounded in UniProt P20839, GOA, cached PMIDs, Reactome)</h2>
+<p>IMPDH1 = inosine-5'-monophosphate dehydrogenase 1 (EC 1.1.1.205). Catalyzes the<br />
+committed, rate-limiting step of de novo guanine-nucleotide synthesis:<br />
+IMP + NAD+ + H2O -&gt; XMP + NADH + H+ (RHEA:11708). XMP is then aminated to GMP by<br />
+GMPS. UniProt FUNCTION: "Catalyzes the conversion of inosine 5'-phosphate (IMP) to<br />
+xanthosine 5'-phosphate (XMP), the first committed and rate-limiting step in the de<br />
+novo synthesis of guanine nucleotides".</p>
+<ul>
+<li>Homotetramer (UniProt SUBUNIT; PubMed:7903306). Contains catalytic (β/α)8 TIM barrel</li>
+<li>a regulatory subdomain of two CBS (Bateman) domains (FT DOMAIN 114-173 CBS 1,<br />
+  179-237 CBS 2). Can polymerize into filaments ("rods and rings"/cytoophidia) — many<br />
+  cryo-EM structures (7RER..8U8Y).</li>
+<li>Cofactor K+ (UniProt COFACTOR; multiple K+ BINDING sites). Uses NAD+ (BINDING 274-276,<br />
+  324-326). Active sites: Cys331 (thioimidate intermediate), 429 (proton acceptor).</li>
+<li>Subcellular: Cytoplasm + Nucleus (UniProt; PubMed:14766016). HPA IDA cytosol.</li>
+<li>Retina-enriched (UniProt HPA: "Tissue enhanced (retina)").</li>
+<li>Disease: Retinitis pigmentosa 10 (RP10, MIM:180105) and Leber congenital amaurosis 11<br />
+  (LCA11, MIM:613837) — photoreceptor degeneration. Many disease variants map to the CBS<br />
+  subdomain and alter single-stranded nucleic-acid affinity but NOT enzymatic affinity<br />
+  (PubMed:16384941 variant notes).</li>
+</ul>
+<h2 id="moonlighting-non-core-nucleic-acid-binding">Moonlighting / non-core: nucleic-acid binding</h2>
+<p>PMID:14766016 (McLean et al. 2004, abstract only): IMPDHs (T. foetus, E. coli, both human<br />
+isoforms) bind single-stranded nucleic acids with nanomolar affinity via the CBS subdomain;<br />
+~100 nt per tetramer. IMPDH found in nucleus; immunoprecipitation shows binding of RNA and<br />
+DNA in vivo. Concluded "a previously unappreciated role in replication, transcription or<br />
+translation." This is a moonlighting/regulatory activity, NOT the core catalytic function.<br />
+UniProt hedges: "Could also have a single-stranded nucleic acid-binding activity and could<br />
+play a role in RNA and/or DNA metabolism." =&gt; treat DNA/nucleic-acid binding and the nucleus<br />
+localization associated with it as KEEP_AS_NON_CORE.</p>
+<h2 id="goa-annotations-summary-from-impdh1-goatsv">GOA annotations summary (from IMPDH1-goa.tsv)</h2>
+<p>Core MF: GO:0003938 IMP dehydrogenase activity (IBA, IEA, TAS PMID:1969416).<br />
+Core BP: GO:0006177 GMP biosynthetic process (IEA); GO:0097294 'de novo' XMP biosynthetic<br />
+process (IEA/Ensembl orthology) — most precise BP for the actual reaction; GO:0006183 GTP<br />
+biosynthetic process (IBA) — one step removed (XMP-&gt;GMP-&gt;GDP-&gt;GTP), keep as non-core;<br />
+GO:0006164 purine nucleotide biosynthetic process (IEA, broad parent).<br />
+CC: GO:0005829 cytosol (IDA HPA; TAS Reactome) — core location; GO:0005737 cytoplasm<br />
+(IBA is_active_in, IEA, IDA) — core; GO:0005634 nucleus (IEA, IDA PMID:14766016) — non-core<br />
+moonlighting. Extracellular/granule-lumen (Reactome neutrophil degranulation) = bystander<br />
+secretome, non-core.</p>
+<h2 id="reactome-refs">Reactome refs</h2>
+<p>R-HSA-73794 is the actual IMP-&gt;XMP reaction (core). R-HSA-9678749/9748945 concern IMPDH<br />
+inhibitor binding / thiopurine (6TIMP) turnover (drug-metabolism context). R-HSA-6798748/<br />
+6798751/6800434 are neutrophil-degranulation exocytosis events (extracellular/granule lumen<br />
+localization by mass-spec proteomics of granules) — bystander, non-core.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P20839
+gene_symbol: IMPDH1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Inosine-5&#39;-monophosphate dehydrogenase 1 (IMPDH1; EC 1.1.1.205) catalyses the
+  NAD+-dependent oxidation of inosine 5&#39;-monophosphate (IMP) to xanthosine
+  5&#39;-monophosphate (XMP) (IMP + NAD+ + H2O -&gt; XMP + NADH + H+), the first
+  committed and rate-limiting step of de novo guanine-nucleotide (GMP)
+  biosynthesis; XMP is subsequently aminated to GMP by GMP synthase (GMPS). The
+  enzyme is a cytosolic homotetramer built from a catalytic (beta/alpha)8 TIM-barrel
+  domain plus a regulatory subdomain of two tandem CBS (Bateman) domains, uses a
+  monovalent cation (K+) cofactor, and can assemble into higher-order filaments
+  (&#34;rods and rings&#34;/cytoophidia). IMPDH1 is broadly expressed but strongly enriched
+  in retinal photoreceptors; a reported single-stranded nucleic-acid-binding
+  activity mediated by the CBS subdomain suggests an additional, less well-defined
+  role in nucleic-acid metabolism. Because guanine-nucleotide supply is coupled to
+  cell proliferation, IMPDH is a validated target of immunosuppressive (mycophenolic
+  acid, mizoribine), antiviral (ribavirin) and antitumour drugs. Dominant IMPDH1
+  mutations, many clustered in the CBS subdomain, cause retinitis pigmentosa 10
+  (RP10) and Leber congenital amaurosis (LCA11), degenerative diseases of the retina.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:14766016
+  title: Inosine 5&#39;-monophosphate dehydrogenase binds nucleic acids in vitro and in
+    vivo.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Hedstrom lab, Biochem J 2004). Establishes the CBS-subdomain
+      single-stranded nucleic-acid-binding activity for both human IMPDH isoforms
+      and IMPDH nuclear localization. Supports a moonlighting/regulatory (non-core)
+      role rather than the enzyme&#39;s principal catalytic function; abstract-only in
+      the cache.
+- id: PMID:1969416
+  title: Two distinct cDNAs for human IMP dehydrogenase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (Natsumeda et al., J Biol Chem 1990). Original cloning of the
+      two human IMPDH cDNAs (type I = IMPDH1, type II = IMPDH2); identifies IMP
+      dehydrogenase (EC 1.1.1.205) as the rate-limiting enzyme of de novo guanine
+      nucleotide biosynthesis. Directly supports the core catalytic function.
+- id: Reactome:R-HSA-6798748
+  title: Exocytosis of secretory granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-6798751
+  title: Exocytosis of azurophil granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-6800434
+  title: Exocytosis of ficolin-rich granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-73794
+  title: IMP + H2O + NAD+ =&gt; XMP + NADH + H+ [IMPDH1,2]
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the human IMP -&gt; XMP dehydrogenation catalysed by IMPDH1
+      and IMPDH2; the summary confirms this is the rate-limiting step in GMP synthesis
+      from IMP. Directly supports the core molecular function.
+- id: Reactome:R-HSA-9678749
+  title: IMPDH tetramers bind IMPDH inhibitors
+  findings: []
+- id: Reactome:R-HSA-9748945
+  title: IMPDH tetramers dehydrogenate 6TIMP to 6TXMP
+  findings: []
+- id: file:human/IMPDH1/IMPDH1-uniprot.txt
+  title: UniProtKB P20839 (IMDH1_HUMAN) curated entry
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred cytoplasmic localization. IMPDH1 is a soluble
+      cytosolic enzyme, consistent with its role in the cytosolic de novo purine
+      pathway.
+    action: ACCEPT
+    reason: &gt;-
+      IBA is_active_in cytoplasm is correct and consistent with the UniProt
+      subcellular location and with the more specific IDA cytosol annotation. This
+      is a core localization for the enzyme&#39;s catalytic activity.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0003938
+    label: IMP dehydrogenase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP dehydrogenase activity (EC 1.1.1.205) is the defining, experimentally and
+      phylogenetically well-supported molecular function of IMPDH1: NAD+-dependent
+      oxidation of IMP to XMP.
+    action: ACCEPT
+    reason: &gt;-
+      This is the core molecular function. Supported by the enzyme name, EC number,
+      catalytic-activity reaction in UniProt, and by direct biochemical
+      characterization of human type I IMPDH; the IBA is at the correct level of
+      specificity.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+    - reference_id: PMID:1969416
+      supporting_text: &#34;IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP&#34;
+- term:
+    id: GO:0006183
+    label: GTP biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IMPDH1 contributes to GTP biosynthesis only indirectly: it makes XMP (-&gt;GMP),
+      and GMP is subsequently phosphorylated (GMP-&gt;GDP-&gt;GTP) by other enzymes.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The direct committed step catalysed by IMPDH1 produces XMP en route to GMP,
+      not GTP. GTP biosynthesis is several enzymatic steps downstream, so this term
+      overstates the enzyme&#39;s direct role. It is biologically defensible as a broader
+      pathway contribution but is not the core function; the more precise BP terms are
+      XMP/GMP biosynthetic process.
+    supported_by:
+    - reference_id: PMID:1969416
+      supporting_text: &#34;IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP&#34;
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMPDH1 binds the nucleotide cofactor NAD+ and the nucleotide substrate IMP; a
+      generic &#34;nucleotide binding&#34; annotation captures this but at a very shallow
+      level.
+    action: MODIFY
+    reason: &gt;-
+      The term is not wrong but is uninformative given that the specific ligands
+      (NAD+, IMP) and the catalytic activity are known. Replace with the specific
+      cofactor-binding molecular function NAD binding (GO:0051287); the catalytic
+      activity term already covers IMP as substrate.
+    proposed_replacement_terms:
+    - id: GO:0051287
+      label: NAD binding
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level catalytic activity term derived from an InterPro domain mapping.
+      IMPDH1 is an enzyme, so this is true but maximally uninformative.
+    action: MODIFY
+    reason: &gt;-
+      &#34;catalytic activity&#34; is the top of the MF catalytic branch and adds nothing
+      beyond the specific, well-established IMP dehydrogenase activity. Replace with
+      GO:0003938 (IMP dehydrogenase activity).
+    proposed_replacement_terms:
+    - id: GO:0003938
+      label: IMP dehydrogenase activity
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+- term:
+    id: GO:0003938
+    label: IMP dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (UniRule/RHEA/EC-based) assertion of the core IMP dehydrogenase
+      activity, duplicating the IBA and TAS annotations of the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific core molecular function; the IEA mapping from EC 1.1.1.205
+      / RHEA:11708 is well grounded. Duplicate of GO:0003938 by other evidence codes,
+      which is acceptable.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear localization transferred electronically, ultimately reflecting the
+      reported nuclear pool of IMPDH linked to its nucleic-acid-binding activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IMPDH is detected in the nucleus (PMID:14766016), but the enzyme&#39;s core
+      catalytic role in de novo GMP synthesis operates in the cytosol. Nuclear
+      localization relates to the moonlighting single-stranded nucleic-acid-binding
+      activity and is a non-core feature.
+    supported_by:
+    - reference_id: PMID:14766016
+      supporting_text: &#34;IMPDH is found in the nucleus of human cells, as&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic cytoplasmic localization, consistent with the enzyme&#39;s soluble
+      cytosolic distribution.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization; duplicates the IBA/IDA cytoplasm and IDA cytosol
+      annotations. The cytosol is where IMPDH1 performs its catalytic function.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0006164
+    label: purine nucleotide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad &#34;purine nucleotide biosynthetic process&#34; from an InterPro mapping.
+      IMPDH1 does act in de novo purine (guanine) nucleotide biosynthesis, but this
+      is a high-level parent term.
+    action: MODIFY
+    reason: &gt;-
+      Correct branch but too general; the specific, well-defined role is in guanosine
+      (GMP)/XMP biosynthesis. Replace with the more precise GMP biosynthetic process
+      (GO:0006177), which is the committed step catalysed by IMPDH1.
+    proposed_replacement_terms:
+    - id: GO:0006177
+      label: GMP biosynthetic process
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;step in the de novo synthesis of guanine nucleotides&#34;
+- term:
+    id: GO:0006177
+    label: GMP biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      GMP biosynthetic process, the pathway in which IMPDH1 catalyses the committed,
+      rate-limiting step (IMP -&gt; XMP -&gt; GMP).
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct, appropriately specific core biological process for
+      IMPDH1. The enzyme makes XMP, the immediate committed precursor of GMP, in the
+      de novo guanine-nucleotide pathway.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;step in the de novo synthesis of guanine nucleotides&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Parent oxidoreductase activity from an InterPro mapping. IMPDH1 is an
+      NAD+-dependent oxidoreductase, but this is a broad ancestor of its specific
+      activity.
+    action: MODIFY
+    reason: &gt;-
+      True but too general; the specific dehydrogenase activity is IMP dehydrogenase
+      activity (GO:0003938), a descendant of oxidoreductase activity. Replace with
+      the specific term.
+    proposed_replacement_terms:
+    - id: GO:0003938
+      label: IMP dehydrogenase activity
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Metal-ion binding assigned by UniRule. IMPDH1 requires a monovalent cation
+      (K+) cofactor, with several structurally defined K+ binding sites at the
+      tetramer interface.
+    action: MODIFY
+    reason: &gt;-
+      The generic &#34;metal ion binding&#34; understates the specific, functionally
+      important requirement for a monovalent cation (potassium). Replace with
+      potassium ion binding (GO:0030955), which the UniProt COFACTOR and K+ BINDING
+      site annotations support.
+    proposed_replacement_terms:
+    - id: GO:0030955
+      label: potassium ion binding
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;Name=K(+)&#34;
+- term:
+    id: GO:0097294
+    label: &#34;&#39;de novo&#39; XMP biosynthetic process&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      &#39;de novo&#39; XMP biosynthetic process is the most precise biological process for
+      the reaction IMPDH1 actually catalyses: IMP -&gt; XMP is the single committed step
+      of de novo XMP synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Directly matches the UniProt pathway annotation (&#34;XMP biosynthesis via de novo
+      pathway; XMP from IMP: step 1/1&#34;) and the catalytic reaction. This is arguably
+      the single most accurate BP term for IMPDH1 and a core process.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;XMP biosynthesis via de novo pathway&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence localization (HPA) to the cytosol, the compartment
+      where IMPDH1 carries out de novo GMP synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) cytosolic localization is the most specific and accurate
+      core location, consistent with the soluble cytosolic purine pathway and the
+      broader cytoplasm annotations.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Extracellular localization inferred from a Reactome neutrophil-degranulation
+      exocytosis event (secretory granule proteins), not from a dedicated function
+      of IMPDH1.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      IMPDH1 is a soluble cytosolic enzyme. Its appearance in the extracellular
+      region derives from bulk proteomic detection of the neutrophil granule/secretome
+      and does not reflect a genuine secreted function. This is a bystander
+      over-annotation, not a core localization.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate extracellular-region localization from a Reactome azurophil-granule
+      exocytosis event.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same rationale as the other extracellular-region Reactome annotations: IMPDH1
+      is cytosolic, and its granule-lumen/extracellular assignment reflects
+      neutrophil-degranulation proteomics rather than a genuine secreted role.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate extracellular-region localization from a Reactome ficolin-rich
+      granule exocytosis event.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      As with the other Reactome degranulation-derived localizations, this reflects
+      bulk granule/secretome proteomics rather than a genuine extracellular function
+      of the cytosolic enzyme IMPDH1.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0034774
+    label: secretory granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798748
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Secretory granule lumen localization from the Reactome neutrophil-degranulation
+      pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Cytosolic IMPDH1 is detected in neutrophil granule proteomes, but this is a
+      bystander/contaminant-type localization from degranulation datasets rather than
+      a genuine granule-lumen residence relevant to its enzymatic function.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0035578
+    label: azurophil granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Azurophil granule lumen localization from the Reactome neutrophil-degranulation
+      pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      As above: derives from neutrophil granule proteomics of the cytosolic enzyme
+      IMPDH1 and does not reflect a core, functionally meaningful granule-lumen
+      localization.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:1904813
+    label: ficolin-1-rich granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Ficolin-1-rich granule lumen localization from the Reactome
+      neutrophil-degranulation pathway.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same bystander-proteomics rationale: cytosolic IMPDH1 appearing in a granule
+      lumen dataset does not constitute a genuine, core subcellular location for the
+      enzyme.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73794
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization asserted by the Reactome IMP -&gt; XMP reaction, the core
+      catalytic event of IMPDH1.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization tied directly to the catalytic reaction; consistent
+      with the IDA cytosol and cytoplasm annotations.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73794
+      supporting_text: &#34;IMP dehydrogenase 1 and 2 (IMPDH1,2) catalyze the irreversible dehydrogenation of inosine 5&#39;-monophosphate (IMP) to form xanthosine 5&#39;-monophosphate (XMP)&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9678749
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization from the Reactome &#34;IMPDH tetramers bind IMPDH inhibitors&#34;
+      reaction (drug-binding context).
+    action: ACCEPT
+    reason: &gt;-
+      The cytosol is the correct core compartment for IMPDH1; the annotation arises
+      from a drug/inhibitor-binding reaction but the localization itself is accurate
+      and duplicates the other cytosol annotations.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9748945
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization from the Reactome &#34;IMPDH tetramers dehydrogenate 6TIMP
+      to 6TXMP&#34; reaction (thiopurine metabolism context).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization. The reaction reflects IMPDH turnover of a thiopurine
+      metabolite, but the cytosolic assignment is accurate and duplicates the other
+      cytosol annotations.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IDA
+  original_reference_id: PMID:14766016
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct demonstration that IMPDH (both human isoforms) binds single-stranded
+      nucleic acids with nanomolar affinity via its CBS subdomain, with ~100
+      nucleotides bound per tetramer.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a genuine, experimentally supported moonlighting activity of IMPDH1
+      mediated by the regulatory CBS (Bateman) subdomain, and several RP10/LCA
+      disease variants alter this nucleic-acid affinity. However, the enzyme&#39;s core
+      function is IMP dehydrogenase catalysis; the nucleic-acid-binding role is
+      regulatory/moonlighting and best retained as non-core.
+    supported_by:
+    - reference_id: PMID:14766016
+      supporting_text: &#34;bind single-stranded nucleic acids with nanomolar affinity via the&#34;
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IDA
+  original_reference_id: PMID:14766016
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMPDH was shown by immunoprecipitation to bind DNA (and RNA) in vivo, an
+      extension of its single-stranded nucleic-acid-binding activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported (IDA) but represents the moonlighting nucleic-acid
+      interaction rather than a sequence-specific transcription-factor-type DNA
+      binding. It is a non-core, regulatory activity distinct from the enzyme&#39;s
+      committed metabolic role; retained as non-core per curation policy for
+      experimental annotations.
+    supported_by:
+    - reference_id: PMID:14766016
+      supporting_text: &#34;immunoprecipitation experiments show that IMPDH binds both RNA and DNA in vivo&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:14766016
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct detection of IMPDH in the nucleus of human cells, consistent with its
+      nucleic-acid-binding activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Experimentally supported nuclear pool, but the enzyme&#39;s core catalytic function
+      in de novo GMP synthesis is cytosolic. Nuclear localization is tied to the
+      moonlighting nucleic-acid-binding role and is non-core.
+    supported_by:
+    - reference_id: PMID:14766016
+      supporting_text: &#34;IMPDH is found in the nucleus of human cells, as&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:14766016
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct localization of IMPDH to the cytoplasm, its principal compartment.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) cytoplasmic localization corroborates the core cytosolic
+      residence where IMPDH1 catalyses IMP -&gt; XMP; consistent with the IDA cytosol
+      and IBA/IEA cytoplasm annotations.
+    supported_by:
+    - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0003938
+    label: IMP dehydrogenase activity
+  evidence_type: TAS
+  original_reference_id: PMID:1969416
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable author statement (original cloning paper) that the two human IMPDH
+      cDNAs encode IMP dehydrogenase, the rate-limiting enzyme of de novo guanine
+      nucleotide synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function supported by the foundational cloning/characterization
+      paper for human IMPDH1 (type I). Duplicates GO:0003938 by other evidence codes,
+      which is acceptable.
+    supported_by:
+    - reference_id: PMID:1969416
+      supporting_text: &#34;IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP&#34;
+core_functions:
+- description: &gt;-
+    NAD+-dependent oxidation of inosine 5&#39;-monophosphate (IMP) to xanthosine
+    5&#39;-monophosphate (XMP), the committed and rate-limiting step of de novo
+    guanine-nucleotide biosynthesis, performed in the cytosol.
+  molecular_function:
+    id: GO:0003938
+    label: IMP dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0097294
+    label: &#34;&#39;de novo&#39; XMP biosynthetic process&#34;
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+    supporting_text: &#34;Reaction=IMP + NAD(+) + H2O = XMP + NADH + H(+)&#34;
+  - reference_id: PMID:1969416
+    supporting_text: &#34;IMP dehydrogenase (EC 1.1.1.205), the rate-limiting enzyme of de novo GTP&#34;
+- description: &gt;-
+    Committed step of de novo GMP biosynthesis: by producing XMP, IMPDH1 supplies
+    the immediate precursor that GMP synthase aminates to GMP, thereby providing
+    guanine nucleotides for the cell.
+  molecular_function:
+    id: GO:0003938
+    label: IMP dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0006177
+    label: GMP biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/IMPDH1/IMPDH1-uniprot.txt
+    supporting_text: &#34;step in the de novo synthesis of guanine nucleotides&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is the single-stranded nucleic-acid-binding activity of the CBS subdomain a
+    physiologically regulated function of IMPDH1 in photoreceptors, and does its
+    disruption (as by RP10/LCA CBS-domain variants) cause disease independently of
+    catalytic activity?
+- question: &gt;-
+    What is the functional significance of IMPDH1 filament (&#34;rods and rings&#34;/
+    cytoophidia) assembly for guanine-nucleotide homeostasis in the retina?
+suggested_experiments:
+- description: &gt;-
+    Separate-of-function IMPDH1 alleles that abolish catalysis while preserving
+    nucleic-acid binding (and vice versa) expressed in photoreceptor models, to test
+    whether RP10/LCA phenotypes arise from loss of catalysis, loss/alteration of
+    nucleic-acid binding, or a dominant-negative filament defect.
+- description: &gt;-
+    Cryo-EM and cellular imaging of retina-specific IMPDH1 isoforms to determine how
+    the extended N-terminal retinal isoforms modulate filament assembly and
+    GTP/GDP-dependent allosteric regulation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

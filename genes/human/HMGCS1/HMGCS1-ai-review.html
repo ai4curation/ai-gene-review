@@ -1,0 +1,3847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMGCS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HMGCS1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q01581" target="_blank" class="term-link">
+                        Q01581
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HMGCS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q01581" data-a="DESCRIPTION: HMGCS1 is the cytoplasmic (cytosolic) isoform of h..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HMGCS1 is the cytoplasmic (cytosolic) isoform of hydroxymethylglutaryl-CoA synthase (HMG-CoA synthase; EC 2.3.3.10). It catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA (with water) to form (3S)-3-hydroxy-3- methylglutaryl-CoA (HMG-CoA) plus CoA, the first committed step of the cytosolic mevalonate pathway. The HMG-CoA it produces is reduced by HMG-CoA reductase (HMGCR) to mevalonate, the precursor of isoprenoids and cholesterol; HMGCS1 thus feeds isoprenoid and cholesterol biosynthesis. The enzyme is a homodimer with a thiolase-like fold and uses an active-site cysteine (Cys129) that forms an acetyl-thioester intermediate during catalysis. It is a soluble cytosolic protein and is distinct from the mitochondrial isoform HMGCS2, which produces HMG-CoA for ketone-body synthesis (ketogenesis). HMGCS1 is a sterol-regulatory-element-binding-protein (SREBP)-regulated cholesterogenic gene, and biallelic loss-of-function variants cause a congenital rigid-spine myopathy.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                                    GO:0004421
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylglutaryl-CoA synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0004421" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. Phylogenetically inferred HMG-CoA synthase activity, the defining and experimentally established catalytic activity of HMGCS1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the correct, specific molecular function of HMGCS1 and is well supported experimentally (kinetics and active-site mutagenesis). The IBA is consistent across the HMG-CoA synthase family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link">
+                                        PMID:7913309
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutation of Cys129 to serine or alanine destroys</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006084" target="_blank" class="term-link">
+                                    GO:0006084
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0006084" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Acetyl-CoA is a substrate of HMGCS1, so participation in acetyl-CoA metabolism is accurate but generic relative to the enzyme&#39;s committed role in the mevalonate/cholesterol pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and phylogenetically reviewed (IBA), but this is an upstream-substrate process term rather than the core function; the cholesterol/isoprenoid biosynthesis terms better capture the biological role. Retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                                    GO:0004421
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylglutaryl-CoA synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0004421" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro/RHEA/EC) assignment of the same core HMG-CoA synthase activity; the mapping (EC 2.3.3.10, RHEA:10188) matches the experimentally established reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the experimentally/phylogenetically supported core MF; the EC and RHEA mappings are exactly correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.3.3.10</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization from the UniProt subcellular-location vocabulary mapping, consistent with the curated location of this cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HMGCS1 is a soluble cytosolic protein; cytoplasm is correct (the more specific cytosol term is also annotated).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006084" target="_blank" class="term-link">
+                                    GO:0006084
+                                </a>
+                            </span>
+                            <span class="term-label">acetyl-CoA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0006084" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO assignment of acetyl-CoA metabolic process, duplicating the IBA of the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate (acetyl-CoA is a substrate) but generic; keep as non-core, consistent with the IBA annotation of the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                    GO:0008299
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0008299" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HMGCS1 catalyzes the first committed step of the mevalonate pathway, which supplies isoprenoid precursors; isoprenoid biosynthetic process is an accurate biological-process term for the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mevalonate pathway is the isoprenoid biosynthetic route in eukaryotes; HMGCS1&#39;s product HMG-CoA is the committed intermediate feeding it. This is a correct, appropriately general core process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191323
+
+                                </span>
+
+                                <div class="support-text">is involved in synthesis of isoprenoids and cholesterol biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">(R)-mevalonate from acetyl-CoA: step 2/3.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general acyltransferase (thiolase-like superfamily) activity term from InterPro; HMGCS1&#39;s actual transferase activity is the specific HMG-CoA synthase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016746 is a high-level parent of the specific, experimentally established HMG-CoA synthase activity. Replace with the specific molecular function GO:0004421.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                                    hydroxymethylglutaryl-CoA synthase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.3.3.10</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding IPI from a large-scale BioPlex 2.0 AP-MS interactome screen (interactor SLC22A5). Not informative about HMGCS1 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, uninformative bare protein binding is marked as over-annotated rather than retained as a core function; it does not identify a specific molecular activity. Not removed (it reflects a real experimentally detected interaction).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BioPlex 2.0 constitutes a powerful resource for biological inquiry</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding IPI from a large-scale BioPlex 3.0 AP-MS interactome screen. Uninformative about HMGCS1 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same class of high-throughput interaction evidence as PMID:28514442. Bare protein binding is over-annotated; kept (not removed) as it reflects a real detected interaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These networks model the interactome whose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9969896
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0006695" data-r="Reactome:R-HSA-9969896" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process. Via the mevalonate pathway, HMGCS1-produced HMG-CoA is the committed precursor of cholesterol; Reactome places HMGCS1 in cholesterol (lanosterol) biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported by the curated pathway and by UniProt (HMG-CoA is converted by HMGCR into mevalonate, a precursor for cholesterol synthesis). This is a central biological role of HMGCS1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9969896
+
+                                </span>
+
+                                <div class="support-text">Cholesterol biosynthesis begins with the transformation of cytosolic acetyl CoA into lanosterol</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">mevalonate, a precursor for cholesterol synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                                    GO:0004421
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylglutaryl-CoA synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191323
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0004421" data-r="Reactome:R-HSA-191323" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion of the core HMG-CoA synthase reaction (condensation of acetyl-CoA and acetoacetyl-CoA to HMG-CoA).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the core molecular function, supported by the curated Reactome reaction and by experimental characterization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191323
+
+                                </span>
+
+                                <div class="support-text">catalyzes the condensation of acetyl CoA with acetoacetyl CoA to produce HMG-CoA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleoplasm localization from an HPA immunofluorescence dataset. HMGCS1 is a soluble cytosolic mevalonate-pathway enzyme, so nucleoplasm is not a core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Inconsistent with the well-established cytosolic role of the enzyme; likely reflects antibody staining that includes non-specific/soluble-pool signal. Kept (not removed) as it is an experimental IDA, but flagged as non-core over- annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosol localization from HPA immunofluorescence, matching the curated cytosolic location of this soluble enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the correct and most specific subcellular location for HMGCS1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane localization from HPA immunofluorescence. HMGCS1 is a soluble cytosolic enzyme with no transmembrane region or membrane-anchoring feature, so plasma membrane is not a core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Inconsistent with the cytosolic biochemistry and structure of HMGCS1 (no TM segment; thiolase-like soluble fold); likely an HPA antibody artifact. Kept as an experimental IDA but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7911016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7911016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and nucleotide sequence of complementary D...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0006695" data-r="PMID:7911016" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator-inferred (IC, from GO:0004421) participation in cholesterol biosynthesis. The conclusion is correct for HMGCS1, though the cited reference (PMID:7911016) is about the upstream enzyme cytosolic acetoacetyl-CoA thiolase, not HMGCS1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cholesterol biosynthetic process assignment is a correct core role, inferred from the HMG-CoA synthase activity. The term is retained; the reference mismatch is recorded in reference_review for PMID:7911016.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">mevalonate, a precursor for cholesterol synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20346956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20346956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structures of human HMG-CoA synthase isoforms provid...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0042803" data-r="PMID:20346956" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HMGCS1 is a homodimer, established by the crystal structure of the human cytosolic isoform (PDB 2P8U).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the crystallographic and biochemical characterization showing HMGCS1 functions as a homodimer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20346956" target="_blank" class="term-link">
+                                        PMID:20346956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we report high-resolution crystal structures of the human cytosolic</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655848
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005829" data-r="Reactome:R-HSA-1655848" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion of cytosolic localization, consistent with the curated location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosol is the correct core location for this soluble mevalonate-pathway enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191323
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005829" data-r="Reactome:R-HSA-191323" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion of cytosolic localization (duplicate of the Reactome/HPA cytosol annotations).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location; consistent with the other cytosol annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006629" target="_blank" class="term-link">
+                                    GO:0006629
+                                </a>
+                            </span>
+                            <span class="term-label">lipid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7913309
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human cytoplasmic 3-hydroxy-3-methylglutaryl coenzyme A synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0006629" data-r="PMID:7913309" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general lipid metabolic process assertion. HMGCS1&#39;s role is captured far more precisely by the cholesterol/isoprenoid biosynthetic process terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006629 is a broad ancestor of the specific mevalonate/cholesterol biosynthesis terms already annotated; it adds little and is an over-general (NAS) annotation. Not removed, but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">mevalonate, a precursor for cholesterol synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                                    GO:0004421
+                                </a>
+                            </span>
+                            <span class="term-label">hydroxymethylglutaryl-CoA synthase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7913309
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human cytoplasmic 3-hydroxy-3-methylglutaryl coenzyme A synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0004421" data-r="PMID:7913309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion of HMG-CoA synthase activity from the biochemical characterization of recombinant human cytoplasmic HMGCS1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by expression/purification/kinetics and by Cys129 mutagenesis abolishing activity. This is the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link">
+                                        PMID:7913309
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mutation of Cys129 to serine or alanine destroys</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7913309
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human cytoplasmic 3-hydroxy-3-methylglutaryl coenzyme A synt...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q01581" data-a="GO:0005737" data-r="PMID:7913309" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion of cytoplasmic localization, consistent with the curated cytosolic location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> HMGCS1 is a cytoplasmic/cytosolic enzyme; correct localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the first committed step of the cytosolic mevalonate pathway: condensation of acetyl-CoA and acetoacetyl-CoA (with water) to form HMG-CoA plus CoA, feeding isoprenoid and cholesterol biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q01581" data-a="FUNCTION: Catalyzes the first committed step of the cytosoli..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004421" target="_blank" class="term-link">
+                            hydroxymethylglutaryl-CoA synthase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                cholesterol biosynthetic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                isoprenoid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link">
+                                PMID:7913309
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Mutation of Cys129 to serine or alanine destroys</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-191323
+
+                        </span>
+
+                        <div class="finding-text">is involved in synthesis of isoprenoids and cholesterol biosynthesis</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20346956" target="_blank" class="term-link">
+                            PMID:20346956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structures of human HMG-CoA synthase isoforms provide insights into inherited ketogenesis disorders and inhibitor design.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7911016" target="_blank" class="term-link">
+                            PMID:7911016
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and nucleotide sequence of complementary DNA for human hepatic cytosolic acetoacetyl-coenzyme A thiolase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7913309" target="_blank" class="term-link">
+                            PMID:7913309
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human cytoplasmic 3-hydroxy-3-methylglutaryl coenzyme A synthase: expression, purification, and characterization of recombinant wild-type and Cys129 mutant enzymes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655848
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Hydroxymethylglutaryl coenzyme A synthase (HMGCS1)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191323
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HMGCS1 condenses Ac-CoA and ACA-CoA to form bHMG-CoA</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9969896
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lanosterol biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/HMGCS1/HMGCS1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q01581 (HMCS1_HUMAN) curated record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which non-catalytic protein interactions of HMGCS1 (e.g. with SLC22A5) are functionally meaningful, and does HMGCS1 have any moonlighting role beyond the mevalonate pathway?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q01581" data-a="Q: Which non-catalytic protein interactions of HMGCS1..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How do HMGCS1 loss-of-function variants cause a rigid-spine congenital myopathy despite the ubiquitous, essential nature of the mevalonate pathway, and why is the phenotype rescued by mevalonic acid?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q01581" data-a="Q: How do HMGCS1 loss-of-function variants cause a ri..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Isoform-resolved subcellular fractionation plus validated-antibody immunofluorescence to test whether the HPA-reported nucleoplasm and plasma- membrane signals reflect genuine HMGCS1 pools or antibody artifacts.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q01581" data-a="EXPERIMENT: Isoform-resolved subcellular fractionation plus va..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolic flux analysis in HMGCS1-deficient patient muscle/cells to quantify the mevalonate/cholesterol-pathway defect and its rescue by exogenous mevalonate.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q01581" data-a="EXPERIMENT: Metabolic flux analysis in HMGCS1-deficient patien..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HMGCS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q01581" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hmgcs1-q01581-review-notes">HMGCS1 (Q01581) review notes</h1>
+<p>Human hydroxymethylglutaryl-CoA synthase, cytoplasmic (HGNC:5007). EC 2.3.3.10.<br />
+Deep research via falcon was unavailable (provider out of credits, HTTP 402); this<br />
+review is grounded in the cached UniProt record, the seeded GOA, and cached<br />
+<code>publications/PMID_*.md</code> and <code>reactome/*.md</code>.</p>
+<h2 id="core-biology-provenance">Core biology (provenance)</h2>
+<ul>
+<li>Function: condenses acetyl-CoA + acetoacetyl-CoA (+ H2O) to form (3S)-HMG-CoA + CoA,<br />
+  the first committed / second step of the cytosolic <strong>mevalonate pathway</strong> that<br />
+  feeds isoprenoid and <strong>cholesterol</strong> biosynthesis. HMG-CoA is subsequently reduced<br />
+  by HMGCR to mevalonate.</li>
+<li>[file:human/HMGCS1/HMGCS1-uniprot.txt "Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA to form HMG-CoA, which is converted by HMG-CoA reductase (HMGCR) into mevalonate, a precursor for cholesterol synthesis."]</li>
+<li>CATALYTIC ACTIVITY: RHEA:10188, EC=2.3.3.10 (acetoacetyl-CoA + acetyl-CoA + H2O = (3S)-3-hydroxy-3-methylglutaryl-CoA + CoA + H+).</li>
+<li>PATHWAY: "(R)-mevalonate from acetyl-CoA: step 2/3." (UniPathway UPA00058, UER00102).</li>
+<li>[PMID:20346956 abstract "The eukaryotic cytosolic isoform also participates in the mevalonate pathway but its end product is cholesterol."] — distinguishes HMGCS1 (cytosolic, cholesterol) from HMGCS2 (mitochondrial, ketogenesis).</li>
+<li>
+<p>[reactome:R-HSA-191323 "The cytosolic form of 3-hydroxy-3-methylglutaryl Coenzyme A synthase (HMGCS1) catalyzes the condensation of acetyl CoA with acetoacetyl CoA to produce HMG-CoA. HMGCS1 is ubiquitously expressed in the body and is involved in synthesis of isoprenoids and cholesterol biosynthesis (Rokosz et al. 1994)."]</p>
+</li>
+<li>
+<p>Distinct from mitochondrial HMGCS2 (P54868), which makes HMG-CoA for ketone body<br />
+  synthesis (ketogenesis). Both are in the same PANTHER family (PTHR43323); HMGCS1 =<br />
+  subfamily SF4 (cytoplasmic).</p>
+</li>
+<li>
+<p>Catalytic mechanism: Cys129 is the active-site nucleophile forming the acetyl-thioester<br />
+  intermediate. Cys129Ala/Ser abolishes activity.</p>
+</li>
+<li>[PMID:7913309 abstract "Mutation of Cys129 to serine or alanine destroys HMG-CoA synthase activity by disrupting the first catalytic step in HMG-CoA synthesis, enzyme acetylation by acetyl coenzyme A."]</li>
+<li>
+<p>UniProt ACT_SITE 129 "Acyl-thioester intermediate"; MUTAGEN 129 "C-&gt;A,S: Loss of activity."</p>
+</li>
+<li>
+<p>Quaternary structure: homodimer (crystal structure 2P8U, thiolase-like fold).</p>
+</li>
+<li>[PMID:20346956 abstract "we report high-resolution crystal structures of the human cytosolic (hHMGCS1) and mitochondrial (hHMGCS2) isoforms in binary product complexes."]</li>
+<li>
+<p>UniProt SUBUNIT "Homodimer."</p>
+</li>
+<li>
+<p>Localization: cytoplasm / cytosol.</p>
+</li>
+<li>[file:human/HMGCS1/HMGCS1-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"]</li>
+<li>
+<p>HPA IDA GO:0005829 cytosol; Reactome cytosol.</p>
+</li>
+<li>
+<p>Regulation: SREBP-regulated cholesterogenic gene (UniProt DR Reactome R-HSA-2426168<br />
+  "Activation of gene expression by SREBF (SREBP)"; also R-HSA-1989781 PPARA target).</p>
+</li>
+<li>
+<p>Disease: biallelic HMGCS1 variants cause congenital myopathy 28 with rigid spine<br />
+  (CMYO28); rescuable with mevalonic acid in a zebrafish model. Highly expressed in<br />
+  cerebral cortex.</p>
+</li>
+<li>[file:human/HMGCS1/HMGCS1-uniprot.txt "HMGCS1 variants cause rigid spine syndrome amenable to mevalonic acid treatment"] (PMID:39531736; not cached as full text)</li>
+</ul>
+<h2 id="annotation-specific-notes">Annotation-specific notes</h2>
+<ul>
+<li>
+<p>IPI <code>protein binding</code> (GO:0005515) x2 (PMID:28514442 BioPlex 2.0; PMID:33961781<br />
+  BioPlex 3.0): both are large-scale AP-MS interactome screens. Per curation policy,<br />
+  bare <code>protein binding</code> -&gt; MARK_AS_OVER_ANNOTATED (uninformative), NOT REMOVE. The<br />
+  single UniProt-listed interactor is SLC22A5 (O76082, the WITH/FROM), an OCTN2<br />
+  carnitine transporter — not obviously functionally meaningful for a cytosolic<br />
+  metabolic enzyme.</p>
+</li>
+<li>
+<p>GO:0005886 plasma membrane (IDA, HPA GO_REF:0000052): inconsistent with a soluble<br />
+  cytosolic mevalonate-pathway enzyme; likely an HPA antibody-based artifact / non-core.<br />
+  MARK_AS_OVER_ANNOTATED (HPA IDA, do not REMOVE experimental).</p>
+</li>
+<li>GO:0005654 nucleoplasm (IDA, HPA): similarly non-core; MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0016746 acyltransferase activity (IEA InterPro IPR016039 Thiolase-like): correct<br />
+  but a very general parent of the specific HMG-CoA synthase activity. MODIFY -&gt;<br />
+  GO:0004421.</li>
+<li>GO:0006084 acetyl-CoA metabolic process (IBA + IEA): acetyl-CoA is a substrate;<br />
+  accurate but generic/non-core relative to the cholesterol/mevalonate role. ACCEPT<br />
+  IBA (phylogenetically reviewed); KEEP_AS_NON_CORE.</li>
+<li>GO:0006629 lipid metabolic process (NAS, ProtInc): very general; the specific<br />
+  cholesterol/mevalonate terms are better. MARK_AS_OVER_ANNOTATED (too general).</li>
+<li>PMID:7911016 (IC for GO:0006695): this cited paper is actually about cytosolic<br />
+  acetoacetyl-CoA thiolase (ACAT2), the enzyme immediately upstream of HMGCS1; the<br />
+  annotation is IC (inferred by curator from GO:0004421). The cholesterol biosynthetic<br />
+  process conclusion is correct for HMGCS1, so ACCEPT the term, but flag the reference<br />
+  choice in reference_review (MISCITED wrt this gene).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q01581
+gene_symbol: HMGCS1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HMGCS1 is the cytoplasmic (cytosolic) isoform of hydroxymethylglutaryl-CoA
+  synthase (HMG-CoA synthase; EC 2.3.3.10). It catalyzes the condensation of
+  acetyl-CoA with acetoacetyl-CoA (with water) to form (3S)-3-hydroxy-3-
+  methylglutaryl-CoA (HMG-CoA) plus CoA, the first committed step of the
+  cytosolic mevalonate pathway. The HMG-CoA it produces is reduced by HMG-CoA
+  reductase (HMGCR) to mevalonate, the precursor of isoprenoids and cholesterol;
+  HMGCS1 thus feeds isoprenoid and cholesterol biosynthesis. The enzyme is a
+  homodimer with a thiolase-like fold and uses an active-site cysteine (Cys129)
+  that forms an acetyl-thioester intermediate during catalysis. It is a soluble
+  cytosolic protein and is distinct from the mitochondrial isoform HMGCS2, which
+  produces HMG-CoA for ketone-body synthesis (ketogenesis). HMGCS1 is a
+  sterol-regulatory-element-binding-protein (SREBP)-regulated cholesterogenic
+  gene, and biallelic loss-of-function variants cause a congenital rigid-spine
+  myopathy.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:20346956
+  title: Crystal structures of human HMG-CoA synthase isoforms provide insights into
+    inherited ketogenesis disorders and inhibitor design.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Solved the crystal structures of both human HMGCS isoforms (hHMGCS1 cytosolic,
+      hHMGCS2 mitochondrial; PDB 2P8U for HMGCS1), establishing the homodimer and
+      distinguishing the cytosolic/cholesterol from the mitochondrial/ketogenesis
+      isoform. Directly supports the homodimerization and catalytic-function claims.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale BioPlex 2.0 AP-MS interactome screen; HMGCS1 appears only as an
+      IntAct/BioPlex bait/prey (interactor SLC22A5). Correctly cited for a physical
+      interaction but uninformative about molecular function.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale BioPlex 3.0 AP-MS interactome screen; same class of evidence as
+      PMID:28514442. Supports only a bare protein-binding IPI, not a specific function.
+- id: PMID:7911016
+  title: Molecular cloning and nucleotide sequence of complementary DNA for human
+    hepatic cytosolic acetoacetyl-coenzyme A thiolase.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &gt;-
+      This paper is about cytosolic acetoacetyl-CoA thiolase (ACAT2), the enzyme
+      immediately UPSTREAM of HMGCS1 in the mevalonate pathway, not about HMGCS1
+      itself. It is used only as the reference for a curator IC (inferred from
+      GO:0004421) placing HMGCS1 in cholesterol biosynthesis. The conclusion (HMGCS1
+      acts in cholesterol biosynthesis) is correct, but the reference is not about
+      this gene.
+- id: PMID:7913309
+  title: &#39;Human cytoplasmic 3-hydroxy-3-methylglutaryl coenzyme A synthase: expression,
+    purification, and characterization of recombinant wild-type and Cys129 mutant
+    enzymes.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Expression, purification and kinetic characterization of recombinant human
+      cytoplasmic HMG-CoA synthase, and demonstration that the active-site Cys129 is
+      required for catalysis. Directly establishes HMGCS1 catalytic activity.
+- id: Reactome:R-HSA-1655848
+  title: Expression of Hydroxymethylglutaryl coenzyme A synthase (HMGCS1)
+  findings: []
+- id: Reactome:R-HSA-191323
+  title: HMGCS1 condenses Ac-CoA and ACA-CoA to form bHMG-CoA
+  findings: []
+- id: Reactome:R-HSA-9969896
+  title: Lanosterol biosynthesis
+  findings: []
+- id: file:human/HMGCS1/HMGCS1-uniprot.txt
+  title: UniProtKB Q01581 (HMCS1_HUMAN) curated record
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0004421
+    label: hydroxymethylglutaryl-CoA synthase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. Phylogenetically inferred HMG-CoA synthase activity,
+      the defining and experimentally established catalytic activity of HMGCS1.
+    action: ACCEPT
+    reason: &gt;-
+      This is the correct, specific molecular function of HMGCS1 and is well supported
+      experimentally (kinetics and active-site mutagenesis). The IBA is consistent
+      across the HMG-CoA synthase family.
+    supported_by:
+    - reference_id: PMID:7913309
+      supporting_text: Mutation of Cys129 to serine or alanine destroys
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA
+- term:
+    id: GO:0006084
+    label: acetyl-CoA metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Acetyl-CoA is a substrate of HMGCS1, so participation in acetyl-CoA metabolism
+      is accurate but generic relative to the enzyme&#39;s committed role in the
+      mevalonate/cholesterol pathway.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct and phylogenetically reviewed (IBA), but this is an upstream-substrate
+      process term rather than the core function; the cholesterol/isoprenoid
+      biosynthesis terms better capture the biological role. Retain as non-core.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA
+- term:
+    id: GO:0004421
+    label: hydroxymethylglutaryl-CoA synthase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (ARBA/InterPro/RHEA/EC) assignment of the same core HMG-CoA synthase
+      activity; the mapping (EC 2.3.3.10, RHEA:10188) matches the experimentally
+      established reaction.
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the experimentally/phylogenetically supported core MF; the EC and
+      RHEA mappings are exactly correct.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: EC=2.3.3.10
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytoplasmic localization from the UniProt subcellular-location vocabulary
+      mapping, consistent with the curated location of this cytosolic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      HMGCS1 is a soluble cytosolic protein; cytoplasm is correct (the more specific
+      cytosol term is also annotated).
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006084
+    label: acetyl-CoA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO assignment of acetyl-CoA metabolic process, duplicating the IBA of
+      the same term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate (acetyl-CoA is a substrate) but generic; keep as non-core, consistent
+      with the IBA annotation of the same term.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA
+- term:
+    id: GO:0008299
+    label: isoprenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      HMGCS1 catalyzes the first committed step of the mevalonate pathway, which
+      supplies isoprenoid precursors; isoprenoid biosynthetic process is an accurate
+      biological-process term for the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      The mevalonate pathway is the isoprenoid biosynthetic route in eukaryotes;
+      HMGCS1&#39;s product HMG-CoA is the committed intermediate feeding it. This is a
+      correct, appropriately general core process term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191323
+      supporting_text: is involved in synthesis of isoprenoids and cholesterol biosynthesis
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;(R)-mevalonate from acetyl-CoA: step 2/3.&#39;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Very general acyltransferase (thiolase-like superfamily) activity term from
+      InterPro; HMGCS1&#39;s actual transferase activity is the specific HMG-CoA synthase
+      activity.
+    action: MODIFY
+    reason: &gt;-
+      GO:0016746 is a high-level parent of the specific, experimentally established
+      HMG-CoA synthase activity. Replace with the specific molecular function
+      GO:0004421.
+    proposed_replacement_terms:
+    - id: GO:0004421
+      label: hydroxymethylglutaryl-CoA synthase activity
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: EC=2.3.3.10
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding IPI from a large-scale BioPlex 2.0 AP-MS interactome screen
+      (interactor SLC22A5). Not informative about HMGCS1 molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, uninformative bare protein binding is marked as
+      over-annotated rather than retained as a core function; it does not identify a
+      specific molecular activity. Not removed (it reflects a real experimentally
+      detected interaction).
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: BioPlex 2.0 constitutes a powerful resource for biological inquiry
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding IPI from a large-scale BioPlex 3.0 AP-MS interactome screen.
+      Uninformative about HMGCS1 molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same class of high-throughput interaction evidence as PMID:28514442. Bare
+      protein binding is over-annotated; kept (not removed) as it reflects a real
+      detected interaction.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: These networks model the interactome whose
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9969896
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process. Via the mevalonate pathway, HMGCS1-produced HMG-CoA is
+      the committed precursor of cholesterol; Reactome places HMGCS1 in cholesterol
+      (lanosterol) biosynthesis.
+    action: ACCEPT
+    reason: &gt;-
+      Well-supported by the curated pathway and by UniProt (HMG-CoA is converted by
+      HMGCR into mevalonate, a precursor for cholesterol synthesis). This is a central
+      biological role of HMGCS1.
+    supported_by:
+    - reference_id: Reactome:R-HSA-9969896
+      supporting_text: Cholesterol biosynthesis begins with the transformation of cytosolic
+        acetyl CoA into lanosterol
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: mevalonate, a precursor for cholesterol synthesis.
+- term:
+    id: GO:0004421
+    label: hydroxymethylglutaryl-CoA synthase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191323
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable assertion of the core HMG-CoA synthase reaction (condensation
+      of acetyl-CoA and acetoacetyl-CoA to HMG-CoA).
+    action: ACCEPT
+    reason: &gt;-
+      Duplicate of the core molecular function, supported by the curated Reactome
+      reaction and by experimental characterization.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191323
+      supporting_text: catalyzes the condensation of acetyl CoA with acetoacetyl CoA
+        to produce HMG-CoA
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nucleoplasm localization from an HPA immunofluorescence dataset. HMGCS1 is a
+      soluble cytosolic mevalonate-pathway enzyme, so nucleoplasm is not a core
+      location.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Inconsistent with the well-established cytosolic role of the enzyme; likely
+      reflects antibody staining that includes non-specific/soluble-pool signal. Kept
+      (not removed) as it is an experimental IDA, but flagged as non-core over-
+      annotation.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosol localization from HPA immunofluorescence, matching the curated cytosolic
+      location of this soluble enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol is the correct and most specific subcellular location for HMGCS1.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Plasma membrane localization from HPA immunofluorescence. HMGCS1 is a soluble
+      cytosolic enzyme with no transmembrane region or membrane-anchoring feature, so
+      plasma membrane is not a core location.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Inconsistent with the cytosolic biochemistry and structure of HMGCS1 (no TM
+      segment; thiolase-like soluble fold); likely an HPA antibody artifact. Kept as
+      an experimental IDA but flagged as over-annotation.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IC
+  original_reference_id: PMID:7911016
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator-inferred (IC, from GO:0004421) participation in cholesterol biosynthesis.
+      The conclusion is correct for HMGCS1, though the cited reference (PMID:7911016)
+      is about the upstream enzyme cytosolic acetoacetyl-CoA thiolase, not HMGCS1.
+    action: ACCEPT
+    reason: &gt;-
+      The cholesterol biosynthetic process assignment is a correct core role, inferred
+      from the HMG-CoA synthase activity. The term is retained; the reference
+      mismatch is recorded in reference_review for PMID:7911016.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: mevalonate, a precursor for cholesterol synthesis.
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:20346956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      HMGCS1 is a homodimer, established by the crystal structure of the human
+      cytosolic isoform (PDB 2P8U).
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the crystallographic and biochemical characterization
+      showing HMGCS1 functions as a homodimer.
+    supported_by:
+    - reference_id: PMID:20346956
+      supporting_text: we report high-resolution crystal structures of the human cytosolic
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBUNIT: Homodimer.&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655848
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion of cytosolic localization, consistent with the
+      curated location.
+    action: ACCEPT
+    reason: &gt;-
+      Cytosol is the correct core location for this soluble mevalonate-pathway enzyme.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191323
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion of cytosolic localization (duplicate of the
+      Reactome/HPA cytosol annotations).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location; consistent with the other cytosol annotations.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+- term:
+    id: GO:0006629
+    label: lipid metabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:7913309
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Very general lipid metabolic process assertion. HMGCS1&#39;s role is captured far
+      more precisely by the cholesterol/isoprenoid biosynthetic process terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0006629 is a broad ancestor of the specific mevalonate/cholesterol
+      biosynthesis terms already annotated; it adds little and is an over-general
+      (NAS) annotation. Not removed, but flagged as over-annotated.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: mevalonate, a precursor for cholesterol synthesis.
+- term:
+    id: GO:0004421
+    label: hydroxymethylglutaryl-CoA synthase activity
+  evidence_type: TAS
+  original_reference_id: PMID:7913309
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable assertion of HMG-CoA synthase activity from the biochemical
+      characterization of recombinant human cytoplasmic HMGCS1.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by expression/purification/kinetics and by Cys129 mutagenesis
+      abolishing activity. This is the core molecular function.
+    supported_by:
+    - reference_id: PMID:7913309
+      supporting_text: Mutation of Cys129 to serine or alanine destroys
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: TAS
+  original_reference_id: PMID:7913309
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Traceable assertion of cytoplasmic localization, consistent with the curated
+      cytosolic location.
+    action: ACCEPT
+    reason: &gt;-
+      HMGCS1 is a cytoplasmic/cytosolic enzyme; correct localization.
+    supported_by:
+    - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm&#39;
+core_functions:
+- description: &gt;-
+    Catalyzes the first committed step of the cytosolic mevalonate pathway:
+    condensation of acetyl-CoA and acetoacetyl-CoA (with water) to form HMG-CoA
+    plus CoA, feeding isoprenoid and cholesterol biosynthesis.
+  molecular_function:
+    id: GO:0004421
+    label: hydroxymethylglutaryl-CoA synthase activity
+  directly_involved_in:
+  - id: GO:0006695
+    label: cholesterol biosynthetic process
+  - id: GO:0008299
+    label: isoprenoid biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/HMGCS1/HMGCS1-uniprot.txt
+    supporting_text: Catalyzes the condensation of acetyl-CoA with acetoacetyl-CoA
+  - reference_id: PMID:7913309
+    supporting_text: Mutation of Cys129 to serine or alanine destroys
+  - reference_id: Reactome:R-HSA-191323
+    supporting_text: is involved in synthesis of isoprenoids and cholesterol biosynthesis
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Which non-catalytic protein interactions of HMGCS1 (e.g. with SLC22A5) are
+    functionally meaningful, and does HMGCS1 have any moonlighting role beyond the
+    mevalonate pathway?
+- question: &gt;-
+    How do HMGCS1 loss-of-function variants cause a rigid-spine congenital myopathy
+    despite the ubiquitous, essential nature of the mevalonate pathway, and why is
+    the phenotype rescued by mevalonic acid?
+suggested_experiments:
+- description: &gt;-
+    Isoform-resolved subcellular fractionation plus validated-antibody
+    immunofluorescence to test whether the HPA-reported nucleoplasm and plasma-
+    membrane signals reflect genuine HMGCS1 pools or antibody artifacts.
+- description: &gt;-
+    Metabolic flux analysis in HMGCS1-deficient patient muscle/cells to quantify the
+    mevalonate/cholesterol-pathway defect and its rescue by exogenous mevalonate.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

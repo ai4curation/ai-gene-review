@@ -1,0 +1,4605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMVK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PMVK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q15126" target="_blank" class="term-link">
+                        Q15126
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PMVK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q15126" data-a="DESCRIPTION: Phosphomevalonate kinase (PMVK; EC 2.7.4.2) is a s..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Phosphomevalonate kinase (PMVK; EC 2.7.4.2) is a small (192-residue) cytosolic enzyme of the nucleoside-monophosphate kinase family (P-loop/Walker-A fold) that catalyses the reversible, ATP- and cation-dependent phosphorylation of (R)-mevalonate 5-phosphate to (R)-mevalonate 5-diphosphate, generating ADP. This is the fifth reaction of the mevalonate/isoprenoid biosynthetic pathway, acting between mevalonate kinase (MVK) and diphosphomevalonate decarboxylase (MVD), and constitutes step 2 of the three-step conversion of (R)-mevalonate to isopentenyl diphosphate (IPP), the universal isoprenoid precursor from which sterols (including cholesterol) and nonsterol isoprenoids are built. The enzyme acts as a monomer and uses ATP as the phosphoryl donor, with conserved basic active-site residues (e.g. K22, R110) neutralising the pentacoordinate phosphoryl-transfer intermediate. PMVK is expressed broadly (highest in heart, liver, skeletal muscle, kidney and pancreas) and its transcription is upregulated by sterol depletion, consistent with coordinate regulation of the cholesterol biosynthetic program. Although it carries a C-terminal Ser-Arg-Leu type-1 peroxisomal targeting signal and was historically proposed to be peroxisomal, multiple biochemical and microscopy studies establish that human PMVK is a cytosolic protein. Loss-of-function variants cause autosomal-dominant porokeratosis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the defining molecular function. This is the correct, experimentally corroborated core catalytic activity of PMVK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMVK is the human phosphomevalonate kinase; the activity is directly demonstrated for the recombinant human enzyme and encoded by UniProt EC 2.7.4.2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                        PMID:16519518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0006695" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment placing PMVK in cholesterol biosynthesis. This is correct but represents a downstream branch of the pathway; the enzymatic step feeds the whole isoprenoid program, of which cholesterol is one output.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cholesterol is a downstream product of the mevalonate pathway; the more precise pathway role of PMVK is IPP biosynthesis (GO:0019287, step 2/3 to IPP), from which the sterol and nonsterol isoprenoid branches diverge. Keep as a valid but non-core (broader downstream) process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link">
+                                        PMID:27052676
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                    GO:0019287
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, mevalonate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0019287" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment to IPP biosynthesis via the mevalonate pathway. This is the most precise biological-process term for PMVK and matches the UniProt PATHWAY statement (IPP from (R)-mevalonate, step 2/3).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMVK catalyses the direct precursor step to IPP; the UniProt PATHWAY line places it at &#34;isopentenyl diphosphate from (R)-mevalonate, step 2/3&#34;, making this the core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">isopentenyl diphosphate from (R)-mevalonate:</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the phosphomevalonate kinase activity via ARBA/InterPro (IPR005919, RHEA:16341, EC 2.7.4.2). Correct and consistent with the experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core molecular function (duplicate of the EXP/IDA/IBA GO:0004631 annotations); the electronic mapping is accurate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=(R)-5-phosphomevalonate + ATP = (R)-5-diphosphomevalonate +</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic mapping to cytoplasm. Consistent with the established cytosolic localization, but less precise than the cytosol (GO:0005829) IDA/TAS terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is a broader parent of the more precise, experimentally supported cytosol term; correct but non-core given the specific cytosol annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005829" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt Subcellular-Location keyword mapping to cytosol. Correct; matches the experimental IDA cytosol annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core cytosolic location (duplicate of the experimental IDA GO:0005829 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0006695" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/InterPro) assignment to cholesterol biosynthesis. Correct but a downstream branch rather than the most precise pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate of the cholesterol biosynthetic process annotation; correct but downstream/broad relative to the core IPP biosynthesis role (GO:0019287).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link">
+                                        PMID:27052676
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from the HuRI high-throughput yeast-two-hybrid binary interactome map (interactors ZNF177 Q13360-2 and DDIT4L Q96D03). Uninformative and not connected to a characterised biological function of PMVK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 (protein binding) is uninformative and per curation guidelines should not be used as a stand-in for a specific molecular function. The interactors (a zinc-finger protein and a DDIT4-like protein) come from a proteome-wide binary screen with no follow-up establishing a physiological complex or function for PMVK. Marked as over-annotated rather than removed (experimental IPI, full text not read).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Here we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                    GO:0019287
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, mevalonate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0019287" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA/UniPathway UPA00057) assignment to IPP biosynthesis via the mevalonate pathway. Correct and matches the core pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core pathway role (duplicate of the IBA GO:0019287 annotation); matches the UniProt PATHWAY statement (IPP from (R)-mevalonate, step 2/3).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">isopentenyl diphosphate from (R)-mevalonate:</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9969896
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0006695" data-r="Reactome:R-HSA-9969896" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (Lanosterol biosynthesis) traceable-author annotation to cholesterol biosynthesis. Correct but a downstream branch relative to the core IPP-precursor role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway membership but downstream/broad; duplicate of the cholesterol biosynthetic process annotations kept as non-core (core process is GO:0019287).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link">
+                                        PMID:27052676
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191422
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="Reactome:R-HSA-191422" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction &#34;Mevalonate-5-phosphate is further phosphorylated&#34; attributes the phosphomevalonate kinase activity to PMVK. Correct core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core molecular function (duplicate of the experimental GO:0004631 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                        PMID:16519518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655839
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005829" data-r="Reactome:R-HSA-1655839" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (Expression of PMVK) traceable-author cytosol location. Consistent with the experimental IDA cytosol annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core cytosolic location (duplicate of the experimental IDA GO:0005829 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link">
+                                        PMID:14729858
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exclusive cytosolic localization of both endogenously expressed human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191422
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005829" data-r="Reactome:R-HSA-191422" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (mevalonate-5-phosphate phosphorylation reaction) traceable-author cytosol location. Consistent with the established cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core cytosolic location (duplicate of the experimental IDA GO:0005829 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link">
+                                        PMID:14729858
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exclusive cytosolic localization of both endogenously expressed human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17902708" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17902708
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional evaluation of conserved basic residues in human p...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="PMID:17902708" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental demonstration of phosphomevalonate kinase activity for human PMVK via kinetic and mutagenesis analysis of conserved active-site basic residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the core catalytic activity; identifies catalytic (R110, K48, R73) and substrate/ATP-binding (R111, R84, R141) residues.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17902708" target="_blank" class="term-link">
+                                        PMID:17902708
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphomevalonate kinase (PMK) catalyzes the cation-dependent reaction of</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9392419
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Post-translational regulation of mevalonate kinase by interm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="PMID:9392419" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental study expressing and assaying recombinant human PMKase (alongside MKase and MDDase); confirms phosphomevalonate kinase activity for PMVK.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the core catalytic activity (the enzyme was purified and assayed spectrophotometrically); underpins UniProt EC 2.7.4.2.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link">
+                                        PMID:9392419
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">phosphomevalonate kinase (PMKase), and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729858
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphomevalonate kinase is a cytosolic protein in humans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005777" data-r="PMID:14729858" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct NOT annotation. Multiple techniques (subcellular fractionation, digitonin permeabilization, immunofluorescence, immunoelectron microscopy) found no peroxisomal PMVK, overturning the earlier peroxisomal claim.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This negated annotation captures the definitive finding that human PMVK is not peroxisomal; it is corroborated by PMID:27052676 (no co-localization with PEX14) and by the UniProt CAUTION note.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link">
+                                        PMID:14729858
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">No indication of a peroxisomal localization was obtained.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27052676
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Loss-of-function Mutation in PMVK Causes Autosomal Dominant ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005829" data-r="PMID:27052676" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (immunofluorescence in HaCaT/ARPE-19 cells) showing wild-type PMVK has a dispersed cytoplasmic (cytosolic) distribution that does not co-localize with the peroxisomal marker PEX14.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental confirmation of the core cytosolic localization of PMVK.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link">
+                                        PMID:27052676
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The wild-type PMVK exhibited dispersed cytoplasmic localization and showed little co-localization with the peroxisomal marker PEX14</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput detection of PMVK in an NK-cell &#34;membrane proteome&#34; preparation. This is a soluble cytosolic kinase; membrane co-purification in a large-scale MS dataset is not a functional membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMVK is an established soluble, cytosolic enzyme with no transmembrane domain or lipid anchor (UniProt). Its appearance in a bulk membrane-enriched MS dataset most likely reflects incomplete fractionation/contamination rather than a physiological membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">define the composition of the membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0070062" data-r="PMID:19056867" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput MS identification of PMVK in a urinary-exosome proteome. This is a bulk proteomic catalogue rather than evidence of a functional exosomal role for this cytosolic kinase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detection in a large-scale exosome proteomics survey is a common finding for abundant cytosolic proteins and does not indicate a biological function of PMVK in exosomes; the enzyme&#39;s characterised location is the cytosol.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LC-MS/MS to profile the proteome of human urinary exosomes</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm, cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17180682" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17180682
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Localization of the pre-squalene segment of the isoprenoid b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005777" data-r="PMID:17180682" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Minority-view IDA reporting peroxisomal localization of presqualene enzymes (including PMVK) using isotopomer and immunofluorescence methods. This conclusion has been rejected by the field; the consensus (and UniProt) is that human PMVK is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly contradicted by PMID:14729858 (exclusive cytosolic localization; NOT peroxisome) and PMID:27052676 (no PEX14 co-localization), and by the UniProt CAUTION note stating PMVK &#34;was later shown to be cytosolic&#34;. Retained rather than removed because it is an experimental IDA whose full text was not read, but flagged as an over-annotation superseded by stronger, concordant evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17180682" target="_blank" class="term-link">
+                                        PMID:17180682
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">segment of the cholesterol biosynthetic pathway is localized to peroxisomes</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Was originally thought to be located in the peroxisome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14729858
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphomevalonate kinase is a cytosolic protein in humans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005829" data-r="PMID:14729858" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental determination (subcellular fractionation, digitonin permeabilization, immunofluorescence, immunoelectron microscopy) that endogenous and overexpressed human PMVK localize exclusively to the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Definitive experimental evidence for the core cytosolic localization; this is the study that established PMVK as cytosolic and underlies the UniProt annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link">
+                                        PMID:14729858
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exclusive cytosolic localization of both endogenously expressed human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16519518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphomevalonate kinase: functional investigation of the re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="PMID:16519518" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of recombinant His-tagged human PMVK confirming phosphomevalonate kinase activity; kinetic constants determined for both forward and reverse reactions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Primary experimental evidence for the core catalytic activity of the human enzyme, with determined KM and Vmax values.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                        PMID:16519518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16519518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphomevalonate kinase: functional investigation of the re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0005524" data-r="PMID:16519518" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP is the phosphoryl donor for the kinase reaction; the study identifies an N-terminal Walker-A-like basic-residue motif and demonstrates ATP binding via mutagenesis (e.g. K22M abolishes activity).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP binding is directly supported and mechanistically integral to the core phosphotransferase function (ATP + mevalonate-5-P -&gt; mevalonate-5-PP + ADP).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                        PMID:16519518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an N-terminal basic</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PMVK/PMVK-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ligand=&#34;ATP&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016126" target="_blank" class="term-link">
+                                    GO:0016126
+                                </a>
+                            </span>
+                            <span class="term-label">sterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16519518
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphomevalonate kinase: functional investigation of the re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0016126" data-r="PMID:16519518" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Places PMVK in sterol biosynthesis. Correct at a broad level but downstream of the direct enzymatic step; the more precise process is IPP biosynthesis (GO:0019287).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sterol biosynthesis is a downstream/broad process relative to the direct IPP-precursor role; retained as a valid but non-core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                        PMID:16519518
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes a key step in isoprenoid/sterol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070723" target="_blank" class="term-link">
+                                    GO:0070723
+                                </a>
+                            </span>
+                            <span class="term-label">response to cholesterol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10191291" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10191291
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of phosphomevalonate kinase: chromosomal lo...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0070723" data-r="PMID:10191291" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Expression-pattern evidence that PMVK message and activity are regulated in response to dietary/cellular sterol levels, coordinately with HMG-CoA reductase. This reflects transcriptional (SREBP-type) regulation of the gene, not a core enzymatic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sterol-responsive regulation of PMVK is a genuine, documented property but is a regulatory/response process distinct from the enzyme&#39;s molecular function; kept as a valid non-core annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10191291" target="_blank" class="term-link">
+                                        PMID:10191291
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activity of rat liver phosphomevalonate kinase are regulated in response to</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8663599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8663599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of human phosphomevalonate kinase and iden...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="PMID:8663599" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Original molecular cloning of human liver PMKase with expression of PMKase catalytic activity in bacteria from the cloned cDNA, establishing the enzyme&#39;s identity and activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Foundational experimental evidence for the core phosphomevalonate kinase activity of human PMVK.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8663599" target="_blank" class="term-link">
+                                        PMID:8663599
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">expression of PMKase activity in bacteria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8663599" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8663599
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning of human phosphomevalonate kinase and iden...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0006695" data-r="PMID:8663599" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Assigns PMVK to cholesterol biosynthesis. Correct membership but a downstream/broad process relative to the direct IPP-precursor step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cholesterol biosynthesis is downstream of PMVK&#39;s direct reaction; duplicate of the cholesterol biosynthetic process annotations, kept as non-core (core process is GO:0019287 IPP biosynthesis).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8663599" target="_blank" class="term-link">
+                                        PMID:8663599
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cholesterol biosynthetic protein which contains a consensus PTS-1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                                    GO:0004631
+                                </a>
+                            </span>
+                            <span class="term-label">phosphomevalonate kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14680974
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cholesterol biosynthesis is not defective in peroxisome biog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q15126" data-a="GO:0004631" data-r="PMID:14680974" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Directly measured phosphomevalonate kinase protein level and enzymatic activity in fibroblasts (among five presqualene-pathway enzymes) while assessing peroxisomal involvement in cholesterol biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Provides direct experimental measurement of PMVK activity, supporting the core catalytic function; also shows the activity is retained in peroxisome-deficient cells.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                                        PMID:14680974
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">determined the protein levels and activities of five different</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphomevalonate kinase activity - ATP-dependent phosphorylation of (R)-mevalonate 5-phosphate to (R)-mevalonate 5-diphosphate, the direct precursor step to isopentenyl diphosphate in the mevalonate pathway.</h3>
+                <span class="vote-buttons" data-g="Q15126" data-a="FUNCTION: Phosphomevalonate kinase activity - ATP-dependent ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004631" target="_blank" class="term-link">
+                            phosphomevalonate kinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                isopentenyl diphosphate biosynthetic process, mevalonate pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                PMID:16519518
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PMVK/PMVK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">isopentenyl diphosphate from (R)-mevalonate:</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP binding required for phosphoryl transfer; ATP is the phosphate donor consumed in the phosphomevalonate kinase reaction, coordinated by an N-terminal Walker-A-like basic-residue motif.</h3>
+                <span class="vote-buttons" data-g="Q15126" data-a="FUNCTION: ATP binding required for phosphoryl transfer; ATP ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                            ATP binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                isopentenyl diphosphate biosynthetic process, mevalonate pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                                PMID:16519518
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">an N-terminal basic</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PMVK/PMVK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">ligand=&#34;ATP&#34;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10191291" target="_blank" class="term-link">
+                            PMID:10191291
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of phosphomevalonate kinase: chromosomal localization, regulation, and subcellular targeting.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                            PMID:14680974
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cholesterol biosynthesis is not defective in peroxisome biogenesis defective fibroblasts.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" target="_blank" class="term-link">
+                            PMID:14729858
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphomevalonate kinase is a cytosolic protein in humans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16519518" target="_blank" class="term-link">
+                            PMID:16519518
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphomevalonate kinase: functional investigation of the recombinant human enzyme.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17180682" target="_blank" class="term-link">
+                            PMID:17180682
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Localization of the pre-squalene segment of the isoprenoid biosynthetic pathway in mammalian peroxisomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17902708" target="_blank" class="term-link">
+                            PMID:17902708
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional evaluation of conserved basic residues in human phosphomevalonate kinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27052676" target="_blank" class="term-link">
+                            PMID:27052676
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Loss-of-function Mutation in PMVK Causes Autosomal Dominant Disseminated Superficial Porokeratosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8663599" target="_blank" class="term-link">
+                            PMID:8663599
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning of human phosphomevalonate kinase and identification of a consensus peroxisomal targeting sequence.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link">
+                            PMID:9392419
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Post-translational regulation of mevalonate kinase by intermediates of the cholesterol and nonsterol isoprene biosynthetic pathways.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655839
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Phosphomevalonate Kinase (PMVK)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191422
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mevalonate-5-phosphate is further phosphorylated</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9969896
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Lanosterol biosynthesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PMVK/PMVK-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q15126 (PMVK_HUMAN) record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PMVK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q15126" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pmvk-phosphomevalonate-kinase-uniprotkbq15126-review-notes">PMVK (phosphomevalonate kinase, UniProtKB:Q15126) — review notes</h1>
+<h2 id="deep-research-status">Deep research status</h2>
+<p>Falcon deep research is OUT OF CREDITS (HTTP 402); no <code>-deep-research-falcon.md</code> was<br />
+generated. This review is grounded in the UniProt record (<code>PMVK-uniprot.txt</code>), the seeded<br />
+GOA (<code>PMVK-goa.tsv</code>), and the cached publications in <code>publications/PMID_*.md</code> (all 12 GOA<br />
+PMIDs are present).</p>
+<h2 id="core-biology">Core biology</h2>
+<p>PMVK is phosphomevalonate kinase (EC 2.7.4.2), a 192-aa cytosolic enzyme of the<br />
+nucleoside-monophosphate (NMP) kinase family (P-loop fold). It catalyses the reversible,<br />
+ATP- and cation-dependent phosphorylation of (R)-mevalonate 5-phosphate to (R)-mevalonate<br />
+5-diphosphate (+ADP) — the step between mevalonate kinase (MVK) and diphosphomevalonate<br />
+decarboxylase (MVD) in the mevalonate/isoprenoid pathway.</p>
+<ul>
+<li>UniProt CATALYTIC ACTIVITY: "Reaction=(R)-5-phosphomevalonate + ATP = (R)-5-diphosphomevalonate + ADP; ... EC=2.7.4.2" [Rhea:16341].</li>
+<li>UniProt PATHWAY: "Isoprenoid biosynthesis; isopentenyl diphosphate biosynthesis via mevalonate pathway; isopentenyl diphosphate from (R)-mevalonate: step 2/3."</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16519518" title="Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol biosynthesis, converting mevalonate 5-phosphate and ATP to mevalonate 5-diphosphate and ADP">PMID:16519518</a> — recombinant human enzyme; monomer; kinetics both directions.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/17902708" title="Phosphomevalonate kinase (PMK) catalyzes the cation-dependent reaction of mevalonate 5-phosphate with ATP to form mevalonate 5-diphosphate and ADP, a key step in the mevalonate pathway for isoprenoid/sterol biosynthesis">PMID:17902708</a> — Walker-A / basic-residue mutagenesis (K48, R73, R110, R111, R84, R141).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/8663599">PMID:8663599</a> cloning of human liver PMKase; PMKase activity expressed in bacteria; sterol-regulated transcription; identified a C-terminal PTS-1 (Ser-Arg-Leu) but this is now known NOT to drive peroxisomal targeting.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9392419">PMID:9392419</a> PMKase (with MKase, MDDase) expressed in E. coli and assayed; only MKase (not PMKase) was feedback-inhibited by isoprene intermediates.</li>
+</ul>
+<h2 id="localization-cytosolic-peroxisomal-claim-retracted">Localization: cytosolic (peroxisomal claim retracted)</h2>
+<p>Early reports (rat, and PTS-1 motif reasoning) proposed peroxisomal localization<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10191291" title="phosphomevalonate kinase is a peroxisomal protein which requires the C-terminal peroxisomal targeting signal, Ser-Arg-Leu">PMID:10191291</a>. This was overturned:<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/14729858" title="We found an exclusive cytosolic localization of both endogenously expressed human phosphomevalonate kinase ... and overexpressed human phosphomevalonate kinase ... No indication of a peroxisomal localization was obtained.">PMID:14729858</a> — GOA uses this as NOT|peroxisome (IDA) and as cytosol (IDA).<br />
+- [PMID:27052676 "The wild-type PMVK exhibited dispersed cytoplasmic localization and showed little co-localization with the peroxisomal marker PEX14"; "PMVK and MVK were predominantly cytosolically localized"] — confirms cytosol.<br />
+- UniProt CAUTION: "Was originally thought to be located in the peroxisome (PubMed:10191291). However, was later shown to be cytosolic (PubMed:14729858, PubMed:27052676)."<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/14680974">PMID:14680974</a> shows cholesterol biosynthesis is normal in peroxisome-biogenesis-deficient fibroblasts (presqualene enzymes including PMK retain activity), arguing against obligate peroxisomal function.</p>
+<p>The conflicting IDA peroxisome annotation from <a href="https://pubmed.ncbi.nlm.nih.gov/17180682" title="the pre-squalene segment of the cholesterol biosynthetic pathway is localized to peroxisomes">PMID:17180682</a> (Kovacs/Krisans) is the<br />
+minority view that the field and UniProt have since rejected. Per curation policy (do not<br />
+REMOVE an experimental IDA whose full text I cannot read), this is kept but marked<br />
+over-annotated with the contradicting evidence noted.</p>
+<h2 id="disease">Disease</h2>
+<p>Heterozygous loss-of-function PMVK variants cause autosomal-dominant porokeratosis<br />
+(POROK1) — a keratinization disorder — <a href="https://pubmed.ncbi.nlm.nih.gov/27052676">PMID:27052676</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/26202976">PMID:26202976</a>. This is a<br />
+downstream phenotype of impaired mevalonate-pathway flux in skin, not the molecular<br />
+function; not treated as a core function.</p>
+<h2 id="annotation-decisions-summary">Annotation decisions summary</h2>
+<ul>
+<li>MF phosphomevalonate kinase activity (GO:0004631): multiple EXP/IDA + IBA + IEA/TAS — ACCEPT (core). IEA/TAS/IBA duplicates KEEP_AS_NON_CORE.</li>
+<li>ATP binding (GO:0005524) IDA <a href="https://pubmed.ncbi.nlm.nih.gov/16519518">PMID:16519518</a>: ACCEPT (supports mechanism; ATP is the phosphate donor; Walker-A motif).</li>
+<li>BP isopentenyl diphosphate biosynthetic process, mevalonate pathway (GO:0019287): the most precise pathway BP — ACCEPT (core, matches UniProt PATHWAY step 2/3).</li>
+<li>BP cholesterol biosynthetic process (GO:0006695) / sterol biosynthetic process (GO:0016126): correct but downstream/broad — KEEP_AS_NON_CORE (cholesterol is one branch downstream of IPP).</li>
+<li>CC cytosol (GO:0005829) IDA/TAS: ACCEPT (core location). cytoplasm (GO:0005737) IEA: KEEP_AS_NON_CORE (broader parent).</li>
+<li>CC peroxisome (GO:0005777) IDA <a href="https://pubmed.ncbi.nlm.nih.gov/17180682">PMID:17180682</a>: MARK_AS_OVER_ANNOTATED (contradicted by field/UniProt CAUTION; do not REMOVE experimental IDA).</li>
+<li>CC NOT|peroxisome (GO:0005777) IDA <a href="https://pubmed.ncbi.nlm.nih.gov/14729858">PMID:14729858</a>: ACCEPT (correct negation).</li>
+<li>CC membrane (GO:0016020) HDA / extracellular exosome (GO:0070062) HDA: MARK_AS_OVER_ANNOTATED (large-scale proteomics; not a functional location for a cytosolic kinase).</li>
+<li>MF protein binding (GO:0005515) IPI <a href="https://pubmed.ncbi.nlm.nih.gov/32296183">PMID:32296183</a>: MARK_AS_OVER_ANNOTATED (bare, uninformative HuRI Y2H hits; per curation policy, not REMOVE).</li>
+<li>BP response to cholesterol (GO:0070723) IEP <a href="https://pubmed.ncbi.nlm.nih.gov/10191291">PMID:10191291</a>: KEEP_AS_NON_CORE (sterol-regulated transcription of the gene; regulatory response, not core enzymatic function).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q15126
+gene_symbol: PMVK
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Phosphomevalonate kinase (PMVK; EC 2.7.4.2) is a small (192-residue) cytosolic
+  enzyme of the nucleoside-monophosphate kinase family (P-loop/Walker-A fold) that catalyses
+  the reversible, ATP- and cation-dependent phosphorylation of (R)-mevalonate 5-phosphate
+  to (R)-mevalonate 5-diphosphate, generating ADP. This is the fifth reaction of the
+  mevalonate/isoprenoid biosynthetic pathway, acting between mevalonate kinase (MVK) and
+  diphosphomevalonate decarboxylase (MVD), and constitutes step 2 of the three-step
+  conversion of (R)-mevalonate to isopentenyl diphosphate (IPP), the universal isoprenoid
+  precursor from which sterols (including cholesterol) and nonsterol isoprenoids are built.
+  The enzyme acts as a monomer and uses ATP as the phosphoryl donor, with conserved basic
+  active-site residues (e.g. K22, R110) neutralising the pentacoordinate phosphoryl-transfer
+  intermediate. PMVK is expressed broadly (highest in heart, liver, skeletal muscle, kidney
+  and pancreas) and its transcription is upregulated by sterol depletion, consistent with
+  coordinate regulation of the cholesterol biosynthetic program. Although it carries a
+  C-terminal Ser-Arg-Leu type-1 peroxisomal targeting signal and was historically proposed
+  to be peroxisomal, multiple biochemical and microscopy studies establish that human PMVK
+  is a cytosolic protein. Loss-of-function variants cause autosomal-dominant porokeratosis.
+existing_annotations:
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) assignment of the defining molecular function. This is
+      the correct, experimentally corroborated core catalytic activity of PMVK.
+    action: ACCEPT
+    reason: PMVK is the human phosphomevalonate kinase; the activity is directly
+      demonstrated for the recombinant human enzyme and encoded by UniProt EC 2.7.4.2.
+    supported_by:
+      - reference_id: PMID:16519518
+        supporting_text: Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic assignment placing PMVK in cholesterol biosynthesis. This is
+      correct but represents a downstream branch of the pathway; the enzymatic step feeds
+      the whole isoprenoid program, of which cholesterol is one output.
+    action: KEEP_AS_NON_CORE
+    reason: Cholesterol is a downstream product of the mevalonate pathway; the more precise
+      pathway role of PMVK is IPP biosynthesis (GO:0019287, step 2/3 to IPP), from which
+      the sterol and nonsterol isoprenoid branches diverge. Keep as a valid but non-core
+      (broader downstream) process annotation.
+    supported_by:
+      - reference_id: PMID:27052676
+        supporting_text: PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid
+          biosynthetic pathway
+- term:
+    id: GO:0019287
+    label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic assignment to IPP biosynthesis via the mevalonate pathway. This
+      is the most precise biological-process term for PMVK and matches the UniProt PATHWAY
+      statement (IPP from (R)-mevalonate, step 2/3).
+    action: ACCEPT
+    reason: PMVK catalyses the direct precursor step to IPP; the UniProt PATHWAY line
+      places it at &#34;isopentenyl diphosphate from (R)-mevalonate, step 2/3&#34;, making this
+      the core process annotation.
+    supported_by:
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;isopentenyl diphosphate from (R)-mevalonate:&#34;
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic assignment of the phosphomevalonate kinase activity via ARBA/InterPro
+      (IPR005919, RHEA:16341, EC 2.7.4.2). Correct and consistent with the experimental
+      evidence.
+    action: ACCEPT
+    reason: Correctly captures the core molecular function (duplicate of the EXP/IDA/IBA
+      GO:0004631 annotations); the electronic mapping is accurate.
+    supported_by:
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;Reaction=(R)-5-phosphomevalonate + ATP = (R)-5-diphosphomevalonate +&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: InterPro2GO electronic mapping to cytoplasm. Consistent with the established
+      cytosolic localization, but less precise than the cytosol (GO:0005829) IDA/TAS terms.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasm is a broader parent of the more precise, experimentally supported
+      cytosol term; correct but non-core given the specific cytosol annotations.
+    supported_by:
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: UniProt Subcellular-Location keyword mapping to cytosol. Correct; matches the
+      experimental IDA cytosol annotations.
+    action: ACCEPT
+    reason: Correctly captures the core cytosolic location (duplicate of the experimental
+      IDA GO:0005829 annotations).
+    supported_by:
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (ARBA/InterPro) assignment to cholesterol biosynthesis. Correct
+      but a downstream branch rather than the most precise pathway role.
+    action: KEEP_AS_NON_CORE
+    reason: Duplicate of the cholesterol biosynthetic process annotation; correct but
+      downstream/broad relative to the core IPP biosynthesis role (GO:0019287).
+    supported_by:
+      - reference_id: PMID:27052676
+        supporting_text: PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid
+          biosynthetic pathway
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Bare &#34;protein binding&#34; from the HuRI high-throughput yeast-two-hybrid binary
+      interactome map (interactors ZNF177 Q13360-2 and DDIT4L Q96D03). Uninformative and
+      not connected to a characterised biological function of PMVK.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0005515 (protein binding) is uninformative and per curation guidelines
+      should not be used as a stand-in for a specific molecular function. The interactors
+      (a zinc-finger protein and a DDIT4-like protein) come from a proteome-wide binary
+      screen with no follow-up establishing a physiological complex or function for PMVK.
+      Marked as over-annotated rather than removed (experimental IPI, full text not read).
+    supported_by:
+      - reference_id: PMID:32296183
+        supporting_text: Here we present a human &#39;all-by-all&#39; reference interactome map of
+          human binary protein interactions, or &#39;HuRI&#39;.
+- term:
+    id: GO:0019287
+    label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic (ARBA/UniPathway UPA00057) assignment to IPP biosynthesis via the
+      mevalonate pathway. Correct and matches the core pathway role.
+    action: ACCEPT
+    reason: Correctly captures the core pathway role (duplicate of the IBA GO:0019287
+      annotation); matches the UniProt PATHWAY statement (IPP from (R)-mevalonate, step 2/3).
+    supported_by:
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;isopentenyl diphosphate from (R)-mevalonate:&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9969896
+  qualifier: involved_in
+  review:
+    summary: Reactome (Lanosterol biosynthesis) traceable-author annotation to cholesterol
+      biosynthesis. Correct but a downstream branch relative to the core IPP-precursor role.
+    action: KEEP_AS_NON_CORE
+    reason: Correct pathway membership but downstream/broad; duplicate of the cholesterol
+      biosynthetic process annotations kept as non-core (core process is GO:0019287).
+    supported_by:
+      - reference_id: PMID:27052676
+        supporting_text: PMVK catalyzes the fifth reaction of the cholesterol/isoprenoid
+          biosynthetic pathway
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191422
+  qualifier: enables
+  review:
+    summary: Reactome reaction &#34;Mevalonate-5-phosphate is further phosphorylated&#34; attributes
+      the phosphomevalonate kinase activity to PMVK. Correct core molecular function.
+    action: ACCEPT
+    reason: Correctly captures the core molecular function (duplicate of the experimental
+      GO:0004631 annotations).
+    supported_by:
+      - reference_id: PMID:16519518
+        supporting_text: Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655839
+  qualifier: located_in
+  review:
+    summary: Reactome (Expression of PMVK) traceable-author cytosol location. Consistent
+      with the experimental IDA cytosol annotations.
+    action: ACCEPT
+    reason: Correctly captures the core cytosolic location (duplicate of the experimental
+      IDA GO:0005829 annotations).
+    supported_by:
+      - reference_id: PMID:14729858
+        supporting_text: exclusive cytosolic localization of both endogenously expressed human
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191422
+  qualifier: located_in
+  review:
+    summary: Reactome (mevalonate-5-phosphate phosphorylation reaction) traceable-author
+      cytosol location. Consistent with the established cytosolic localization.
+    action: ACCEPT
+    reason: Correctly captures the core cytosolic location (duplicate of the experimental
+      IDA GO:0005829 annotations).
+    supported_by:
+      - reference_id: PMID:14729858
+        supporting_text: exclusive cytosolic localization of both endogenously expressed human
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:17902708
+  qualifier: enables
+  review:
+    summary: Experimental demonstration of phosphomevalonate kinase activity for human PMVK
+      via kinetic and mutagenesis analysis of conserved active-site basic residues.
+    action: ACCEPT
+    reason: Direct experimental evidence for the core catalytic activity; identifies
+      catalytic (R110, K48, R73) and substrate/ATP-binding (R111, R84, R141) residues.
+    supported_by:
+      - reference_id: PMID:17902708
+        supporting_text: Phosphomevalonate kinase (PMK) catalyzes the cation-dependent reaction
+          of
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:9392419
+  qualifier: enables
+  review:
+    summary: Experimental study expressing and assaying recombinant human PMKase (alongside
+      MKase and MDDase); confirms phosphomevalonate kinase activity for PMVK.
+    action: ACCEPT
+    reason: Direct experimental evidence for the core catalytic activity (the enzyme was
+      purified and assayed spectrophotometrically); underpins UniProt EC 2.7.4.2.
+    supported_by:
+      - reference_id: PMID:9392419
+        supporting_text: &#39;phosphomevalonate kinase (PMKase), and&#39;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:14729858
+  qualifier: located_in
+  negated: true
+  review:
+    summary: Correct NOT annotation. Multiple techniques (subcellular fractionation,
+      digitonin permeabilization, immunofluorescence, immunoelectron microscopy) found no
+      peroxisomal PMVK, overturning the earlier peroxisomal claim.
+    action: ACCEPT
+    reason: This negated annotation captures the definitive finding that human PMVK is not
+      peroxisomal; it is corroborated by PMID:27052676 (no co-localization with PEX14) and
+      by the UniProt CAUTION note.
+    supported_by:
+      - reference_id: PMID:14729858
+        supporting_text: No indication of a peroxisomal localization was obtained.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:27052676
+  qualifier: located_in
+  review:
+    summary: Direct assay (immunofluorescence in HaCaT/ARPE-19 cells) showing wild-type
+      PMVK has a dispersed cytoplasmic (cytosolic) distribution that does not co-localize
+      with the peroxisomal marker PEX14.
+    action: ACCEPT
+    reason: Experimental confirmation of the core cytosolic localization of PMVK.
+    supported_by:
+      - reference_id: PMID:27052676
+        supporting_text: The wild-type PMVK exhibited dispersed cytoplasmic localization and
+          showed little co-localization with the peroxisomal marker PEX14
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: High-throughput detection of PMVK in an NK-cell &#34;membrane proteome&#34;
+      preparation. This is a soluble cytosolic kinase; membrane co-purification in a
+      large-scale MS dataset is not a functional membrane localization.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: PMVK is an established soluble, cytosolic enzyme with no transmembrane domain
+      or lipid anchor (UniProt). Its appearance in a bulk membrane-enriched MS dataset most
+      likely reflects incomplete fractionation/contamination rather than a physiological
+      membrane location.
+    supported_by:
+      - reference_id: PMID:19946888
+        supporting_text: define the composition of the membrane
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: High-throughput MS identification of PMVK in a urinary-exosome proteome. This
+      is a bulk proteomic catalogue rather than evidence of a functional exosomal role for
+      this cytosolic kinase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Detection in a large-scale exosome proteomics survey is a common finding for
+      abundant cytosolic proteins and does not indicate a biological function of PMVK in
+      exosomes; the enzyme&#39;s characterised location is the cytosol.
+    supported_by:
+      - reference_id: PMID:19056867
+        supporting_text: LC-MS/MS to profile the proteome of human urinary exosomes
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm, cytosol&#34;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:17180682
+  qualifier: located_in
+  review:
+    summary: Minority-view IDA reporting peroxisomal localization of presqualene enzymes
+      (including PMVK) using isotopomer and immunofluorescence methods. This conclusion has
+      been rejected by the field; the consensus (and UniProt) is that human PMVK is cytosolic.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Directly contradicted by PMID:14729858 (exclusive cytosolic localization; NOT
+      peroxisome) and PMID:27052676 (no PEX14 co-localization), and by the UniProt CAUTION
+      note stating PMVK &#34;was later shown to be cytosolic&#34;. Retained rather than removed
+      because it is an experimental IDA whose full text was not read, but flagged as an
+      over-annotation superseded by stronger, concordant evidence.
+    supported_by:
+      - reference_id: PMID:17180682
+        supporting_text: segment of the cholesterol biosynthetic pathway is localized to peroxisomes
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#34;Was originally thought to be located in the peroxisome&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:14729858
+  qualifier: located_in
+  review:
+    summary: Direct experimental determination (subcellular fractionation, digitonin
+      permeabilization, immunofluorescence, immunoelectron microscopy) that endogenous and
+      overexpressed human PMVK localize exclusively to the cytosol.
+    action: ACCEPT
+    reason: Definitive experimental evidence for the core cytosolic localization; this is
+      the study that established PMVK as cytosolic and underlies the UniProt annotation.
+    supported_by:
+      - reference_id: PMID:14729858
+        supporting_text: exclusive cytosolic localization of both endogenously expressed human
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:16519518
+  qualifier: enables
+  review:
+    summary: Direct assay of recombinant His-tagged human PMVK confirming phosphomevalonate
+      kinase activity; kinetic constants determined for both forward and reverse reactions.
+    action: ACCEPT
+    reason: Primary experimental evidence for the core catalytic activity of the human
+      enzyme, with determined KM and Vmax values.
+    supported_by:
+      - reference_id: PMID:16519518
+        supporting_text: Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:16519518
+  qualifier: enables
+  review:
+    summary: ATP is the phosphoryl donor for the kinase reaction; the study identifies an
+      N-terminal Walker-A-like basic-residue motif and demonstrates ATP binding via
+      mutagenesis (e.g. K22M abolishes activity).
+    action: ACCEPT
+    reason: ATP binding is directly supported and mechanistically integral to the core
+      phosphotransferase function (ATP + mevalonate-5-P -&gt; mevalonate-5-PP + ADP).
+    supported_by:
+      - reference_id: PMID:16519518
+        supporting_text: an N-terminal basic
+      - reference_id: file:human/PMVK/PMVK-uniprot.txt
+        supporting_text: &#39;ligand=&#34;ATP&#34;&#39;
+- term:
+    id: GO:0016126
+    label: sterol biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16519518
+  qualifier: involved_in
+  review:
+    summary: Places PMVK in sterol biosynthesis. Correct at a broad level but downstream of
+      the direct enzymatic step; the more precise process is IPP biosynthesis (GO:0019287).
+    action: KEEP_AS_NON_CORE
+    reason: Sterol biosynthesis is a downstream/broad process relative to the direct
+      IPP-precursor role; retained as a valid but non-core process annotation.
+    supported_by:
+      - reference_id: PMID:16519518
+        supporting_text: catalyzes a key step in isoprenoid/sterol
+- term:
+    id: GO:0070723
+    label: response to cholesterol
+  evidence_type: IEP
+  original_reference_id: PMID:10191291
+  qualifier: involved_in
+  review:
+    summary: Expression-pattern evidence that PMVK message and activity are regulated in
+      response to dietary/cellular sterol levels, coordinately with HMG-CoA reductase. This
+      reflects transcriptional (SREBP-type) regulation of the gene, not a core enzymatic
+      function.
+    action: KEEP_AS_NON_CORE
+    reason: The sterol-responsive regulation of PMVK is a genuine, documented property but
+      is a regulatory/response process distinct from the enzyme&#39;s molecular function; kept
+      as a valid non-core annotation.
+    supported_by:
+      - reference_id: PMID:10191291
+        supporting_text: activity of rat liver phosphomevalonate kinase are regulated in response
+          to
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:8663599
+  qualifier: enables
+  review:
+    summary: Original molecular cloning of human liver PMKase with expression of PMKase
+      catalytic activity in bacteria from the cloned cDNA, establishing the enzyme&#39;s
+      identity and activity.
+    action: ACCEPT
+    reason: Foundational experimental evidence for the core phosphomevalonate kinase
+      activity of human PMVK.
+    supported_by:
+      - reference_id: PMID:8663599
+        supporting_text: expression of PMKase activity in bacteria
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:8663599
+  qualifier: involved_in
+  review:
+    summary: Assigns PMVK to cholesterol biosynthesis. Correct membership but a
+      downstream/broad process relative to the direct IPP-precursor step.
+    action: KEEP_AS_NON_CORE
+    reason: Cholesterol biosynthesis is downstream of PMVK&#39;s direct reaction; duplicate of
+      the cholesterol biosynthetic process annotations, kept as non-core (core process is
+      GO:0019287 IPP biosynthesis).
+    supported_by:
+      - reference_id: PMID:8663599
+        supporting_text: cholesterol biosynthetic protein which contains a consensus PTS-1
+- term:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:14680974
+  qualifier: enables
+  review:
+    summary: Directly measured phosphomevalonate kinase protein level and enzymatic
+      activity in fibroblasts (among five presqualene-pathway enzymes) while assessing
+      peroxisomal involvement in cholesterol biosynthesis.
+    action: ACCEPT
+    reason: Provides direct experimental measurement of PMVK activity, supporting the core
+      catalytic function; also shows the activity is retained in peroxisome-deficient cells.
+    supported_by:
+      - reference_id: PMID:14680974
+        supporting_text: determined the protein levels and activities of five different
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10191291
+  title: &#39;Characterization of phosphomevalonate kinase: chromosomal localization,
+    regulation, and subcellular targeting.&#39;
+  findings: []
+- id: PMID:14680974
+  title: Cholesterol biosynthesis is not defective in peroxisome biogenesis defective
+    fibroblasts.
+  findings: []
+- id: PMID:14729858
+  title: Phosphomevalonate kinase is a cytosolic protein in humans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; definitive multi-technique demonstration that human PMVK
+      is exclusively cytosolic, the basis for the NOT|peroxisome and cytosol annotations.
+- id: PMID:16519518
+  title: &#39;Phosphomevalonate kinase: functional investigation of the recombinant human
+    enzyme.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; primary characterization of recombinant human PMVK
+      establishing the phosphomevalonate kinase activity, ATP binding, and monomeric state.
+- id: PMID:17180682
+  title: Localization of the pre-squalene segment of the isoprenoid biosynthetic pathway
+    in mammalian peroxisomes.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: DISPUTED
+    review_notes: PubMed-verified citation, but its conclusion of peroxisomal localization
+      of presqualene enzymes (including PMVK) is contradicted by PMID:14729858 and
+      PMID:27052676 and by the UniProt CAUTION note; the field consensus is cytosolic.
+- id: PMID:17902708
+  title: Functional evaluation of conserved basic residues in human phosphomevalonate
+    kinase.
+  findings: []
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+- id: PMID:27052676
+  title: Loss-of-function Mutation in PMVK Causes Autosomal Dominant Disseminated
+    Superficial Porokeratosis.
+  findings: []
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified HuRI interactome map. The PMVK interactors it reports are
+      high-throughput Y2H hits with no functional follow-up; supports only a bare, and
+      uninformative, protein-binding annotation.
+- id: PMID:8663599
+  title: Molecular cloning of human phosphomevalonate kinase and identification of
+    a consensus peroxisomal targeting sequence.
+  findings: []
+- id: PMID:9392419
+  title: Post-translational regulation of mevalonate kinase by intermediates of the
+    cholesterol and nonsterol isoprene biosynthetic pathways.
+  findings: []
+- id: Reactome:R-HSA-1655839
+  title: Expression of Phosphomevalonate Kinase (PMVK)
+  findings: []
+- id: Reactome:R-HSA-191422
+  title: Mevalonate-5-phosphate is further phosphorylated
+  findings: []
+- id: Reactome:R-HSA-9969896
+  title: Lanosterol biosynthesis
+  findings: []
+- id: file:human/PMVK/PMVK-uniprot.txt
+  title: UniProtKB Q15126 (PMVK_HUMAN) record
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProt entry; source for the EC 2.7.4.2 catalytic activity, the
+      isoprenoid/IPP PATHWAY statement, the cytosolic subcellular location, the ATP-binding
+      features, and the CAUTION note reconciling the peroxisome-vs-cytosol history.
+core_functions:
+- description: Phosphomevalonate kinase activity - ATP-dependent phosphorylation of
+    (R)-mevalonate 5-phosphate to (R)-mevalonate 5-diphosphate, the direct precursor step
+    to isopentenyl diphosphate in the mevalonate pathway.
+  molecular_function:
+    id: GO:0004631
+    label: phosphomevalonate kinase activity
+  directly_involved_in:
+    - id: GO:0019287
+      label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  supported_by:
+    - reference_id: PMID:16519518
+      supporting_text: Phosphomevalonate kinase (PMK) catalyzes a key step in isoprenoid/sterol
+    - reference_id: file:human/PMVK/PMVK-uniprot.txt
+      supporting_text: &#34;isopentenyl diphosphate from (R)-mevalonate:&#34;
+  locations:
+    - id: GO:0005829
+      label: cytosol
+- description: ATP binding required for phosphoryl transfer; ATP is the phosphate donor
+    consumed in the phosphomevalonate kinase reaction, coordinated by an N-terminal
+    Walker-A-like basic-residue motif.
+  molecular_function:
+    id: GO:0005524
+    label: ATP binding
+  directly_involved_in:
+    - id: GO:0019287
+      label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  supported_by:
+    - reference_id: PMID:16519518
+      supporting_text: an N-terminal basic
+    - reference_id: file:human/PMVK/PMVK-uniprot.txt
+      supporting_text: &#39;ligand=&#34;ATP&#34;&#39;
+  locations:
+    - id: GO:0005829
+      label: cytosol
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
