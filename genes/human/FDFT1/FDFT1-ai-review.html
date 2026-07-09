@@ -1,0 +1,3971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FDFT1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>FDFT1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P37268" target="_blank" class="term-link">
+                        P37268
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "FDFT1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P37268" data-a="DESCRIPTION: FDFT1 encodes squalene synthase (SQS; farnesyl-dip..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FDFT1 encodes squalene synthase (SQS; farnesyl-diphosphate farnesyltransferase 1; EC 2.5.1.21), the enzyme that catalyses the first committed step of sterol biosynthesis. It performs the reductive, head-to-head condensation of two molecules of farnesyl diphosphate (FPP) to form squalene, proceeding in two half-reactions via the stable presqualene diphosphate (PSQPP) intermediate followed by an NAD(P)H- and Mg2+-dependent reduction. Because FPP lies at the branch point of the isoprenoid pathway, squalene synthase commits the isoprenoid pool specifically to the sterol branch (squalene to lanosterol to cholesterol), diverting it away from the non-sterol branches (dolichol, ubiquinone, heme A, and protein prenylation). The protein is a C-terminally anchored, multi-pass endoplasmic reticulum membrane enzyme with its catalytic domain facing the cytoplasm. Squalene synthase is widely expressed, is a pharmacological target for cholesterol lowering, and biallelic loss-of-function causes squalene synthase deficiency (SQSD), a congenital disorder of cholesterol biosynthesis featuring developmental delay, facial dysmorphism, and low total/LDL cholesterol.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Squalene synthase is a C-terminally anchored endoplasmic reticulum membrane protein; the phylogenetic IBA correctly places its active enzymatic location at the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the subcellular location as the endoplasmic reticulum membrane (multi-pass), consistent with the family-wide phylogenetic inference. This is a core aspect of the gene&#39;s biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051996" target="_blank" class="term-link">
+                                    GO:0051996
+                                </a>
+                            </span>
+                            <span class="term-label">squalene synthase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0051996" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function. FDFT1 is squalene synthase, catalysing the NAD(P)H-dependent condensation of two farnesyl diphosphate molecules to squalene (EC 2.5.1.21).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is fully supported by experimental characterization of the human enzyme, including the crystal structure and catalytic assays. This is the defining core function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">through a reductive dimerization of two farnesyl diphosphate (FPP)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0006695" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Squalene synthase catalyses the first committed step toward cholesterol; its product squalene is cyclised (via lanosterol) to cholesterol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported: FPP conversion to squalene by SQS is the first committed step in cholesterol formation, and the human enzyme functionally complements sterol-deficient yeast. This is a core biological process for the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">squalene synthase represents the first committed</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Squalene synthase catalyzes the biosynthesis of squalene, a key</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045338" target="_blank" class="term-link">
+                                    GO:0045338
+                                </a>
+                            </span>
+                            <span class="term-label">farnesyl diphosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0045338" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FPP is the substrate of squalene synthase; the enzyme consumes two FPP molecules per catalytic cycle, so it participates in farnesyl diphosphate metabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate: SQS is the enzyme that diverts FPP into the sterol branch, and FPP sits at the branch point of the isoprenoid pathway. This is correct though secondary to the squalene synthase activity/cholesterol biosynthesis annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the final branch point in the isoprenoid biosynthesis pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005783" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localizes to the endoplasmic reticulum. Correct but less precise than the ER membrane annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt ER membrane subcellular location and with the IDA HPA immunofluorescence annotation to the ER. ER is a valid (broader) location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane localization, mapped from the UniProt subcellular location keyword.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches the curated UniProt subcellular location; SQS is a multi-pass ER membrane protein. Core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006694" target="_blank" class="term-link">
+                                    GO:0006694
+                                </a>
+                            </span>
+                            <span class="term-label">steroid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0006694" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad parent term covering sterol/cholesterol biosynthesis. True but less specific than cholesterol biosynthetic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct as a broader classification of the gene&#39;s role in sterol/cholesterol synthesis; retained but not the most informative BP term (see GO:0006695).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">It is the first committed enzyme of the sterol biosynthesis pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008610" target="_blank" class="term-link">
+                                    GO:0008610
+                                </a>
+                            </span>
+                            <span class="term-label">lipid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0008610" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Very general parent term (sterols are lipids). True but uninformative relative to the cholesterol/sterol biosynthesis annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not incorrect: cholesterol biosynthesis is a lipid biosynthetic process. Retained as a high-level classification; the more specific terms carry the biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">It is the first committed enzyme of the sterol biosynthesis pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0016020" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization; SQS is a multi-pass membrane protein. Correct but far less specific than endoplasmic reticulum membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but a high-level parent of the ER membrane annotation. Retained; the ER membrane term is the informative one.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016765" target="_blank" class="term-link">
+                                    GO:0016765
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring alkyl or aryl (other than methyl) groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0016765" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Parent MF term corresponding to EC 2.5.1.- (alkyl/aryl transferases); squalene synthase (EC 2.5.1.21) is a member. Correct but general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> An InterPro2GO mapping to the correct enzymatic superclass. It is accurate but subsumed by the specific squalene synthase [NAD(P)H] activity term (GO:0051996).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.5.1.21</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045338" target="_blank" class="term-link">
+                                    GO:0045338
+                                </a>
+                            </span>
+                            <span class="term-label">farnesyl diphosphate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0045338" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based duplicate of the IBA farnesyl diphosphate metabolic process annotation; FPP is the substrate of SQS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; consistent with the IBA annotation to the same term. SQS consumes FPP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051996" target="_blank" class="term-link">
+                                    GO:0051996
+                                </a>
+                            </span>
+                            <span class="term-label">squalene synthase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0051996" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (RHEA/EC 2.5.1.21) mapping to the core squalene synthase activity. Duplicate of the experimentally-supported EXP/IBA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly recapitulates the core molecular function from RHEA:32295/32299 and EC 2.5.1.21.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.5.1.21</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23864651" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23864651
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The identification of novel proteins that interact with the ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005515" data-r="PMID:23864651" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FDFT1/SQS was identified as one of many candidate interactors of the GLP-1 receptor in a membrane split-ubiquitin yeast two-hybrid / CO-IP screen. This is a generic protein-binding annotation with no specific molecular function attached.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) is uninformative and, here, derives from a high-throughput GLP-1R interactome screen in which SQS is a co-detected membrane partner; it does not describe the enzyme&#39;s function. Per curation policy, marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23864651" target="_blank" class="term-link">
+                                        PMID:23864651
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identify proteins that interact with the GLP-1R</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein-binding annotation arising from an interactome-scale edgotyping study of Mendelian disease alleles. Generic and uninformative for FDFT1 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding from a systematic interaction-perturbation dataset; no specific binding partner/function is established for SQS beyond an entry in a large interaction map. Marked as over-annotated per policy (not removed).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                                        PMID:25910212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">two-thirds of disease-associated alleles perturb protein-protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Multiple binary interactions for FDFT1 from HuRI (human reference interactome, Y2H). Many partners are ER/membrane proteins, consistent with an ER-membrane enzyme, but no specific molecular function is defined by these bare protein-binding calls.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare protein binding (GO:0005515) from a proteome-scale binary interactome; uninformative regarding SQS function. Marked as over-annotated rather than removed, per curation policy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005783" data-r="GO_REF:0000052" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct immunofluorescence (Human Protein Atlas) localizes FDFT1 to the endoplasmic reticulum.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) localization consistent with the curated ER membrane subcellular location. Supports the core ER localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane localization inferred by sequence similarity to an ortholog (UniProtKB:Q02769, rat SQS). Consistent with all other localization evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Curator-judged sequence-similarity transfer of the ER membrane location; agrees with the IBA, IDA (ER), TAS (Reactome), and IEA annotations. Core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/FDFT1/FDFT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051996" target="_blank" class="term-link">
+                                    GO:0051996
+                                </a>
+                            </span>
+                            <span class="term-label">squalene synthase [NAD(P)H] activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10896663
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of human squalene synthase. A key enzyme i...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0051996" data-r="PMID:10896663" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental determination of squalene synthase catalytic activity on the human enzyme, accompanying its crystal structure: reductive dimerization of two FPP molecules to squalene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental support (EXP) for the defining molecular function from the human SQS crystal-structure/catalysis study. This is the anchor experimental annotation for the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">through a reductive dimerization of two farnesyl diphosphate (FPP)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                        PMID:10896663
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Squalene synthase catalyzes the biosynthesis of squalene, a key</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655850
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="Reactome:R-HSA-1655850" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (FDFT1 expression event) places the enzyme at the ER membrane. Consistent with all other localization evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable author statement from Reactome agreeing with the curated ER membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1655850
+
+                                </span>
+
+                                <div class="support-text">The FDFT1 gene is transcribed to yield mRNA</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191402
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="Reactome:R-HSA-191402" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction (reduction of presqualene diphosphate to squalene) is annotated to the ER membrane, where SQS acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome TAS for the second half-reaction of squalene synthesis, consistent with the ER membrane localization of the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191402
+
+                                </span>
+
+                                <div class="support-text">catalyzes the reduction of presqualene diphosphate (PSQPP) to squalene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191405
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0005789" data-r="Reactome:R-HSA-191405" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome reaction (dimerization of two FPP molecules to presqualene diphosphate) at the ER membrane, catalysed by FDFT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome TAS for the first half-reaction of squalene synthesis, consistent with the ER membrane localization of the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-191405
+
+                                </span>
+
+                                <div class="support-text">catalyzes the reductive dimerization of two farnesyl diphosphate (FAPP) molecules to form</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006694" target="_blank" class="term-link">
+                                    GO:0006694
+                                </a>
+                            </span>
+                            <span class="term-label">steroid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8474436
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conservation between human and fungal squalene synthetases: ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0006694" data-r="PMID:8474436" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQS is a major control point of sterol biosynthesis; human/yeast/fungal enzymes are conserved and the human enzyme rescues sterol-deficient yeast. Steroid (sterol) biosynthesis is a broad but accurate BP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable author statement supported by demonstrated conservation and functional complementation. Correct though broader than the cholesterol biosynthetic process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link">
+                                        PMID:8474436
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is thought to represent a major control point</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link">
+                                        PMID:8474436
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reversed the ergosterol requirement of S.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8474436
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conservation between human and fungal squalene synthetases: ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P37268" data-a="GO:0016020" data-r="PMID:8474436" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> SQS is predicted/shown to be a C-terminal membrane-spanning protein. Generic membrane term; the ER membrane annotations are more specific.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Traceable author statement; correct that SQS is a membrane protein. Subsumed by the ER membrane annotations, which carry the informative localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link">
+                                        PMID:8474436
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">C-terminal membrane-spanning proteins of approximately 50</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Squalene synthase: catalyses the NAD(P)H- and Mg2+-dependent reductive condensation of two molecules of farnesyl diphosphate to squalene (via presqualene diphosphate), the first committed step of sterol biosynthesis, at the endoplasmic reticulum membrane.</h3>
+                <span class="vote-buttons" data-g="P37268" data-a="FUNCTION: Squalene synthase: catalyses the NAD(P)H- and Mg2+..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051996" target="_blank" class="term-link">
+                            squalene synthase [NAD(P)H] activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                cholesterol biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                                PMID:10896663
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">through a reductive dimerization of two farnesyl diphosphate (FPP)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/FDFT1/FDFT1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10896663" target="_blank" class="term-link">
+                            PMID:10896663
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of human squalene synthase. A key enzyme in cholesterol biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human squalene synthase catalyses biosynthesis of squalene through reductive dimerization of two FPP molecules; conversion of FPP to squalene is the first committed step in cholesterol formation.</div>
+
+                        <div class="finding-text">"through a reductive dimerization of two farnesyl diphosphate (FPP)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23864651" target="_blank" class="term-link">
+                            PMID:23864651
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The identification of novel proteins that interact with the GLP-1 receptor and restrain its activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8474436" target="_blank" class="term-link">
+                            PMID:8474436
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Conservation between human and fungal squalene synthetases: similarities in structure, function, and regulation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Squalene synthetase (EC 2.5.1.21) is a major control point of isoprene and sterol biosynthesis; the human enzyme is a C-terminal membrane-spanning ~50 kDa protein and functionally complements sterol-deficient (ERG9) yeast.</div>
+
+                        <div class="finding-text">"is thought to represent a major control point"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655850
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Farnesyldiphosphate Farnesyltransferase (FDFT1, Squalene Synthase)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191402
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reduction of presqualene diphosphate to form squalene</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191405
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Two FAPP molecules dimerize to form presqualene diphosphate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/FDFT1/FDFT1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P37268 (FDFT_HUMAN) entry - Squalene synthase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(FDFT1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P37268" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fdft1-squalene-synthase-farnesyl-diphosphate-farnesyltransferase-1-review-notes">FDFT1 (Squalene synthase / farnesyl-diphosphate farnesyltransferase 1) review notes</h1>
+<p>UniProtKB: P37268 | HGNC:3629 | EC 2.5.1.21 | Human (NCBITaxon:9606)</p>
+<h2 id="function-verified">Function (verified)</h2>
+<p>FDFT1 is <strong>squalene synthase (SQS/SS)</strong>, also called farnesyl-diphosphate<br />
+farnesyltransferase 1 (FPP:FPP farnesyltransferase). It catalyses the <strong>first<br />
+committed step of sterol biosynthesis</strong>: the reductive head-to-head (1'-1)<br />
+condensation of <strong>two molecules of farnesyl diphosphate (FPP) to squalene</strong>,<br />
+proceeding via a stable <strong>presqualene diphosphate (PSQPP)</strong> intermediate and an<br />
+NAD(P)H-dependent reduction.</p>
+<ul>
+<li>UniProt FUNCTION [file:human/FDFT1/FDFT1-uniprot.txt]: "Catalyzes the condensation<br />
+  of 2 farnesyl pyrophosphate (FPP) moieties to form squalene. Proceeds in two<br />
+  distinct steps. In the first half-reaction, two molecules of FPP react to form the<br />
+  stable presqualene diphosphate intermediate (PSQPP) ... In the second half-reaction,<br />
+  PSQPP undergoes heterolysis, isomerization, and reduction with NADPH or NADH to form<br />
+  squalene. It is the first committed enzyme of the sterol biosynthesis pathway."</li>
+<li>Catalytic activity (Rhea:RHEA:32295, EC 2.5.1.21): 2 (2E,6E)-farnesyl diphosphate +<br />
+  NADPH + H+ = squalene + 2 diphosphate + NADP+. Also uses NADH (RHEA:32299).<br />
+  Requires Mg2+ cofactor (PubMed:24531458).</li>
+<li>PATHWAY (UniProt): Terpene metabolism; lanosterol biosynthesis; lanosterol from<br />
+  farnesyl diphosphate: step 1/3.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10896663" title="Squalene synthase catalyzes the biosynthesis of squalene, a key   cholesterol precursor, through a reductive dimerization of two farnesyl diphosphate   (FPP) molecules.">PMID:10896663</a> and "Because FPP is located at the final branch point in the<br />
+  isoprenoid biosynthesis pathway, its conversion to squalene through the action of<br />
+  squalene synthase represents the first committed step in the formation of cholesterol"<br />
+  — establishes both the reaction and the branch-point/committed-step role. This is the<br />
+  human SQS crystal structure paper (2.15 A, residues 39-370).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24531458">PMID:24531458</a> structural insights into catalytic mechanism, Mg2+/NADP binding sites<br />
+  (abstract not cached; used as ECO:0000269 support in UniProt for the reactions).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/8474436" title="Squalene synthetase (farnesyl diphosphate:farnesyl diphosphate   farnesyltransferase; EC 2.5.1.21) is thought to represent a major control point of   isoprene and sterol biosynthesis in eukaryotes.">PMID:8474436</a> Human/yeast conservation; human<br />
+  cDNA can rescue S. cerevisiae ERG9 disruption; predicted C-terminal membrane-spanning<br />
+  ~50 kDa protein.</li>
+</ul>
+<h2 id="branch-point-biology">Branch point biology</h2>
+<p>FPP sits at the branch point of the isoprenoid pathway. SQS commits FPP specifically to<br />
+the sterol branch (squalene -&gt; lanosterol -&gt; cholesterol), diverting it away from the<br />
+non-sterol branches (dolichol, ubiquinone/CoQ, heme A, protein prenylation). This makes<br />
+SQS a pharmacological target (statin-sparing lipid-lowering; inhibitors TAK-475/lapaquistat,<br />
+zaragozic acids) that lowers sterol synthesis without depleting the non-sterol isoprenoids<br />
+depleted by HMG-CoA reductase inhibition.</p>
+<h2 id="localization">Localization</h2>
+<p>C-terminally anchored <strong>endoplasmic reticulum membrane</strong> protein.<br />
+- UniProt SUBCELLULAR LOCATION: "Endoplasmic reticulum membrane ... Multi-pass membrane<br />
+  protein" (two C-terminal TM helices, FT TRANSMEM 284-304 and 384-404; the catalytic<br />
+  domain 31-370 is cytosolic-facing, consistent with the ER GO:0098554 cytoplasmic-side<br />
+  annotation).<br />
+- GOA has IDA (HPA immunofluorescence, GO_REF:0000052) to endoplasmic reticulum, plus<br />
+  IBA/ISS/TAS/IEA to ER membrane. HPA reports low tissue specificity; widely expressed.</p>
+<h2 id="disease">Disease</h2>
+<p><strong>Squalene synthase deficiency (SQSD; MIM:618156)</strong> — autosomal recessive congenital<br />
+disorder of cholesterol biosynthesis. <a href="https://pubmed.ncbi.nlm.nih.gov/29909962">PMID:29909962</a> (Coman et al. 2018, Am J Hum Genet)<br />
+first characterised it: profound developmental delay, brain abnormalities, 2/3 syndactyly<br />
+of toes, facial dysmorphism, low total and LDL cholesterol, abnormal urine organic acids<br />
+(heptadecanoid / methylsuccinate features from accumulated FPP-derived metabolites). SLOS-like.<br />
+UniProt DISEASE + TISSUE SPECIFICITY (widely expressed) cite this paper. (Abstract not cached;<br />
+used only as background, not as supporting_text.)</p>
+<h2 id="protein-protein-interactions-ipi-go0005515">Protein-protein interactions (IPI, GO:0005515)</h2>
+<p>GOA carries many <code>protein binding</code> (GO:0005515) IPI annotations from high-throughput<br />
+interactome maps. These are bare protein-binding and per policy should be<br />
+MARK_AS_OVER_ANNOTATED (not informative; not core function; not removed).<br />
+- PMID:23864651 — GLP-1R interactome (MYTH split-ubiquitin Y2H + CO-IP). FDFT1/SQS<br />
+  (P37268) appears as one of many GLP-1R (P43220) interactors; membrane-based screen. No<br />
+  functional consequence for SQS shown.<br />
+- PMID:25910212 — "Widespread macromolecular interaction perturbations in human genetic<br />
+  disorders" (edgotyping); interactome-scale.<br />
+- PMID:32296183 — HuRI, the human binary reference interactome (Y2H). FDFT1 shown to bind<br />
+  ~16 partners (AQP6, ARL13B, CD74, CD79A, CLN5, CREB3, ELOVL4, FAM209A, GJA8, GPR152,<br />
+  JAGN1, NCAPH2, PANX1, SLC10A1, SLC35C2, TLCD4, TMX2 in UniProt INTERACTION block). Many<br />
+  are ER/membrane proteins; consistent with an ER-membrane enzyme co-detected in<br />
+  membrane-Y2H, but none establish a specific molecular function beyond catalysis.</p>
+<h2 id="annotation-set-assessment-goa-p37268">Annotation-set assessment (GOA, P37268)</h2>
+<p>Core (ACCEPT):<br />
+- GO:0051996 squalene synthase [NAD(P)H] activity — MF, has EXP (PMID:10896663), IBA, IEA<br />
+- GO:0006695 cholesterol biosynthetic process — BP, IBA<br />
+- GO:0005789 endoplasmic reticulum membrane — CC, IBA is_active_in + ISS/TAS/IEA located_in<br />
+- GO:0005783 endoplasmic reticulum — CC, IDA (HPA)</p>
+<p>Accept (correct, broader or context):<br />
+- GO:0045338 farnesyl diphosphate metabolic process — BP (FPP is the substrate)<br />
+- GO:0006694 steroid biosynthetic process — BP (broad parent of sterol/cholesterol biosynth)<br />
+- GO:0008610 lipid biosynthetic process — BP (broad but true)<br />
+- GO:0016765 transferase, transferring alkyl/aryl (other than methyl) groups — MF (EC 2.5.1.-<br />
+  parent of the squalene-synthase activity; correct but general)<br />
+- GO:0016020 membrane — CC (general; true)</p>
+<p>MARK_AS_OVER_ANNOTATED:<br />
+- GO:0005515 protein binding (x3 PMIDs) — bare protein binding, uninformative HT interactome.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P37268
+gene_symbol: FDFT1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  FDFT1 encodes squalene synthase (SQS; farnesyl-diphosphate farnesyltransferase 1;
+  EC 2.5.1.21), the enzyme that catalyses the first committed step of sterol
+  biosynthesis. It performs the reductive, head-to-head condensation of two molecules
+  of farnesyl diphosphate (FPP) to form squalene, proceeding in two half-reactions via
+  the stable presqualene diphosphate (PSQPP) intermediate followed by an NAD(P)H- and
+  Mg2+-dependent reduction. Because FPP lies at the branch point of the isoprenoid
+  pathway, squalene synthase commits the isoprenoid pool specifically to the sterol
+  branch (squalene to lanosterol to cholesterol), diverting it away from the non-sterol
+  branches (dolichol, ubiquinone, heme A, and protein prenylation). The protein is a
+  C-terminally anchored, multi-pass endoplasmic reticulum membrane enzyme with its
+  catalytic domain facing the cytoplasm. Squalene synthase is widely expressed, is a
+  pharmacological target for cholesterol lowering, and biallelic loss-of-function causes
+  squalene synthase deficiency (SQSD), a congenital disorder of cholesterol biosynthesis
+  featuring developmental delay, facial dysmorphism, and low total/LDL cholesterol.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Squalene synthase is a C-terminally anchored endoplasmic reticulum membrane protein;
+      the phylogenetic IBA correctly places its active enzymatic location at the ER membrane.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records the subcellular location as the endoplasmic reticulum membrane
+      (multi-pass), consistent with the family-wide phylogenetic inference. This is a
+      core aspect of the gene&#39;s biology.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0051996
+    label: squalene synthase [NAD(P)H] activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function. FDFT1 is squalene synthase, catalysing the NAD(P)H-dependent
+      condensation of two farnesyl diphosphate molecules to squalene (EC 2.5.1.21).
+    action: ACCEPT
+    reason: &gt;-
+      The IBA is fully supported by experimental characterization of the human enzyme,
+      including the crystal structure and catalytic assays. This is the defining core
+      function of the gene.
+    supported_by:
+    - reference_id: PMID:10896663
+      supporting_text: through a reductive dimerization of two farnesyl diphosphate (FPP)
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Squalene synthase catalyses the first committed step toward cholesterol; its product
+      squalene is cyclised (via lanosterol) to cholesterol.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported: FPP conversion to squalene by SQS is the first committed step in
+      cholesterol formation, and the human enzyme functionally complements sterol-deficient
+      yeast. This is a core biological process for the gene.
+    supported_by:
+    - reference_id: PMID:10896663
+      supporting_text: squalene synthase represents the first committed
+    - reference_id: PMID:10896663
+      supporting_text: Squalene synthase catalyzes the biosynthesis of squalene, a key
+- term:
+    id: GO:0045338
+    label: farnesyl diphosphate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      FPP is the substrate of squalene synthase; the enzyme consumes two FPP molecules per
+      catalytic cycle, so it participates in farnesyl diphosphate metabolism.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate: SQS is the enzyme that diverts FPP into the sterol branch, and FPP sits at
+      the branch point of the isoprenoid pathway. This is correct though secondary to the
+      squalene synthase activity/cholesterol biosynthesis annotations.
+    supported_by:
+    - reference_id: PMID:10896663
+      supporting_text: the final branch point in the isoprenoid biosynthesis pathway
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localizes to the endoplasmic reticulum. Correct but less precise than the ER membrane
+      annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the UniProt ER membrane subcellular location and with the IDA HPA
+      immunofluorescence annotation to the ER. ER is a valid (broader) location.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER membrane localization, mapped from the UniProt subcellular location keyword.
+    action: ACCEPT
+    reason: &gt;-
+      Matches the curated UniProt subcellular location; SQS is a multi-pass ER membrane
+      protein. Core localization.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0006694
+    label: steroid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad parent term covering sterol/cholesterol biosynthesis. True but less specific
+      than cholesterol biosynthetic process.
+    action: ACCEPT
+    reason: &gt;-
+      Correct as a broader classification of the gene&#39;s role in sterol/cholesterol
+      synthesis; retained but not the most informative BP term (see GO:0006695).
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: It is the first committed enzyme of the sterol biosynthesis pathway
+- term:
+    id: GO:0008610
+    label: lipid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Very general parent term (sterols are lipids). True but uninformative relative to the
+      cholesterol/sterol biosynthesis annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Not incorrect: cholesterol biosynthesis is a lipid biosynthetic process. Retained as a
+      high-level classification; the more specific terms carry the biology.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: It is the first committed enzyme of the sterol biosynthesis pathway
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic membrane localization; SQS is a multi-pass membrane protein. Correct but far
+      less specific than endoplasmic reticulum membrane.
+    action: ACCEPT
+    reason: &gt;-
+      True but a high-level parent of the ER membrane annotation. Retained; the ER membrane
+      term is the informative one.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0016765
+    label: transferase activity, transferring alkyl or aryl (other than methyl) groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Parent MF term corresponding to EC 2.5.1.- (alkyl/aryl transferases); squalene synthase
+      (EC 2.5.1.21) is a member. Correct but general.
+    action: ACCEPT
+    reason: &gt;-
+      An InterPro2GO mapping to the correct enzymatic superclass. It is accurate but subsumed
+      by the specific squalene synthase [NAD(P)H] activity term (GO:0051996).
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: EC=2.5.1.21
+- term:
+    id: GO:0045338
+    label: farnesyl diphosphate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro-based duplicate of the IBA farnesyl diphosphate metabolic process annotation;
+      FPP is the substrate of SQS.
+    action: ACCEPT
+    reason: &gt;-
+      Correct; consistent with the IBA annotation to the same term. SQS consumes FPP.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)
+- term:
+    id: GO:0051996
+    label: squalene synthase [NAD(P)H] activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (RHEA/EC 2.5.1.21) mapping to the core squalene synthase activity. Duplicate of
+      the experimentally-supported EXP/IBA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly recapitulates the core molecular function from RHEA:32295/32299 and EC 2.5.1.21.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: EC=2.5.1.21
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23864651
+  qualifier: enables
+  review:
+    summary: &gt;-
+      FDFT1/SQS was identified as one of many candidate interactors of the GLP-1 receptor in a
+      membrane split-ubiquitin yeast two-hybrid / CO-IP screen. This is a generic protein-binding
+      annotation with no specific molecular function attached.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding (GO:0005515) is uninformative and, here, derives from a
+      high-throughput GLP-1R interactome screen in which SQS is a co-detected membrane partner;
+      it does not describe the enzyme&#39;s function. Per curation policy, marked as over-annotated
+      rather than removed.
+    supported_by:
+    - reference_id: PMID:23864651
+      supporting_text: identify proteins that interact with the GLP-1R
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Protein-binding annotation arising from an interactome-scale edgotyping study of Mendelian
+      disease alleles. Generic and uninformative for FDFT1 molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding from a systematic interaction-perturbation dataset; no specific binding
+      partner/function is established for SQS beyond an entry in a large interaction map. Marked as
+      over-annotated per policy (not removed).
+    supported_by:
+    - reference_id: PMID:25910212
+      supporting_text: two-thirds of disease-associated alleles perturb protein-protein
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Multiple binary interactions for FDFT1 from HuRI (human reference interactome, Y2H). Many
+      partners are ER/membrane proteins, consistent with an ER-membrane enzyme, but no specific
+      molecular function is defined by these bare protein-binding calls.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Bare protein binding (GO:0005515) from a proteome-scale binary interactome; uninformative
+      regarding SQS function. Marked as over-annotated rather than removed, per curation policy.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct immunofluorescence (Human Protein Atlas) localizes FDFT1 to the endoplasmic reticulum.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) localization consistent with the curated ER membrane subcellular location.
+      Supports the core ER localization.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER membrane localization inferred by sequence similarity to an ortholog (UniProtKB:Q02769,
+      rat SQS). Consistent with all other localization evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Curator-judged sequence-similarity transfer of the ER membrane location; agrees with the IBA,
+      IDA (ER), TAS (Reactome), and IEA annotations. Core localization.
+    supported_by:
+    - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0051996
+    label: squalene synthase [NAD(P)H] activity
+  evidence_type: EXP
+  original_reference_id: PMID:10896663
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental determination of squalene synthase catalytic activity on the human enzyme,
+      accompanying its crystal structure: reductive dimerization of two FPP molecules to squalene.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental support (EXP) for the defining molecular function from the human SQS
+      crystal-structure/catalysis study. This is the anchor experimental annotation for the core
+      function.
+    supported_by:
+    - reference_id: PMID:10896663
+      supporting_text: through a reductive dimerization of two farnesyl diphosphate (FPP)
+    - reference_id: PMID:10896663
+      supporting_text: Squalene synthase catalyzes the biosynthesis of squalene, a key
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655850
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (FDFT1 expression event) places the enzyme at the ER membrane. Consistent with all
+      other localization evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Traceable author statement from Reactome agreeing with the curated ER membrane location.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1655850
+      supporting_text: The FDFT1 gene is transcribed to yield mRNA
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191402
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome reaction (reduction of presqualene diphosphate to squalene) is annotated to the ER
+      membrane, where SQS acts.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome TAS for the second half-reaction of squalene synthesis, consistent with the ER
+      membrane localization of the enzyme.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191402
+      supporting_text: catalyzes the reduction of presqualene diphosphate (PSQPP) to squalene
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191405
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome reaction (dimerization of two FPP molecules to presqualene diphosphate) at the ER
+      membrane, catalysed by FDFT1.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome TAS for the first half-reaction of squalene synthesis, consistent with the ER
+      membrane localization of the enzyme.
+    supported_by:
+    - reference_id: Reactome:R-HSA-191405
+      supporting_text: catalyzes the reductive dimerization of two farnesyl diphosphate (FAPP) molecules to form
+- term:
+    id: GO:0006694
+    label: steroid biosynthetic process
+  evidence_type: TAS
+  original_reference_id: PMID:8474436
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      SQS is a major control point of sterol biosynthesis; human/yeast/fungal enzymes are conserved
+      and the human enzyme rescues sterol-deficient yeast. Steroid (sterol) biosynthesis is a broad
+      but accurate BP.
+    action: ACCEPT
+    reason: &gt;-
+      Traceable author statement supported by demonstrated conservation and functional
+      complementation. Correct though broader than the cholesterol biosynthetic process term.
+    supported_by:
+    - reference_id: PMID:8474436
+      supporting_text: is thought to represent a major control point
+    - reference_id: PMID:8474436
+      supporting_text: reversed the ergosterol requirement of S.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:8474436
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      SQS is predicted/shown to be a C-terminal membrane-spanning protein. Generic membrane term;
+      the ER membrane annotations are more specific.
+    action: ACCEPT
+    reason: &gt;-
+      Traceable author statement; correct that SQS is a membrane protein. Subsumed by the ER
+      membrane annotations, which carry the informative localization.
+    supported_by:
+    - reference_id: PMID:8474436
+      supporting_text: C-terminal membrane-spanning proteins of approximately 50
+core_functions:
+- description: &gt;-
+    Squalene synthase: catalyses the NAD(P)H- and Mg2+-dependent reductive condensation of
+    two molecules of farnesyl diphosphate to squalene (via presqualene diphosphate), the first
+    committed step of sterol biosynthesis, at the endoplasmic reticulum membrane.
+  molecular_function:
+    id: GO:0051996
+    label: squalene synthase [NAD(P)H] activity
+  directly_involved_in:
+  - id: GO:0006695
+    label: cholesterol biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:10896663
+    supporting_text: through a reductive dimerization of two farnesyl diphosphate (FPP)
+  - reference_id: file:human/FDFT1/FDFT1-uniprot.txt
+    supporting_text: Catalyzes the condensation of 2 farnesyl pyrophosphate (FPP)
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10896663
+  title: Crystal structure of human squalene synthase. A key enzyme in cholesterol
+    biosynthesis.
+  findings:
+  - statement: &gt;-
+      Human squalene synthase catalyses biosynthesis of squalene through reductive
+      dimerization of two FPP molecules; conversion of FPP to squalene is the first
+      committed step in cholesterol formation.
+    supporting_text: through a reductive dimerization of two farnesyl diphosphate (FPP)
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Human SQS crystal-structure and catalysis paper; directly establishes the core
+      molecular function (EC 2.5.1.21) and the first-committed-step role.
+- id: PMID:23864651
+  title: The identification of novel proteins that interact with the GLP-1 receptor
+    and restrain its activity.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GLP-1R interactome (MYTH Y2H + CO-IP). FDFT1 is one of many co-detected interactors;
+      supports only a bare GO:0005515 protein-binding annotation, not SQS function.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-scale edgotyping study; source of a generic protein-binding IPI for FDFT1.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome (Y2H); source of multiple bare GO:0005515 protein-binding calls
+      for FDFT1, many with ER/membrane partners but no defined molecular function.
+- id: PMID:8474436
+  title: &#39;Conservation between human and fungal squalene synthetases: similarities
+    in structure, function, and regulation.&#39;
+  findings:
+  - statement: &gt;-
+      Squalene synthetase (EC 2.5.1.21) is a major control point of isoprene and sterol
+      biosynthesis; the human enzyme is a C-terminal membrane-spanning ~50 kDa protein and
+      functionally complements sterol-deficient (ERG9) yeast.
+    supporting_text: is thought to represent a major control point
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning/characterization of human hepatic squalene synthase; establishes conservation,
+      membrane topology, and role in sterol biosynthesis (basis of the TAS annotations).
+- id: Reactome:R-HSA-1655850
+  title: Expression of Farnesyldiphosphate Farnesyltransferase (FDFT1, Squalene Synthase)
+  findings: []
+- id: Reactome:R-HSA-191402
+  title: Reduction of presqualene diphosphate to form squalene
+  findings: []
+- id: Reactome:R-HSA-191405
+  title: Two FAPP molecules dimerize to form presqualene diphosphate
+  findings: []
+- id: file:human/FDFT1/FDFT1-uniprot.txt
+  title: UniProtKB P37268 (FDFT_HUMAN) entry - Squalene synthase
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
