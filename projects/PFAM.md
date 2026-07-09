@@ -206,6 +206,14 @@ validation**, not an asserted fact.
   release that re-integrates a signature into a new entry, `pfam2go` can transiently
   retain GO terms that InterPro2GO has temporarily dropped. This is a versioning
   artifact to be aware of, not a curation resource.
+- **Worked example of the coverage gap at gene level.** The
+  [ProtNLM2 evaluation](PROTNLM_EVALUATION.md) found that ML function prediction is largely
+  filling exactly the ~18k-family space InterPro abstains from — see its
+  [InterPro2GO coverage gaps](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) note, where
+  three uncharacterized proteins receive likely-correct, domain-derivable functions that
+  InterPro2GO never emits (olfactomedin has no mapping; KilA-N's DNA-binding term sits only
+  on the unassigned APSES superfamily entry; MCM-4 matched only the unintegrated Pfam
+  `PF21128`). That is the demand-side counterpart to this project's supply-side analysis.
 
 ## Where increased precision actually lives (follow-ups)
 
