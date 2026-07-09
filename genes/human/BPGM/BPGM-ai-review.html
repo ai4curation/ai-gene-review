@@ -1,0 +1,3235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPGM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BPGM</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P07738" target="_blank" class="term-link">
+                        P07738
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "BPGM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P07738" data-a="DESCRIPTION: Bisphosphoglycerate mutase (BPGM) is the enzyme of..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Bisphosphoglycerate mutase (BPGM) is the enzyme of the Rapoport-Luebering shunt, a branch of glycolysis that is prominently expressed in erythrocytes. It is a cytosolic homodimeric, trifunctional member of the cofactor-dependent (histidine) phosphoglycerate mutase family and uses a phospho-histidine catalytic intermediate. Its principal 2,3-bisphosphoglycerate synthase / bisphosphoglycerate mutase activity (EC 5.4.2.4) converts 1,3-bisphosphoglycerate to 2,3-bisphosphoglycerate (2,3-BPG); it additionally has a 2,3-BPG phosphatase activity that degrades 2,3-BPG to 3-phosphoglycerate and a weak phosphoglycerate mutase activity (EC 5.4.2.11). 2,3-BPG is the major allosteric effector of hemoglobin: it binds preferentially to deoxyhemoglobin and lowers hemoglobin oxygen affinity, promoting oxygen delivery to tissues. By routing 1,3-bisphosphoglycerate through the shunt, BPGM also bypasses the ATP-generating phosphoglycerate kinase (PGK1) step of glycolysis. Loss-of-function causes bisphosphoglycerate mutase deficiency (familial erythrocytosis type 8), characterized by low 2,3-BPG, increased hemoglobin-oxygen affinity, and secondary erythrocytosis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0004082" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred bisphosphoglycerate mutase activity. This is the principal, experimentally established molecular function of BPGM (EC 5.4.2.4; synthesis of 2,3-bisphosphoglycerate from 1,3-bisphosphoglycerate) and the core function of the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is correct and at the appropriate level of specificity. It matches the enzyme&#39;s defining catalytic activity, established biochemically and structurally in human BPGM.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BPGM/BPGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Plays a major role in regulating hemoglobin oxygen affinity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link">
+                                        PMID:2542247
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is a trifunctional enzyme which</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytosolic localization. BPGM is a soluble cytosolic enzyme of the erythrocyte, consistent with its role in glycolysis / the Rapoport-Luebering shunt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization. Family members are cytosolic and BPGM is a soluble erythrocyte enzyme with no membrane or organelle-targeting features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BPGM/BPGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Expressed in red blood cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based mapping to the root-level &#34;catalytic activity&#34; term. BPGM is an enzyme, so this is not wrong, but it is far less informative than the specific bisphosphoglycerate mutase activity already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an uninformative high-level parent of the specific molecular function GO:0004082, which is independently annotated. It adds no functional information.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0004082" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt/RHEA/EC 5.4.2.4) assertion of bisphosphoglycerate mutase activity, duplicating the IBA and experimental annotations for the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, consistent with the RHEA:17765 / EC 5.4.2.4 reaction recorded in UniProt. Duplicate of the IBA/TAS annotations, which is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BPGM/BPGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">controlling the levels of its allosteric effector 2,3-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0004619" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (EC 5.4.2.11 / RHEA:15901) assertion of phosphoglycerate mutase activity. BPGM does exhibit a weak/secondary phosphoglycerate mutase activity in addition to its principal bisphosphoglycerate mutase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a genuine but secondary/minor activity of BPGM (UniProt records EC 5.4.2.11 in addition to the principal EC 5.4.2.4), so it is correct but not the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BPGM/BPGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Also exhibits mutase (EC 5.4.2.11)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assertion that BPGM is involved in the glycolytic process. BPGM operates in the Rapoport-Luebering shunt, a branch of glycolysis, acting on the glycolytic intermediate 1,3-bisphosphoglycerate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct: the Rapoport-Luebering shunt is a glycolytic branch and BPGM acts on/around the 1,3-bisphosphoglycerate node of glycolysis (bypassing the PGK1 ATP-generating step). No more specific &#34;2,3-BPG metabolic process&#34; term exists in GO, so this is the best-fitting BP.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016868" target="_blank" class="term-link">
+                                    GO:0016868
+                                </a>
+                            </span>
+                            <span class="term-label">intramolecular phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0016868" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based mapping to intramolecular phosphotransferase activity, the parent class that captures the mutase/isomerase mechanism (phospho-group transfer within a molecule via a phospho-histidine intermediate).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct branch and mechanistically accurate, but it is a less-informative parent of the specific bisphosphoglycerate mutase activity (GO:0004082) that is already annotated.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a large-scale interactome/affinity-purification study (WITH/FROM UniProtKB:P15259, PGAM2). This term conveys no specific molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;protein binding&#34; (GO:0005515) is uninformative per curation guidelines. The interaction (with PGAM2, a paralogous phosphoglycerate mutase) is from a high-throughput interactome screen and does not establish a specific functional role; retained but flagged rather than used as a core function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput binary interactome map (HuRI; WITH/FROM UniProtKB:P15259, PGAM2). Uninformative as a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same rationale as the other protein-binding IPI annotations: GO:0005515 is uninformative and derives from a genome-scale interactome screen; kept but marked as over-annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale affinity-purification network (BioPlex; WITH/FROM UniProtKB:P15259, PGAM2). Uninformative as a molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same rationale as the other protein-binding IPI annotations: GO:0005515 is uninformative and derives from a high-throughput interactome screen; kept but marked as over-annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901136" target="_blank" class="term-link">
+                                    GO:1901136
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798335
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:1901136" data-r="Reactome:R-HSA-6798335" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable involvement in a carbohydrate-derivative catabolic process, reflecting BPGM consuming/isomerising the sugar-phosphate 1,3-bisphosphoglycerate (and the phosphatase breakdown of 2,3-BPG) within the Rapoport-Luebering shunt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A defensible but broad process description of BPGM&#39;s action on phosphorylated glycerate intermediates; the more specific and central process is the glycolytic Rapoport-Luebering shunt (glycolytic process). Kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798335
+
+                                </span>
+
+                                <div class="support-text">One of its functions is the isomerisation of 1,3-bisphosphoglycerate (1,3BPG)  to 2,3-bisphosphoglycerate (2,3BPG)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798335
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0004082" data-r="Reactome:R-HSA-6798335" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable assertion of bisphosphoglycerate mutase activity (isomerisation of 1,3-BPG to 2,3-BPG). This is the core molecular function of BPGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function with a traceable Reactome reaction (BPGM dimer isomerises 1,3BPG to 2,3BPG). Duplicate of the IBA/IEA annotations for GO:0004082, which is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798335
+
+                                </span>
+
+                                <div class="support-text">Bisphosphoglycerate mutase (BPGM) is an erythrocyte-specific trifunctional enzyme.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798335
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005829" data-r="Reactome:R-HSA-6798335" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable cytosolic localization, consistent with the soluble erythrocyte Rapoport-Luebering shunt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization, corroborating the IBA cytosol annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of BPGM in urinary/prostatic-secretion exosome preparations. This is a proteome-inventory observation, not the functional site of BPGM, which acts as a soluble cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exosome/secretome mass-spec inventories frequently capture abundant cytosolic enzymes as passengers. There is no evidence that BPGM functions in the extracellular exosome; its catalytic role is cytosolic. Retained but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2542247
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization, and structure of a mutant 89 Ar...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0005975" data-r="PMID:2542247" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (NAS) involvement in carbohydrate metabolism, reflecting BPGM&#39;s action on glycerate-phosphate intermediates of glycolysis / the Rapoport-Luebering shunt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A broad parent process; correct but less informative than the glycolytic process annotation. Kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link">
+                                        PMID:2542247
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">is a trifunctional enzyme which</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2542247
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization, and structure of a mutant 89 Ar...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0004082" data-r="PMID:2542247" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable assertion of bisphosphoglycerate mutase activity from a study characterizing a catalytically impaired human BPGM variant (89 Arg-&gt;Cys) with markedly reduced synthase and mutase activities, directly linking the protein to this activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, supported by biochemical characterization of the human enzyme and a disease-associated active-site variant. Duplicate of other GO:0004082 annotations, which is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link">
+                                        PMID:2542247
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">displays synthase, mutase, and phosphatase activities.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link">
+                                        PMID:2542247
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">normal and that of the mutase 4.1%.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007585" target="_blank" class="term-link">
+                                    GO:0007585
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory gaseous exchange by respiratory system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2542247
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Isolation, characterization, and structure of a mutant 89 Ar...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07738" data-a="GO:0007585" data-r="PMID:2542247" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable annotation to respiratory gaseous exchange by the respiratory system. BPGM does modulate systemic oxygen delivery by setting 2,3-BPG levels and thereby hemoglobin oxygen affinity, but this GO term denotes gas exchange by the respiratory (breathing) system (lungs), not the erythrocyte hemoglobin-affinity mechanism through which BPGM acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BPGM&#39;s contribution to oxygen transport is via 2,3-BPG allosteric regulation of hemoglobin, not via respiratory-system gas exchange. The term is a broad/mismatched process for this enzyme; the oxygen-delivery role is better captured through its molecular function and the 2,3-BPG glycolytic shunt. Retained but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/BPGM/BPGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Plays a major role in regulating hemoglobin oxygen affinity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Bisphosphoglycerate mutase / 2,3-bisphosphoglycerate synthase activity: BPGM isomerises the glycolytic intermediate 1,3-bisphosphoglycerate to 2,3-bisphosphoglycerate (2,3-BPG) in the erythrocyte Rapoport-Luebering shunt (and, at lower pH, degrades 2,3-BPG via its phosphatase activity). By controlling 2,3-BPG levels it sets hemoglobin oxygen affinity, promoting oxygen delivery to tissues, and it bypasses the ATP-generating PGK1 step of glycolysis.</h3>
+                <span class="vote-buttons" data-g="P07738" data-a="FUNCTION: Bisphosphoglycerate mutase / 2,3-bisphosphoglycera..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                            bisphosphoglycerate mutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/BPGM/BPGM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Plays a major role in regulating hemoglobin oxygen affinity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-6798335
+
+                        </span>
+
+                        <div class="finding-text">One of its functions is the isomerisation of 1,3-bisphosphoglycerate (1,3BPG)  to 2,3-bisphosphoglycerate (2,3BPG)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2542247" target="_blank" class="term-link">
+                            PMID:2542247
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Isolation, characterization, and structure of a mutant 89 Arg</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798335
+
+                    </span>
+                </div>
+
+                <div class="reference-title">BPGM dimer isomerises 1,3BPG to 2,3BPG</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/BPGM/BPGM-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry P07738 (PMGE_HUMAN), Bisphosphoglycerate mutase</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What determines the in vivo balance between the synthase, mutase, and phosphatase activities of BPGM, and how is 2,3-BPG homeostasis regulated in erythrocytes under different physiological conditions (e.g., hypoxia, altitude, anemia)?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P07738" data-a="Q: What determines the in vivo balance between the sy..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the reported BPGM-PGAM2 interaction have any functional significance, or is it an artifact of high-throughput interactome screens between two closely related mutases?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P07738" data-a="Q: Does the reported BPGM-PGAM2 interaction have any ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Knockdown/knockout of BPGM in erythroid cells with metabolomic measurement of 2,3-BPG and quantification of the resulting shift in hemoglobin oxygen-affinity (P50) to confirm the gene-to-phenotype link.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of BPGM lowers erythrocyte 2,3-BPG and increases hemoglobin oxygen affinity.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P07738" data-a="EXPERIMENT: Knockdown/knockout of BPGM in erythroid cells with..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of active-site residues (e.g., His-11, His-89, Arg-90) to dissect the contributions of synthase vs mutase vs phosphatase activities to 2,3-BPG levels.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Distinct active-site residues differentially control the synthase, mutase, and phosphatase activities that together set steady-state 2,3-BPG.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P07738" data-a="EXPERIMENT: Structure-guided mutagenesis of active-site residu..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(BPGM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P07738" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="bpgm-bisphosphoglycerate-mutase-review-notes">BPGM (bisphosphoglycerate mutase) — review notes</h1>
+<p>UniProtKB: P07738 (PMGE_HUMAN). Human. HGNC:1093. Chromosome 7.</p>
+<h2 id="core-biology">Core biology</h2>
+<ul>
+<li>BPGM is the enzyme of the <strong>Rapoport-Luebering shunt</strong>, a branch of glycolysis that is highly<br />
+  expressed in erythrocytes.</li>
+<li><strong>Trifunctional enzyme</strong> of the cofactor-dependent phosphoglycerate mutase (dPGM) family, BPG-dependent<br />
+  PGAM subfamily; shares the phospho-histidine catalytic mechanism.</li>
+<li>PMID:2542247 abstract: "Bisphosphoglycerate mutase (EC 5.4.2.4.) is a trifunctional enzyme which<br />
+    displays synthase, mutase, and phosphatase activities."</li>
+<li>Principal activity: <strong>2,3-bisphosphoglycerate synthase / bisphosphoglycerate mutase</strong> (EC 5.4.2.4),<br />
+  converting 1,3-bisphosphoglycerate to 2,3-bisphosphoglycerate (2,3-BPG).</li>
+<li>RHEA:17765: (2R)-3-phospho-glyceroyl phosphate = (2R)-2,3-bisphosphoglycerate + H(+); EC 5.4.2.4.</li>
+<li>Also a weak <strong>phosphoglycerate mutase</strong> activity (EC 5.4.2.11; RHEA:15901, 2-PG &lt;=&gt; 3-PG) and a<br />
+<strong>2,3-BPG phosphatase</strong> activity degrading 2,3-BPG to 3-phosphoglycerate.</li>
+<li>UniProt FUNCTION (PMID:21045285): "Plays a major role in regulating hemoglobin oxygen affinity by<br />
+    controlling the levels of its allosteric effector 2,3-bisphosphoglycerate (2,3-BPG). Also exhibits<br />
+    mutase (EC 5.4.2.11) activity."</li>
+<li>UniProt ACTIVITY REGULATION (PMID:10477269, PMID:21045285): "At alkaline pH BPGM favors the synthase<br />
+    reaction; however, at lower pH the phosphatase reaction is dominant. Inhibited by citrate."</li>
+<li><strong>2,3-BPG</strong> is the major allosteric effector that binds deoxyhemoglobin and <strong>lowers hemoglobin oxygen<br />
+  affinity</strong>, promoting O2 delivery to tissues (Reactome R-HSA-6798335: "In red blood cells, 2,3BPG is<br />
+  the main allosteric effector of hemoglobin, binding preferentially to the deoxygenated hemoglobin<br />
+  tetramer, thus reducing oxygen affinity"). The shunt also bypasses the ATP-generating PGK1 step of<br />
+  glycolysis.</li>
+<li><strong>Homodimer</strong> (PMID:15258155, PMID:17052986). Cytosolic. Active-site His-11 forms the<br />
+  tele-phosphohistidine intermediate; His-89 proton donor/acceptor (UniProt ACT_SITE).</li>
+</ul>
+<h2 id="structure-localization">Structure / localization</h2>
+<ul>
+<li>259 aa, 30 kDa. Multiple crystal structures (1T8P, 2HHJ, 7THI, etc.).</li>
+<li>Cytosolic (soluble erythrocyte enzyme). Also detected in placental syncytiotrophoblast<br />
+  (PMID:16246416) and reported in urinary-prostatic exosome proteomes (PMID:23533145, mass-spec).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Deficiency causes <strong>bisphosphoglycerate mutase deficiency</strong> = Erythrocytosis, familial, 8 (ECYT8;<br />
+  MIM:222800): low 2,3-BPG, increased hemoglobin-oxygen affinity, secondary erythrocytosis<br />
+  (PMID:1421379, PMID:15054810, PMID:2542247).</li>
+<li>PMID:2542247: mutant "89 Arg-&gt;Cys" (mature-protein numbering; = residue 90 in UniProt) shows synthase<br />
+  0.57% and mutase 4.1% of normal, phosphatase unaffected — active-site Arg near substrate binding.</li>
+</ul>
+<h2 id="goa-annotations-17-lines-review-plan">GOA annotations (17 lines) — review plan</h2>
+<ul>
+<li>GO:0004082 bisphosphoglycerate mutase activity: appears 4x (IBA, IEA GO_REF:0000120, TAS Reactome,<br />
+  TAS PMID:2542247). ACCEPT the IBA as core MF; accept the others.</li>
+<li>GO:0005829 cytosol: IBA + TAS Reactome. ACCEPT (core localization).</li>
+<li>GO:0003824 catalytic activity (IEA InterPro): too general — MARK_AS_OVER_ANNOTATED (root-ish parent<br />
+  of the specific MF already present).</li>
+<li>GO:0004619 phosphoglycerate mutase activity (IEA UniProtKB-EC, EC 5.4.2.11): real secondary activity<br />
+  (UniProt lists EC 5.4.2.11). ACCEPT / KEEP_AS_NON_CORE.</li>
+<li>GO:0006096 glycolytic process (IEA): ACCEPT — Rapoport-Luebering shunt is a glycolytic branch.</li>
+<li>GO:0016868 intramolecular phosphotransferase activity (IEA InterPro): parent of the mutase MF; correct<br />
+  branch but less informative — KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0005515 protein binding x3 (IPI, all WITH/FROM P15259 PGAM2; HuRI/BioPlex-type interactome papers):<br />
+  bare protein binding, uninformative -&gt; MARK_AS_OVER_ANNOTATED (per policy, not REMOVE).</li>
+<li>GO:1901136 carbohydrate derivative catabolic process (TAS Reactome): the phosphatase/consumption of<br />
+  1,3-BPG; broad but defensible. KEEP_AS_NON_CORE.</li>
+<li>GO:0070062 extracellular exosome (HDA PMID:23533145): mass-spec exosome proteome; not the site of<br />
+  function. MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0005975 carbohydrate metabolic process (NAS PMID:2542247): broad parent of glycolysis;<br />
+  KEEP_AS_NON_CORE / MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0007585 respiratory gaseous exchange by respiratory system (TAS PMID:2542247): this term is about<br />
+  the respiratory <em>system</em> (breathing/lung gas exchange), NOT the erythrocyte O2-affinity role. BPGM's<br />
+  effect on O2 delivery is via hemoglobin, not respiratory-system gas exchange. Over-annotation /<br />
+  arguably wrong branch. MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="core-functions">Core functions</h2>
+<ul>
+<li>MF: GO:0004082 bisphosphoglycerate mutase activity.</li>
+<li>BP: GO:0006096 glycolytic process (the Rapoport-Luebering shunt branch that produces/degrades 2,3-BPG<br />
+  and regulates Hb O2 affinity). No dedicated "2,3-BPG metabolic process" term exists in GO.</li>
+<li>CC: GO:0005829 cytosol.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P07738
+gene_symbol: BPGM
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Bisphosphoglycerate mutase (BPGM) is the enzyme of the Rapoport-Luebering shunt, a branch
+  of glycolysis that is prominently expressed in erythrocytes. It is a cytosolic homodimeric,
+  trifunctional member of the cofactor-dependent (histidine) phosphoglycerate mutase family
+  and uses a phospho-histidine catalytic intermediate. Its principal 2,3-bisphosphoglycerate
+  synthase / bisphosphoglycerate mutase activity (EC 5.4.2.4) converts 1,3-bisphosphoglycerate
+  to 2,3-bisphosphoglycerate (2,3-BPG); it additionally has a 2,3-BPG phosphatase activity that
+  degrades 2,3-BPG to 3-phosphoglycerate and a weak phosphoglycerate mutase activity (EC 5.4.2.11).
+  2,3-BPG is the major allosteric effector of hemoglobin: it binds preferentially to
+  deoxyhemoglobin and lowers hemoglobin oxygen affinity, promoting oxygen delivery to tissues.
+  By routing 1,3-bisphosphoglycerate through the shunt, BPGM also bypasses the ATP-generating
+  phosphoglycerate kinase (PGK1) step of glycolysis. Loss-of-function causes bisphosphoglycerate
+  mutase deficiency (familial erythrocytosis type 8), characterized by low 2,3-BPG, increased
+  hemoglobin-oxygen affinity, and secondary erythrocytosis.
+existing_annotations:
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred bisphosphoglycerate mutase activity. This is the principal,
+      experimentally established molecular function of BPGM (EC 5.4.2.4; synthesis of
+      2,3-bisphosphoglycerate from 1,3-bisphosphoglycerate) and the core function of the gene.
+    action: ACCEPT
+    reason: &gt;-
+      The IBA is correct and at the appropriate level of specificity. It matches the enzyme&#39;s
+      defining catalytic activity, established biochemically and structurally in human BPGM.
+    supported_by:
+    - reference_id: file:human/BPGM/BPGM-uniprot.txt
+      supporting_text: &#34;Plays a major role in regulating hemoglobin oxygen affinity&#34;
+    - reference_id: PMID:2542247
+      supporting_text: &#34;is a trifunctional enzyme which&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetically inferred cytosolic localization. BPGM is a soluble cytosolic enzyme of the
+      erythrocyte, consistent with its role in glycolysis / the Rapoport-Luebering shunt.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization. Family members are cytosolic and BPGM is a soluble erythrocyte
+      enzyme with no membrane or organelle-targeting features.
+    supported_by:
+    - reference_id: file:human/BPGM/BPGM-uniprot.txt
+      supporting_text: &#34;Expressed in red blood cells.&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based mapping to the root-level &#34;catalytic activity&#34; term. BPGM is an enzyme, so
+      this is not wrong, but it is far less informative than the specific bisphosphoglycerate
+      mutase activity already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is an uninformative high-level parent of the specific molecular function GO:0004082,
+      which is independently annotated. It adds no functional information.
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (UniProt/RHEA/EC 5.4.2.4) assertion of bisphosphoglycerate mutase activity,
+      duplicating the IBA and experimental annotations for the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, consistent with the RHEA:17765 / EC 5.4.2.4 reaction
+      recorded in UniProt. Duplicate of the IBA/TAS annotations, which is acceptable.
+    supported_by:
+    - reference_id: file:human/BPGM/BPGM-uniprot.txt
+      supporting_text: &#34;controlling the levels of its allosteric effector 2,3-&#34;
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (EC 5.4.2.11 / RHEA:15901) assertion of phosphoglycerate mutase activity. BPGM
+      does exhibit a weak/secondary phosphoglycerate mutase activity in addition to its principal
+      bisphosphoglycerate mutase activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a genuine but secondary/minor activity of BPGM (UniProt records EC 5.4.2.11 in
+      addition to the principal EC 5.4.2.4), so it is correct but not the core function.
+    supported_by:
+    - reference_id: file:human/BPGM/BPGM-uniprot.txt
+      supporting_text: &#34;Also exhibits mutase (EC 5.4.2.11)&#34;
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assertion that BPGM is involved in the glycolytic process. BPGM operates in the
+      Rapoport-Luebering shunt, a branch of glycolysis, acting on the glycolytic intermediate
+      1,3-bisphosphoglycerate.
+    action: ACCEPT
+    reason: &gt;-
+      Correct: the Rapoport-Luebering shunt is a glycolytic branch and BPGM acts on/around the
+      1,3-bisphosphoglycerate node of glycolysis (bypassing the PGK1 ATP-generating step). No
+      more specific &#34;2,3-BPG metabolic process&#34; term exists in GO, so this is the best-fitting BP.
+- term:
+    id: GO:0016868
+    label: intramolecular phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based mapping to intramolecular phosphotransferase activity, the parent class that
+      captures the mutase/isomerase mechanism (phospho-group transfer within a molecule via a
+      phospho-histidine intermediate).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct branch and mechanistically accurate, but it is a less-informative parent of the
+      specific bisphosphoglycerate mutase activity (GO:0004082) that is already annotated.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a large-scale interactome/affinity-purification study (WITH/FROM
+      UniProtKB:P15259, PGAM2). This term conveys no specific molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;protein binding&#34; (GO:0005515) is uninformative per curation guidelines. The interaction
+      (with PGAM2, a paralogous phosphoglycerate mutase) is from a high-throughput interactome
+      screen and does not establish a specific functional role; retained but flagged rather than
+      used as a core function.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput binary interactome map (HuRI; WITH/FROM
+      UniProtKB:P15259, PGAM2). Uninformative as a molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same rationale as the other protein-binding IPI annotations: GO:0005515 is uninformative and
+      derives from a genome-scale interactome screen; kept but marked as over-annotation.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale affinity-purification network (BioPlex;
+      WITH/FROM UniProtKB:P15259, PGAM2). Uninformative as a molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same rationale as the other protein-binding IPI annotations: GO:0005515 is uninformative and
+      derives from a high-throughput interactome screen; kept but marked as over-annotation.
+- term:
+    id: GO:1901136
+    label: carbohydrate derivative catabolic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798335
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome-traceable involvement in a carbohydrate-derivative catabolic process, reflecting
+      BPGM consuming/isomerising the sugar-phosphate 1,3-bisphosphoglycerate (and the phosphatase
+      breakdown of 2,3-BPG) within the Rapoport-Luebering shunt.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A defensible but broad process description of BPGM&#39;s action on phosphorylated glycerate
+      intermediates; the more specific and central process is the glycolytic Rapoport-Luebering
+      shunt (glycolytic process). Kept as non-core.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798335
+      supporting_text: &#34;One of its functions is the isomerisation of 1,3-bisphosphoglycerate (1,3BPG)  to 2,3-bisphosphoglycerate (2,3BPG)&#34;
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798335
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome-traceable assertion of bisphosphoglycerate mutase activity (isomerisation of
+      1,3-BPG to 2,3-BPG). This is the core molecular function of BPGM.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function with a traceable Reactome reaction (BPGM dimer isomerises
+      1,3BPG to 2,3BPG). Duplicate of the IBA/IEA annotations for GO:0004082, which is acceptable.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798335
+      supporting_text: &#34;Bisphosphoglycerate mutase (BPGM) is an erythrocyte-specific trifunctional enzyme.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798335
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-traceable cytosolic localization, consistent with the soluble erythrocyte
+      Rapoport-Luebering shunt.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization, corroborating the IBA cytosol annotation.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of BPGM in urinary/prostatic-secretion exosome
+      preparations. This is a proteome-inventory observation, not the functional site of BPGM,
+      which acts as a soluble cytosolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Exosome/secretome mass-spec inventories frequently capture abundant cytosolic enzymes as
+      passengers. There is no evidence that BPGM functions in the extracellular exosome; its
+      catalytic role is cytosolic. Retained but flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &#34;exosome preparations were&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: NAS
+  original_reference_id: PMID:2542247
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated (NAS) involvement in carbohydrate metabolism, reflecting BPGM&#39;s action on
+      glycerate-phosphate intermediates of glycolysis / the Rapoport-Luebering shunt.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A broad parent process; correct but less informative than the glycolytic process
+      annotation. Kept as non-core.
+    supported_by:
+    - reference_id: PMID:2542247
+      supporting_text: &#34;is a trifunctional enzyme which&#34;
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2542247
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable assertion of bisphosphoglycerate mutase activity from a study characterizing a
+      catalytically impaired human BPGM variant (89 Arg-&gt;Cys) with markedly reduced synthase and
+      mutase activities, directly linking the protein to this activity.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, supported by biochemical characterization of the human enzyme and
+      a disease-associated active-site variant. Duplicate of other GO:0004082 annotations, which
+      is acceptable.
+    supported_by:
+    - reference_id: PMID:2542247
+      supporting_text: &#34;displays synthase, mutase, and phosphatase activities.&#34;
+    - reference_id: PMID:2542247
+      supporting_text: &#34;normal and that of the mutase 4.1%.&#34;
+- term:
+    id: GO:0007585
+    label: respiratory gaseous exchange by respiratory system
+  evidence_type: TAS
+  original_reference_id: PMID:2542247
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Traceable annotation to respiratory gaseous exchange by the respiratory system. BPGM does
+      modulate systemic oxygen delivery by setting 2,3-BPG levels and thereby hemoglobin oxygen
+      affinity, but this GO term denotes gas exchange by the respiratory (breathing) system
+      (lungs), not the erythrocyte hemoglobin-affinity mechanism through which BPGM acts.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      BPGM&#39;s contribution to oxygen transport is via 2,3-BPG allosteric regulation of hemoglobin,
+      not via respiratory-system gas exchange. The term is a broad/mismatched process for this
+      enzyme; the oxygen-delivery role is better captured through its molecular function and the
+      2,3-BPG glycolytic shunt. Retained but flagged as over-annotation.
+    supported_by:
+    - reference_id: file:human/BPGM/BPGM-uniprot.txt
+      supporting_text: &#34;Plays a major role in regulating hemoglobin oxygen affinity&#34;
+core_functions:
+- description: &gt;-
+    Bisphosphoglycerate mutase / 2,3-bisphosphoglycerate synthase activity: BPGM isomerises the
+    glycolytic intermediate 1,3-bisphosphoglycerate to 2,3-bisphosphoglycerate (2,3-BPG) in the
+    erythrocyte Rapoport-Luebering shunt (and, at lower pH, degrades 2,3-BPG via its phosphatase
+    activity). By controlling 2,3-BPG levels it sets hemoglobin oxygen affinity, promoting oxygen
+    delivery to tissues, and it bypasses the ATP-generating PGK1 step of glycolysis.
+  molecular_function:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  directly_involved_in:
+  - id: GO:0006096
+    label: glycolytic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/BPGM/BPGM-uniprot.txt
+    supporting_text: &#34;Plays a major role in regulating hemoglobin oxygen affinity&#34;
+  - reference_id: Reactome:R-HSA-6798335
+    supporting_text: &#34;One of its functions is the isomerisation of 1,3-bisphosphoglycerate (1,3BPG)  to 2,3-bisphosphoglycerate (2,3BPG)&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/GO_Central phylogenetic inference; supports the core bisphosphoglycerate mutase
+      activity and cytosol annotations at the correct level of specificity.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput exosome proteome inventory; BPGM detected as an abundant cytosolic passenger,
+      not evidence of extracellular-exosome function.
+- id: PMID:2542247
+  title: Isolation, characterization, and structure of a mutant 89 Arg
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Characterizes human BPGM as a trifunctional (synthase/mutase/phosphatase) enzyme and a
+      disease-associated active-site variant with reduced synthase and mutase activities.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale interactome (BioPlex-type) study; source of a bare protein-binding IPI (with
+      PGAM2), uninformative for specific molecular function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome map; source of a bare protein-binding IPI (with PGAM2), uninformative
+      for specific molecular function.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex proteome-scale network; source of a bare protein-binding IPI (with PGAM2),
+      uninformative for specific molecular function.
+- id: Reactome:R-HSA-6798335
+  title: BPGM dimer isomerises 1,3BPG to 2,3BPG
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction describing BPGM isomerising 1,3-BPG to 2,3-BPG, the allosteric hemoglobin
+      effector; directly supports the core molecular function and biological process.
+- id: file:human/BPGM/BPGM-uniprot.txt
+  title: UniProt entry P07738 (PMGE_HUMAN), Bisphosphoglycerate mutase
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt curated record documenting the trifunctional activities (EC 5.4.2.4, EC 5.4.2.11),
+      hemoglobin oxygen-affinity regulation via 2,3-BPG, homodimer, cytosolic erythrocyte
+      expression, and ECYT8 disease association.
+suggested_questions:
+- question: &gt;-
+    What determines the in vivo balance between the synthase, mutase, and phosphatase activities
+    of BPGM, and how is 2,3-BPG homeostasis regulated in erythrocytes under different physiological
+    conditions (e.g., hypoxia, altitude, anemia)?
+- question: &gt;-
+    Does the reported BPGM-PGAM2 interaction have any functional significance, or is it an
+    artifact of high-throughput interactome screens between two closely related mutases?
+suggested_experiments:
+- description: &gt;-
+    Knockdown/knockout of BPGM in erythroid cells with metabolomic measurement of 2,3-BPG and
+    quantification of the resulting shift in hemoglobin oxygen-affinity (P50) to confirm the
+    gene-to-phenotype link.
+  hypothesis: &gt;-
+    Loss of BPGM lowers erythrocyte 2,3-BPG and increases hemoglobin oxygen affinity.
+- description: &gt;-
+    Structure-guided mutagenesis of active-site residues (e.g., His-11, His-89, Arg-90) to
+    dissect the contributions of synthase vs mutase vs phosphatase activities to 2,3-BPG levels.
+  hypothesis: &gt;-
+    Distinct active-site residues differentially control the synthase, mutase, and phosphatase
+    activities that together set steady-state 2,3-BPG.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
