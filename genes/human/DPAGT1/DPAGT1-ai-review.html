@@ -1,0 +1,4551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPAGT1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DPAGT1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H3H5" target="_blank" class="term-link">
+                        Q9H3H5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DPAGT1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H3H5" data-a="DESCRIPTION: DPAGT1 (GlcNAc-1-P transferase, GPT; EC 2.7.8.15) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DPAGT1 (GlcNAc-1-P transferase, GPT; EC 2.7.8.15) is a polytopic (10-transmembrane) endoplasmic reticulum membrane enzyme that catalyzes the first and committed step of dolichol-linked oligosaccharide (LLO) assembly for protein N-linked glycosylation. On the cytoplasmic face of the ER membrane it transfers N-acetylglucosamine-1-phosphate (GlcNAc-1-P) from cytosolic UDP-GlcNAc onto the carrier lipid dolichyl phosphate (Dol-P), yielding GlcNAc-PP-dolichol (Dol-PP-GlcNAc), the membrane-anchored precursor onto which further sugars are added to build the 14-sugar N-glycan that is subsequently transferred to nascent proteins by oligosaccharyltransferase. The enzyme requires Mg2+, functions as a homodimer, and is a member of the polyprenyl-phosphate N-acetylhexosamine-1-phosphate transferase (PNPT) / glycosyltransferase family 4. It is the eukaryotic target of the nucleoside antibiotic tunicamycin, which acts as a competitive inhibitor mimicking UDP-GlcNAc. Loss-of-function variants cause DPAGT1-congenital disorder of glycosylation type Ij (CDG1J) and a limb-girdle form of congenital myasthenic syndrome (CMS13, with tubular aggregates); DPAGT1 overexpression contributes to aberrant N-glycosylation in oral cancer.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the defining GlcNAc-1-P transferase molecular function. This is the correct, well-supported core catalytic activity of DPAGT1/GPT and matches abundant experimental evidence in human and orthologs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of DPAGT1, confirmed enzymatically and structurally in human and by cross-species conservation. The IBA is at the correct level of specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the first and committed step of N-linked glycosylation on the cytosolic face of endoplasmic reticulum (ER) membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl phosphate (Dol-P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment placing DPAGT1 activity in a membrane. Correct but generic; DPAGT1 is specifically a multi-pass endoplasmic reticulum membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The essence (membrane-embedded catalysis) is correct, but &#39;membrane&#39; is a high-level term. The informative location is the ER membrane (GO:0005789), where the enzyme is a multi-pass integral membrane protein acting on the cytosolic leaflet.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    endoplasmic reticulum membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the first and committed step of N-linked glycosylation on the cytosolic face of endoplasmic reticulum (ER) membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro/RHEA/EC 2.7.8.15) assignment of the GlcNAc-1-P transferase activity. Consistent with the experimentally validated catalytic activity and correct EC number.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEA maps to the correct, specific molecular function (EC 2.7.8.15, RHEA:13289) that matches the experimental characterization of DPAGT1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">transferring GlcNAc-1-P from</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location mapping to ER membrane. This is the correct and informative localization of DPAGT1, an ER-resident multi-pass membrane enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ER membrane is the experimentally and structurally supported location of DPAGT1; the enzyme acts on the cytoplasmic leaflet of the ER membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hGPT crystallized as a homodimer with one tunicamycin molecule bound to the active site of each protomer near the cytosolic side of the ER membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006488" target="_blank" class="term-link">
+                                    GO:0006488
+                                </a>
+                            </span>
+                            <span class="term-label">dolichol-linked oligosaccharide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0006488" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping to the LLO biosynthetic process. DPAGT1 catalyzes the first, committed step of dolichol-linked oligosaccharide assembly, so this BP is directly and correctly assigned.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DPAGT1 initiates the dolichol cycle producing GlcNAc-PP-dolichol; this is the correct core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The product GlcNAc-PP-Dol is anchored to the ER membrane by its dolichyl moiety</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro) assignment of generic membrane localization. Correct but far less specific than ER membrane, which is available and directly supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct that DPAGT1 is membrane-integral, but &#39;membrane&#39; is uninformative; the specific ER membrane term (GO:0005789) is supported and preferred.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    endoplasmic reticulum membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016780" target="_blank" class="term-link">
+                                    GO:0016780
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, for other substituted phosphate groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0016780" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping to a broad phosphotransferase class. This is a correct but general parent of the specific DPAGT1 activity (GO:0003975), which is available and experimentally validated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016780 is a high-level ancestor of the specific UDP-GlcNAc:dolichyl-P GlcNAc-1-P transferase activity. The specific term GO:0003975 should be used.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl phosphate (Dol-P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IntAct IPI annotation from a large-scale neurodegenerative-disease interactome (yeast two-hybrid) screen, recording a single interaction with huntingtin (HTT, UniProtKB:P42858). &#39;Protein binding&#39; conveys no specific molecular function for DPAGT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#39;protein binding&#39; is uninformative and should be avoided as a function term. The interaction derives from a high-throughput ND-focused interactome screen and does not establish a specific molecular function or a validated biological role for DPAGT1. Retained (not removed) as an IPI-supported interaction record but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It facilitates the identification
+of interacting proteins that significantly influence mutant TDP-43 and HTT
+toxicity in transgenic flies</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006488" target="_blank" class="term-link">
+                                    GO:0006488
+                                </a>
+                            </span>
+                            <span class="term-label">dolichol-linked oligosaccharide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446193
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0006488" data-r="Reactome:R-HSA-446193" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion linking DPAGT1 to biosynthesis of the dolichol lipid-linked oligosaccharide (LLO) precursor. Consistent with DPAGT1&#39;s role initiating the 14-sugar N-glycan precursor pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates DPAGT1 as the first catalytic step of the LLO/N-glycan precursor pathway; this is a correct core biological process assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The product GlcNAc-PP-Dol is anchored to the ER membrane by its dolichyl moiety and then monosaccharide units are added sequentially to build the N-glycan that is then transferred</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446191
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="Reactome:R-HSA-446191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS for the GlcNAc-1-P transferase reaction (addition of N-acetylglucosamine to dolichyl phosphate). Matches the defining catalytic activity of DPAGT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates DPAGT1 as the enzyme that adds GlcNAc to dolichyl phosphate in the first step of LLO synthesis, the correct core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This reaction involves the transfer of N-acetylglucosamine-1-phosphate (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid dolichyl-phosphate (Dol-P).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-4549334
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="Reactome:R-HSA-4549334" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS (disease-variant reaction &#39;Defective DPAGT1 does not transfer GlcNAc to DOLP&#39;) again attributing the GlcNAc-1-P transferase activity to DPAGT1. Duplicate of the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; the disease-reaction framing reflects loss of the same activity in CDG1J/CMS13 variants.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This reaction involves the transfer of N-acetylglucosamine-1-phosphate (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid dolichyl-phosphate (Dol-P).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30388443
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structures of DPAGT1 Explain Glycosylation Disease Mechanism...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="PMID:30388443" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (structural/enzymatic) evidence for GlcNAc-1-P transferase activity: crystal structures of human DPAGT1 with UDP-GlcNAc and tunicamycin, Michaelis-Menten kinetics, and extensive active-site mutagenesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental characterization of the catalytic activity with defined kinetic parameters and mechanism; strongly supports the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl phosphate (Dol-P)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9451016" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9451016
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and functional expression of the human GlcNAc-1-P tr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="PMID:9451016" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental evidence: the human GPT cDNA was cloned by complementation of a conditional-lethal yeast GPT strain, and recombinant enzyme produced GlcNAc- and GlcNAc2-PP-dolichol, stimulated by dolichol phosphate and inhibited by tunicamycin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functional expression demonstrating the GlcNAc-1-P transferase activity of human DPAGT1; supports the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9451016" target="_blank" class="term-link">
+                                        PMID:9451016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">GlcNAc2-PP-Dolichol biosynthesis could be shown with isolated S.cerevisiae</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9451016" target="_blank" class="term-link">
+                                        PMID:9451016
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the enzyme for the committed step of the dolichol cycle</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of ER membrane localization (from ortholog UniProtKB:P23338). Consistent with the experimentally/structurally supported ER membrane residence of DPAGT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ER membrane is the correct, informative localization, corroborated by human structural data and UniProt subcellular-location annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0042802" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of identical (self) protein binding. DPAGT1 is a homodimer, so self-association is real, but this describes a quaternary/ structural property rather than the catalytic core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is experimentally supported (crystallized as a homodimer; UniProt SUBUNIT: Homodimer), so &#39;identical protein binding&#39; is valid. It is retained as a non-core structural feature rather than the defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hGPT crystallized as a homodimer with one tunicamycin molecule bound to the active site of each protomer near the cytosolic side of the ER membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29459785
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GlcNAc-1-P-transferase-tunicamycin complex structure reveals...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="PMID:29459785" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay evidence: crystal structure of human GPT with tunicamycin plus functional/enzymatic analyses defining the GlcNAc-1-P transferase reaction and its inhibition.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the catalytic activity; core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the first and committed step of N-linked glycosylation on the cytosolic face of endoplasmic reticulum (ER) membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006488" target="_blank" class="term-link">
+                                    GO:0006488
+                                </a>
+                            </span>
+                            <span class="term-label">dolichol-linked oligosaccharide biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29459785
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GlcNAc-1-P-transferase-tunicamycin complex structure reveals...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0006488" data-r="PMID:29459785" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence that DPAGT1 acts in dolichol-linked oligosaccharide biosynthesis, catalyzing the first committed step of LLO assembly on the cytosolic ER face.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DPAGT1 initiates the LLO/dolichol-cycle pathway; correct core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                        PMID:29459785
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This reaction involves the transfer of N-acetylglucosamine-1-phosphate (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid dolichyl-phosphate (Dol-P).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003976" target="_blank" class="term-link">
+                                    GO:0003976
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-lysosomal-enzyme N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6289658" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6289658
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Demonstration of the heterozygous state for I-cell disease a...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003976" data-r="PMID:6289658" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation to the UDP-GlcNAc:LYSOSOMAL-ENZYME GlcNAc-1-phosphotransferase activity, citing Varki et al. 1982 on I-cell disease (mucolipidosis II) and pseudo-Hurler polydystrophy heterozygote enzyme assays. That activity belongs to the distinct lysosomal-enzyme-targeting phosphotransferase (encoded by GNPTAB/GNPTG), not to DPAGT1. DPAGT1 transfers GlcNAc-1-P to the lipid dolichyl phosphate, not to lysosomal enzymes (mannose-6-phosphate marker formation).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This molecular function (GO:0003976) is a different enzyme&#39;s activity; the cited paper is entirely about I-cell disease / pseudo-Hurler polydystrophy (mucolipidosis II/III), which are caused by GNPTAB/GNPTG deficiency, not DPAGT1. The annotation conflates two similarly named but mechanistically distinct GlcNAc-1-phosphotransferases (lipid-acceptor DPAGT1 vs protein/lysosomal-enzyme acceptor GNPTAB). Per policy this experimental annotation is flagged as an over-annotation of a function that is not DPAGT1&#39;s rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6289658" target="_blank" class="term-link">
+                                        PMID:6289658
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a deficiency
+of the enzyme UDP-N-acetylglucosamine:lysosomal enzyme
+N-acetylglucosamine-1-phosphotransferase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-4549334
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0005789" data-r="Reactome:R-HSA-4549334" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS localizing DPAGT1 to the ER membrane (disease-variant reaction context). Consistent with the experimentally supported ER membrane residence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, informative ER membrane localization curated by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-446191
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0005789" data-r="Reactome:R-HSA-446191" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS localizing DPAGT1 to the ER membrane in the LLO-synthesis reaction. The dolichyl phosphate anchor ties the reaction to the ER membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core cellular component; the enzyme and its product are ER-membrane associated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                        PMID:30388443
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The product GlcNAc-PP-Dol is anchored to the ER membrane by its dolichyl moiety</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                    GO:0006487
+                                </a>
+                            </span>
+                            <span class="term-label">protein N-linked glycosylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19549906" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19549906
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Overexpression of DPAGT1 leads to aberrant N-glycosylation o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0006487" data-r="PMID:19549906" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype (siRNA knockdown/overexpression) evidence that DPAGT1 controls the extent of protein N-glycosylation: it initiates LLO synthesis and regulates E-cadherin N-glycosylation in oral cancer cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DPAGT1 is upstream of and required for protein N-linked glycosylation; perturbing DPAGT1 alters cellular N-glycosylation. Correct core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19549906" target="_blank" class="term-link">
+                                        PMID:19549906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">initiates the synthesis of the lipid-linked oligosaccharide (LLO) precursor for protein N-glycosylation in the endoplasmic reticulum</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19549906" target="_blank" class="term-link">
+                                        PMID:19549906
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">elevated expression of DPAGT1, the gene that initiates protein N-glycosylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12872255
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Deficiency of UDP-GlcNAc:Dolichol Phosphate N-Acetylglucosam...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="PMID:12872255" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype evidence: patient with CDG-Ij has GPT (DPAGT1) activity reduced to ~10% of normal; the Y170C variant produces near-inactive enzyme, directly tying the GlcNAc-1-P transferase activity to DPAGT1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss-of-activity in disease variants demonstrates that DPAGT1 encodes the GlcNAc-1-P transferase; supports the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link">
+                                        PMID:12872255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">N-acetyl-glucosamine-1 phosphate transferase (GPT) activity encoded by DPAGT1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link">
+                                        PMID:12872255
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the GPT activity is reduced to approximately 10% of normal levels</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                                    GO:0003975
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8179616" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8179616
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Major defect of carbohydrate-deficient-glycoprotein syndrome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0003975" data-r="PMID:8179616" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biochemical assay of GlcNAc-1-P transferase activity (and dolichyl phosphate content) in CDG-syndrome versus normal fibroblasts. Directly assays the DPAGT1/GPT enzymatic activity in human cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct enzymatic measurement of the GlcNAc-1-P transferase activity in human fibroblasts; supports the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8179616" target="_blank" class="term-link">
+                                        PMID:8179616
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activity in CDG syndrome fibroblasts were similar to those in normal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0016020" data-r="GO_REF:0000024" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of generic membrane localization. Correct but subsumed by the more informative ER membrane term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DPAGT1 is membrane-integral, but the specific ER membrane term (GO:0005789) is supported and preferable to generic &#39;membrane&#39;.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    endoplasmic reticulum membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8179616" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8179616
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Major defect of carbohydrate-deficient-glycoprotein syndrome...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0016020" data-r="PMID:8179616" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay associated DPAGT1/GPT activity with a membrane (microsomal) fraction. Correct but generic; ER membrane is the informative location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane association is experimentally consistent, but the specific ER membrane term (GO:0005789) is supported and preferable.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    endoplasmic reticulum membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043231" target="_blank" class="term-link">
+                                    GO:0043231
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular membrane-bounded organelle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12872255
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Deficiency of UDP-GlcNAc:Dolichol Phosphate N-Acetylglucosam...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3H5" data-a="GO:0043231" data-r="PMID:12872255" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence places DPAGT1 in an intracellular membrane-bounded organelle (microsomal/ER fraction from patient fibroblasts). This is a very general CC term; the specific organelle is the ER (ER membrane).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but high-level. The informative core localization is ER membrane (GO:0005789), already annotated. Retained as a non-core, less specific location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UDP-GlcNAc:dolichyl-phosphate GlcNAc-1-phosphotransferase (GPT) activity: transfers GlcNAc-1-phosphate from UDP-GlcNAc onto dolichyl phosphate to form GlcNAc-PP-dolichol, the first and committed step of dolichol-linked oligosaccharide (LLO) assembly, on the cytoplasmic face of the ER membrane.</h3>
+                <span class="vote-buttons" data-g="Q9H3H5" data-a="FUNCTION: UDP-GlcNAc:dolichyl-phosphate GlcNAc-1-phosphotran..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                            UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006488" target="_blank" class="term-link">
+                                dolichol-linked oligosaccharide biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                                PMID:29459785
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the first and committed step of N-linked glycosylation on the cytosolic face of endoplasmic reticulum (ER) membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                                PMID:30388443
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl phosphate (Dol-P)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Initiation of protein N-linked glycosylation: by producing the membrane-anchored GlcNAc-PP-dolichol precursor, DPAGT1 provides the substrate for subsequent LLO extension and thereby controls the extent of protein N-glycosylation.</h3>
+                <span class="vote-buttons" data-g="Q9H3H5" data-a="FUNCTION: Initiation of protein N-linked glycosylation: by p..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003975" target="_blank" class="term-link">
+                            UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006487" target="_blank" class="term-link">
+                                protein N-linked glycosylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19549906" target="_blank" class="term-link">
+                                PMID:19549906
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">initiates the synthesis of the lipid-linked oligosaccharide (LLO) precursor for protein N-glycosylation in the endoplasmic reticulum</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link">
+                                PMID:12872255
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">N-acetyl-glucosamine-1 phosphate transferase (GPT) activity encoded by DPAGT1</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/DPAGT1/DPAGT1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q9H3H5 (GPT_HUMAN) DPAGT1</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12872255" target="_blank" class="term-link">
+                            PMID:12872255
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deficiency of UDP-GlcNAc:Dolichol Phosphate N-Acetylglucosamine-1 Phosphate Transferase (DPAGT1) causes a novel congenital disorder of Glycosylation Type Ij.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19549906" target="_blank" class="term-link">
+                            PMID:19549906
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Overexpression of DPAGT1 leads to aberrant N-glycosylation of E-cadherin and cellular discohesion in oral cancer.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29459785" target="_blank" class="term-link">
+                            PMID:29459785
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GlcNAc-1-P-transferase-tunicamycin complex structure reveals basis for inhibition of N-glycosylation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30388443" target="_blank" class="term-link">
+                            PMID:30388443
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structures of DPAGT1 Explain Glycosylation Disease Mechanisms and Advance TB Antibiotic Design.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6289658" target="_blank" class="term-link">
+                            PMID:6289658
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Demonstration of the heterozygous state for I-cell disease and pseudo-Hurler polydystrophy by assay of N-acetylglucosaminylphosphotransferase in white blood cells and fibroblasts.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8179616" target="_blank" class="term-link">
+                            PMID:8179616
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Major defect of carbohydrate-deficient-glycoprotein syndrome is not found in the synthesis of dolichyl phosphate or N-acetylglucosaminyl-pyrophosphoryl-dolichol.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9451016" target="_blank" class="term-link">
+                            PMID:9451016
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and functional expression of the human GlcNAc-1-P transferase, the enzyme for the committed step of the dolichol cycle, by heterologous complementation in Saccharomyces cerevisiae.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446191
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Addition of N-acetyl-D-glucosamine to Dolichyl phosphate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-446193
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biosynthesis of the N-glycan precursor (dolichol lipid-linked oligosaccharide, LLO) and transfer to a nascent protein</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-4549334
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective DPAGT1 does not transfer GlcNAc to DOLP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DPAGT1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H3H5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="dpagt1-gpt-q9h3h5-review-notes">DPAGT1 (GPT / Q9H3H5) review notes</h1>
+<p>Human UDP-N-acetylglucosamine--dolichyl-phosphate N-acetylglucosaminephosphotransferase<br />
+(GlcNAc-1-P transferase, GPT). HGNC:2995. EC 2.7.8.15. 408 aa, 10-TM polytopic ER<br />
+membrane protein. Deep research (falcon) unavailable — provider out of credits (HTTP 402).<br />
+Review grounded in DPAGT1-uniprot.txt, DPAGT1-goa.tsv, and cached publications.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li>Catalyses the FIRST and COMMITTED step of dolichol-linked oligosaccharide (LLO)<br />
+  assembly for N-linked glycosylation. On the cytosolic face of the ER membrane it<br />
+  transfers GlcNAc-1-P from UDP-GlcNAc onto dolichyl phosphate (Dol-P), yielding<br />
+  GlcNAc-PP-dolichol (Dol-PP-GlcNAc).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29459785" title="catalyzes the first and committed step of N-linked glycosylation on the cytosolic face of endoplasmic reticulum (ER) membrane">PMID:29459785</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/30388443" title="It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl phosphate (Dol-P)">PMID:30388443</a></li>
+<li>Mg2+-dependent; homodimer; 10 TM helices; inhibited competitively by tunicamycin<br />
+  (structural analog / competitor of UDP-GlcNAc). PDB structures 5LEV/5O5E/6BW5/6BW6/6FM9/6FWZ.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/29459785" title="Magnesium is a required cofactor for GPT">PMID:29459785</a></li>
+<li>GO MF term used by GOA and for core_functions: GO:0003975<br />
+  "UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase activity"<br />
+  (label confirmed current in local go.db).</li>
+<li>BP: GO:0006488 dolichol-linked oligosaccharide biosynthetic process (IDA PMID:29459785);<br />
+  GO:0006487 protein N-linked glycosylation (IMP PMID:19549906).</li>
+<li>CC: GO:0005789 endoplasmic reticulum membrane; multi-pass.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>DPAGT1-CDG / CDG type Ij (CDG1J, MIM:608093) — GPT activity reduced to ~10% in patient<br />
+  fibroblasts, Y170C etc. <a href="https://pubmed.ncbi.nlm.nih.gov/12872255">PMID:12872255</a></li>
+<li>Congenital myasthenic syndrome 13 (CMS13/CMSTA2, MIM:614750), limb-girdle with tubular<br />
+  aggregates. [UniProt DISEASE; Reactome R-HSA-4549334; PMID:30388443]</li>
+</ul>
+<h2 id="annotation-specific-notes">Annotation-specific notes</h2>
+<ul>
+<li>GO:0003976 (UDP-N-acetylglucosamine-LYSOSOMAL-ENZYME N-acetylglucosaminephosphotransferase<br />
+  activity), IDA, PMID:6289658, assigned by MGI. This is the activity of the DISTINCT<br />
+  lysosomal-enzyme-targeting GlcNAc-1-phosphotransferase (GNPTAB/GNPTG; the I-cell disease<br />
+  / mucolipidosis II-III enzyme). PMID:6289658 (Varki et al.) is entirely about I-cell<br />
+  disease / pseudo-Hurler polydystrophy heterozygote assays of that lysosomal enzyme, NOT<br />
+  about DPAGT1's dolichol-P GlcNAc transferase. DPAGT1 transfers GlcNAc-1-P to a lipid<br />
+  (dolichyl phosphate), not to lysosomal-enzyme mannose-6-phosphate recognition markers.<br />
+  This is a wrong-function annotation (different enzyme). Marked MARK_AS_OVER_ANNOTATED<br />
+  (per policy, not REMOVE for an experimental annotation) — it is not DPAGT1's function.</li>
+<li>GO:0005515 protein binding (IPI, PMID:32814053, with UniProtKB:P42858 = HTT) — bare<br />
+  "protein binding" from a large-scale neurodegeneration Y2H/interactome screen; single<br />
+  HTT interaction, no functional MF. MARK_AS_OVER_ANNOTATED (uninformative per curation<br />
+  guidelines; do not REMOVE an IPI).</li>
+<li>GO:0042802 identical protein binding (ISS, GO_REF:0000024, from P24140) — supported by<br />
+  homodimer biology (UniProt SUBUNIT: Homodimer; PMID:29459785/30388443 crystallized as<br />
+  homodimer). ACCEPT as non-core (structural/quaternary, not the catalytic core function).</li>
+<li>GO:0016780 "phosphotransferase activity, for other substituted phosphate groups" (IEA<br />
+  InterPro) — correct but a parent/less-specific class of GO:0003975. MODIFY -&gt; GO:0003975.</li>
+<li>GO:0016020 membrane (IBA/IEA/ISS/IDA) — correct but generic; ER membrane (GO:0005789) is<br />
+  the informative term. Keep as accept/non-core; ER membrane is core CC.</li>
+<li>GO:0043231 intracellular membrane-bounded organelle (IDA PMID:12872255) — very generic<br />
+  CC, subsumed by ER membrane. KEEP_AS_NON_CORE.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H3H5
+gene_symbol: DPAGT1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: DPAGT1 (GlcNAc-1-P transferase, GPT; EC 2.7.8.15) is a polytopic (10-transmembrane)
+  endoplasmic reticulum membrane enzyme that catalyzes the first and committed step of
+  dolichol-linked oligosaccharide (LLO) assembly for protein N-linked glycosylation. On
+  the cytoplasmic face of the ER membrane it transfers N-acetylglucosamine-1-phosphate
+  (GlcNAc-1-P) from cytosolic UDP-GlcNAc onto the carrier lipid dolichyl phosphate (Dol-P),
+  yielding GlcNAc-PP-dolichol (Dol-PP-GlcNAc), the membrane-anchored precursor onto which
+  further sugars are added to build the 14-sugar N-glycan that is subsequently transferred
+  to nascent proteins by oligosaccharyltransferase. The enzyme requires Mg2+, functions as
+  a homodimer, and is a member of the polyprenyl-phosphate N-acetylhexosamine-1-phosphate
+  transferase (PNPT) / glycosyltransferase family 4. It is the eukaryotic target of the
+  nucleoside antibiotic tunicamycin, which acts as a competitive inhibitor mimicking
+  UDP-GlcNAc. Loss-of-function variants cause DPAGT1-congenital disorder of glycosylation
+  type Ij (CDG1J) and a limb-girdle form of congenital myasthenic syndrome (CMS13, with
+  tubular aggregates); DPAGT1 overexpression contributes to aberrant N-glycosylation in
+  oral cancer.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9H3H5-1
+- name: &#39;2&#39;
+  id: Q9H3H5-2
+  sequence_note: VSP_001803
+- name: &#39;3&#39;
+  id: Q9H3H5-3
+  sequence_note: VSP_008886
+existing_annotations:
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) assignment of the defining GlcNAc-1-P transferase molecular
+      function. This is the correct, well-supported core catalytic activity of DPAGT1/GPT
+      and matches abundant experimental evidence in human and orthologs.
+    action: ACCEPT
+    reason: This is the core molecular function of DPAGT1, confirmed enzymatically and
+      structurally in human and by cross-species conservation. The IBA is at the correct
+      level of specificity.
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;catalyzes the first and committed step of N-linked glycosylation\
+        \ on the cytosolic face of endoplasmic reticulum (ER) membrane&#34;
+    - reference_id: PMID:30388443
+      supporting_text: &#34;It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl\
+        \ unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl\
+        \ phosphate (Dol-P)&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic assignment placing DPAGT1 activity in a membrane. Correct but
+      generic; DPAGT1 is specifically a multi-pass endoplasmic reticulum membrane protein.
+    action: MODIFY
+    reason: &#34;The essence (membrane-embedded catalysis) is correct, but &#39;membrane&#39; is a\
+      \ high-level term. The informative location is the ER membrane (GO:0005789), where\
+      \ the enzyme is a multi-pass integral membrane protein acting on the cytosolic\
+      \ leaflet.&#34;
+    proposed_replacement_terms:
+    - id: GO:0005789
+      label: endoplasmic reticulum membrane
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;catalyzes the first and committed step of N-linked glycosylation\
+        \ on the cytosolic face of endoplasmic reticulum (ER) membrane&#34;
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Automated (ARBA/InterPro/RHEA/EC 2.7.8.15) assignment of the GlcNAc-1-P
+      transferase activity. Consistent with the experimentally validated catalytic
+      activity and correct EC number.
+    action: ACCEPT
+    reason: &#34;The IEA maps to the correct, specific molecular function (EC 2.7.8.15,\
+      \ RHEA:13289) that matches the experimental characterization of DPAGT1.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;transferring GlcNAc-1-P from&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Subcellular-location mapping to ER membrane. This is the correct and
+      informative localization of DPAGT1, an ER-resident multi-pass membrane enzyme.
+    action: ACCEPT
+    reason: &#34;ER membrane is the experimentally and structurally supported location of\
+      \ DPAGT1; the enzyme acts on the cytoplasmic leaflet of the ER membrane.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum&#34;
+    - reference_id: PMID:29459785
+      supporting_text: &#34;hGPT crystallized as a homodimer with one tunicamycin molecule\
+        \ bound to the active site of each protomer near the cytosolic side of the ER\
+        \ membrane&#34;
+- term:
+    id: GO:0006488
+    label: dolichol-linked oligosaccharide biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: InterPro2GO mapping to the LLO biosynthetic process. DPAGT1 catalyzes the
+      first, committed step of dolichol-linked oligosaccharide assembly, so this BP is
+      directly and correctly assigned.
+    action: ACCEPT
+    reason: &#34;DPAGT1 initiates the dolichol cycle producing GlcNAc-PP-dolichol; this is\
+      \ the correct core biological process.&#34;
+    supported_by:
+    - reference_id: PMID:30388443
+      supporting_text: &#34;The product GlcNAc-PP-Dol is anchored to the ER membrane by its\
+        \ dolichyl moiety&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Automated (ARBA/InterPro) assignment of generic membrane localization.
+      Correct but far less specific than ER membrane, which is available and directly
+      supported.
+    action: MODIFY
+    reason: &#34;Correct that DPAGT1 is membrane-integral, but &#39;membrane&#39; is uninformative;\
+      \ the specific ER membrane term (GO:0005789) is supported and preferred.&#34;
+    proposed_replacement_terms:
+    - id: GO:0005789
+      label: endoplasmic reticulum membrane
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+- term:
+    id: GO:0016780
+    label: phosphotransferase activity, for other substituted phosphate groups
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro2GO mapping to a broad phosphotransferase class. This is a correct
+      but general parent of the specific DPAGT1 activity (GO:0003975), which is available
+      and experimentally validated.
+    action: MODIFY
+    reason: &#34;GO:0016780 is a high-level ancestor of the specific UDP-GlcNAc:dolichyl-P\
+      \ GlcNAc-1-P transferase activity. The specific term GO:0003975 should be used.&#34;
+    proposed_replacement_terms:
+    - id: GO:0003975
+      label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+        activity
+    supported_by:
+    - reference_id: PMID:30388443
+      supporting_text: &#34;It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl\
+        \ unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl\
+        \ phosphate (Dol-P)&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: &#34;IntAct IPI annotation from a large-scale neurodegenerative-disease\
+      \ interactome (yeast two-hybrid) screen, recording a single interaction with\
+      \ huntingtin (HTT, UniProtKB:P42858). &#39;Protein binding&#39; conveys no specific\
+      \ molecular function for DPAGT1.&#34;
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#34;Per curation guidelines, bare &#39;protein binding&#39; is uninformative and should\
+      \ be avoided as a function term. The interaction derives from a high-throughput\
+      \ ND-focused interactome screen and does not establish a specific molecular\
+      \ function or a validated biological role for DPAGT1. Retained (not removed) as an\
+      \ IPI-supported interaction record but flagged as over-annotation.&#34;
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: &#34;It facilitates the identification \nof interacting proteins that\
+        \ significantly influence mutant TDP-43 and HTT \ntoxicity in transgenic flies&#34;
+- term:
+    id: GO:0006488
+    label: dolichol-linked oligosaccharide biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446193
+  qualifier: involved_in
+  review:
+    summary: &#34;Reactome traceable assertion linking DPAGT1 to biosynthesis of the\
+      \ dolichol lipid-linked oligosaccharide (LLO) precursor. Consistent with DPAGT1&#39;s\
+      \ role initiating the 14-sugar N-glycan precursor pathway.&#34;
+    action: ACCEPT
+    reason: &#34;Reactome curates DPAGT1 as the first catalytic step of the LLO/N-glycan\
+      \ precursor pathway; this is a correct core biological process assignment.&#34;
+    supported_by:
+    - reference_id: PMID:30388443
+      supporting_text: &#34;The product GlcNAc-PP-Dol is anchored to the ER membrane by its\
+        \ dolichyl moiety and then monosaccharide units are added sequentially to build\
+        \ the N-glycan that is then transferred&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446191
+  qualifier: enables
+  review:
+    summary: &#34;Reactome TAS for the GlcNAc-1-P transferase reaction (addition of\
+      \ N-acetylglucosamine to dolichyl phosphate). Matches the defining catalytic\
+      \ activity of DPAGT1.&#34;
+    action: ACCEPT
+    reason: &#34;Reactome curates DPAGT1 as the enzyme that adds GlcNAc to dolichyl phosphate\
+      \ in the first step of LLO synthesis, the correct core molecular function.&#34;
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;This reaction involves the transfer of N-acetylglucosamine-1-phosphate\
+        \ (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid\
+        \ dolichyl-phosphate (Dol-P).&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-4549334
+  qualifier: enables
+  review:
+    summary: &#34;Reactome TAS (disease-variant reaction &#39;Defective DPAGT1 does not transfer\
+      \ GlcNAc to DOLP&#39;) again attributing the GlcNAc-1-P transferase activity to DPAGT1.\
+      \ Duplicate of the core catalytic function.&#34;
+    action: ACCEPT
+    reason: &#34;Correct core molecular function; the disease-reaction framing reflects loss\
+      \ of the same activity in CDG1J/CMS13 variants.&#34;
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;This reaction involves the transfer of N-acetylglucosamine-1-phosphate\
+        \ (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid\
+        \ dolichyl-phosphate (Dol-P).&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: EXP
+  original_reference_id: PMID:30388443
+  qualifier: enables
+  review:
+    summary: &#34;Experimental (structural/enzymatic) evidence for GlcNAc-1-P transferase\
+      \ activity: crystal structures of human DPAGT1 with UDP-GlcNAc and tunicamycin,\
+      \ Michaelis-Menten kinetics, and extensive active-site mutagenesis.&#34;
+    action: ACCEPT
+    reason: &#34;Direct experimental characterization of the catalytic activity with defined\
+      \ kinetic parameters and mechanism; strongly supports the core molecular function.&#34;
+    supported_by:
+    - reference_id: PMID:30388443
+      supporting_text: &#34;It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl\
+        \ unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl\
+        \ phosphate (Dol-P)&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: EXP
+  original_reference_id: PMID:9451016
+  qualifier: enables
+  review:
+    summary: &#34;Experimental evidence: the human GPT cDNA was cloned by complementation of\
+      \ a conditional-lethal yeast GPT strain, and recombinant enzyme produced\
+      \ GlcNAc- and GlcNAc2-PP-dolichol, stimulated by dolichol phosphate and inhibited\
+      \ by tunicamycin.&#34;
+    action: ACCEPT
+    reason: &#34;Functional expression demonstrating the GlcNAc-1-P transferase activity of\
+      \ human DPAGT1; supports the core molecular function.&#34;
+    supported_by:
+    - reference_id: PMID:9451016
+      supporting_text: &#34;GlcNAc2-PP-Dolichol biosynthesis could be shown with isolated\
+        \ S.cerevisiae&#34;
+    - reference_id: PMID:9451016
+      supporting_text: &#34;the enzyme for the committed step of the dolichol cycle&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &#34;Sequence-similarity transfer of ER membrane localization (from ortholog\
+      \ UniProtKB:P23338). Consistent with the experimentally/structurally supported\
+      \ ER membrane residence of DPAGT1.&#34;
+    action: ACCEPT
+    reason: &#34;ER membrane is the correct, informative localization, corroborated by human\
+      \ structural data and UniProt subcellular-location annotation.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &#34;Sequence-similarity transfer of identical (self) protein binding. DPAGT1\
+      \ is a homodimer, so self-association is real, but this describes a quaternary/\
+      \ structural property rather than the catalytic core function.&#34;
+    action: KEEP_AS_NON_CORE
+    reason: &#34;Homodimerization is experimentally supported (crystallized as a homodimer;\
+      \ UniProt SUBUNIT: Homodimer), so &#39;identical protein binding&#39; is valid. It is\
+      \ retained as a non-core structural feature rather than the defining function.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+    - reference_id: PMID:29459785
+      supporting_text: &#34;hGPT crystallized as a homodimer with one tunicamycin molecule\
+        \ bound to the active site of each protomer near the cytosolic side of the ER\
+        \ membrane&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IDA
+  original_reference_id: PMID:29459785
+  qualifier: enables
+  review:
+    summary: &#34;Direct assay evidence: crystal structure of human GPT with tunicamycin plus\
+      \ functional/enzymatic analyses defining the GlcNAc-1-P transferase reaction and\
+      \ its inhibition.&#34;
+    action: ACCEPT
+    reason: &#34;Direct experimental demonstration of the catalytic activity; core molecular\
+      \ function.&#34;
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;catalyzes the first and committed step of N-linked glycosylation\
+        \ on the cytosolic face of endoplasmic reticulum (ER) membrane&#34;
+- term:
+    id: GO:0006488
+    label: dolichol-linked oligosaccharide biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:29459785
+  qualifier: involved_in
+  review:
+    summary: &#34;Direct evidence that DPAGT1 acts in dolichol-linked oligosaccharide\
+      \ biosynthesis, catalyzing the first committed step of LLO assembly on the\
+      \ cytosolic ER face.&#34;
+    action: ACCEPT
+    reason: &#34;DPAGT1 initiates the LLO/dolichol-cycle pathway; correct core biological\
+      \ process.&#34;
+    supported_by:
+    - reference_id: PMID:29459785
+      supporting_text: &#34;This reaction involves the transfer of N-acetylglucosamine-1-phosphate\
+        \ (GlcNAc-1-P) from UDP-N-acetylglucosamine (UDP-GlcNAc) to the carrier lipid\
+        \ dolichyl-phosphate (Dol-P).&#34;
+- term:
+    id: GO:0003976
+    label: UDP-N-acetylglucosamine-lysosomal-enzyme N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IDA
+  original_reference_id: PMID:6289658
+  qualifier: enables
+  review:
+    summary: &#34;Annotation to the UDP-GlcNAc:LYSOSOMAL-ENZYME GlcNAc-1-phosphotransferase\
+      \ activity, citing Varki et al. 1982 on I-cell disease (mucolipidosis II) and\
+      \ pseudo-Hurler polydystrophy heterozygote enzyme assays. That activity belongs to\
+      \ the distinct lysosomal-enzyme-targeting phosphotransferase (encoded by\
+      \ GNPTAB/GNPTG), not to DPAGT1. DPAGT1 transfers GlcNAc-1-P to the lipid dolichyl\
+      \ phosphate, not to lysosomal enzymes (mannose-6-phosphate marker formation).&#34;
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#34;This molecular function (GO:0003976) is a different enzyme&#39;s activity; the\
+      \ cited paper is entirely about I-cell disease / pseudo-Hurler polydystrophy\
+      \ (mucolipidosis II/III), which are caused by GNPTAB/GNPTG deficiency, not DPAGT1.\
+      \ The annotation conflates two similarly named but mechanistically distinct\
+      \ GlcNAc-1-phosphotransferases (lipid-acceptor DPAGT1 vs protein/lysosomal-enzyme\
+      \ acceptor GNPTAB). Per policy this experimental annotation is flagged as an\
+      \ over-annotation of a function that is not DPAGT1&#39;s rather than removed.&#34;
+    supported_by:
+    - reference_id: PMID:6289658
+      supporting_text: &#34;a deficiency \nof the enzyme UDP-N-acetylglucosamine:lysosomal enzyme \nN-acetylglucosamine-1-phosphotransferase&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-4549334
+  qualifier: located_in
+  review:
+    summary: &#34;Reactome TAS localizing DPAGT1 to the ER membrane (disease-variant\
+      \ reaction context). Consistent with the experimentally supported ER membrane\
+      \ residence.&#34;
+    action: ACCEPT
+    reason: &#34;Correct, informative ER membrane localization curated by Reactome.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-446191
+  qualifier: located_in
+  review:
+    summary: &#34;Reactome TAS localizing DPAGT1 to the ER membrane in the LLO-synthesis\
+      \ reaction. The dolichyl phosphate anchor ties the reaction to the ER membrane.&#34;
+    action: ACCEPT
+    reason: &#34;Correct core cellular component; the enzyme and its product are ER-membrane\
+      \ associated.&#34;
+    supported_by:
+    - reference_id: PMID:30388443
+      supporting_text: &#34;The product GlcNAc-PP-Dol is anchored to the ER membrane by its\
+        \ dolichyl moiety&#34;
+- term:
+    id: GO:0006487
+    label: protein N-linked glycosylation
+  evidence_type: IMP
+  original_reference_id: PMID:19549906
+  qualifier: involved_in
+  review:
+    summary: &#34;Mutant-phenotype (siRNA knockdown/overexpression) evidence that DPAGT1\
+      \ controls the extent of protein N-glycosylation: it initiates LLO synthesis and\
+      \ regulates E-cadherin N-glycosylation in oral cancer cells.&#34;
+    action: ACCEPT
+    reason: &#34;DPAGT1 is upstream of and required for protein N-linked glycosylation;\
+      \ perturbing DPAGT1 alters cellular N-glycosylation. Correct core biological\
+      \ process.&#34;
+    supported_by:
+    - reference_id: PMID:19549906
+      supporting_text: &#34;initiates the synthesis of the lipid-linked oligosaccharide\
+        \ (LLO) precursor for protein N-glycosylation in the endoplasmic reticulum&#34;
+    - reference_id: PMID:19549906
+      supporting_text: &#34;elevated expression of DPAGT1, the gene that initiates protein\
+        \ N-glycosylation&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IMP
+  original_reference_id: PMID:12872255
+  qualifier: enables
+  review:
+    summary: &#34;Mutant-phenotype evidence: patient with CDG-Ij has GPT (DPAGT1) activity\
+      \ reduced to ~10% of normal; the Y170C variant produces near-inactive enzyme,\
+      \ directly tying the GlcNAc-1-P transferase activity to DPAGT1.&#34;
+    action: ACCEPT
+    reason: &#34;Loss-of-activity in disease variants demonstrates that DPAGT1 encodes the\
+      \ GlcNAc-1-P transferase; supports the core molecular function.&#34;
+    supported_by:
+    - reference_id: PMID:12872255
+      supporting_text: &#34;N-acetyl-glucosamine-1 phosphate transferase (GPT) activity\
+        \ encoded by DPAGT1&#34;
+    - reference_id: PMID:12872255
+      supporting_text: &#34;the GPT activity is reduced to approximately 10% of normal levels&#34;
+- term:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  evidence_type: IDA
+  original_reference_id: PMID:8179616
+  qualifier: enables
+  review:
+    summary: &#34;Biochemical assay of GlcNAc-1-P transferase activity (and dolichyl\
+      \ phosphate content) in CDG-syndrome versus normal fibroblasts. Directly assays\
+      \ the DPAGT1/GPT enzymatic activity in human cells.&#34;
+    action: ACCEPT
+    reason: &#34;Direct enzymatic measurement of the GlcNAc-1-P transferase activity in human\
+      \ fibroblasts; supports the core molecular function.&#34;
+    supported_by:
+    - reference_id: PMID:8179616
+      supporting_text: &#34;activity in CDG syndrome fibroblasts were similar to those in\
+        \ normal&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &#34;Sequence-similarity transfer of generic membrane localization. Correct\
+      \ but subsumed by the more informative ER membrane term.&#34;
+    action: MODIFY
+    reason: &#34;DPAGT1 is membrane-integral, but the specific ER membrane term (GO:0005789)\
+      \ is supported and preferable to generic &#39;membrane&#39;.&#34;
+    proposed_replacement_terms:
+    - id: GO:0005789
+      label: endoplasmic reticulum membrane
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:8179616
+  qualifier: located_in
+  review:
+    summary: &#34;Direct assay associated DPAGT1/GPT activity with a membrane (microsomal)\
+      \ fraction. Correct but generic; ER membrane is the informative location.&#34;
+    action: MODIFY
+    reason: &#34;Membrane association is experimentally consistent, but the specific ER\
+      \ membrane term (GO:0005789) is supported and preferable.&#34;
+    proposed_replacement_terms:
+    - id: GO:0005789
+      label: endoplasmic reticulum membrane
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+- term:
+    id: GO:0043231
+    label: intracellular membrane-bounded organelle
+  evidence_type: IDA
+  original_reference_id: PMID:12872255
+  qualifier: located_in
+  review:
+    summary: &#34;Direct evidence places DPAGT1 in an intracellular membrane-bounded\
+      \ organelle (microsomal/ER fraction from patient fibroblasts). This is a very\
+      \ general CC term; the specific organelle is the ER (ER membrane).&#34;
+    action: KEEP_AS_NON_CORE
+    reason: &#34;Correct but high-level. The informative core localization is ER membrane\
+      \ (GO:0005789), already annotated. Retained as a non-core, less specific location.&#34;
+    supported_by:
+    - reference_id: file:human/DPAGT1/DPAGT1-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum&#34;
+core_functions:
+- description: &#34;UDP-GlcNAc:dolichyl-phosphate GlcNAc-1-phosphotransferase (GPT) activity:\
+    \ transfers GlcNAc-1-phosphate from UDP-GlcNAc onto dolichyl phosphate to form\
+    \ GlcNAc-PP-dolichol, the first and committed step of dolichol-linked oligosaccharide\
+    \ (LLO) assembly, on the cytoplasmic face of the ER membrane.&#34;
+  molecular_function:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  directly_involved_in:
+  - id: GO:0006488
+    label: dolichol-linked oligosaccharide biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:29459785
+    supporting_text: &#34;catalyzes the first and committed step of N-linked glycosylation\
+      \ on the cytosolic face of endoplasmic reticulum (ER) membrane&#34;
+  - reference_id: PMID:30388443
+    supporting_text: &#34;It catalyzes the transfer of an N-acetyl-D-glucosamine-1-phosphoryl\
+      \ unit (GlcNAc-1-P) from UDP-N-acetyl glucosamine (UDP-GlcNAc) onto dolichyl\
+      \ phosphate (Dol-P)&#34;
+- description: &#34;Initiation of protein N-linked glycosylation: by producing the\
+    \ membrane-anchored GlcNAc-PP-dolichol precursor, DPAGT1 provides the substrate for\
+    \ subsequent LLO extension and thereby controls the extent of protein N-glycosylation.&#34;
+  molecular_function:
+    id: GO:0003975
+    label: UDP-N-acetylglucosamine-dolichyl-phosphate N-acetylglucosaminephosphotransferase
+      activity
+  directly_involved_in:
+  - id: GO:0006487
+    label: protein N-linked glycosylation
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:19549906
+    supporting_text: &#34;initiates the synthesis of the lipid-linked oligosaccharide (LLO)\
+      \ precursor for protein N-glycosylation in the endoplasmic reticulum&#34;
+  - reference_id: PMID:12872255
+    supporting_text: &#34;N-acetyl-glucosamine-1 phosphate transferase (GPT) activity\
+      \ encoded by DPAGT1&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/DPAGT1/DPAGT1-uniprot.txt
+  title: UniProtKB entry Q9H3H5 (GPT_HUMAN) DPAGT1
+  findings: []
+- id: PMID:12872255
+  title: Deficiency of UDP-GlcNAc:Dolichol Phosphate N-Acetylglucosamine-1 Phosphate
+    Transferase (DPAGT1) causes a novel congenital disorder of Glycosylation Type
+    Ij.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified. Establishes DPAGT1/GPT deficiency as the cause of\
+      \ CDG-Ij, with patient GPT activity ~10% of normal and the Y170C variant; directly\
+      \ ties the GlcNAc-1-P transferase activity to DPAGT1.&#34;
+- id: PMID:19549906
+  title: Overexpression of DPAGT1 leads to aberrant N-glycosylation of E-cadherin
+    and cellular discohesion in oral cancer.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified. Shows DPAGT1 initiates LLO synthesis and controls\
+      \ E-cadherin N-glycosylation; supports the protein N-linked glycosylation BP\
+      \ annotation.&#34;
+- id: PMID:29459785
+  title: GlcNAc-1-P-transferase-tunicamycin complex structure reveals basis for inhibition
+    of N-glycosylation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified structural/functional study of human GPT (DPAGT1);\
+      \ defines the first committed step of N-glycosylation and the tunicamycin\
+      \ inhibition mechanism; homodimer, ER membrane, cytosolic-face catalysis.&#34;
+- id: PMID:30388443
+  title: Structures of DPAGT1 Explain Glycosylation Disease Mechanisms and Advance
+    TB Antibiotic Design.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified. Human DPAGT1 structures with UDP-GlcNAc and\
+      \ tunicamycin, kinetics, Mg2+ cofactor, disease-variant characterization\
+      \ (CDG1J, CMS13); directly supports the catalytic MF and disease mechanism.&#34;
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified large-scale ND interactome (Y2H) study. Basis for a\
+      \ single DPAGT1-HTT interaction supporting only a bare &#39;protein binding&#39; IPI; no\
+      \ specific molecular function for DPAGT1.&#34;
+- id: PMID:6289658
+  title: Demonstration of the heterozygous state for I-cell disease and pseudo-Hurler
+    polydystrophy by assay of N-acetylglucosaminylphosphotransferase in white blood
+    cells and fibroblasts.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: MISCITED
+    review_notes: &#34;PubMed-verified, but the paper is about the DISTINCT lysosomal-enzyme\
+      \ GlcNAc-1-phosphotransferase (GNPTAB/GNPTG; I-cell disease / mucolipidosis II-III),\
+      \ not DPAGT1. It does not support a DPAGT1 function; used to support the\
+      \ GO:0003976 annotation that has been flagged as over-annotation (wrong enzyme).&#34;
+- id: PMID:8179616
+  title: Major defect of carbohydrate-deficient-glycoprotein syndrome is not found
+    in the synthesis of dolichyl phosphate or N-acetylglucosaminyl-pyrophosphoryl-dolichol.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified. Assays GlcNAc-1-P transferase (GPT) activity and\
+      \ dolichyl phosphate in CDG fibroblasts; supports the enzymatic activity and\
+      \ membrane association of the enzyme.&#34;
+- id: PMID:9451016
+  title: Cloning and functional expression of the human GlcNAc-1-P transferase, the
+    enzyme for the committed step of the dolichol cycle, by heterologous complementation
+    in Saccharomyces cerevisiae.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &#34;PubMed-verified. Cloned human DPAGT1/GPT by yeast complementation;\
+      \ recombinant enzyme made GlcNAc(2)-PP-dolichol, dolichol-P-stimulated and\
+      \ tunicamycin-inhibited; supports the core catalytic function.&#34;
+- id: Reactome:R-HSA-446191
+  title: Addition of N-acetyl-D-glucosamine to Dolichyl phosphate
+  findings: []
+- id: Reactome:R-HSA-446193
+  title: Biosynthesis of the N-glycan precursor (dolichol lipid-linked oligosaccharide,
+    LLO) and transfer to a nascent protein
+  findings: []
+- id: Reactome:R-HSA-4549334
+  title: Defective DPAGT1 does not transfer GlcNAc to DOLP
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
