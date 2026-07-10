@@ -1,0 +1,3358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGQ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGQ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9BRB3" target="_blank" class="term-link">
+                        Q9BRB3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGQ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9BRB3" data-a="DESCRIPTION: PIGQ (also known as GPI1 or PIG-Q) is a non-cataly..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGQ (also known as GPI1 or PIG-Q) is a non-catalytic subunit of the glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex, the multi-protein enzyme that catalyses the first, committed step of glycosylphosphatidylinositol (GPI) anchor biosynthesis: transfer of N-acetylglucosamine from UDP-GlcNAc onto phosphatidylinositol to form GlcNAc-phosphatidylinositol. Within this complex, PIGA is the catalytic subunit, while PIGQ is a required accessory subunit (together with PIGC, PIGH, PIGP, PIGY and DPM2) that stabilises the complex and supports its activity; PIGQ itself has no independent enzymatic activity. It is a multi-pass integral membrane protein of the endoplasmic reticulum membrane, where the GPI-GnT complex assembles and acts. Biallelic loss-of-function variants in PIGQ cause multiple congenital anomalies-hypotonia-seizures syndrome 4 (MCAHS4), an autosomal-recessive inherited GPI-deficiency disorder presenting as a developmental and epileptic encephalopathy with refractory neonatal seizures, severe global developmental delay, dysmorphism and skeletal, renal and ophthalmic anomalies.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing PIGQ in the endoplasmic reticulum. This is correct: the GPI-GnT complex containing PIGQ was biochemically shown to be an ER-membrane complex (PMID:9463366). ER is a core location, though the more specific ER membrane term (GO:0005789, below) better captures the localization of this multi-pass membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental localization of the GPI-GnT complex to the ER membrane and conserved across orthologs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                        PMID:9463366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0006506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to GPI anchor biosynthetic process. This is the core biological process for PIGQ: as a subunit of the GPI-GnT complex it participates in the first step of GPI biosynthesis, and the mammalian GPI1 protein functionally rescues yeast gpi1 mutants defective in this process (PMID:9729469).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core, well-supported and phylogenetically conserved biological role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9729469" target="_blank" class="term-link">
+                                        PMID:9729469
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the mammalian GPI1 homologues can rescue haploids</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGQ/PIGQ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the first step of GPI</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (InterPro IPR007720 PigQ/GPI1 signature plus UniPathway) to GPI anchor biosynthetic process. The InterPro-to-GO mapping is accurate for this family-defining domain and agrees with the experimental and phylogenetic annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct family-level electronic inference, concordant with experimental evidence for the same process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGQ/PIGQ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the first step of GPI</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the generic term membrane (from UniProt SubCell SL-0162 / InterPro). PIGQ is indeed a multi-pass membrane protein, but the specific compartment is known experimentally to be the endoplasmic reticulum membrane (PMID:9463366; PMID:16162815). The generic membrane term is uninformative and should be replaced by the more specific ER membrane term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Too general; experimental evidence localizes PIGQ/the GPI-GnT complex specifically to the ER membrane, so GO:0005789 is the appropriate term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    endoplasmic reticulum membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGQ/PIGQ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                        PMID:9463366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10944123" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10944123
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Initial enzyme for glycosylphosphatidylinositol biosynthesis...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005515" data-r="PMID:10944123" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) annotation recording binary interactions of PIGQ/GPI1 with DPM2 and PIGA. These are physiological partners within the GPI-GnT complex: DPM2 associates with GPI-GnT through interactions that include GPI1, and PIG-P associates with both PIG-A and GPI1 (PMID:10944123). The bare &#34;protein binding&#34; term is uninformative; the underlying biology is captured by part_of the GPI-GnT complex (GO:0000506).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;Protein binding&#34; (GO:0005515) is too generic to convey function; the documented interactions are with fellow GPI-GnT subunits and are better represented by complex membership. Retained (not removed) as an experimental interaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10944123" target="_blank" class="term-link">
+                                        PMID:10944123
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">DPM2, but not two other components of dolichol-phosphate-mannose synthase, associates with GPI-GnT through interactions with PIG-A, PIG-C and GPI1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10944123" target="_blank" class="term-link">
+                                        PMID:10944123
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-P, a 134-amino acid protein having two hydrophobic domains, associates with PIG-A and GPI1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16162815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The initial enzyme for glycosylphosphatidylinositol biosynth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005515" data-r="PMID:16162815" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) annotation recording interaction of PIGQ with PIGA, a co-subunit of the GPI-GnT complex characterized in this study (PMID:16162815). As above, &#34;protein binding&#34; is uninformative and the interaction reflects assembly of the GPI-GnT complex (GO:0000506).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic MF term; the interaction is with a fellow complex subunit and is better captured by GPI-GnT complex membership. Retained as an experimental interaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link">
+                                        PMID:16162815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT) consisting of at least six proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) annotation from the BioPlex 3.0 proteome-scale AP-MS interactome (PMID:33961781), recording interaction of PIGQ with PIGH, a GPI-GnT subunit. High-throughput; &#34;protein binding&#34; is uninformative and the interaction is consistent with GPI-GnT complex membership (GO:0000506).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic MF term from a high-throughput interactome screen; the partner is a fellow complex subunit, better represented by complex membership. Retained as an experimental interaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BioPlex 3.0, results from affinity purification of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162 interactions among 14,586 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:40205054
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Multimodal cell maps as a foundation for structural and func...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005515" data-r="PMID:40205054" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) annotation from a multimodal cell-map AP-MS study (PMID:40205054), recording interaction of PIGQ with PIGH. As with the other IPI annotations, &#34;protein binding&#34; is uninformative; the partner is a GPI-GnT subunit, consistent with complex membership (GO:0000506).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic MF term from a high-throughput interactome/imaging study; the partner is a fellow complex subunit. Retained as an experimental interaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                                        PMID:40205054
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a total of 36,842 interactions among 7,543 proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9463366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The first step of glycosylphosphatidylinositol biosynthesis ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005515" data-r="PMID:9463366" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI (IntAct) annotation recording interactions of PIGQ/GPI1 with PIGA, PIGC and PIGH. This is the foundational study defining the PIG-A/PIG-H/PIG-C/GPI1 complex in the ER membrane (PMID:9463366). The bare &#34;protein binding&#34; term is uninformative; the biology is captured by GPI-GnT complex membership (GO:0000506).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic MF term; all partners are fellow GPI-GnT subunits and the interactions define the complex, which is better represented by GO:0000506. Retained as an experimental interaction annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                        PMID:9463366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000506" target="_blank" class="term-link">
+                                    GO:0000506
+                                </a>
+                            </span>
+                            <span class="term-label">glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16162815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The initial enzyme for glycosylphosphatidylinositol biosynth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0000506" data-r="PMID:16162815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGQ is a component of the GPI-GnT complex. This ComplexPortal annotation (CPX-6502) records PIGQ as a subunit of the seven-component GPI-GnT complex (PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY, DPM2) characterized in PMID:16162815. This is a core cellular-component annotation for PIGQ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by biochemical characterization of the GPI-GnT complex; PIGQ is an established subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link">
+                                        PMID:16162815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT) consisting of at least six proteins</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGQ/PIGQ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY and DPM2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16162815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The initial enzyme for glycosylphosphatidylinositol biosynth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005789" data-r="PMID:16162815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation localizing PIGQ to the endoplasmic reticulum membrane, where the GPI-GnT complex assembles and acts. The GPI-GnT complex was biochemically shown to reside in the ER membrane (PMID:9463366), and PIGQ is a multi-pass ER-membrane protein. Core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific, experimentally supported subcellular localization consistent with the complex&#39;s site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                        PMID:9463366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000506" target="_blank" class="term-link">
+                                    GO:0000506
+                                </a>
+                            </span>
+                            <span class="term-label">glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16162815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The initial enzyme for glycosylphosphatidylinositol biosynth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0000506" data-r="PMID:16162815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation (UniProt) recording PIGQ as part of the GPI-GnT complex, based on the biochemical characterization in PMID:16162815. Duplicate of the ComplexPortal complex annotation with direct experimental evidence; core cellular-component annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by experimental characterization of the GPI-GnT complex; PIGQ is an established subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link">
+                                        PMID:16162815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A complex of six components was formed without PIG-Y</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGQ/PIGQ-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY and DPM2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16162815
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The initial enzyme for glycosylphosphatidylinositol biosynth...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0006506" data-r="PMID:16162815" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to GPI anchor biosynthetic process, from the study establishing the seven-component GPI-GnT complex that catalyses the first step of GPI biosynthesis (PMID:16162815). This is the core biological process for PIGQ.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core process, directly supported by characterization of the GPI-GnT complex to which PIGQ belongs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link">
+                                        PMID:16162815
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT) consisting of at least six proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162730
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005789" data-r="Reactome:R-HSA-162730" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation from Reactome localizing the GlcNAc-PI-forming reaction and its catalysing multimeric enzyme to the ER membrane. Concordant with the IDA ER-membrane annotation; core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with experimental localization of the GPI-GnT complex to the ER membrane.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                        PMID:9463366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9729469" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9729469
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human and mouse Gpi1p homologues restore glycosylphosphatidy...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9BRB3" data-a="GO:0005975" data-r="PMID:9729469" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation to the very broad term carbohydrate metabolic process, based on the cloning/functional-complementation study of GPI1 (PMID:9729469). While technically true (the GPI-GnT reaction transfers a sugar), this term is far too general. The specific process is GPI anchor biosynthesis (formation of GlcNAc-PI), already captured by GO:0006506.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Overly general; the informative and accurate term is GPI anchor biosynthetic process (GO:0006506), which describes the actual pathway PIGQ participates in.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GPI anchor biosynthetic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9729469" target="_blank" class="term-link">
+                                        PMID:9729469
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">allow conclusions about a specific function for Gpi1p in stabilizing the enzymic complex</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic subunit of the GPI-N-acetylglucosaminyltransferase (GPI-GnT) complex, contributing to the first committed step of GPI-anchor biosynthesis (transfer of GlcNAc from UDP-GlcNAc to phosphatidylinositol) at the ER membrane; PIGQ stabilises the complex rather than performing catalysis itself (the catalytic subunit is PIGA).</h3>
+                <span class="vote-buttons" data-g="Q9BRB3" data-a="FUNCTION: Non-catalytic subunit of the GPI-N-acetylglucosami..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000506" target="_blank" class="term-link">
+                            glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                                PMID:9463366
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">four mammalian gene products form a protein complex in the endoplasmic reticulum membrane</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9729469" target="_blank" class="term-link">
+                                PMID:9729469
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">allow conclusions about a specific function for Gpi1p in stabilizing the enzymic complex</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGQ/PIGQ-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">participates in the first step of GPI</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10944123" target="_blank" class="term-link">
+                            PMID:10944123
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Initial enzyme for glycosylphosphatidylinositol biosynthesis requires PIG-P and is regulated by DPM2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16162815" target="_blank" class="term-link">
+                            PMID:16162815
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The initial enzyme for glycosylphosphatidylinositol biosynthesis requires PIG-Y, a seventh component.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40205054" target="_blank" class="term-link">
+                            PMID:40205054
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Multimodal cell maps as a foundation for structural and functional genomics.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9463366" target="_blank" class="term-link">
+                            PMID:9463366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The first step of glycosylphosphatidylinositol biosynthesis is mediated by a complex of PIG-A, PIG-H, PIG-C and GPI1.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9729469" target="_blank" class="term-link">
+                            PMID:9729469
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human and mouse Gpi1p homologues restore glycosylphosphatidylinositol membrane anchor biosynthesis in yeast mutants.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162730
+
+                    </span>
+                </div>
+
+                <div class="reference-title">phosphatidylinositol + UDP-N-acetyl-D-glucosamine -&gt; N-acetylglucosaminyl-PI + UDP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PIGQ/PIGQ-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q9BRB3 (PIGQ_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise structural and mechanistic contribution of PIGQ within the GPI-GnT complex - does it act purely as a scaffolding/stabilising subunit, or does it also modulate substrate (phosphatidylinositol) selection or catalytic rate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BRB3" data-a="Q: What is the precise structural and mechanistic con..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the human GPI-GnT complex with and without PIGQ and measure GlcNAc-PI transferase activity and complex stability to quantify PIGQ&#39;s contribution to assembly versus catalysis.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BRB3" data-a="EXPERIMENT: Reconstitute the human GPI-GnT complex with and wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine a cryo-EM structure of the intact human GPI-GnT complex to define PIGQ&#39;s interfaces with PIGA (catalytic subunit), PIGC, PIGH, PIGP, PIGY and DPM2.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9BRB3" data-a="EXPERIMENT: Determine a cryo-EM structure of the intact human ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGQ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9BRB3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pigq-gpi1-review-notes">PIGQ (GPI1) review notes</h1>
+<p>UniProtKB: Q9BRB3. HGNC:14135. Synonym GPI1. Gene on chr16p13.3.</p>
+<h2 id="function-verified-from-primary-literature-uniprot">Function (verified from primary literature + UniProt)</h2>
+<p>PIGQ (also GPI1 / PIG-Q) is a <strong>non-catalytic subunit of the GPI-N-acetylglucosaminyltransferase (GPI-GnT) complex</strong>, the multi-protein ER-membrane enzyme that catalyses the <strong>first, committed step of GPI-anchor biosynthesis</strong>: transfer of GlcNAc from UDP-GlcNAc to phosphatidylinositol (PI) → GlcNAc-PI. The catalytic subunit is PIGA; PIGQ is a required accessory/scaffolding subunit.</p>
+<ul>
+<li>UniProt FUNCTION: "Part of the glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT) complex that catalyzes the transfer of N-acetylglucosamine from UDP-N-acetylglucosamine to phosphatidylinositol and participates in the first step of GPI biosynthesis." [file:human/PIGQ/PIGQ-uniprot.txt]</li>
+<li>UniProt SUBUNIT: complex composed at least by PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY and DPM2 (PMID:16162815, PMID:9463366). Interacts with PIGA, PIGH and PIGC (PMID:9463366).</li>
+<li>The GOA TSV carries <strong>no catalytic MF term</strong>. UniProt DR has GO:0017176 (phosphatidylinositol N-acetylglucosaminyltransferase activity) as IEA:Ensembl, but this is NOT in the GOA snapshot, and PIGQ is not the catalytic subunit — so no catalytic activity is asserted here.</li>
+</ul>
+<h3 id="complex-membership-role">Complex membership / role</h3>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9463366" title="four mammalian gene products form a protein complex in the endoplasmic reticulum membrane. ... The protein complex had GPI-GlcNAc transferase (GPI-GnT) activity in vitro">PMID:9463366</a> — first defines the PIG-A/PIG-H/PIG-C/GPI1 complex; localises it to the ER membrane; GPI-GnT activity in vitro.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9729469" title="allow conclusions about a specific function for Gpi1p in stabilizing the enzymic complex">PMID:9729469</a> — Gpi1p/GPI1 role = stabilising the GPI-GnT enzymic complex; mammalian GPI1 rescues yeast gpi1 mutants (first step of GPI biosynthesis, conserved).</li>
+<li>[PMID:10944123 "GPI-GnT is a uniquely complex glycosyltransferase, consisting of at least four proteins, PIG-A, PIG-H, PIG-C and GPI1"; "PIG-P ... associates with PIG-A and GPI1"; "DPM2 ... associates with GPI-GnT through interactions with PIG-A, PIG-C and GPI1"] — GPI1 interacts with PIG-P and DPM2 within the complex (IPI partners DPM2 O94777, PIGA P37287).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16162815" title="Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT) consisting of at least six proteins. Here, we report that human GPI-GnT requires another component, termed PIG-Y ... A complex of six components was formed without PIG-Y.">PMID:16162815</a> — establishes 7-component complex incl. PIGQ; the "complex of six" (PIGA/PIGC/PIGH/PIGP/PIGQ/DPM2) forms without PIG-Y. Source of the IDA GPI-GnT-complex, ER-membrane, and GPI-anchor-biosynthesis annotations.</li>
+</ul>
+<h3 id="location">Location</h3>
+<ul>
+<li>ER membrane. PMID:9463366 (complex in ER membrane). UniProt SUBCELLULAR LOCATION: Membrane; multi-pass membrane protein (5 predicted TM helices, residues 278-497).</li>
+<li>Reactome R-HSA-162730: the GlcNAc-PI-forming reaction and its catalysing multimeric enzyme are "localized to the endoplasmic reticulum membrane".</li>
+</ul>
+<h2 id="mf-protein-binding-ipi-annotations">MF: protein binding (IPI) annotations</h2>
+<p>Five IPI GO:0005515 annotations from IntAct, all to physiological GPI-GnT partners:<br />
+- PMID:10944123 → DPM2 (O94777), PIGA (P37287)<br />
+- PMID:16162815 → PIGA (P37287)<br />
+- PMID:33961781 (BioPlex) → PIGH (Q14442)<br />
+- PMID:40205054 (multimodal cell maps) → PIGH (Q14442)<br />
+- PMID:9463366 → PIGA (P37287), PIGC (Q92535), PIGH (Q14442)<br />
+Bare "protein binding" is uninformative per curation policy; the biology is better captured by part_of GPI-GnT complex (GO:0000506). Per policy, do NOT REMOVE experimental IPIs whose full text is unverified — MARK_AS_OVER_ANNOTATED. Interactions with PIGA/PIGC/PIGH/PIGP/DPM2 are all with fellow complex subunits, corroborating complex membership.</p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic PIGQ loss-of-function → <strong>Multiple congenital anomalies-hypotonia-seizures syndrome 4 (MCAHS4; MIM:618548)</strong>, an autosomal-recessive inherited GPI-deficiency disorder (GPIBD) = a developmental and epileptic encephalopathy: refractory neonatal seizures, severe global developmental delay, dysmorphism, skeletal/renal/ophthalmic anomalies; caused cellularly by defective GPI synthesis. Refs PMID:24463883, 25558065, 27513193, 31148362. (These are disease/phenotype refs, not in GOA; noted for description only.)</p>
+<h2 id="annotation-review-decisions-goa-has-15-rows">Annotation review decisions (GOA has 15 rows)</h2>
+<ul>
+<li>GO:0005783 endoplasmic reticulum (IBA, GO_REF:0000033, is_active_in) → ACCEPT (core location, phylo). ER is correct; ER membrane (below) is more specific.</li>
+<li>GO:0006506 GPI anchor biosynthetic process (IBA, GO_REF:0000033) → ACCEPT (core BP).</li>
+<li>GO:0006506 GPI anchor biosynthetic process (IEA, GO_REF:0000120; InterPro IPR007720 + UniPathway) → ACCEPT.</li>
+<li>GO:0016020 membrane (IEA, GO_REF:0000120; SubCell SL-0162) → MODIFY → GO:0005789 ER membrane (too general; specific ER-membrane localization is known).</li>
+<li>GO:0005515 protein binding ×5 (IPI) → MARK_AS_OVER_ANNOTATED (uninformative; partners are complex subunits; captured by GO:0000506).</li>
+<li>GO:0000506 GPI-GnT complex (IPI, PMID:16162815, ComplexPortal) → ACCEPT (core CC).</li>
+<li>GO:0005789 ER membrane (IDA, PMID:16162815, ComplexPortal) → ACCEPT (core location).</li>
+<li>GO:0000506 GPI-GnT complex (IDA, PMID:16162815, UniProt) → ACCEPT (core CC).</li>
+<li>GO:0006506 GPI anchor biosynthetic process (IDA, PMID:16162815) → ACCEPT (core BP).</li>
+<li>GO:0005789 ER membrane (TAS, Reactome R-HSA-162730) → ACCEPT.</li>
+<li>GO:0005975 carbohydrate metabolic process (TAS, PMID:9729469) → MODIFY → GO:0006506 (too general; the specific process is GPI anchor biosynthesis / GlcNAc-PI formation).</li>
+</ul>
+<h2 id="core_functions">core_functions</h2>
+<p>No catalytic MF in GOA → omit <code>function</code>; record BP via directly_involved_in GO:0006506, location GO:0005789 (ER membrane), complex GO:0000506 (GPI-GnT complex).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9BRB3
+gene_symbol: PIGQ
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PIGQ (also known as GPI1 or PIG-Q) is a non-catalytic subunit of the
+  glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT)
+  complex, the multi-protein enzyme that catalyses the first, committed step of
+  glycosylphosphatidylinositol (GPI) anchor biosynthesis: transfer of
+  N-acetylglucosamine from UDP-GlcNAc onto phosphatidylinositol to form
+  GlcNAc-phosphatidylinositol. Within this complex, PIGA is the catalytic
+  subunit, while PIGQ is a required accessory subunit (together with PIGC, PIGH,
+  PIGP, PIGY and DPM2) that stabilises the complex and supports its activity;
+  PIGQ itself has no independent enzymatic activity. It is a multi-pass integral
+  membrane protein of the endoplasmic reticulum membrane, where the GPI-GnT
+  complex assembles and acts. Biallelic loss-of-function variants in PIGQ cause
+  multiple congenital anomalies-hypotonia-seizures syndrome 4 (MCAHS4), an
+  autosomal-recessive inherited GPI-deficiency disorder presenting as a
+  developmental and epileptic encephalopathy with refractory neonatal seizures,
+  severe global developmental delay, dysmorphism and skeletal, renal and
+  ophthalmic anomalies.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9BRB3-1
+- name: &#39;2&#39;
+  id: Q9BRB3-2
+  sequence_note: VSP_007281, VSP_007282
+- name: &#39;3&#39;
+  id: Q9BRB3-3
+  sequence_note: VSP_007279, VSP_007280
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation placing PIGQ in the endoplasmic reticulum.
+      This is correct: the GPI-GnT complex containing PIGQ was biochemically
+      shown to be an ER-membrane complex (PMID:9463366). ER is a core location,
+      though the more specific ER membrane term (GO:0005789, below) better
+      captures the localization of this multi-pass membrane protein.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with experimental localization of the GPI-GnT complex to the ER
+      membrane and conserved across orthologs.
+    supported_by:
+    - reference_id: PMID:9463366
+      supporting_text: &gt;-
+        four mammalian gene products form a protein complex in the endoplasmic
+        reticulum membrane
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to GPI anchor biosynthetic process. This is
+      the core biological process for PIGQ: as a subunit of the GPI-GnT complex
+      it participates in the first step of GPI biosynthesis, and the mammalian
+      GPI1 protein functionally rescues yeast gpi1 mutants defective in this
+      process (PMID:9729469).
+    action: ACCEPT
+    reason: &gt;-
+      Core, well-supported and phylogenetically conserved biological role.
+    supported_by:
+    - reference_id: PMID:9729469
+      supporting_text: &gt;-
+        the mammalian GPI1 homologues can rescue haploids
+    - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+      supporting_text: participates in the first step of GPI
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation (InterPro IPR007720 PigQ/GPI1 signature plus
+      UniPathway) to GPI anchor biosynthetic process. The InterPro-to-GO mapping
+      is accurate for this family-defining domain and agrees with the
+      experimental and phylogenetic annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct family-level electronic inference, concordant with experimental
+      evidence for the same process.
+    supported_by:
+    - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+      supporting_text: participates in the first step of GPI
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation to the generic term membrane (from UniProt SubCell
+      SL-0162 / InterPro). PIGQ is indeed a multi-pass membrane protein, but the
+      specific compartment is known experimentally to be the endoplasmic
+      reticulum membrane (PMID:9463366; PMID:16162815). The generic membrane
+      term is uninformative and should be replaced by the more specific ER
+      membrane term.
+    action: MODIFY
+    reason: &gt;-
+      Too general; experimental evidence localizes PIGQ/the GPI-GnT complex
+      specifically to the ER membrane, so GO:0005789 is the appropriate term.
+    proposed_replacement_terms:
+    - id: GO:0005789
+      label: endoplasmic reticulum membrane
+    supported_by:
+    - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+      supporting_text: Membrane
+    - reference_id: PMID:9463366
+      supporting_text: &gt;-
+        four mammalian gene products form a protein complex in the endoplasmic
+        reticulum membrane
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:10944123
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) annotation recording binary interactions of PIGQ/GPI1 with
+      DPM2 and PIGA. These are physiological partners within the GPI-GnT
+      complex: DPM2 associates with GPI-GnT through interactions that include
+      GPI1, and PIG-P associates with both PIG-A and GPI1 (PMID:10944123). The
+      bare &#34;protein binding&#34; term is uninformative; the underlying biology is
+      captured by part_of the GPI-GnT complex (GO:0000506).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;Protein binding&#34; (GO:0005515) is too generic to convey function; the
+      documented interactions are with fellow GPI-GnT subunits and are better
+      represented by complex membership. Retained (not removed) as an
+      experimental interaction annotation.
+    supported_by:
+    - reference_id: PMID:10944123
+      supporting_text: &gt;-
+        DPM2, but not two other components of dolichol-phosphate-mannose
+        synthase, associates with GPI-GnT through interactions with PIG-A, PIG-C
+        and GPI1
+    - reference_id: PMID:10944123
+      supporting_text: &gt;-
+        PIG-P, a 134-amino acid protein having two hydrophobic domains,
+        associates with PIG-A and GPI1
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16162815
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) annotation recording interaction of PIGQ with PIGA, a
+      co-subunit of the GPI-GnT complex characterized in this study
+      (PMID:16162815). As above, &#34;protein binding&#34; is uninformative and the
+      interaction reflects assembly of the GPI-GnT complex (GO:0000506).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic MF term; the interaction is with a fellow complex subunit and is
+      better captured by GPI-GnT complex membership. Retained as an experimental
+      interaction annotation.
+    supported_by:
+    - reference_id: PMID:16162815
+      supporting_text: &gt;-
+        Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an
+        unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT)
+        consisting of at least six proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) annotation from the BioPlex 3.0 proteome-scale AP-MS
+      interactome (PMID:33961781), recording interaction of PIGQ with PIGH, a
+      GPI-GnT subunit. High-throughput; &#34;protein binding&#34; is uninformative and
+      the interaction is consistent with GPI-GnT complex membership
+      (GO:0000506).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic MF term from a high-throughput interactome screen; the partner is
+      a fellow complex subunit, better represented by complex membership.
+      Retained as an experimental interaction annotation.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &gt;-
+        BioPlex 3.0, results from affinity purification of 10,128 human
+        proteins-half the proteome-in 293T cells and includes 118,162
+        interactions among 14,586 proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:40205054
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) annotation from a multimodal cell-map AP-MS study
+      (PMID:40205054), recording interaction of PIGQ with PIGH. As with the
+      other IPI annotations, &#34;protein binding&#34; is uninformative; the partner is
+      a GPI-GnT subunit, consistent with complex membership (GO:0000506).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic MF term from a high-throughput interactome/imaging study; the
+      partner is a fellow complex subunit. Retained as an experimental
+      interaction annotation.
+    supported_by:
+    - reference_id: PMID:40205054
+      supporting_text: &gt;-
+        a total of 36,842 interactions among 7,543 proteins
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:9463366
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI (IntAct) annotation recording interactions of PIGQ/GPI1 with PIGA,
+      PIGC and PIGH. This is the foundational study defining the
+      PIG-A/PIG-H/PIG-C/GPI1 complex in the ER membrane (PMID:9463366). The bare
+      &#34;protein binding&#34; term is uninformative; the biology is captured by
+      GPI-GnT complex membership (GO:0000506).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic MF term; all partners are fellow GPI-GnT subunits and the
+      interactions define the complex, which is better represented by GO:0000506.
+      Retained as an experimental interaction annotation.
+    supported_by:
+    - reference_id: PMID:9463366
+      supporting_text: &gt;-
+        four mammalian gene products form a protein complex in the endoplasmic
+        reticulum membrane
+- term:
+    id: GO:0000506
+    label: glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT)
+      complex
+  evidence_type: IPI
+  original_reference_id: PMID:16162815
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      PIGQ is a component of the GPI-GnT complex. This ComplexPortal annotation
+      (CPX-6502) records PIGQ as a subunit of the seven-component GPI-GnT complex
+      (PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY, DPM2) characterized in PMID:16162815.
+      This is a core cellular-component annotation for PIGQ.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by biochemical characterization of the GPI-GnT complex;
+      PIGQ is an established subunit.
+    supported_by:
+    - reference_id: PMID:16162815
+      supporting_text: &gt;-
+        Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an
+        unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT)
+        consisting of at least six proteins
+    - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+      supporting_text: PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY and DPM2
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:16162815
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation localizing PIGQ to the endoplasmic reticulum membrane,
+      where the GPI-GnT complex assembles and acts. The GPI-GnT complex was
+      biochemically shown to reside in the ER membrane (PMID:9463366), and PIGQ
+      is a multi-pass ER-membrane protein. Core location.
+    action: ACCEPT
+    reason: &gt;-
+      Specific, experimentally supported subcellular localization consistent
+      with the complex&#39;s site of action.
+    supported_by:
+    - reference_id: PMID:9463366
+      supporting_text: &gt;-
+        four mammalian gene products form a protein complex in the endoplasmic
+        reticulum membrane
+- term:
+    id: GO:0000506
+    label: glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT)
+      complex
+  evidence_type: IDA
+  original_reference_id: PMID:16162815
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IDA annotation (UniProt) recording PIGQ as part of the GPI-GnT complex,
+      based on the biochemical characterization in PMID:16162815. Duplicate of
+      the ComplexPortal complex annotation with direct experimental evidence;
+      core cellular-component annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by experimental characterization of the GPI-GnT
+      complex; PIGQ is an established subunit.
+    supported_by:
+    - reference_id: PMID:16162815
+      supporting_text: &gt;-
+        A complex of six components was formed without PIG-Y
+    - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+      supporting_text: PIGA, PIGC, PIGH, PIGP, PIGQ, PIGY and DPM2
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:16162815
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation to GPI anchor biosynthetic process, from the study
+      establishing the seven-component GPI-GnT complex that catalyses the first
+      step of GPI biosynthesis (PMID:16162815). This is the core biological
+      process for PIGQ.
+    action: ACCEPT
+    reason: &gt;-
+      Core process, directly supported by characterization of the GPI-GnT
+      complex to which PIGQ belongs.
+    supported_by:
+    - reference_id: PMID:16162815
+      supporting_text: &gt;-
+        Biosynthesis of glycosylphosphatidylinositol (GPI) is initiated by an
+        unusually complex GPI-N-acetylglucosaminyltransferase (GPI-GnT)
+        consisting of at least six proteins
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162730
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation from Reactome localizing the GlcNAc-PI-forming reaction and
+      its catalysing multimeric enzyme to the ER membrane. Concordant with the
+      IDA ER-membrane annotation; core location.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with experimental localization of the GPI-GnT complex to the ER
+      membrane.
+    supported_by:
+    - reference_id: PMID:9463366
+      supporting_text: &gt;-
+        four mammalian gene products form a protein complex in the endoplasmic
+        reticulum membrane
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:9729469
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS annotation to the very broad term carbohydrate metabolic process,
+      based on the cloning/functional-complementation study of GPI1
+      (PMID:9729469). While technically true (the GPI-GnT reaction transfers a
+      sugar), this term is far too general. The specific process is GPI anchor
+      biosynthesis (formation of GlcNAc-PI), already captured by GO:0006506.
+    action: MODIFY
+    reason: &gt;-
+      Overly general; the informative and accurate term is GPI anchor
+      biosynthetic process (GO:0006506), which describes the actual pathway PIGQ
+      participates in.
+    proposed_replacement_terms:
+    - id: GO:0006506
+      label: GPI anchor biosynthetic process
+    supported_by:
+    - reference_id: PMID:9729469
+      supporting_text: &gt;-
+        allow conclusions about a specific function for Gpi1p in stabilizing the
+        enzymic complex
+core_functions:
+- description: &gt;-
+    Non-catalytic subunit of the GPI-N-acetylglucosaminyltransferase (GPI-GnT)
+    complex, contributing to the first committed step of GPI-anchor biosynthesis
+    (transfer of GlcNAc from UDP-GlcNAc to phosphatidylinositol) at the ER
+    membrane; PIGQ stabilises the complex rather than performing catalysis
+    itself (the catalytic subunit is PIGA).
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  in_complex:
+    id: GO:0000506
+    label: glycosylphosphatidylinositol-N-acetylglucosaminyltransferase (GPI-GnT)
+      complex
+  supported_by:
+  - reference_id: PMID:9463366
+    supporting_text: &gt;-
+      four mammalian gene products form a protein complex in the endoplasmic
+      reticulum membrane
+  - reference_id: PMID:9729469
+    supporting_text: &gt;-
+      allow conclusions about a specific function for Gpi1p in stabilizing the
+      enzymic complex
+  - reference_id: file:human/PIGQ/PIGQ-uniprot.txt
+    supporting_text: participates in the first step of GPI
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the precise structural and mechanistic contribution of PIGQ within
+    the GPI-GnT complex - does it act purely as a scaffolding/stabilising
+    subunit, or does it also modulate substrate (phosphatidylinositol) selection
+    or catalytic rate?
+suggested_experiments:
+- description: &gt;-
+    Reconstitute the human GPI-GnT complex with and without PIGQ and measure
+    GlcNAc-PI transferase activity and complex stability to quantify PIGQ&#39;s
+    contribution to assembly versus catalysis.
+- description: &gt;-
+    Determine a cryo-EM structure of the intact human GPI-GnT complex to define
+    PIGQ&#39;s interfaces with PIGA (catalytic subunit), PIGC, PIGH, PIGP, PIGY and
+    DPM2.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10944123
+  title: Initial enzyme for glycosylphosphatidylinositol biosynthesis requires PIG-P
+    and is regulated by DPM2.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes GPI1/PIGQ as a component of the GPI-GnT complex and its
+      interactions with PIG-P and DPM2 within the complex. Supports IPI and
+      complex-membership annotations.
+- id: PMID:16162815
+  title: The initial enzyme for glycosylphosphatidylinositol biosynthesis requires
+    PIG-Y, a seventh component.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Defines the seven-component GPI-GnT complex including PIGQ; source of the
+      IDA GPI-GnT-complex, ER-membrane and GPI-anchor-biosynthesis annotations.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput BioPlex 3.0 AP-MS interactome; contributes a PIGQ-PIGH
+      interaction underpinning a generic protein-binding annotation.
+- id: PMID:40205054
+  title: Multimodal cell maps as a foundation for structural and functional genomics.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput multimodal (AP-MS + imaging) cell-map study; contributes a
+      PIGQ-PIGH interaction underpinning a generic protein-binding annotation.
+- id: PMID:9463366
+  title: The first step of glycosylphosphatidylinositol biosynthesis is mediated by
+    a complex of PIG-A, PIG-H, PIG-C and GPI1.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational study cloning human GPI1 and defining the PIG-A/PIG-H/PIG-C/GPI1
+      complex in the ER membrane with GPI-GnT activity in vitro.
+- id: PMID:9729469
+  title: Human and mouse Gpi1p homologues restore glycosylphosphatidylinositol membrane
+    anchor biosynthesis in yeast mutants.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows mammalian GPI1 functionally complements yeast gpi1 mutants and
+      concludes GPI1&#39;s role is stabilising the GPI-GnT enzymic complex.
+- id: Reactome:R-HSA-162730
+  title: phosphatidylinositol + UDP-N-acetyl-D-glucosamine -&gt; N-acetylglucosaminyl-PI
+    + UDP
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the first step of GPI biosynthesis, localized to the
+      ER membrane; supports the TAS ER-membrane annotation.
+- id: file:human/PIGQ/PIGQ-uniprot.txt
+  title: UniProtKB entry Q9BRB3 (PIGQ_HUMAN)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
