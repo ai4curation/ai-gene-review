@@ -1,0 +1,3212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGN - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGN</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O95427" target="_blank" class="term-link">
+                        O95427
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGN";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O95427" data-a="DESCRIPTION: PIGN (GPI ethanolamine phosphate transferase 1; GP..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGN (GPI ethanolamine phosphate transferase 1; GPI-ET-I) is a multi-pass endoplasmic reticulum membrane protein that acts in glycosylphosphatidylinositol (GPI) anchor biosynthesis. It transfers ethanolamine phosphate from phosphatidylethanolamine onto the 2-OH of the first alpha-1,4-linked mannose of the GPI intermediate, one of three ethanolamine phosphate additions to the trimannosyl core (PIGN acts on mannose 1; the paralogs PIGO and PIGG act on mannoses 3 and 2). PIGN belongs to the PIGG/PIGN/PIGO family and localizes to the ER membrane, where the later steps of GPI assembly occur. Biallelic loss-of-function variants cause multiple congenital anomalies-hypotonia-seizures syndrome 1 (MCAHS1), an autosomal recessive disorder of GPI-anchor biosynthesis characterized by neonatal hypotonia, seizures, dysmorphic features, and congenital anomalies.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005789" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGN is a multi-pass ER membrane protein that carries out the ethanolamine phosphate transfer step of GPI-anchor biosynthesis in the ER; this phylogenetic (IBA) location annotation reflects the correct site of action and is a core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the subcellular location as ER membrane (multi-pass membrane protein), consistent with the whole GPI-biosynthetic machinery residing in the ER, and the topology has 13 predicted transmembrane helices. This IBA is well supported and represents where PIGN functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0006506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGN participates in GPI-anchor biosynthesis, transferring ethanolamine phosphate onto the first mannose of the GPI intermediate. This phylogenetic annotation captures the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt PATHWAY line assigns PIGN to glycosylphosphatidylinositol-anchor biosynthesis, and its FUNCTION describes participation in a defined step of GPI biosynthesis. The IBA is consistent across orthologs (yeast MCD4, mouse Pign) and represents a core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the eighth step of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0051377" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is PIGN&#39;s core molecular function: transfer of ethanolamine phosphate from phosphatidylethanolamine onto a mannose of the GPI intermediate. The phylogenetic annotation is the correct, appropriately specific catalytic term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt describes PIGN as an ethanolamine phosphate transferase that transfers EtNP from PE to the 2-OH of the first alpha-1,4-linked mannose of the GPI intermediate. GO:0051377 (mannose-ethanolamine phosphotransferase activity) is the exact catalytic term and is well conserved across the PIGN orthologs used for the IBA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Ethanolamine phosphate transferase that catalyzes an</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ethanolamine phosphate (EtNP) transfer from phosphatidylethanolamine</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the first alpha-1,4-linked mannose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro/SubCell) annotation placing PIGN in the ER membrane; agrees with the curated UniProt location and the IBA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro signatures (IPR007070 GPI EtNP transferase 1, IPR017852) and UniProtKB-SubCell SL-0097 map to ER membrane, matching PIGN&#39;s curated location as a multi-pass ER membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation assigning PIGN to GPI-anchor biosynthesis via InterPro and UniPathway; consistent with the curated pathway and the IBA/TAS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro GPI EtNP-transferase signatures and UniPathway UPA00196 (glycosylphosphatidylinositol-anchor biosynthesis) correctly place PIGN in this core process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro-derived membrane localization. True but uninformative given the more specific ER membrane annotation that pinpoints where PIGN acts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PIGN is a multi-pass membrane protein, so a bare &#39;membrane&#39; term is not wrong, but it is subsumed by the more specific and functionally correct GO:0005789 ER membrane annotation. The specific term should carry the localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016740" target="_blank" class="term-link">
+                                    GO:0016740
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0016740" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic InterPro parent term for PIGN&#39;s transferase activity. Correct but far less informative than the specific mannose-ethanolamine phosphotransferase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016740 is a high-level ancestor of PIGN&#39;s actual catalytic term GO:0051377. It is not wrong, but the specific EtNP-transferase term should represent the molecular function; the parent adds no additional information.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Ethanolamine phosphate transferase that catalyzes an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0051377" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro) assignment of PIGN&#39;s specific catalytic activity, matching the IBA/ISS/TAS and the curated UniProt function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> InterPro GPI EtNP-transferase 1 signatures (IPR007070, IPR037671) correctly predict the mannose-ethanolamine phosphotransferase activity that is PIGN&#39;s core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">ethanolamine phosphate (EtNP) transfer from phosphatidylethanolamine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162710
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0006506" data-r="Reactome:R-HSA-162710" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation placing PIGN in the human GPI synthesis pathway. Consistent with the core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome pathway R-HSA-162710 (Synthesis of glycosylphosphatidylinositol) includes the EtNP-transfer reaction catalyzed by PIGN as one step of GPI-anchor biosynthesis; this is a well-established core process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162710
+
+                                </span>
+
+                                <div class="support-text">GPI is synthesized in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005829" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence-based cytosolic localization. PIGN is a multi-pass ER membrane protein that functions on the lumenal/ER-membrane face during GPI assembly; a cytosolic pool is not its site of function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a high-throughput HPA IF annotation. PIGN&#39;s curated location is the ER membrane, and its 13-TM topology and role in GPI-anchor synthesis place its activity in the ER, not the bulk cytosol. A cytosolic signal most likely reflects antibody background or over-expression and is not the functional site. Retained (not removed) per policy, but flagged as over-annotated relative to the ER localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005886" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> HPA immunofluorescence-based plasma membrane localization. PIGN acts in the ER membrane during GPI-anchor biosynthesis; the plasma membrane is where mature GPI-anchored proteins end up, not where PIGN itself functions.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A plasma-membrane signal for an ER-resident biosynthetic enzyme is not its functional location. This HPA IF annotation likely reflects staining of the broader secretory/membrane compartment or antibody cross-reactivity; PIGN&#39;s curated and functional location is the ER membrane. Retained (not removed) per policy, but marked over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of the ER membrane location from the mouse ortholog (Q9R1S3). Matches the curated location and other evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ISS from mouse Pign (UniProtKB:Q9R1S3) correctly assigns the ER membrane location; this is PIGN&#39;s core site of action and is corroborated by IBA, IEA, and TAS evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0006506" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of the GPI-anchor biosynthetic process from mouse Pign. Consistent with PIGN&#39;s core role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ISS from mouse Pign (UniProtKB:Q9R1S3) assigns the GPI-anchor biosynthetic process, matching the curated pathway and PIGN&#39;s function as the EtNP transferase for the first mannose.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the eighth step of the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0051377" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer of the EtNP-transferase activity from mouse Pign; this is PIGN&#39;s core molecular function and the UniProt EC/catalytic-activity block is itself inferred by similarity to the mouse enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ISS from mouse Pign (UniProtKB:Q9R1S3) assigns mannose-ethanolamine phosphotransferase activity, matching PIGN&#39;s curated catalytic activity (EtNP transfer from PE to the first mannose of the GPI intermediate).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGN/PIGN-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Ethanolamine phosphate transferase that catalyzes an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                                    GO:0051377
+                                </a>
+                            </span>
+                            <span class="term-label">mannose-ethanolamine phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162798
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0051377" data-r="Reactome:R-HSA-162798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of the specific EtNP-transfer reaction catalyzed by PIGN (phosphoethanolamine from PE onto the first mannose of the GPI precursor). Directly supports the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome reaction R-HSA-162798 describes the transfer of a phosphoethanolamine group from phosphatidylethanolamine onto the first mannose of the GPI precursor, the reaction PIGN catalyzes, mapping to GO:0051377.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162798
+
+                                </span>
+
+                                <div class="support-text">a phosphoethanolamine group is transferred from phosphatidylethanolamine onto the first mannose of the GPI precursor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mass-spectrometry detection of PIGN in an NK-cell membrane proteome. Confirms PIGN is a membrane protein but gives only a generic membrane location, not its functional ER-membrane site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited study is a bulk membrane-proteome MS survey of the YTS NK-like cell line that identified ~1843 proteins; detection in a crude membrane fraction supports only a generic &#39;membrane&#39; term and is subsumed by the specific ER membrane annotation that reflects where PIGN acts.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                                        PMID:19946888
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mass spectrometric analysis identified 1843 proteins with high confidence scores.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162798
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O95427" data-a="GO:0005789" data-r="Reactome:R-HSA-162798" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation placing the PIGN-catalyzed EtNP-transfer reaction in the ER. Consistent with the core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome annotates GPI synthesis, including the PIGN reaction R-HSA-162798, as occurring in the endoplasmic reticulum, matching PIGN&#39;s curated ER membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162710
+
+                                </span>
+
+                                <div class="support-text">GPI is synthesized in the endoplasmic reticulum</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PIGN transfers ethanolamine phosphate from phosphatidylethanolamine onto the 2-OH of the first alpha-1,4-linked mannose of the GPI intermediate in the ER membrane, an essential step of glycosylphosphatidylinositol-anchor biosynthesis.</h3>
+                <span class="vote-buttons" data-g="O95427" data-a="FUNCTION: PIGN transfers ethanolamine phosphate from phospha..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051377" target="_blank" class="term-link">
+                            mannose-ethanolamine phosphotransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGN/PIGN-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Ethanolamine phosphate transferase that catalyzes an ethanolamine phosphate (EtNP) transfer from phosphatidylethanolamine</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGN/PIGN-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            Reactome:R-HSA-162798
+
+                        </span>
+
+                        <div class="finding-text">a phosphoethanolamine group is transferred from phosphatidylethanolamine onto the first mannose of the GPI precursor</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162710
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of glycosylphosphatidylinositol (GPI)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162798
+
+                    </span>
+                </div>
+
+                <div class="reference-title">mannose(a1-4)glucosaminyl-acyl-PI + phosphatidylethanolamine -&gt; (ethanolamineP) mannose(al1-4)glucosaminyl-acyl-PI + diacylglycerol</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PIGN/PIGN-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry O95427 (PIGN_HUMAN), GPI ethanolamine phosphate transferase 1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGN-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O95427" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pign-review-notes">PIGN review notes</h1>
+<p>Gene: PIGN (HGNC:8967), UniProt O95427, human (NCBITaxon:9606)<br />
+Product name: GPI ethanolamine phosphate transferase 1 (GPI-ET-I / GPI-ethanolamine transferase I / PIG-N / MCD4 homolog)</p>
+<h2 id="verified-biology-grounded-in-pign-uniprottxt-goa-cached-reactomepmid">Verified biology (grounded in PIGN-uniprot.txt, GOA, cached Reactome/PMID)</h2>
+<p>PIGN is an <strong>ethanolamine phosphate (EtNP) transferase</strong> of the ER that acts in<br />
+glycosylphosphatidylinositol (GPI) anchor biosynthesis. It transfers ethanolamine<br />
+phosphate from phosphatidylethanolamine (PE) onto the <strong>2-OH of the first<br />
+(alpha-1,4-linked) mannose</strong> of the GPI intermediate.</p>
+<p>UniProt FUNCTION [file:human/PIGN/PIGN-uniprot.txt]:<br />
+"Ethanolamine phosphate transferase that catalyzes an ethanolamine phosphate (EtNP)<br />
+transfer from phosphatidylethanolamine (PE) to the 2-OH position of the first<br />
+alpha-1,4-linked mannose ... participates in the eighth step of the<br />
+glycosylphosphatidylinositol-anchor biosynthesis (By similarity)."</p>
+<ul>
+<li>Family: "Belongs to the PIGG/PIGN/PIGO family. PIGN subfamily." — the three human<br />
+  paralogs each add EtNP to a different mannose (PIGN → Man1; PIGO → Man3, the bridging<br />
+  EtNP that links the anchor to protein; PIGG → Man2).</li>
+<li>PATHWAY: "Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor biosynthesis."<br />
+  (UniPathway UPA00196).</li>
+<li>Localization: "Endoplasmic reticulum membrane ... Multi-pass membrane protein"; the<br />
+  UniProt topology has 13 TM helices (multi-pass ER membrane protein), consistent with<br />
+  ER membrane (GO:0005789).</li>
+<li>MCAHS1: "Multiple congenital anomalies-hypotonia-seizures syndrome 1 (MCAHS1)<br />
+  [MIM:614080]" — autosomal recessive; neonatal hypotonia, seizures, dysmorphism,<br />
+  congenital anomalies (PubMed:21493957, variant R709Q).</li>
+<li>A secondary/moonlighting claim: "May act as suppressor of replication stress and<br />
+  chromosome missegregation (PubMed:23446422)." This is a screen-derived observation,<br />
+  not the core evolved GPI-biosynthesis function.</li>
+</ul>
+<h2 id="goa-mf-term-exact-current-term-to-use">GOA MF term (exact current term to use)</h2>
+<p>GOA (genes/human/PIGN/PIGN-goa.tsv) carries the MF as:<br />
+- <strong>GO:0051377 "mannose-ethanolamine phosphotransferase activity"</strong> (verified current,<br />
+  MF aspect, not obsolete via QuickGO). This is the exact term used in core_functions.</p>
+<p>Core BP: GO:0006506 "GPI anchor biosynthetic process" (verified current, BP aspect).<br />
+Core CC: GO:0005789 "endoplasmic reticulum membrane" (verified current, CC aspect).</p>
+<h2 id="reactome">Reactome</h2>
+<ul>
+<li>R-HSA-162710 "Synthesis of glycosylphosphatidylinositol (GPI)" — pathway; TAS<br />
+  support for GO:0006506.</li>
+<li>R-HSA-162798 "mannose(a1-4)glucosaminyl-acyl-PI + phosphatidylethanolamine -&gt;<br />
+  (ethanolamineP) mannose(al1-4)glucosaminyl-acyl-PI + diacylglycerol" — the specific<br />
+  EtNP-transfer reaction (sixth step of GPI synthesis per Reactome; UniProt calls it the<br />
+  eighth step under a finer-grained numbering). Supports the EtNP-transferase MF and ER<br />
+  membrane CC. Reactome summary: "a phosphoethanolamine group is transferred from<br />
+  phosphatidylethanolamine onto the first mannose of the GPI precursor."</li>
+</ul>
+<h2 id="annotation-by-annotation-decisions">Annotation-by-annotation decisions</h2>
+<p>Total GOA lines: 16 (rows 2-18 of TSV).</p>
+<p>MF GO:0051377 (IBA, IEA-InterPro, ISS, TAS-Reactome) — core catalytic activity; ACCEPT all.<br />
+MF GO:0016740 transferase activity (IEA InterPro) — correct parent, less informative;<br />
+  MARK_AS_OVER_ANNOTATED (redundant with the specific GO:0051377).<br />
+BP GO:0006506 (IBA, IEA, TAS, ISS) — core biological process; ACCEPT all.<br />
+CC GO:0005789 ER membrane (IBA is_active_in, IEA, ISS, TAS) — correct core location; ACCEPT all.<br />
+CC GO:0016020 membrane (IEA InterPro; HDA proteomics PMID:19946888) — true but generic;<br />
+  MARK_AS_OVER_ANNOTATED (subsumed by ER membrane; HDA is a bulk membrane-proteome MS study).<br />
+CC GO:0005829 cytosol (IDA HPA) — PIGN is a multi-pass ER membrane protein; a soluble<br />
+  cytosolic pool is not its site of function. HPA IF can pick up antibody background /<br />
+  over-expression signal. MARK_AS_OVER_ANNOTATED (do not REMOVE an IDA per policy).<br />
+CC GO:0005886 plasma membrane (IDA HPA) — likewise not PIGN's functional site; PIGN acts<br />
+  in the ER lumen/membrane, not the PM. MARK_AS_OVER_ANNOTATED.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>file:human/PIGN/PIGN-uniprot.txt — UniProt O95427 (FUNCTION, PATHWAY, SUBCELLULAR<br />
+  LOCATION, DISEASE, SIMILARITY). Grounds MF/BP/CC and MCAHS1.</li>
+<li>Reactome R-HSA-162710, R-HSA-162798 (titles left exactly as fetched).</li>
+<li>PMID:19946888 — NK-cell membrane proteome MS; abstract-only; supports generic membrane<br />
+  detection (HDA), not ER-specific localization.</li>
+<li>GO_REF:0000002/0000024/0000033/0000052/0000120 — standard pipeline references.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O95427
+gene_symbol: PIGN
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PIGN (GPI ethanolamine phosphate transferase 1; GPI-ET-I) is a multi-pass
+  endoplasmic reticulum membrane protein that acts in glycosylphosphatidylinositol
+  (GPI) anchor biosynthesis. It transfers ethanolamine phosphate from
+  phosphatidylethanolamine onto the 2-OH of the first alpha-1,4-linked mannose of
+  the GPI intermediate, one of three ethanolamine phosphate additions to the trimannosyl
+  core (PIGN acts on mannose 1; the paralogs PIGO and PIGG act on mannoses 3 and 2).
+  PIGN belongs to the PIGG/PIGN/PIGO family and localizes to the ER membrane, where the
+  later steps of GPI assembly occur. Biallelic loss-of-function variants cause multiple
+  congenital anomalies-hypotonia-seizures syndrome 1 (MCAHS1), an autosomal recessive
+  disorder of GPI-anchor biosynthesis characterized by neonatal hypotonia, seizures,
+  dysmorphic features, and congenital anomalies.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      PIGN is a multi-pass ER membrane protein that carries out the ethanolamine
+      phosphate transfer step of GPI-anchor biosynthesis in the ER; this phylogenetic
+      (IBA) location annotation reflects the correct site of action and is a core
+      localization.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt records the subcellular location as ER membrane (multi-pass membrane
+      protein), consistent with the whole GPI-biosynthetic machinery residing in the
+      ER, and the topology has 13 predicted transmembrane helices. This IBA is well
+      supported and represents where PIGN functions.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Endoplasmic reticulum membrane
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Multi-pass membrane protein
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      PIGN participates in GPI-anchor biosynthesis, transferring ethanolamine phosphate
+      onto the first mannose of the GPI intermediate. This phylogenetic annotation
+      captures the core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      The UniProt PATHWAY line assigns PIGN to glycosylphosphatidylinositol-anchor
+      biosynthesis, and its FUNCTION describes participation in a defined step of GPI
+      biosynthesis. The IBA is consistent across orthologs (yeast MCD4, mouse Pign) and
+      represents a core process.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        participates in the eighth step of the
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      This is PIGN&#39;s core molecular function: transfer of ethanolamine phosphate from
+      phosphatidylethanolamine onto a mannose of the GPI intermediate. The phylogenetic
+      annotation is the correct, appropriately specific catalytic term.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt describes PIGN as an ethanolamine phosphate transferase that transfers
+      EtNP from PE to the 2-OH of the first alpha-1,4-linked mannose of the GPI
+      intermediate. GO:0051377 (mannose-ethanolamine phosphotransferase activity) is the
+      exact catalytic term and is well conserved across the PIGN orthologs used for the
+      IBA.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Ethanolamine phosphate transferase that catalyzes an
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        ethanolamine phosphate (EtNP) transfer from phosphatidylethanolamine
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        the first alpha-1,4-linked mannose
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (InterPro/SubCell) annotation placing PIGN in the ER membrane; agrees
+      with the curated UniProt location and the IBA.
+    action: ACCEPT
+    reason: &gt;-
+      The InterPro signatures (IPR007070 GPI EtNP transferase 1, IPR017852) and
+      UniProtKB-SubCell SL-0097 map to ER membrane, matching PIGN&#39;s curated location as
+      a multi-pass ER membrane protein.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Endoplasmic reticulum membrane
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation assigning PIGN to GPI-anchor biosynthesis via InterPro and
+      UniPathway; consistent with the curated pathway and the IBA/TAS.
+    action: ACCEPT
+    reason: &gt;-
+      InterPro GPI EtNP-transferase signatures and UniPathway UPA00196
+      (glycosylphosphatidylinositol-anchor biosynthesis) correctly place PIGN in this
+      core process.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic InterPro-derived membrane localization. True but uninformative given the
+      more specific ER membrane annotation that pinpoints where PIGN acts.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PIGN is a multi-pass membrane protein, so a bare &#39;membrane&#39; term is not wrong, but
+      it is subsumed by the more specific and functionally correct GO:0005789 ER
+      membrane annotation. The specific term should carry the localization.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Multi-pass membrane protein
+- term:
+    id: GO:0016740
+    label: transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic InterPro parent term for PIGN&#39;s transferase activity. Correct but far less
+      informative than the specific mannose-ethanolamine phosphotransferase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      GO:0016740 is a high-level ancestor of PIGN&#39;s actual catalytic term GO:0051377.
+      It is not wrong, but the specific EtNP-transferase term should represent the
+      molecular function; the parent adds no additional information.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Ethanolamine phosphate transferase that catalyzes an
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (InterPro) assignment of PIGN&#39;s specific catalytic activity, matching
+      the IBA/ISS/TAS and the curated UniProt function.
+    action: ACCEPT
+    reason: &gt;-
+      InterPro GPI EtNP-transferase 1 signatures (IPR007070, IPR037671) correctly
+      predict the mannose-ethanolamine phosphotransferase activity that is PIGN&#39;s core
+      molecular function.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        ethanolamine phosphate (EtNP) transfer from phosphatidylethanolamine
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162710
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation placing PIGN in the human GPI synthesis
+      pathway. Consistent with the core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome pathway R-HSA-162710 (Synthesis of glycosylphosphatidylinositol) includes
+      the EtNP-transfer reaction catalyzed by PIGN as one step of GPI-anchor biosynthesis;
+      this is a well-established core process annotation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162710
+      supporting_text: &gt;-
+        GPI is synthesized in the endoplasmic reticulum
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence-based cytosolic localization. PIGN is a multi-pass ER
+      membrane protein that functions on the lumenal/ER-membrane face during GPI
+      assembly; a cytosolic pool is not its site of function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is a high-throughput HPA IF annotation. PIGN&#39;s curated location is the ER
+      membrane, and its 13-TM topology and role in GPI-anchor synthesis place its
+      activity in the ER, not the bulk cytosol. A cytosolic signal most likely reflects
+      antibody background or over-expression and is not the functional site. Retained
+      (not removed) per policy, but flagged as over-annotated relative to the ER
+      localization.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Endoplasmic reticulum membrane
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      HPA immunofluorescence-based plasma membrane localization. PIGN acts in the ER
+      membrane during GPI-anchor biosynthesis; the plasma membrane is where mature
+      GPI-anchored proteins end up, not where PIGN itself functions.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A plasma-membrane signal for an ER-resident biosynthetic enzyme is not its
+      functional location. This HPA IF annotation likely reflects staining of the
+      broader secretory/membrane compartment or antibody cross-reactivity; PIGN&#39;s
+      curated and functional location is the ER membrane. Retained (not removed) per
+      policy, but marked over-annotated.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Endoplasmic reticulum membrane
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of the ER membrane location from the mouse ortholog
+      (Q9R1S3). Matches the curated location and other evidence.
+    action: ACCEPT
+    reason: &gt;-
+      ISS from mouse Pign (UniProtKB:Q9R1S3) correctly assigns the ER membrane location;
+      this is PIGN&#39;s core site of action and is corroborated by IBA, IEA, and TAS
+      evidence.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Endoplasmic reticulum membrane
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of the GPI-anchor biosynthetic process from mouse
+      Pign. Consistent with PIGN&#39;s core role.
+    action: ACCEPT
+    reason: &gt;-
+      ISS from mouse Pign (UniProtKB:Q9R1S3) assigns the GPI-anchor biosynthetic process,
+      matching the curated pathway and PIGN&#39;s function as the EtNP transferase for the
+      first mannose.
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        participates in the eighth step of the
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer of the EtNP-transferase activity from mouse Pign;
+      this is PIGN&#39;s core molecular function and the UniProt EC/catalytic-activity block
+      is itself inferred by similarity to the mouse enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      ISS from mouse Pign (UniProtKB:Q9R1S3) assigns mannose-ethanolamine
+      phosphotransferase activity, matching PIGN&#39;s curated catalytic activity (EtNP
+      transfer from PE to the first mannose of the GPI intermediate).
+    supported_by:
+    - reference_id: file:human/PIGN/PIGN-uniprot.txt
+      supporting_text: &gt;-
+        Ethanolamine phosphate transferase that catalyzes an
+- term:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162798
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of the specific EtNP-transfer reaction
+      catalyzed by PIGN (phosphoethanolamine from PE onto the first mannose of the GPI
+      precursor). Directly supports the core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome reaction R-HSA-162798 describes the transfer of a phosphoethanolamine
+      group from phosphatidylethanolamine onto the first mannose of the GPI precursor,
+      the reaction PIGN catalyzes, mapping to GO:0051377.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162798
+      supporting_text: &gt;-
+        a phosphoethanolamine group is transferred from phosphatidylethanolamine onto
+        the first mannose of the GPI precursor
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mass-spectrometry detection of PIGN in an NK-cell membrane
+      proteome. Confirms PIGN is a membrane protein but gives only a generic membrane
+      location, not its functional ER-membrane site.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The cited study is a bulk membrane-proteome MS survey of the YTS NK-like cell line
+      that identified ~1843 proteins; detection in a crude membrane fraction supports
+      only a generic &#39;membrane&#39; term and is subsumed by the specific ER membrane
+      annotation that reflects where PIGN acts.
+    supported_by:
+    - reference_id: PMID:19946888
+      supporting_text: &gt;-
+        Mass spectrometric analysis identified 1843 proteins with high confidence scores.
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162798
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation placing the PIGN-catalyzed EtNP-transfer
+      reaction in the ER. Consistent with the core localization.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome annotates GPI synthesis, including the PIGN reaction R-HSA-162798, as
+      occurring in the endoplasmic reticulum, matching PIGN&#39;s curated ER membrane
+      location.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162710
+      supporting_text: &gt;-
+        GPI is synthesized in the endoplasmic reticulum
+core_functions:
+- description: &gt;-
+    PIGN transfers ethanolamine phosphate from phosphatidylethanolamine onto the 2-OH of
+    the first alpha-1,4-linked mannose of the GPI intermediate in the ER membrane, an
+    essential step of glycosylphosphatidylinositol-anchor biosynthesis.
+  molecular_function:
+    id: GO:0051377
+    label: mannose-ethanolamine phosphotransferase activity
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/PIGN/PIGN-uniprot.txt
+    supporting_text: &gt;-
+      Ethanolamine phosphate transferase that catalyzes an ethanolamine phosphate (EtNP)
+      transfer from phosphatidylethanolamine
+  - reference_id: file:human/PIGN/PIGN-uniprot.txt
+    supporting_text: &gt;-
+      Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor
+  - reference_id: Reactome:R-HSA-162798
+    supporting_text: &gt;-
+      a phosphoethanolamine group is transferred from phosphatidylethanolamine onto the
+      first mannose of the GPI precursor
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Bulk NK-cell membrane-proteome MS study; supports only generic membrane detection
+      of PIGN (HDA), not its functional ER-membrane localization.
+- id: Reactome:R-HSA-162710
+  title: Synthesis of glycosylphosphatidylinositol (GPI)
+  findings: []
+- id: Reactome:R-HSA-162798
+  title: mannose(a1-4)glucosaminyl-acyl-PI + phosphatidylethanolamine -&gt; (ethanolamineP)
+    mannose(al1-4)glucosaminyl-acyl-PI + diacylglycerol
+  findings: []
+- id: file:human/PIGN/PIGN-uniprot.txt
+  title: UniProt entry O95427 (PIGN_HUMAN), GPI ethanolamine phosphate transferase 1
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
