@@ -1,0 +1,4309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPOX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PPOX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P50336" target="_blank" class="term-link">
+                        P50336
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PPOX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P50336" data-a="DESCRIPTION: Protoporphyrinogen oxidase (PPOX; PPO; EC 1.3.3.4)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Protoporphyrinogen oxidase (PPOX; PPO; EC 1.3.3.4) is the flavoprotein that catalyses the seventh (penultimate) step of heme biosynthesis: the FAD-dependent and oxygen-dependent six-electron oxidation of protoporphyrinogen IX to protoporphyrin IX (reaction: protoporphyrinogen IX + 3 O2 -&gt; protoporphyrin IX + 3 H2O2). The protein is bound to the outer (intermembrane-space-facing) surface of the mitochondrial inner membrane, where it acts in the terminal, mitochondrial phase of the pathway feeding protoporphyrin IX to ferrochelatase for iron insertion. Each subunit binds one non-covalent FAD cofactor. In humans, partial loss of PPOX activity causes variegate porphyria (VP), an autosomal dominant acute hepatic porphyria with cutaneous photosensitivity; severe deficiency causes autosomal recessive childhood-onset variegate porphyria. PPOX is also the molecular target of diphenyl-ether herbicides (e.g. acifluorfen).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the defining catalytic activity of PPOX, transferred across the protoporphyrinogen oxidase orthology group. This is the core molecular function and is strongly supported by direct human enzyme assays.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Protoporphyrinogen oxidase (EC 1.3.3.4) is the experimentally established activity of the human enzyme, purified and assayed directly, and this IBA sits at the correct level of specificity for the whole ortholog group. The current ontology label for this ID is &#34;oxygen-dependent protoporphyrinogen oxidase activity&#34;.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment placing PPOX in the heme biosynthetic pathway. This is the core biological process for the gene: the PPOX-catalysed step is the penultimate reaction of heme synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PPOX catalyses the seventh of eight steps of heme biosynthesis. The process assignment is correct and well supported; deficiency causes the heme-biosynthesis disorder variegate porphyria.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005743" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of PPOX to the mitochondrial inner membrane, its established site of action. PPOX is a peripheral membrane protein on the intermembrane-space-facing (outer) surface of the inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The human enzyme is a mitochondrial inner-membrane protein; the crystallographic study explicitly describes hPPO as a mitochondrial inner membrane protein, and Reactome places it on the outer surface of the inner mitochondrial membrane. Core cellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                        PMID:21048046
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment (combined IEA methods, tied to EC 1.3.3.4, RHEA:25576 and InterPro:IPR004572) of the core catalytic activity. Redundant with the experimental and IBA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function, independently supported by direct enzyme assays and the mapped EC number/RHEA reaction. Duplicate ID with different evidence is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005743" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (combined IEA / SubCell SL-0168) assignment of mitochondrial inner membrane localisation, matching the experimentally supported location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the UniProt subcellular location (mitochondrion inner membrane, peripheral, intermembrane side) and with the crystallographic characterisation of the human enzyme. Core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005758" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment to the mitochondrial intermembrane space. PPOX faces the intermembrane space (it is a peripheral protein on the outer/IMS-facing surface of the inner membrane) but is not a soluble intermembrane-space protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PPOX is anchored to the inner membrane with its active site oriented toward the intermembrane space; UniProt records the location as &#34;Mitochondrion inner membrane; Peripheral membrane protein; Intermembrane side&#34;. The more specific and accurate component is mitochondrial inner membrane (GO:0005743). Assigning it as an intermembrane-space (matrix-of-the-IMS) protein overstates a free-luminal localisation, so this is an over-annotation relative to the inner-membrane term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">{ECO:0000250|UniProtKB:P51175}; Intermembrane side</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006779" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment to porphyrin-containing compound biosynthesis. This is a correct but more general parent of the specific heme biosynthetic process; PPOX produces the porphyrin protoporphyrin IX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically correct: PPOX generates protoporphyrin IX, a porphyrin. The term is broader than the core heme biosynthetic process, but an IEA at this generality is acceptable and true.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                        PMID:21048046
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">converts protoporphyrinogen IX to protoporphyrin IX in the heme biosynthetic pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    GO:0006785
+                                </a>
+                            </span>
+                            <span class="term-label">heme B biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006785" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment to heme B (protoheme) biosynthesis, the specific branch of heme synthesis to which the PPOX-generated protoporphyrin IX is committed (protoporphyrin IX + Fe2+ -&gt; heme B).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heme b (protoheme IX) is the immediate downstream product of the protoporphyrin IX made by PPOX (via ferrochelatase). The term is a valid, more specific descendant of heme biosynthetic process. Keep as a specific process; the general heme biosynthetic process remains the core BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0016491" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment (from the flavin amine-oxidase domain IPR002937) of the broad parent activity oxidoreductase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PPOX is an oxidoreductase, so the term is not wrong, but it is far more general than the specific and experimentally established protoporphyrinogen oxidase activity (GO:0004729) that is already annotated. The generic parent adds no functional information beyond the specific child.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0031966" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic assignment to the generic mitochondrial membrane. Correct but broader than the specific mitochondrial inner membrane localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PPOX localises specifically to the mitochondrial inner membrane (GO:0005743), which is already annotated. The generic mitochondrial membrane parent is true but redundant and less informative.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006783" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl (orthology-based) electronic transfer of the core heme biosynthetic process annotation. Redundant with the IBA/ISS/IDA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, supported by direct experimental evidence for the human enzyme; the electronic transfer from the rat ortholog is appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009410" target="_blank" class="term-link">
+                                    GO:0009410
+                                </a>
+                            </span>
+                            <span class="term-label">response to xenobiotic stimulus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0009410" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ensembl electronic transfer (from the rat ortholog D3ZVN7) of &#34;response to xenobiotic stimulus&#34;. PPOX is the molecular target of diphenyl-ether herbicides (e.g. acifluorfen), which underlies this annotation, but responding to a xenobiotic is not a core evolved function of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation reflects that PPOX is inhibited by xenobiotic herbicides (acifluorfen is a specific PPO inhibitor), a pharmacologically important but peripheral, non-core aspect of the gene. It is retained as non-core rather than removed because the xenobiotic-interaction is genuine and experimentally documented for the enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">this activity was inhibited by acifluorfen, a specific inhibitor of PPO</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS) transfer of the core catalytic activity from the mouse ortholog (MGI:104968). Redundant with the direct experimental and IBA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; sequence-similarity transfer is fully consistent with the directly assayed human enzyme activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006783" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS) transfer of the core heme biosynthetic process from the mouse ortholog. Redundant with IBA/IEA/IDA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, consistent with all other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23467411" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23467411
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative structural insight into human variegate porphyr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="PMID:23467411" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation of protoporphyrinogen oxidase activity from the quantitative structural/kinetic study of wild-type and VP-mutant human PPO, which assayed kcat/Km of the enzyme and characterised the FAD- and O2-dependent oxidation of protoporphyrinogen IX to protoporphyrin IX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental determination of the core catalytic activity of the human enzyme, including quantitative kinetics; the defining function of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23467411" target="_blank" class="term-link">
+                                        PMID:23467411
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX (porphyrin) in the presence of cofactor FAD and molecular oxygen</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005743" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator sequence-similarity (ISS) transfer of mitochondrial inner membrane localisation from the mouse ortholog (P51175). Consistent with the experimentally supported location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location; matches the UniProt subcellular location and the crystallographic description of the human enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                        PMID:21048046
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005743" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate GOA line of the curator sequence-similarity (ISS) transfer of mitochondrial inner membrane localisation from the mouse ortholog (P51175); differs only in annotation date/source. Same conclusion as the other ISS localisation annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location; matches the UniProt subcellular location and the crystallographic description of the human enzyme. Duplicate of the equivalent GO:0005743 ISS annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                        PMID:21048046
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21048046
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Structural insight into human variegate porphyria disease.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="PMID:21048046" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of protoporphyrinogen oxidase activity from the 1.9 Angstrom crystal structure study of human PPO in complex with FAD and the inhibitor acifluorfen, which biochemically characterised the wild-type enzyme and 47 VP-causing mutants.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the core catalytic function of the human enzyme, including structural and kinetic characterisation. Defining molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                        PMID:21048046
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we report the crystal structure of hPPO in complex with the coenzyme flavin adenine dinucleotide (FAD) and the inhibitor acifluorfen at a resolution of 1.9</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006785" target="_blank" class="term-link">
+                                    GO:0006785
+                                </a>
+                            </span>
+                            <span class="term-label">heme B biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006785" data-r="PMID:7713909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) placing PPOX in heme (heme B / protoheme) biosynthesis, from the cDNA cloning study that complemented an E. coli hemG (PPO-deficient) mutant and demonstrated acifluorfen-inhibitable PPO activity in transfected cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functional complementation of a heme-pathway (hemG) mutant plus demonstration of PPO activity directly establishes PPOX&#39;s role in producing the protoporphyrin IX committed to heme b synthesis. Keep as a specific heme-branch process alongside the general core heme biosynthetic process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a hemG mutant strain of Escherichia coli deficient in PPO is defective in aerobic respiration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005739" data-r="PMID:34800366" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HTP) proteomic assignment of PPOX to the mitochondrion, from a quantitative high-confidence human mitochondrial proteome (MitoCoP) study. Broader than, but consistent with, the specific inner-membrane localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct organellar localisation supported by a large-scale, high-confidence mitochondrial proteome. The term is more general than mitochondrial inner membrane but is accurate; retained as a valid (if less specific) location annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                                        PMID:34800366
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">defined a mitochondrial high-confidence proteome of &gt;1,100 proteins (MitoCoP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005758" target="_blank" class="term-link">
+                                    GO:0005758
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial intermembrane space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-189423
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0005758" data-r="Reactome:R-HSA-189423" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author-statement placing PPO on the outer surface of the inner mitochondrial membrane (facing the intermembrane space). As with the IEA IMS annotation, the intermembrane-space term overstates a soluble-luminal localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome explicitly states the protein resides on the outer surface of the inner mitochondrial membrane, i.e. it is inner-membrane-associated with its active site facing the intermembrane space, not a free intermembrane-space protein. The specific, accurate component is mitochondrial inner membrane (GO:0005743); the IMS assignment is an over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-189423
+
+                                </span>
+
+                                <div class="support-text">The protein resides on the outer surface of the inner mitochondrial membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                                    GO:0004729
+                                </a>
+                            </span>
+                            <span class="term-label">protoporphyrinogen oxidase activity, oxygen as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0004729" data-r="PMID:7713909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of protoporphyrinogen oxidase activity from the original human cDNA cloning: COS-1 cells transfected with the cDNA showed markedly higher, acifluorfen- inhibitable PPO activity than controls.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration of the core catalytic activity of the human gene product. Defining molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A homogenate of the monkey kidney COS-1 cells that had been transfected with the cDNA had much higher PPO activity than an extract of control cells, and this activity was inhibited by acifluorfen, a specific inhibitor of PPO.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006779" target="_blank" class="term-link">
+                                    GO:0006779
+                                </a>
+                            </span>
+                            <span class="term-label">porphyrin-containing compound biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006779" data-r="PMID:7713909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) placing PPOX in porphyrin-containing compound biosynthesis, from the cloning/complementation study. PPOX generates the porphyrin protoporphyrin IX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general process; PPOX produces protoporphyrin IX, a porphyrin. The specific heme biosynthetic process is the core BP, with this as a valid broader annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                    GO:0006783
+                                </a>
+                            </span>
+                            <span class="term-label">heme biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0006783" data-r="PMID:7713909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of PPOX&#39;s role in heme biosynthesis, from functional complementation of an E. coli hemG (PPO-deficient) mutant with the human cDNA. This is the core biological process for the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functional complementation of a heme-pathway mutant and restoration of PPO activity directly establishes the role of PPOX in heme biosynthesis. Core BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0031966" data-r="PMID:7713909" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutant-phenotype-based (IMP) localisation to the mitochondrial membrane, from the cloning study showing the in vitro-translated protein associates with isolated mitochondria without size change, indicating no cleaved targeting presequence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The evidence supports mitochondrial (membrane) localisation, but the generic mitochondrial membrane term is broader than the experimentally and structurally supported mitochondrial inner membrane (GO:0005743), which is already annotated. Kept but flagged as an over-general component. (Deferring to the curator, this is not a removal — the localisation is genuine.)
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">after incubation with isolated mitochondria the protein was found to be located in the mitochondria, having just the same size as before, an indication that PPO is a mitochondrial enzyme and has no apparent transport-specific leader sequence.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                                    GO:0050660
+                                </a>
+                            </span>
+                            <span class="term-label">flavin adenine dinucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7713909
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning of a human cDNA for protoporphyrinogen oxidase by co...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P50336" data-a="GO:0050660" data-r="PMID:7713909" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement that PPOX binds FAD. The N-terminal sequence contains a classic dinucleotide-binding motif, and the crystal structure resolves one FAD bound per subunit; FAD is the essential redox cofactor for the oxidation reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PPOX is a flavoprotein that binds one FAD per subunit as its catalytic cofactor, confirmed both by sequence motif and by crystal structures. This is a genuine, though secondary/enabling, molecular function supporting the core oxidase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                                        PMID:7713909
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The NH2-terminal amino acid sequence of the deduced PPO contains a conserved amino acid sequence that forms the dinucleotide-binding site in many flavin-containing proteins.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PPOX/PPOX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Note=Binds 1 FAD per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FAD- and oxygen-dependent six-electron oxidation of protoporphyrinogen IX to protoporphyrin IX, the seventh (penultimate) step of heme biosynthesis, catalysed at the mitochondrial inner membrane.</h3>
+                <span class="vote-buttons" data-g="P50336" data-a="FUNCTION: FAD- and oxygen-dependent six-electron oxidation o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004729" target="_blank" class="term-link">
+                            oxygen-dependent protoporphyrinogen oxidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006783" target="_blank" class="term-link">
+                                heme biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23467411" target="_blank" class="term-link">
+                                PMID:23467411
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX (porphyrin) in the presence of cofactor FAD and molecular oxygen</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                PMID:21048046
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme biosynthetic pathway.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds one non-covalent FAD cofactor per subunit, the flavin redox centre required for the oxidase activity.</h3>
+                <span class="vote-buttons" data-g="P50336" data-a="FUNCTION: Binds one non-covalent FAD cofactor per subunit, t..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050660" target="_blank" class="term-link">
+                            flavin adenine dinucleotide binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                                PMID:21048046
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">in complex with the coenzyme flavin adenine dinucleotide (FAD)</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PPOX/PPOX-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Note=Binds 1 FAD per subunit.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21048046" target="_blank" class="term-link">
+                            PMID:21048046
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural insight into human variegate porphyria disease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">1.9 Angstrom crystal structure of human PPO in complex with FAD and the inhibitor acifluorfen; hPPO converts protoporphyrinogen IX to protoporphyrin IX and is a mitochondrial inner membrane protein. Also characterised 47 VP-causing mutants.</div>
+
+                        <div class="finding-text">"Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme biosynthetic pathway."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23467411" target="_blank" class="term-link">
+                            PMID:23467411
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative structural insight into human variegate porphyria disease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PPO (EC 1.3.3.4) is the penultimate enzyme of heme biosynthesis, oxidising protoporphyrinogen IX to protoporphyrin IX using FAD and molecular oxygen; ~50% decreased activity causes dominantly inherited variegate porphyria (an acute hepatic porphyria).</div>
+
+                        <div class="finding-text">"catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX (porphyrin) in the presence of cofactor FAD and molecular oxygen"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Large-scale proteomic study defining a high-confidence human mitochondrial proteome (MitoCoP) of &gt;1,100 proteins, supporting mitochondrial localisation of PPOX.</div>
+
+                        <div class="finding-text">"defined a mitochondrial high-confidence proteome of &gt;1,100 proteins (MitoCoP)"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7713909" target="_blank" class="term-link">
+                            PMID:7713909
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning of a human cDNA for protoporphyrinogen oxidase by complementation in vivo of a hemG mutant of Escherichia coli.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Cloning of the human PPOX cDNA by complementation of an E. coli hemG (PPO-deficient) mutant; PPO is the penultimate heme-pathway enzyme, a mitochondrial flavoprotein whose activity is inhibited by acifluorfen.</div>
+
+                        <div class="finding-text">"Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the penultimate step in the heme biosynthetic pathway."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-189423
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PPO oxidises PPGEN9 to PRIN9</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction: six-electron oxidation of protoporphyrinogen IX to protoporphyrin IX by PPO, a FAD-containing enzyme on the outer surface of the inner mitochondrial membrane; PPO deficiency causes variegate porphyria.</div>
+
+                        <div class="finding-text">"The protein resides on the outer surface of the inner mitochondrial membrane."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PPOX/PPOX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P50336 (PPOX_HUMAN)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records the catalytic reaction (protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2; EC 1.3.3.4), FAD cofactor (one per subunit), mitochondrial inner membrane peripheral (intermembrane-side) localisation, and the disease associations variegate porphyria and childhood-onset variegate porphyria.</div>
+
+                        <div class="finding-text">"Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P50336
+gene_symbol: PPOX
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  Protoporphyrinogen oxidase (PPOX; PPO; EC 1.3.3.4) is the flavoprotein that catalyses
+  the seventh (penultimate) step of heme biosynthesis: the FAD-dependent and oxygen-dependent
+  six-electron oxidation of protoporphyrinogen IX to protoporphyrin IX (reaction:
+  protoporphyrinogen IX + 3 O2 -&gt; protoporphyrin IX + 3 H2O2). The protein is bound to
+  the outer (intermembrane-space-facing) surface of the mitochondrial inner membrane, where
+  it acts in the terminal, mitochondrial phase of the pathway feeding protoporphyrin IX to
+  ferrochelatase for iron insertion. Each subunit binds one non-covalent FAD cofactor. In
+  humans, partial loss of PPOX activity causes variegate porphyria (VP), an autosomal
+  dominant acute hepatic porphyria with cutaneous photosensitivity; severe deficiency causes
+  autosomal recessive childhood-onset variegate porphyria. PPOX is also the molecular target
+  of diphenyl-ether herbicides (e.g. acifluorfen).
+existing_annotations:
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the defining catalytic activity of PPOX, transferred
+      across the protoporphyrinogen oxidase orthology group. This is the core molecular
+      function and is strongly supported by direct human enzyme assays.
+    action: ACCEPT
+    reason: &gt;-
+      Protoporphyrinogen oxidase (EC 1.3.3.4) is the experimentally established activity of
+      the human enzyme, purified and assayed directly, and this IBA sits at the correct level
+      of specificity for the whole ortholog group. The current ontology label for this ID is
+      &#34;oxygen-dependent protoporphyrinogen oxidase activity&#34;.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment placing PPOX in the heme biosynthetic pathway. This is
+      the core biological process for the gene: the PPOX-catalysed step is the penultimate
+      reaction of heme synthesis.
+    action: ACCEPT
+    reason: &gt;-
+      PPOX catalyses the seventh of eight steps of heme biosynthesis. The process
+      assignment is correct and well supported; deficiency causes the heme-biosynthesis
+      disorder variegate porphyria.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of PPOX to the mitochondrial inner membrane, its
+      established site of action. PPOX is a peripheral membrane protein on the
+      intermembrane-space-facing (outer) surface of the inner membrane.
+    action: ACCEPT
+    reason: &gt;-
+      The human enzyme is a mitochondrial inner-membrane protein; the crystallographic study
+      explicitly describes hPPO as a mitochondrial inner membrane protein, and Reactome
+      places it on the outer surface of the inner mitochondrial membrane. Core cellular
+      location.
+    supported_by:
+    - reference_id: PMID:21048046
+      supporting_text: &gt;-
+        Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane
+        protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme
+        biosynthetic pathway.
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment (combined IEA methods, tied to EC 1.3.3.4, RHEA:25576 and
+      InterPro:IPR004572) of the core catalytic activity. Redundant with the experimental
+      and IBA annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function, independently supported by direct enzyme assays and
+      the mapped EC number/RHEA reaction. Duplicate ID with different evidence is acceptable.
+    supported_by:
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (combined IEA / SubCell SL-0168) assignment of mitochondrial inner membrane
+      localisation, matching the experimentally supported location.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the UniProt subcellular location (mitochondrion inner membrane,
+      peripheral, intermembrane side) and with the crystallographic characterisation of the
+      human enzyme. Core location.
+    supported_by:
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion inner membrane&#34;
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment to the mitochondrial intermembrane space. PPOX faces the
+      intermembrane space (it is a peripheral protein on the outer/IMS-facing surface of the
+      inner membrane) but is not a soluble intermembrane-space protein.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PPOX is anchored to the inner membrane with its active site oriented toward the
+      intermembrane space; UniProt records the location as &#34;Mitochondrion inner membrane;
+      Peripheral membrane protein; Intermembrane side&#34;. The more specific and accurate
+      component is mitochondrial inner membrane (GO:0005743). Assigning it as an
+      intermembrane-space (matrix-of-the-IMS) protein overstates a free-luminal localisation,
+      so this is an over-annotation relative to the inner-membrane term.
+    supported_by:
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &#34;{ECO:0000250|UniProtKB:P51175}; Intermembrane side&#34;
+- term:
+    id: GO:0006779
+    label: porphyrin-containing compound biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment to porphyrin-containing compound biosynthesis. This is a correct
+      but more general parent of the specific heme biosynthetic process; PPOX produces the
+      porphyrin protoporphyrin IX.
+    action: ACCEPT
+    reason: &gt;-
+      Biologically correct: PPOX generates protoporphyrin IX, a porphyrin. The term is
+      broader than the core heme biosynthetic process, but an IEA at this generality is
+      acceptable and true.
+    supported_by:
+    - reference_id: PMID:21048046
+      supporting_text: &gt;-
+        converts protoporphyrinogen IX to protoporphyrin IX in the heme
+        biosynthetic pathway
+- term:
+    id: GO:0006785
+    label: heme B biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment to heme B (protoheme) biosynthesis, the specific branch of
+      heme synthesis to which the PPOX-generated protoporphyrin IX is committed (protoporphyrin
+      IX + Fe2+ -&gt; heme B).
+    action: ACCEPT
+    reason: &gt;-
+      Heme b (protoheme IX) is the immediate downstream product of the protoporphyrin IX made
+      by PPOX (via ferrochelatase). The term is a valid, more specific descendant of heme
+      biosynthetic process. Keep as a specific process; the general heme biosynthetic process
+      remains the core BP.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO electronic assignment (from the flavin amine-oxidase domain IPR002937) of
+      the broad parent activity oxidoreductase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PPOX is an oxidoreductase, so the term is not wrong, but it is far more general than
+      the specific and experimentally established protoporphyrinogen oxidase activity
+      (GO:0004729) that is already annotated. The generic parent adds no functional
+      information beyond the specific child.
+    supported_by:
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &gt;-
+        Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARBA electronic assignment to the generic mitochondrial membrane. Correct but broader
+      than the specific mitochondrial inner membrane localisation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      PPOX localises specifically to the mitochondrial inner membrane (GO:0005743), which is
+      already annotated. The generic mitochondrial membrane parent is true but redundant and
+      less informative.
+    supported_by:
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion inner membrane&#34;
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl (orthology-based) electronic transfer of the core heme biosynthetic process
+      annotation. Redundant with the IBA/ISS/IDA annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, supported by direct experimental evidence for the
+      human enzyme; the electronic transfer from the rat ortholog is appropriate.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0009410
+    label: response to xenobiotic stimulus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Ensembl electronic transfer (from the rat ortholog D3ZVN7) of &#34;response to xenobiotic
+      stimulus&#34;. PPOX is the molecular target of diphenyl-ether herbicides (e.g. acifluorfen),
+      which underlies this annotation, but responding to a xenobiotic is not a core evolved
+      function of the enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The annotation reflects that PPOX is inhibited by xenobiotic herbicides (acifluorfen is
+      a specific PPO inhibitor), a pharmacologically important but peripheral, non-core
+      aspect of the gene. It is retained as non-core rather than removed because the
+      xenobiotic-interaction is genuine and experimentally documented for the enzyme.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        this activity was inhibited by
+        acifluorfen, a specific inhibitor of PPO
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS) transfer of the core catalytic activity from the
+      mouse ortholog (MGI:104968). Redundant with the direct experimental and IBA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; sequence-similarity transfer is fully consistent with
+      the directly assayed human enzyme activity.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS) transfer of the core heme biosynthetic process from
+      the mouse ortholog. Redundant with IBA/IEA/IDA annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, consistent with all other lines of evidence.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: EXP
+  original_reference_id: PMID:23467411
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation of protoporphyrinogen oxidase activity from the
+      quantitative structural/kinetic study of wild-type and VP-mutant human PPO, which
+      assayed kcat/Km of the enzyme and characterised the FAD- and O2-dependent oxidation of
+      protoporphyrinogen IX to protoporphyrin IX.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental determination of the core catalytic activity of the human enzyme,
+      including quantitative kinetics; the defining function of the gene.
+    supported_by:
+    - reference_id: PMID:23467411
+      supporting_text: &gt;-
+        catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX
+        (porphyrin) in the presence of cofactor FAD and molecular oxygen
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Curator sequence-similarity (ISS) transfer of mitochondrial inner membrane localisation
+      from the mouse ortholog (P51175). Consistent with the experimentally supported location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location; matches the UniProt subcellular location and the
+      crystallographic description of the human enzyme.
+    supported_by:
+    - reference_id: PMID:21048046
+      supporting_text: &gt;-
+        Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane
+        protein
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Duplicate GOA line of the curator sequence-similarity (ISS) transfer of mitochondrial
+      inner membrane localisation from the mouse ortholog (P51175); differs only in
+      annotation date/source. Same conclusion as the other ISS localisation annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location; matches the UniProt subcellular location and the
+      crystallographic description of the human enzyme. Duplicate of the equivalent
+      GO:0005743 ISS annotation.
+    supported_by:
+    - reference_id: PMID:21048046
+      supporting_text: &gt;-
+        Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane
+        protein
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: IDA
+  original_reference_id: PMID:21048046
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of protoporphyrinogen oxidase activity from the 1.9 Angstrom crystal
+      structure study of human PPO in complex with FAD and the inhibitor acifluorfen, which
+      biochemically characterised the wild-type enzyme and 47 VP-causing mutants.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental evidence for the core catalytic function of the human enzyme,
+      including structural and kinetic characterisation. Defining molecular function.
+    supported_by:
+    - reference_id: PMID:21048046
+      supporting_text: &gt;-
+        we report the crystal structure
+        of hPPO in complex with the coenzyme flavin adenine dinucleotide (FAD) and the
+        inhibitor acifluorfen at a resolution of 1.9
+- term:
+    id: GO:0006785
+    label: heme B biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:7713909
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) placing PPOX in heme (heme B / protoheme) biosynthesis, from the
+      cDNA cloning study that complemented an E. coli hemG (PPO-deficient) mutant and
+      demonstrated acifluorfen-inhibitable PPO activity in transfected cells.
+    action: ACCEPT
+    reason: &gt;-
+      Functional complementation of a heme-pathway (hemG) mutant plus demonstration of PPO
+      activity directly establishes PPOX&#39;s role in producing the protoporphyrin IX committed
+      to heme b synthesis. Keep as a specific heme-branch process alongside the general core
+      heme biosynthetic process.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        a hemG mutant strain of
+        Escherichia coli deficient in PPO is defective in aerobic respiration
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HTP) proteomic assignment of PPOX to the mitochondrion, from a
+      quantitative high-confidence human mitochondrial proteome (MitoCoP) study. Broader than,
+      but consistent with, the specific inner-membrane localisation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct organellar localisation supported by a large-scale, high-confidence
+      mitochondrial proteome. The term is more general than mitochondrial inner membrane but
+      is accurate; retained as a valid (if less specific) location annotation.
+    supported_by:
+    - reference_id: PMID:34800366
+      supporting_text: &gt;-
+        defined a
+        mitochondrial high-confidence proteome of &gt;1,100 proteins (MitoCoP)
+- term:
+    id: GO:0005758
+    label: mitochondrial intermembrane space
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-189423
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author-statement placing PPO on the outer surface of the inner
+      mitochondrial membrane (facing the intermembrane space). As with the IEA IMS
+      annotation, the intermembrane-space term overstates a soluble-luminal localisation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Reactome explicitly states the protein resides on the outer surface of the inner
+      mitochondrial membrane, i.e. it is inner-membrane-associated with its active site
+      facing the intermembrane space, not a free intermembrane-space protein. The specific,
+      accurate component is mitochondrial inner membrane (GO:0005743); the IMS assignment is
+      an over-annotation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-189423
+      supporting_text: &gt;-
+        The protein resides on the outer surface of the inner mitochondrial membrane.
+- term:
+    id: GO:0004729
+    label: protoporphyrinogen oxidase activity, oxygen as acceptor
+  evidence_type: IDA
+  original_reference_id: PMID:7713909
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of protoporphyrinogen oxidase activity from the original human cDNA
+      cloning: COS-1 cells transfected with the cDNA showed markedly higher, acifluorfen-
+      inhibitable PPO activity than controls.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration of the core catalytic activity of the human gene
+      product. Defining molecular function.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        A homogenate of the monkey kidney
+        COS-1 cells that had been transfected with the cDNA had much higher PPO activity
+        than an extract of control cells, and this activity was inhibited by
+        acifluorfen, a specific inhibitor of PPO.
+- term:
+    id: GO:0006779
+    label: porphyrin-containing compound biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:7713909
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) placing PPOX in porphyrin-containing compound biosynthesis, from the
+      cloning/complementation study. PPOX generates the porphyrin protoporphyrin IX.
+    action: ACCEPT
+    reason: &gt;-
+      Correct but general process; PPOX produces protoporphyrin IX, a porphyrin. The specific
+      heme biosynthetic process is the core BP, with this as a valid broader annotation.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0006783
+    label: heme biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:7713909
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of PPOX&#39;s role in heme biosynthesis, from functional complementation
+      of an E. coli hemG (PPO-deficient) mutant with the human cDNA. This is the core
+      biological process for the gene.
+    action: ACCEPT
+    reason: &gt;-
+      Functional complementation of a heme-pathway mutant and restoration of PPO activity
+      directly establishes the role of PPOX in heme biosynthesis. Core BP.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+        penultimate step in the heme biosynthetic pathway.
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IMP
+  original_reference_id: PMID:7713909
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Mutant-phenotype-based (IMP) localisation to the mitochondrial membrane, from the
+      cloning study showing the in vitro-translated protein associates with isolated
+      mitochondria without size change, indicating no cleaved targeting presequence.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The evidence supports mitochondrial (membrane) localisation, but the generic
+      mitochondrial membrane term is broader than the experimentally and structurally
+      supported mitochondrial inner membrane (GO:0005743), which is already annotated. Kept
+      but flagged as an over-general component. (Deferring to the curator, this is not a
+      removal — the localisation is genuine.)
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        after incubation with isolated mitochondria
+        the protein was found to be located in the mitochondria, having just the same
+        size as before, an indication that PPO is a mitochondrial enzyme and has no
+        apparent transport-specific leader sequence.
+- term:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  evidence_type: TAS
+  original_reference_id: PMID:7713909
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Traceable author statement that PPOX binds FAD. The N-terminal sequence contains a
+      classic dinucleotide-binding motif, and the crystal structure resolves one FAD bound
+      per subunit; FAD is the essential redox cofactor for the oxidation reaction.
+    action: ACCEPT
+    reason: &gt;-
+      PPOX is a flavoprotein that binds one FAD per subunit as its catalytic cofactor,
+      confirmed both by sequence motif and by crystal structures. This is a genuine, though
+      secondary/enabling, molecular function supporting the core oxidase activity.
+    supported_by:
+    - reference_id: PMID:7713909
+      supporting_text: &gt;-
+        The NH2-terminal amino acid sequence of the deduced
+        PPO contains a conserved amino acid sequence that forms the dinucleotide-binding
+        site in many flavin-containing proteins.
+    - reference_id: file:human/PPOX/PPOX-uniprot.txt
+      supporting_text: &#34;Note=Binds 1 FAD per subunit.&#34;
+core_functions:
+- description: &gt;-
+    FAD- and oxygen-dependent six-electron oxidation of protoporphyrinogen IX to
+    protoporphyrin IX, the seventh (penultimate) step of heme biosynthesis, catalysed at the
+    mitochondrial inner membrane.
+  molecular_function:
+    id: GO:0004729
+    label: oxygen-dependent protoporphyrinogen oxidase activity
+  directly_involved_in:
+  - id: GO:0006783
+    label: heme biosynthetic process
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:23467411
+    supporting_text: &gt;-
+      catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX
+      (porphyrin) in the presence of cofactor FAD and molecular oxygen
+  - reference_id: PMID:21048046
+    supporting_text: &gt;-
+      Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane
+      protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme
+      biosynthetic pathway.
+- description: &gt;-
+    Binds one non-covalent FAD cofactor per subunit, the flavin redox centre required for
+    the oxidase activity.
+  molecular_function:
+    id: GO:0050660
+    label: flavin adenine dinucleotide binding
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  supported_by:
+  - reference_id: PMID:21048046
+    supporting_text: &gt;-
+      in complex with the coenzyme flavin adenine dinucleotide (FAD)
+  - reference_id: file:human/PPOX/PPOX-uniprot.txt
+    supporting_text: &#34;Note=Binds 1 FAD per subunit.&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21048046
+  title: Structural insight into human variegate porphyria disease.
+  findings:
+  - statement: &gt;-
+      1.9 Angstrom crystal structure of human PPO in complex with FAD and the inhibitor
+      acifluorfen; hPPO converts protoporphyrinogen IX to protoporphyrin IX and is a
+      mitochondrial inner membrane protein. Also characterised 47 VP-causing mutants.
+    supporting_text: &gt;-
+      Human protoporphyrinogen IX oxidase (hPPO), a mitochondrial inner membrane
+      protein, converts protoporphyrinogen IX to protoporphyrin IX in the heme
+      biosynthetic pathway.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; provides direct structural and biochemical evidence for the catalytic
+      activity, FAD binding, and mitochondrial inner membrane localisation of human PPOX.
+- id: PMID:23467411
+  title: Quantitative structural insight into human variegate porphyria disease.
+  findings:
+  - statement: &gt;-
+      PPO (EC 1.3.3.4) is the penultimate enzyme of heme biosynthesis, oxidising
+      protoporphyrinogen IX to protoporphyrin IX using FAD and molecular oxygen; ~50%
+      decreased activity causes dominantly inherited variegate porphyria (an acute hepatic
+      porphyria).
+    supporting_text: &gt;-
+      catalyzes the oxidation of protoporphyrinogen IX (protogen) to protoporphyrin IX
+      (porphyrin) in the presence of cofactor FAD and molecular oxygen
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified full-text; quantitative kinetic/structural study of wild-type and
+      VP-mutant hPPO. Source of the EXP catalytic-activity annotation.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings:
+  - statement: &gt;-
+      Large-scale proteomic study defining a high-confidence human mitochondrial proteome
+      (MitoCoP) of &gt;1,100 proteins, supporting mitochondrial localisation of PPOX.
+    supporting_text: &gt;-
+      defined a
+      mitochondrial high-confidence proteome of &gt;1,100 proteins (MitoCoP)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; high-throughput evidence for mitochondrial localisation (GO:0005739),
+      broader than the specific inner-membrane location.
+- id: PMID:7713909
+  title: Cloning of a human cDNA for protoporphyrinogen oxidase by complementation
+    in vivo of a hemG mutant of Escherichia coli.
+  findings:
+  - statement: &gt;-
+      Cloning of the human PPOX cDNA by complementation of an E. coli hemG (PPO-deficient)
+      mutant; PPO is the penultimate heme-pathway enzyme, a mitochondrial flavoprotein whose
+      activity is inhibited by acifluorfen.
+    supporting_text: &gt;-
+      Protoporphyrinogen oxidase (PPO; EC 1.3.3.4) is the enzyme that catalyzes in the
+      penultimate step in the heme biosynthetic pathway.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; original human PPOX cDNA cloning and functional characterisation.
+      Anchors the IDA activity, heme/porphyrin process, mitochondrial localisation, and FAD
+      binding annotations.
+- id: Reactome:R-HSA-189423
+  title: PPO oxidises PPGEN9 to PRIN9
+  findings:
+  - statement: &gt;-
+      Reactome reaction: six-electron oxidation of protoporphyrinogen IX to protoporphyrin
+      IX by PPO, a FAD-containing enzyme on the outer surface of the inner mitochondrial
+      membrane; PPO deficiency causes variegate porphyria.
+    supporting_text: &gt;-
+      The protein resides on the outer surface of the inner mitochondrial membrane.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome curated reaction for the PPOX-catalysed step; source of the TAS intermembrane
+      space annotation. Title left exactly as fetched.
+- id: file:human/PPOX/PPOX-uniprot.txt
+  title: UniProtKB entry P50336 (PPOX_HUMAN)
+  findings:
+  - statement: &gt;-
+      UniProt records the catalytic reaction (protoporphyrinogen IX + 3 O2 = protoporphyrin
+      IX + 3 H2O2; EC 1.3.3.4), FAD cofactor (one per subunit), mitochondrial inner membrane
+      peripheral (intermembrane-side) localisation, and the disease associations variegate
+      porphyria and childhood-onset variegate porphyria.
+    supporting_text: &gt;-
+      Reaction=protoporphyrinogen IX + 3 O2 = protoporphyrin IX + 3 H2O2;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary UniProt record for PPOX; source of the catalytic reaction, FAD cofactor,
+      subcellular location, and disease annotations used above.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
