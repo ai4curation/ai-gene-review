@@ -64,6 +64,25 @@ molecular exchange.
   Anabaena (Nostoc) PCC 7120 [PMID:7883709]. Note UniProt ref [2] (PMID:7883709) sequenced
   only aa 1–172 and carries a sequence conflict at 164–172.
 
+## Protein family
+
+FraD is the founding/reference member of a small, taxonomically restricted family:
+
+- **InterPro IPR020360** — "Uncharacterised protein family alr2393". InterPro describes
+  members as *"components of cyanobacterial septal junctions (microplasmodesmata) in
+  heterocyst-forming cyanobacteria."* ~161 proteins across ~436 taxa (86 AlphaFold models).
+- **Pfam PF17310** — "Family of unknown function (DUF5357)" (~161 proteins).
+- **NCBIfam NF037953** — "septal junction protein FraD" (dedicated FraD HMM).
+- **TCDB 1.V.1.1.1** — "the filamentous cyanobacterial septal pore (septum) family."
+
+The family is confined to **filamentous, heterocyst-forming / multicellular cyanobacteria**
+(Nostocales and relatives); there is no known homolog outside this lineage. FraD and its
+partner **SepN co-occur** phylogenetically — SepN is essentially never found without FraD
+[PMID:36470860 "SepN always co-occurs with FraD."]. The absence of the family from
+unicellular cyanobacteria and all other bacteria is consistent with its dedicated role in
+septal-junction-based multicellular cell-cell communication rather than a housekeeping
+membrane function.
+
 ## GO annotation status
 - GOA/QuickGO returns **no GO annotations** for P46079 (empty `FraD-goa.tsv`). This review
   is therefore de-novo; proposed core functions are recorded in `FraD-ai-review.yaml`.

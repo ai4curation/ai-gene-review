@@ -45,6 +45,26 @@ molecular diffusion through the SJ.
   domain only, aa 34–235) restores WT-like FRAP gating and normal SJ ultrastructure,
   showing the TM helix is not essential under the tested conditions (Cell Reports 2026).
 
+## Protein family
+
+Unlike FraD, **SepN has no dedicated Pfam / InterPro / NCBIfam signature** — querying
+InterPro for A0ACD7RWW5 returns zero matches, and its UniProt entry is a bare TrEMBL record
+with no domain annotation. SepN nonetheless defines a conserved, taxonomically restricted
+family:
+
+- **Conserved homologs occur across filamentous cyanobacteria** — the families
+  Oscillatoriophycideae, Nostocaceae, and Stigonematales.
+  [PMID:36470860 "Conserved homologs of SepN can be found in filamentous cyanobacteria of the families Oscillatoriaphycideae, Nostocaceae, and Stigonematales."]
+- Previously described as a **signature protein for the order Nostocales**.
+- **Co-occurs with FraD**: by STRING analysis, SepN is (with one exception) always found
+  together with FraD, mirroring FraD's own restriction to filamentous cyanobacteria.
+  [PMID:36470860 "SepN always co-occurs with FraD."]
+
+The lack of a formal domain model is expected for a small, lineage-specific structural
+protein; the family is best defined operationally by the FraD co-occurrence and the
+Nostocales-signature distribution. This restriction to multicellular cyanobacteria is
+consistent with SepN's dedicated septal-junction (plug) role.
+
 ## GO annotation status
 - GOA/QuickGO returns **no GO annotations** for A0ACD7RWW5 (empty `SepN-goa.tsv`). This
   review is de-novo; proposed core functions are recorded in `SepN-ai-review.yaml`.
