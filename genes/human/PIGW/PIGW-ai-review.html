@@ -1,0 +1,3249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGW - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGW</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7Z7B1" target="_blank" class="term-link">
+                        Q7Z7B1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGW";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7Z7B1" data-a="DESCRIPTION: PIGW (phosphatidylinositol-glycan biosynthesis cla..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGW (phosphatidylinositol-glycan biosynthesis class W protein; PIG-W) is the GPI inositol acyltransferase of glycosylphosphatidylinositol (GPI) anchor biosynthesis. It is a multi-pass endoplasmic reticulum membrane protein that catalyses the fourth step of GPI-anchor assembly: transfer of an acyl group (usually palmitate) from acyl-CoA to the 2-OH of the inositol ring of glucosaminyl-phosphatidylinositol (GlcN-PI), producing 2-acyl-GlcN-PI (GlcN-(acyl)PI). This inositol acyl group is required for downstream recognition of the GPI intermediate by the GPI transamidase complex and is normally removed by PGAP1 after the anchor is attached to protein. Through this activity PIGW is essential for the ER synthesis of GPI anchors and hence for the transport of GPI-anchored proteins to the cell surface. Biallelic loss-of-function variants cause an autosomal-recessive inherited GPI-deficiency disorder (glycosylphosphatidylinositol biosynthesis defect 11, GPIBD11) on the hyperphosphatasia-with-mental-retardation / epileptic-encephalopathy spectrum, characterised by developmental delay, intellectual disability, seizures (including West syndrome with hypsarrhythmia), dysmorphic features, and elevated serum alkaline phosphatase.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGW acts in the endoplasmic reticulum, where GPI-anchor biosynthesis occurs. This phylogenetic (IBA) location is correct but general; the ER membrane (GO:0005789) is the precise compartment for this multi-pass membrane enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt subcellular location and with GPI biosynthesis being an ER process. Kept as a correct-but-broad cellular component; the membrane-specific term is the core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core biological process: PIGW catalyses the fourth step of GPI-anchor biosynthesis (inositol acylation of GlcN-PI). The IBA is well supported across orthologues (PomBase, SGD, CGD, RGD) and matches the human function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the central biological role of PIGW and is corroborated experimentally and by UniProt.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fourth step of GPI-anchor biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032216" target="_blank" class="term-link">
+                                    GO:0032216
+                                </a>
+                            </span>
+                            <span class="term-label">glucosaminyl-phosphatidylinositol O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0032216" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function: PIGW is the GPI inositol acyltransferase, transferring an acyl group from acyl-CoA to the 2-OH of the inositol of GlcN-PI. This specific term is the correct MF and is supported by the UniProt catalytic activity (RHEA:60496/RHEA:83759) and by the IBA across orthologues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific, correct molecular function directly matching the characterised reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGW is a multi-pass ER membrane protein; the ER membrane is its precise location. This SubCell-mapping IEA is correct and represents the core cellular component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches UniProt subcellular location (ER membrane, multi-pass) and the topology features.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006505" target="_blank" class="term-link">
+                                    GO:0006505
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006505" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GPI anchor metabolic process is the broad parent of GPI anchor biosynthetic process. PIGW is a biosynthetic enzyme, so the more specific biosynthetic term (GO:0006506) is the informative core annotation. This ARBA-generated IEA to the parent is redundant with that specific term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but a less-informative parent that is fully subsumed by the accepted biosynthetic process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fourth step of GPI-anchor biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Duplicate of the core GPI anchor biosynthetic process annotation, here via combined-IEA (InterPro IPR009447 / UniPathway UPA00196). Correct and consistent with the IBA/ISS/TAS annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core biosynthetic role; duplicates of a correct term are acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic &#34;membrane&#34; from an InterPro2GO mapping. PIGW is specifically an ER membrane protein, so this uninformative parent is superseded by GO:0005789 (ER membrane).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Too general; the specific ER membrane location is annotated and preferred.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0016746" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic acyltransferase activity from InterPro2GO. This is a broad parent of the specific, correct MF GO:0032216 (glucosaminyl-phosphatidylinositol O-acyltransferase activity).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong but uninformative relative to the specific inositol-acyltransferase term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032216" target="_blank" class="term-link">
+                                    GO:0032216
+                                </a>
+                            </span>
+                            <span class="term-label">glucosaminyl-phosphatidylinositol O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0032216" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-mapped IEA (RHEA:60496/RHEA:83759) to the specific GPI inositol acyltransferase activity, matching the UniProt catalytic activity. Duplicate of the accepted core MF term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function derived from the curated Rhea reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162710
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006506" data-r="Reactome:R-HSA-162710" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable annotation to the core biosynthetic process, from the human GPI synthesis pathway (R-HSA-162710), in which PIGW catalyses the inositol-acylation step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly captures the core biosynthetic role, consistent with the IBA/IEA/ISS annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fourth step of GPI-anchor biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0005789" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of ER membrane localisation from the mouse orthologue (UniProtKB:Q7TSN4), consistent with the multi-pass ER membrane topology. Core cellular component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Matches UniProt subcellular location for the human protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032216" target="_blank" class="term-link">
+                                    GO:0032216
+                                </a>
+                            </span>
+                            <span class="term-label">glucosaminyl-phosphatidylinositol O-acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0032216" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of the GPI inositol acyltransferase activity from the mouse orthologue (UniProtKB:Q7TSN4). Duplicate of the accepted specific core MF term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct specific molecular function, supported by orthology and the curated reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006506" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ISS transfer of the core GPI-anchor biosynthetic process from the mouse orthologue (UniProtKB:Q7TSN4). Duplicate of the accepted core BP term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process, supported by orthology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">participates in the fourth step of GPI-anchor biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162683
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0016747" data-r="Reactome:R-HSA-162683" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable annotation to a broad acyltransferase-class term for the inositol-acylation reaction (R-HSA-162683). This is a general parent of the specific MF GO:0032216.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong but uninformative relative to the specific glucosaminyl-PI O-acyltransferase term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006505" target="_blank" class="term-link">
+                                    GO:0006505
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24367057" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24367057
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glycosylphosphatidylinositol (GPI) anchor deficiency caused ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0006505" data-r="PMID:24367057" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator-inferred (IC, from the GO:0072659 IMP in the same paper) annotation to the broad GPI anchor metabolic process. PIGW is specifically biosynthetic, so the biosynthetic child (GO:0006506) is the informative core term; this broad parent is a redundant over-annotation relative to the accepted biosynthetic-process term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct in essence (PIGW is in GPI-anchor metabolism) but a broad parent superseded by the specific biosynthetic-process term; kept rather than removed, consistent with the other GO:0006505 annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24367057" target="_blank" class="term-link">
+                                        PMID:24367057
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">involved in the addition of the acyl-chain to inositol in an early step of GPI</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0072659" target="_blank" class="term-link">
+                                    GO:0072659
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24367057" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24367057
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Glycosylphosphatidylinositol (GPI) anchor deficiency caused ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0072659" data-r="PMID:24367057" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) annotation from patient/variant studies: PIGW loss reduces surface expression of GPI-anchored proteins, i.e. PIGW is required for transport of GPI-APs to the plasma membrane. This is a downstream consequence of the enzyme&#39;s role in GPI-anchor synthesis rather than the direct molecular function, so it is retained as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Valid experimental phenotype (defer to curator; not removed). Represents a downstream cellular outcome of GPI-anchor biosynthesis, not PIGW&#39;s direct acyltransferase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24367057" target="_blank" class="term-link">
+                                        PMID:24367057
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">decreased surface expression of GPI-APs on</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for the transport of GPI-anchored proteins to the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162683
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7Z7B1" data-a="GO:0005789" data-r="Reactome:R-HSA-162683" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-traceable ER membrane localisation for the inositol-acylation reaction, consistent with the multi-pass ER membrane topology. Duplicate of the accepted core CC term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, consistent with UniProt and the ISS/IEA annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGW/PIGW-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GPI inositol acyltransferase that transfers an acyl group (usually palmitate) from acyl-CoA to the 2-OH of the inositol ring of glucosaminyl-phosphatidylinositol (GlcN-PI), forming 2-acyl-GlcN-PI (GlcN-(acyl)PI) during GPI-anchor biosynthesis in the ER membrane.</h3>
+                <span class="vote-buttons" data-g="Q7Z7B1" data-a="FUNCTION: GPI inositol acyltransferase that transfers an acy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032216" target="_blank" class="term-link">
+                            glucosaminyl-phosphatidylinositol O-acyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGW/PIGW-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Acyltransferase that catalyzes the acyl transfer from an</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGW/PIGW-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">participates in the fourth step of GPI-anchor biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGW/PIGW-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24367057" target="_blank" class="term-link">
+                            PMID:24367057
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycosylphosphatidylinositol (GPI) anchor deficiency caused by mutations in PIGW is associated with West syndrome and hyperphosphatasia with mental retardation syndrome.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">First reported patient with PIGW deficiency (GPIBD11): West syndrome with hypsarrhythmia, developmental delay, dysmorphic features and hyperphosphatasia, with decreased surface expression of GPI-anchored proteins on blood granulocytes; compound heterozygous PIGW variants.</div>
+
+                        <div class="finding-text">"involved in the addition of the acyl-chain to inositol in an early step of GPI"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162683
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glucosaminyl-PI + fatty acyl-CoA -&gt; glucosaminyl-acyl-PI + CoA-SH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fourth step of GPI synthesis: an acyl group (typically palmitate) is transferred from acyl-CoA to glucosaminyl-PI; PIG-W catalyses this reaction.</div>
+
+                        <div class="finding-text">"In the fourth step of GPI synthesis, an acyl group (typically palmitate) is transferred from acyl CoA to glucosaminyl-PI."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162710
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of glycosylphosphatidylinositol (GPI)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human GPI synthesis pathway (nine reactions in the ER); PIGW performs the inositol-acylation step within this pathway.</div>
+
+                        <div class="finding-text">"GPI is synthesized in the endoplasmic reticulum."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PIGW/PIGW-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q7Z7B1 PIGW record</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PIGW is an ER multi-pass membrane acyltransferase that acylates the inositol of GlcN-PI at the fourth step of GPI-anchor biosynthesis; deficiency causes GPIBD11.</div>
+
+                        <div class="finding-text">"participates in the fourth step of GPI-anchor biosynthesis"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGW-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7Z7B1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pigw-review-notes">PIGW review notes</h1>
+<p>UniProtKB:Q7Z7B1, HGNC:23213, human PIGW (Glucosaminyl-phosphatidylinositol-acyltransferase PIGW; PIG-W;<br />
+GlcN-PI-acyltransferase). 504 aa, multi-pass ER membrane protein (11 TM helices per UniProt features).<br />
+PANTHER PTHR20661; Pfam PF06423 (GWT1); InterPro IPR009447 (PIGW/GWT1); PIRSF017321 (GWT1).</p>
+<p>Deep research: falcon provider is OUT OF CREDITS (HTTP 402) — no <code>-deep-research-falcon.md</code> was generated.<br />
+This review is grounded in the UniProt record, the seeded GOA, and cached publications (PMID:24367057;<br />
+Reactome R-HSA-162710, R-HSA-162683).</p>
+<h2 id="core-biology">Core biology</h2>
+<p>PIGW is the <strong>GPI inositol acyltransferase</strong> that catalyses the fourth step of GPI-anchor biosynthesis in<br />
+the ER: transfer of an acyl group (usually palmitate) from acyl-CoA to the <strong>2-OH of the inositol ring</strong> of<br />
+glucosaminyl-phosphatidylinositol (GlcN-PI), producing GlcN-(acyl)PI.</p>
+<p>UniProt FUNCTION [file:human/PIGW/PIGW-uniprot.txt "Acyltransferase that catalyzes the acyl transfer from an<br />
+acyl-CoA at the 2-OH position of the inositol ring of a 6-(alpha-D-glucosaminyl)-1-(1,2-diacyl-sn-glycero-3-<br />
+phospho)-1D-myo-inositol (glucosaminyl phosphatidylinositol, GlcN-PI) ... and participates in the fourth step<br />
+of GPI-anchor biosynthesis"].</p>
+<p>Catalytic activity (RHEA:60496 / RHEA:83759): GlcN-PI + fatty acyl-CoA -&gt; GlcN-(acyl)PI + CoA. The inositol<br />
+acyl group is important for GPI transamidase recognition and is later removed by PGAP1.</p>
+<p>Reactome R-HSA-162683: "In the fourth step of GPI synthesis, an acyl group (typically palmitate) is<br />
+transferred from acyl CoA to glucosaminyl-PI. Mutagenesis and cloning studies suggest that a single protein,<br />
+PIG-W, catalyzes this reaction (Murakami et al. 2003)."</p>
+<h2 id="goa-mf-term">GOA MF term</h2>
+<p>The GOA molecular-function term carried across IBA (GO_REF:0000033), IEA/RHEA (GO_REF:0000116), and ISS<br />
+(GO_REF:0000024) is <strong>GO:0032216 glucosaminyl-phosphatidylinositol O-acyltransferase activity</strong> (label<br />
+confirmed current in local go.db 2026-07). This is the exact current term to use for core_functions MF.</p>
+<h2 id="localisation">Localisation</h2>
+<p>ER membrane, multi-pass. UniProt [file:human/PIGW/PIGW-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic<br />
+reticulum membrane"; "Multi-pass membrane protein"]. GO:0005789 (ER membrane) is the current CC.</p>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes GPIBD11 (MIM:616025) — inherited GPI deficiency (hyperphosphatasia with mental retardation /<br />
+epileptic encephalopathy spectrum). PMID:24367057 (Chiyonobu et al. 2014): first PIGW-deficient patient, West<br />
+syndrome (hypsarrhythmia) + hyperphosphatasia + developmental delay; compound heterozygous NM_178517<br />
+c.211A&gt;C (T71P) and c.499A&gt;G (M167V). Variants reduce GPI-anchored protein surface expression on granulocytes.<br />
+UniProt DISEASE [file:human/PIGW/PIGW-uniprot.txt "developmental delay, intellectual disability, tonic<br />
+seizures associated with hypsarrhythmia, dysmorphic facial features, and elevated serum alkaline phosphatase"].</p>
+<p>PMID:24367057 abstract is the basis of the two experimental-ish GOA annotations:<br />
+- GO:0072659 (protein localization to plasma membrane) IMP — the reduced surface GPI-AP expression phenotype<br />
+  (transport of GPI-APs to the cell surface requires PIGW).<br />
+- GO:0006505 (GPI anchor metabolic process) IC — curator inference (with GO:0072659) from the same paper.</p>
+<h2 id="annotation-review-decisions">Annotation review decisions</h2>
+<ul>
+<li>GO:0032216 O-acyltransferase activity (IBA, IEA-RHEA, ISS): ACCEPT — this is the specific, correct MF.</li>
+<li>GO:0006506 GPI anchor biosynthetic process (IBA, IEA, ISS, TAS-Reactome): ACCEPT — core BP.</li>
+<li>GO:0005783 endoplasmic reticulum (IBA): ACCEPT (CC; located within ER; ER membrane is more specific).</li>
+<li>GO:0005789 ER membrane (IEA-SubCell, ISS x2, TAS-Reactome): ACCEPT — precise location, multi-pass.</li>
+<li>GO:0006505 GPI anchor metabolic process (IEA-ARBA, IC): parent of biosynthetic process; keep the IC<br />
+  (curator, PMID:24367057) as ACCEPT but non-core (biosynthetic child is the informative core term);<br />
+  the IEA-ARBA duplicate MARK_AS_OVER_ANNOTATED (less informative parent, redundant with biosynthetic).</li>
+<li>GO:0016020 membrane (IEA-InterPro): MARK_AS_OVER_ANNOTATED — too general; ER membrane is the specific CC.</li>
+<li>GO:0016746 acyltransferase activity (IEA-InterPro): MARK_AS_OVER_ANNOTATED — general parent of GO:0032216.</li>
+<li>GO:0016747 acyltransferase activity, transferring groups other than amino-acyl groups (TAS-Reactome):<br />
+  MARK_AS_OVER_ANNOTATED — general parent of GO:0032216.</li>
+<li>GO:0072659 protein localization to plasma membrane (IMP, PMID:24367057): KEEP_AS_NON_CORE — downstream<br />
+  consequence of GPI-anchor synthesis, not the direct MF; experimental (defer to curator, do not REMOVE).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7Z7B1
+gene_symbol: PIGW
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PIGW (phosphatidylinositol-glycan biosynthesis class W protein; PIG-W) is the GPI inositol
+  acyltransferase of glycosylphosphatidylinositol (GPI) anchor biosynthesis. It is a multi-pass
+  endoplasmic reticulum membrane protein that catalyses the fourth step of GPI-anchor assembly:
+  transfer of an acyl group (usually palmitate) from acyl-CoA to the 2-OH of the inositol ring of
+  glucosaminyl-phosphatidylinositol (GlcN-PI), producing 2-acyl-GlcN-PI (GlcN-(acyl)PI). This
+  inositol acyl group is required for downstream recognition of the GPI intermediate by the GPI
+  transamidase complex and is normally removed by PGAP1 after the anchor is attached to protein.
+  Through this activity PIGW is essential for the ER synthesis of GPI anchors and hence for the
+  transport of GPI-anchored proteins to the cell surface. Biallelic loss-of-function variants cause
+  an autosomal-recessive inherited GPI-deficiency disorder (glycosylphosphatidylinositol biosynthesis
+  defect 11, GPIBD11) on the hyperphosphatasia-with-mental-retardation / epileptic-encephalopathy
+  spectrum, characterised by developmental delay, intellectual disability, seizures (including West
+  syndrome with hypsarrhythmia), dysmorphic features, and elevated serum alkaline phosphatase.
+existing_annotations:
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      PIGW acts in the endoplasmic reticulum, where GPI-anchor biosynthesis occurs. This
+      phylogenetic (IBA) location is correct but general; the ER membrane (GO:0005789) is the
+      precise compartment for this multi-pass membrane enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with UniProt subcellular location and with GPI biosynthesis being an ER process.
+      Kept as a correct-but-broad cellular component; the membrane-specific term is the core location.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Core biological process: PIGW catalyses the fourth step of GPI-anchor biosynthesis (inositol
+      acylation of GlcN-PI). The IBA is well supported across orthologues (PomBase, SGD, CGD, RGD)
+      and matches the human function.
+    action: ACCEPT
+    reason: &gt;-
+      This is the central biological role of PIGW and is corroborated experimentally and by UniProt.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;participates in the fourth step of GPI-anchor biosynthesis&#34;
+- term:
+    id: GO:0032216
+    label: glucosaminyl-phosphatidylinositol O-acyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function: PIGW is the GPI inositol acyltransferase, transferring an acyl group
+      from acyl-CoA to the 2-OH of the inositol of GlcN-PI. This specific term is the correct MF and
+      is supported by the UniProt catalytic activity (RHEA:60496/RHEA:83759) and by the IBA across
+      orthologues.
+    action: ACCEPT
+    reason: &gt;-
+      Specific, correct molecular function directly matching the characterised reaction.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      PIGW is a multi-pass ER membrane protein; the ER membrane is its precise location. This
+      SubCell-mapping IEA is correct and represents the core cellular component.
+    action: ACCEPT
+    reason: &gt;-
+      Matches UniProt subcellular location (ER membrane, multi-pass) and the topology features.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+- term:
+    id: GO:0006505
+    label: GPI anchor metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      GPI anchor metabolic process is the broad parent of GPI anchor biosynthetic process. PIGW is a
+      biosynthetic enzyme, so the more specific biosynthetic term (GO:0006506) is the informative
+      core annotation. This ARBA-generated IEA to the parent is redundant with that specific term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Not wrong, but a less-informative parent that is fully subsumed by the accepted biosynthetic
+      process annotation.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;participates in the fourth step of GPI-anchor biosynthesis&#34;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Duplicate of the core GPI anchor biosynthetic process annotation, here via combined-IEA
+      (InterPro IPR009447 / UniPathway UPA00196). Correct and consistent with the IBA/ISS/TAS
+      annotations to the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core biosynthetic role; duplicates of a correct term are acceptable.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic &#34;membrane&#34; from an InterPro2GO mapping. PIGW is specifically an ER membrane protein, so
+      this uninformative parent is superseded by GO:0005789 (ER membrane).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Too general; the specific ER membrane location is annotated and preferred.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic acyltransferase activity from InterPro2GO. This is a broad parent of the specific,
+      correct MF GO:0032216 (glucosaminyl-phosphatidylinositol O-acyltransferase activity).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Not wrong but uninformative relative to the specific inositol-acyltransferase term.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+- term:
+    id: GO:0032216
+    label: glucosaminyl-phosphatidylinositol O-acyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Rhea-mapped IEA (RHEA:60496/RHEA:83759) to the specific GPI inositol acyltransferase activity,
+      matching the UniProt catalytic activity. Duplicate of the accepted core MF term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific molecular function derived from the curated Rhea reaction.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162710
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome-traceable annotation to the core biosynthetic process, from the human GPI synthesis
+      pathway (R-HSA-162710), in which PIGW catalyses the inositol-acylation step.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly captures the core biosynthetic role, consistent with the IBA/IEA/ISS annotations.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;participates in the fourth step of GPI-anchor biosynthesis&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ISS transfer of ER membrane localisation from the mouse orthologue (UniProtKB:Q7TSN4),
+      consistent with the multi-pass ER membrane topology. Core cellular component.
+    action: ACCEPT
+    reason: &gt;-
+      Matches UniProt subcellular location for the human protein.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+- term:
+    id: GO:0032216
+    label: glucosaminyl-phosphatidylinositol O-acyltransferase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      ISS transfer of the GPI inositol acyltransferase activity from the mouse orthologue
+      (UniProtKB:Q7TSN4). Duplicate of the accepted specific core MF term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct specific molecular function, supported by orthology and the curated reaction.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ISS transfer of the core GPI-anchor biosynthetic process from the mouse orthologue
+      (UniProtKB:Q7TSN4). Duplicate of the accepted core BP term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core biological process, supported by orthology.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;participates in the fourth step of GPI-anchor biosynthesis&#34;
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162683
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome-traceable annotation to a broad acyltransferase-class term for the inositol-acylation
+      reaction (R-HSA-162683). This is a general parent of the specific MF GO:0032216.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Not wrong but uninformative relative to the specific glucosaminyl-PI O-acyltransferase term.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+- term:
+    id: GO:0006505
+    label: GPI anchor metabolic process
+  evidence_type: IC
+  original_reference_id: PMID:24367057
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Curator-inferred (IC, from the GO:0072659 IMP in the same paper) annotation to the broad GPI
+      anchor metabolic process. PIGW is specifically biosynthetic, so the biosynthetic child
+      (GO:0006506) is the informative core term; this broad parent is a redundant over-annotation
+      relative to the accepted biosynthetic-process term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Correct in essence (PIGW is in GPI-anchor metabolism) but a broad parent superseded by the
+      specific biosynthetic-process term; kept rather than removed, consistent with the other
+      GO:0006505 annotation.
+    supported_by:
+    - reference_id: PMID:24367057
+      supporting_text: &#34;involved in the addition of the acyl-chain to inositol in an early step of GPI&#34;
+- term:
+    id: GO:0072659
+    label: protein localization to plasma membrane
+  evidence_type: IMP
+  original_reference_id: PMID:24367057
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) annotation from patient/variant studies: PIGW loss reduces surface
+      expression of GPI-anchored proteins, i.e. PIGW is required for transport of GPI-APs to the
+      plasma membrane. This is a downstream consequence of the enzyme&#39;s role in GPI-anchor synthesis
+      rather than the direct molecular function, so it is retained as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Valid experimental phenotype (defer to curator; not removed). Represents a downstream cellular
+      outcome of GPI-anchor biosynthesis, not PIGW&#39;s direct acyltransferase function.
+    supported_by:
+    - reference_id: PMID:24367057
+      supporting_text: &#34;decreased surface expression of GPI-APs on&#34;
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;Required for the transport of GPI-anchored proteins to the&#34;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162683
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome-traceable ER membrane localisation for the inositol-acylation reaction, consistent
+      with the multi-pass ER membrane topology. Duplicate of the accepted core CC term.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, consistent with UniProt and the ISS/IEA annotations.
+    supported_by:
+    - reference_id: file:human/PIGW/PIGW-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:24367057
+  title: Glycosylphosphatidylinositol (GPI) anchor deficiency caused by mutations
+    in PIGW is associated with West syndrome and hyperphosphatasia with mental retardation
+    syndrome.
+  findings:
+  - statement: &gt;-
+      First reported patient with PIGW deficiency (GPIBD11): West syndrome with hypsarrhythmia,
+      developmental delay, dysmorphic features and hyperphosphatasia, with decreased surface
+      expression of GPI-anchored proteins on blood granulocytes; compound heterozygous PIGW variants.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      involved in the addition of the acyl-chain to inositol in an early step of GPI
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified case report; establishes the human disease association (GPIBD11) and the
+      GPI-AP surface-transport phenotype that underlie the IMP and IC annotations. Abstract-only in
+      cache (full_text_available: false).
+- id: Reactome:R-HSA-162683
+  title: glucosaminyl-PI + fatty acyl-CoA -&gt; glucosaminyl-acyl-PI + CoA-SH
+  findings:
+  - statement: &gt;-
+      Fourth step of GPI synthesis: an acyl group (typically palmitate) is transferred from acyl-CoA
+      to glucosaminyl-PI; PIG-W catalyses this reaction.
+    supporting_text: &gt;-
+      In the fourth step of GPI synthesis, an acyl group (typically palmitate) is transferred from
+      acyl CoA to glucosaminyl-PI.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the PIGW-catalysed inositol-acylation step; title left exactly as fetched.
+- id: Reactome:R-HSA-162710
+  title: Synthesis of glycosylphosphatidylinositol (GPI)
+  findings:
+  - statement: &gt;-
+      Human GPI synthesis pathway (nine reactions in the ER); PIGW performs the inositol-acylation
+      step within this pathway.
+    supporting_text: &gt;-
+      GPI is synthesized in the endoplasmic reticulum.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Pathway-level Reactome entry; title left exactly as fetched.
+- id: file:human/PIGW/PIGW-uniprot.txt
+  title: UniProtKB Q7Z7B1 PIGW record
+  findings:
+  - statement: &gt;-
+      PIGW is an ER multi-pass membrane acyltransferase that acylates the inositol of GlcN-PI at the
+      fourth step of GPI-anchor biosynthesis; deficiency causes GPIBD11.
+    supporting_text: &gt;-
+      participates in the fourth step of GPI-anchor biosynthesis
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Curated UniProt record for the reviewed protein; source of the catalytic activity, subcellular
+      location, topology, and disease statements.
+core_functions:
+- description: &gt;-
+    GPI inositol acyltransferase that transfers an acyl group (usually palmitate) from acyl-CoA to
+    the 2-OH of the inositol ring of glucosaminyl-phosphatidylinositol (GlcN-PI), forming
+    2-acyl-GlcN-PI (GlcN-(acyl)PI) during GPI-anchor biosynthesis in the ER membrane.
+  molecular_function:
+    id: GO:0032216
+    label: glucosaminyl-phosphatidylinositol O-acyltransferase activity
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: file:human/PIGW/PIGW-uniprot.txt
+    supporting_text: &#34;Acyltransferase that catalyzes the acyl transfer from an&#34;
+  - reference_id: file:human/PIGW/PIGW-uniprot.txt
+    supporting_text: &#34;participates in the fourth step of GPI-anchor biosynthesis&#34;
+  - reference_id: file:human/PIGW/PIGW-uniprot.txt
+    supporting_text: &#34;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#34;
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

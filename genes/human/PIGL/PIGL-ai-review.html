@@ -1,0 +1,3174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGL - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGL</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9Y2B2" target="_blank" class="term-link">
+                        Q9Y2B2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGL";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9Y2B2" data-a="DESCRIPTION: PIGL is the N-acetylglucosaminyl-phosphatidylinosi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGL is the N-acetylglucosaminyl-phosphatidylinositol de-N-acetylase (PIG-L, EC 3.5.1.89) that catalyzes the second step of glycosylphosphatidylinositol (GPI) anchor biosynthesis. It hydrolyzes N-acetylglucosaminyl-phosphatidylinositol (GlcNAc-PI) to glucosaminyl-phosphatidylinositol (GlcN-PI) plus acetate, a de-N-acetylation that is a prerequisite for the subsequent inositol acylation and mannosylation steps of GPI assembly. It is a single-pass type I endoplasmic reticulum membrane protein with a large cytoplasmic domain and belongs to the PIGL/LmbE-like deacetylase family. Biallelic loss-of-function or hypomorphic PIGL variants cause CHIME syndrome (Zeman-Sheard syndrome), an inherited GPI-deficiency disorder characterized by coloboma, congenital heart disease, ichthyosiform dermatosis, impaired intellectual development, and ear anomalies.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (PAN-GO) inference of the core catalytic function, GlcNAc-PI de-N-acetylase activity. This is the correct and experimentally supported molecular function for PIGL and matches the enzyme identity (EC 3.5.1.89).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GlcNAc-PI de-N-acetylase activity is the defining function of PIGL and is directly supported by experimental work; the IBA inference across the conserved PIGL family (including yeast Gpi12p) is well founded.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The second step of GPI biosynthesis is</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0005783" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference that PIGL is active in the endoplasmic reticulum. This is correct but is the broader compartment term; the more informative cellular component is the ER membrane (GO:0005789), where PIGL is experimentally localized.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization but less specific than the experimentally supported ER membrane annotation. Retained as a valid, broader is_active_in statement while the ER membrane term captures the informative location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activity is localized to the endoplasmic reticulum (ER) but enriched in a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGL/PIGL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation of the deacetylase molecular function via UniRule/ARBA, RHEA:11660 and EC:3.5.1.89. Correct and consistent with the experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IEA mapping to GO:0000225 (EC 3.5.1.89 / RHEA:11660) is the correct catalytic term and agrees with experimental and phylogenetic evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGL/PIGL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the second step of glycosylphosphatidylinositol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0005789" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (ARBA / UniProtKB-SubCell SL-0097) placing PIGL in the ER membrane. Correct and matches the experimental IDA/EXP localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ER membrane location is experimentally established for human PIGL, a single-pass type I ER membrane protein; the IEA is consistent and correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGL/PIGL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show that human PIG-L is a type I membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (ARBA / UniPathway UPA00196) placing PIGL in GPI anchor biosynthesis. PIGL performs the second, obligatory step of this pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GPI anchor biosynthetic process is the core biological process for PIGL; the de-N-acetylation it catalyzes is a required step of GPI assembly.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGL/PIGL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The second step of GPI biosynthesis is</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162710
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0006506" data-r="Reactome:R-HSA-162710" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation to the overall GPI synthesis pathway. Correct; PIGL catalyzes the second reaction of this ER pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PIGL is a bona fide component of the GPI anchor biosynthetic pathway curated by Reactome (Synthesis of glycosylphosphatidylinositol).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162710
+
+                                </span>
+
+                                <div class="support-text">GPI is synthesized in the endoplasmic reticulum.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162857
+
+                                </span>
+
+                                <div class="support-text">In the second step of GPI synthesis, N-acetylglucosaminyl-PI is hydrolyzed to yield glucosaminyl-PI and acetate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162857
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="Reactome:R-HSA-162857" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation of the second-step deacetylase reaction (N-acetylglucosaminyl-PI + H2O -&gt; glucosaminyl-PI + acetate) catalyzed by PIG-L. Correct core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Reactome reaction curation directly attributes the GlcNAc-PI de-N-acetylase activity to PIG-L, matching the experimental and phylogenetic evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162857
+
+                                </span>
+
+                                <div class="support-text">as is the PIG-L enzyme that catalyzes it</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14742432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular localization and targeting of N-acetylglucosamin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="PMID:14742432" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental demonstration of GlcNAc-PI de-N-acetylase activity for human PIG-L (Pottekat &amp; Menon 2004), which characterized the activity and its ER localization. This is the strongest, experiment-based support for the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence in human cells that PIG-L catalyzes GlcNAc-PI de-N-acetylation; represents the core catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085243
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0005789" data-r="PMID:10085243" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER membrane localization supported in the original PIG-L characterization; the de-N-acetylation step and its enzyme are components of the ER GPI machinery.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ER membrane localization is correct and independently confirmed by the experimental study of Pottekat &amp; Menon (PMID:14742432); PIGL is a single-pass ER membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show that human PIG-L is a type I membrane protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGL/PIGL-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer (from mouse ortholog O35790) of the deacetylase molecular function. Correct and redundant with the experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ISS transfer of GO:0000225 from the conserved rodent ortholog is correct and matches the experimentally established human activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">has GlcNAc-PI de-N-acetylase activity in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14742432
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Subcellular localization and targeting of N-acetylglucosamin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0005789" data-r="PMID:14742432" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay localizing human PIG-L and its GlcNAc-PI de-N-acetylase activity to the ER membrane (Pottekat &amp; Menon 2004), including identification of ER retention signals. Core cellular component.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence that PIG-L is an ER membrane protein; the most informative and best-supported cellular component annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">activity is localized to the endoplasmic reticulum (ER) but enriched in a</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                        PMID:14742432
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We show that human PIG-L is a type I membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085243
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0006506" data-r="PMID:10085243" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional/complementation evidence (Watanabe et al. 1999) that PIG-L is required for GPI biosynthesis - the rat gene was cloned by complementing a CHO mutant defective in the second step, and its yeast homologue Gpi12p is essential for GPI and cell viability. Core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss/restoration of GlcNAc-PI de-N-acetylase activity and cell-surface GPI-anchored protein expression on manipulating PIG-L/Gpi12p demonstrates PIGL&#39;s required role in GPI anchor biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cell-surface expression of GPI-anchored proteins and GlcNAc-PI</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indispensable in yeasts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162857
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0005789" data-r="Reactome:R-HSA-162857" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable annotation placing the PIG-L enzyme and its substrates in the ER membrane for the second-step reaction. Correct.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimental ER membrane localization; Reactome curates the reaction as occurring in the ER membrane with PIG-L as the catalyst.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162857
+
+                                </span>
+
+                                <div class="support-text">as is the PIG-L enzyme that catalyzes it</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                                    GO:0000225
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosaminylphosphatidylinositol deacetylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085243
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0000225" data-r="PMID:10085243" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Non-traceable/author-statement annotation of the deacetylase molecular function from the original PIG-L paper (Watanabe et al. 1999), which established GlcNAc-PI de-N-acetylase activity for recombinant PIG-L. Correct core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The molecular function is correct and is directly supported by the enzymatic assays in this reference and by later human EXP evidence (PMID:14742432).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">has GlcNAc-PI de-N-acetylase activity in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10085243
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9Y2B2" data-a="GO:0006506" data-r="PMID:10085243" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-statement annotation of involvement in GPI biosynthesis from the original PIG-L characterization. Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PIG-L catalyzes the essential second step of GPI biosynthesis; the process annotation is well supported by the same reference and by disease genetics (CHIME/GPI-deficiency).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The second step of GPI biosynthesis is</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                        PMID:10085243
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indispensable in yeasts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>N-acetylglucosaminyl-phosphatidylinositol de-N-acetylase (EC 3.5.1.89) catalyzing the second step of GPI anchor biosynthesis in the ER membrane - hydrolysis of GlcNAc-PI to GlcN-PI plus acetate.</h3>
+                <span class="vote-buttons" data-g="Q9Y2B2" data-a="FUNCTION: N-acetylglucosaminyl-phosphatidylinositol de-N-ace..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000225" target="_blank" class="term-link">
+                            N-acetylglucosaminylphosphatidylinositol deacetylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                                PMID:14742432
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                                PMID:10085243
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The second step of GPI biosynthesis is</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGL/PIGL-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the second step of glycosylphosphatidylinositol</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10085243" target="_blank" class="term-link">
+                            PMID:10085243
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylglucosaminylphosphatidylinositol de-N-acetylases essential in glycosylphosphatidylinositol biosynthesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant PIG-L has GlcNAc-PI de-N-acetylase activity in vitro, and the de-N-acetylation second step of GPI biosynthesis is conserved and essential from yeast (Gpi12p) to mammals.</div>
+
+                        <div class="finding-text">"has GlcNAc-PI de-N-acetylase activity in vitro"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14742432" target="_blank" class="term-link">
+                            PMID:14742432
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Subcellular localization and targeting of N-acetylglucosaminyl phosphatidylinositol de-N-acetylase, the second enzyme in the glycosylphosphatidylinositol biosynthetic pathway.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human PIG-L is a single-pass type I ER membrane protein whose GlcNAc-PI de-N-acetylase activity is localized to the endoplasmic reticulum, retained there by a multi-component localization signal.</div>
+
+                        <div class="finding-text">"We show that human PIG-L is a type I membrane protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162710
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Synthesis of glycosylphosphatidylinositol (GPI)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GPI is synthesized in the endoplasmic reticulum via a pathway of nine reactions; PIGL contributes the second reaction.</div>
+
+                        <div class="finding-text">"GPI is synthesized in the endoplasmic reticulum."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162857
+
+                    </span>
+                </div>
+
+                <div class="reference-title">N-acetylglucosaminyl-PI + H2O -&gt; glucosaminyl-PI + acetate</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The second GPI-synthesis reaction hydrolyzes N-acetylglucosaminyl-PI to glucosaminyl-PI and acetate in the ER membrane, catalyzed by PIG-L.</div>
+
+                        <div class="finding-text">"as is the PIG-L enzyme that catalyzes it"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PIGL/PIGL-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q9Y2B2 (PIGL_HUMAN)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PIGL catalyzes the second step of GPI biosynthesis (de-N-acetylation of GlcNAc-PI) and is an ER membrane, single-pass type I membrane protein of the PIGL family; variants cause CHIME syndrome.</div>
+
+                        <div class="finding-text">"Catalyzes the second step of glycosylphosphatidylinositol"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGL-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9Y2B2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pigl-q9y2b2-review-notes">PIGL (Q9Y2B2) — review notes</h1>
+<p>Human PIGL, N-acetylglucosaminyl-phosphatidylinositol de-N-acetylase (PIG-L; EC 3.5.1.89).<br />
+HGNC:8966, GeneID 9487, chromosome 17. 252 aa. Reference proteome UP000005640.</p>
+<h2 id="core-biology">Core biology</h2>
+<p>PIGL catalyses the <strong>second step of glycosylphosphatidylinositol (GPI) anchor biosynthesis</strong>:<br />
+the <strong>de-N-acetylation of N-acetylglucosaminyl-phosphatidylinositol (GlcNAc-PI) to<br />
+glucosaminyl-phosphatidylinositol (GlcN-PI)</strong>, releasing acetate. This deacetylation is a<br />
+prerequisite for the downstream inositol acylation and mannosylation steps of GPI assembly.</p>
+<ul>
+<li>UniProt FUNCTION: "Catalyzes the second step of glycosylphosphatidylinositol (GPI)<br />
+  biosynthesis, which is the de-N-acetylation of N-acetylglucosaminyl-phosphatidylinositol."<br />
+  [file:human/PIGL/PIGL-uniprot.txt]</li>
+<li>Reaction (RHEA:11660, EC 3.5.1.89): 6-(N-acetyl-alpha-D-glucosaminyl)-PI + H2O =<br />
+  6-(alpha-D-glucosaminyl)-PI + acetate. [file:human/PIGL/PIGL-uniprot.txt]</li>
+<li>GOA MF term carried: <strong>GO:0000225 N-acetylglucosaminylphosphatidylinositol deacetylase<br />
+  activity</strong> (confirmed in PIGL-goa.tsv, all MF rows).</li>
+</ul>
+<h2 id="enzyme-activity-experimental">Enzyme activity — experimental</h2>
+<p>[PMID:10085243 Watanabe et al. 1999 "The second step of GPI biosynthesis is<br />
+de-N-acetylation of N-acetylglucosaminylphosphatidylinositol (GlcNAc-PI)"] — recombinant<br />
+rat PIG-L purified from E. coli "has GlcNAc-PI de-N-acetylase activity in vitro"; yeast<br />
+homologue Gpi12p (YMR281W) complements PIG-L-deficient mammalian cells and its disruption is<br />
+lethal in S. cerevisiae; "the de-N-acetylation step is also indispensable in yeasts". This<br />
+is the original cloning/functional paper (rat gene by expression cloning complementing a CHO<br />
+mutant defective in this step). Human GOA cites it as NAS (function) and IMP (BP), likely<br />
+via the CHO-complementation / cross-species functional identity.</p>
+<p>[PMID:14742432 Pottekat &amp; Menon 2004] — "We show that human PIG-L is a type I membrane<br />
+protein with a large cytoplasmic domain"; GlcNAc-PI de-N-acetylase activity "is localized to<br />
+the endoplasmic reticulum (ER)"; PIG-L retained in the ER by a multi-component signal (a<br />
+retention signal in the cytoplasmic domain residues 60–88, plus a weak luminal/TM signal).<br />
+This is the human enzyme-activity + ER-localization paper (EXP for MF; EXP/IDA for ER<br />
+membrane).</p>
+<h2 id="localization">Localization</h2>
+<p>ER membrane (GO:0005789). UniProt SUBCELLULAR LOCATION: "Endoplasmic reticulum membrane ...<br />
+Single-pass type I membrane protein." Features: TRANSMEM 2..22 (helical), TOPO_DOM 23..252<br />
+cytoplasmic (large cytoplasmic domain). Consistent with GlcNAc-PI de-N-acetylation on the<br />
+cytoplasmic face of the ER, matching the topology of early GPI assembly.</p>
+<p>Reactome R-HSA-162857 (second-step reaction): "In the second step of GPI synthesis,<br />
+N-acetylglucosaminyl-PI is hydrolyzed to yield glucosaminyl-PI and acetate. The<br />
+phosphatidylinositol (PI) derivatives involved in this reaction are located in the<br />
+endoplasmic reticulum membrane, as is the PIG-L enzyme that catalyzes it." Reactome<br />
+R-HSA-162710 (whole GPI pathway): "GPI is synthesized in the endoplasmic reticulum."</p>
+<h2 id="disease">Disease</h2>
+<p>Biallelic loss-of-function / hypomorphic PIGL variants cause <strong>CHIME syndrome (Zeman-Sheard<br />
+syndrome; Coloboma, congenital Heart disease, Ichthyosiform dermatosis, intellectual<br />
+disability / Mental retardation, Ear anomalies; MIM:280000)</strong>, an inherited GPI-deficiency<br />
+disorder. Recurrent variant p.Leu167Pro. [UniProt DISEASE; PMID:22444671, PMID:29473937,<br />
+PMID:35258128, PMID:39641205 — not needed as review citations for the function/localization<br />
+annotations, but establish the biology.]</p>
+<h2 id="domain-family">Domain / family</h2>
+<p>Belongs to the PIGL family; Pfam PF02585 (PIG-L), LmbE-like fold (Gene3D 3.40.50.10320,<br />
+SUPFAM SSF102588; InterPro IPR003737 GlcNAc_PI_deacetylase-related, IPR024078 LmbE-like).<br />
+PANTHER PTHR12993:SF11. Consistent with the deacetylase MF.</p>
+<h2 id="annotation-review-decisions-summary">Annotation-review decisions (summary)</h2>
+<p>MF GO:0000225 (deacetylase): all 5 rows (IBA, IEA, TAS-Reactome, EXP, ISS, NAS) ACCEPT —<br />
+core catalytic function, experimentally established (PMID:14742432 EXP; PMID:10085243). One<br />
+EXP + others accepted as core; NAS/ISS/IEA/TAS accepted (correct term, redundant support).</p>
+<p>BP GO:0006506 (GPI anchor biosynthetic process): rows (IEA, TAS-Reactome, IMP, NAS) ACCEPT —<br />
+core biological process; second step of GPI assembly.</p>
+<p>CC: GO:0005789 ER membrane (IEA, EXP, IDA, TAS-Reactome) ACCEPT — experimentally localized<br />
+(PMID:14742432), single-pass type I ER membrane protein. GO:0005783 endoplasmic reticulum<br />
+(IBA, is_active_in) ACCEPT as non-core parent — the more specific ER membrane is the<br />
+informative CC; ER is the broader IBA "is_active_in" term, correct but less specific.</p>
+<p>No REMOVE actions: every annotation is correct for this well-characterized enzyme.</p>
+<p>core_functions: GO:0000225 (MF) directly_involved_in GO:0006506, located_in GO:0005789.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9Y2B2
+gene_symbol: PIGL
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PIGL is the N-acetylglucosaminyl-phosphatidylinositol de-N-acetylase (PIG-L,
+  EC 3.5.1.89) that catalyzes the second step of glycosylphosphatidylinositol (GPI) anchor
+  biosynthesis. It hydrolyzes N-acetylglucosaminyl-phosphatidylinositol (GlcNAc-PI) to
+  glucosaminyl-phosphatidylinositol (GlcN-PI) plus acetate, a de-N-acetylation that is a
+  prerequisite for the subsequent inositol acylation and mannosylation steps of GPI
+  assembly. It is a single-pass type I endoplasmic reticulum membrane protein with a large
+  cytoplasmic domain and belongs to the PIGL/LmbE-like deacetylase family. Biallelic
+  loss-of-function or hypomorphic PIGL variants cause CHIME syndrome (Zeman-Sheard syndrome),
+  an inherited GPI-deficiency disorder characterized by coloboma, congenital heart disease,
+  ichthyosiform dermatosis, impaired intellectual development, and ear anomalies.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q9Y2B2-1
+- name: &#39;2&#39;
+  id: Q9Y2B2-2
+  sequence_note: VSP_056886
+existing_annotations:
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (PAN-GO) inference of the core catalytic function, GlcNAc-PI
+      de-N-acetylase activity. This is the correct and experimentally supported molecular
+      function for PIGL and matches the enzyme identity (EC 3.5.1.89).
+    action: ACCEPT
+    reason: The GlcNAc-PI de-N-acetylase activity is the defining function of PIGL and is
+      directly supported by experimental work; the IBA inference across the conserved PIGL
+      family (including yeast Gpi12p) is well founded.
+    supported_by:
+    - reference_id: PMID:10085243
+      supporting_text: The second step of GPI biosynthesis is
+    - reference_id: PMID:14742432
+      supporting_text: catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic inference that PIGL is active in the endoplasmic reticulum. This
+      is correct but is the broader compartment term; the more informative cellular
+      component is the ER membrane (GO:0005789), where PIGL is experimentally localized.
+    action: KEEP_AS_NON_CORE
+    reason: Correct localization but less specific than the experimentally supported ER
+      membrane annotation. Retained as a valid, broader is_active_in statement while the
+      ER membrane term captures the informative location.
+    supported_by:
+    - reference_id: PMID:14742432
+      supporting_text: activity is localized to the endoplasmic reticulum (ER) but enriched in a
+    - reference_id: file:human/PIGL/PIGL-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronic annotation of the deacetylase molecular function via UniRule/ARBA,
+      RHEA:11660 and EC:3.5.1.89. Correct and consistent with the experimental evidence.
+    action: ACCEPT
+    reason: The IEA mapping to GO:0000225 (EC 3.5.1.89 / RHEA:11660) is the correct catalytic
+      term and agrees with experimental and phylogenetic evidence.
+    supported_by:
+    - reference_id: file:human/PIGL/PIGL-uniprot.txt
+      supporting_text: Catalyzes the second step of glycosylphosphatidylinositol
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Electronic annotation (ARBA / UniProtKB-SubCell SL-0097) placing PIGL in the ER
+      membrane. Correct and matches the experimental IDA/EXP localization.
+    action: ACCEPT
+    reason: The ER membrane location is experimentally established for human PIGL, a
+      single-pass type I ER membrane protein; the IEA is consistent and correct.
+    supported_by:
+    - reference_id: file:human/PIGL/PIGL-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+    - reference_id: PMID:14742432
+      supporting_text: We show that human PIG-L is a type I membrane protein
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic annotation (ARBA / UniPathway UPA00196) placing PIGL in GPI anchor
+      biosynthesis. PIGL performs the second, obligatory step of this pathway.
+    action: ACCEPT
+    reason: GPI anchor biosynthetic process is the core biological process for PIGL; the
+      de-N-acetylation it catalyzes is a required step of GPI assembly.
+    supported_by:
+    - reference_id: file:human/PIGL/PIGL-uniprot.txt
+      supporting_text: Glycolipid biosynthesis; glycosylphosphatidylinositol-anchor
+    - reference_id: PMID:10085243
+      supporting_text: The second step of GPI biosynthesis is
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162710
+  qualifier: involved_in
+  review:
+    summary: Reactome traceable annotation to the overall GPI synthesis pathway. Correct;
+      PIGL catalyzes the second reaction of this ER pathway.
+    action: ACCEPT
+    reason: PIGL is a bona fide component of the GPI anchor biosynthetic pathway curated by
+      Reactome (Synthesis of glycosylphosphatidylinositol).
+    supported_by:
+    - reference_id: Reactome:R-HSA-162710
+      supporting_text: GPI is synthesized in the endoplasmic reticulum.
+    - reference_id: Reactome:R-HSA-162857
+      supporting_text: In the second step of GPI synthesis, N-acetylglucosaminyl-PI is hydrolyzed
+        to yield glucosaminyl-PI and acetate.
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162857
+  qualifier: enables
+  review:
+    summary: Reactome traceable annotation of the second-step deacetylase reaction
+      (N-acetylglucosaminyl-PI + H2O -&gt; glucosaminyl-PI + acetate) catalyzed by PIG-L.
+      Correct core molecular function.
+    action: ACCEPT
+    reason: The Reactome reaction curation directly attributes the GlcNAc-PI de-N-acetylase
+      activity to PIG-L, matching the experimental and phylogenetic evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162857
+      supporting_text: as is the PIG-L enzyme that catalyzes it
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:14742432
+  qualifier: enables
+  review:
+    summary: Experimental demonstration of GlcNAc-PI de-N-acetylase activity for human PIG-L
+      (Pottekat &amp; Menon 2004), which characterized the activity and its ER localization.
+      This is the strongest, experiment-based support for the core molecular function.
+    action: ACCEPT
+    reason: Direct experimental evidence in human cells that PIG-L catalyzes GlcNAc-PI
+      de-N-acetylation; represents the core catalytic function.
+    supported_by:
+    - reference_id: PMID:14742432
+      supporting_text: catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: EXP
+  original_reference_id: PMID:10085243
+  qualifier: located_in
+  review:
+    summary: ER membrane localization supported in the original PIG-L characterization; the
+      de-N-acetylation step and its enzyme are components of the ER GPI machinery.
+    action: ACCEPT
+    reason: ER membrane localization is correct and independently confirmed by the
+      experimental study of Pottekat &amp; Menon (PMID:14742432); PIGL is a single-pass ER
+      membrane protein.
+    supported_by:
+    - reference_id: PMID:14742432
+      supporting_text: We show that human PIG-L is a type I membrane protein
+    - reference_id: file:human/PIGL/PIGL-uniprot.txt
+      supporting_text: Endoplasmic reticulum membrane
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: Sequence-similarity transfer (from mouse ortholog O35790) of the deacetylase
+      molecular function. Correct and redundant with the experimental evidence.
+    action: ACCEPT
+    reason: The ISS transfer of GO:0000225 from the conserved rodent ortholog is correct and
+      matches the experimentally established human activity.
+    supported_by:
+    - reference_id: PMID:10085243
+      supporting_text: has GlcNAc-PI de-N-acetylase activity in vitro
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:14742432
+  qualifier: located_in
+  review:
+    summary: Direct assay localizing human PIG-L and its GlcNAc-PI de-N-acetylase activity
+      to the ER membrane (Pottekat &amp; Menon 2004), including identification of ER retention
+      signals. Core cellular component.
+    action: ACCEPT
+    reason: Direct experimental evidence that PIG-L is an ER membrane protein; the most
+      informative and best-supported cellular component annotation.
+    supported_by:
+    - reference_id: PMID:14742432
+      supporting_text: activity is localized to the endoplasmic reticulum (ER) but enriched in a
+    - reference_id: PMID:14742432
+      supporting_text: We show that human PIG-L is a type I membrane protein
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:10085243
+  qualifier: involved_in
+  review:
+    summary: Functional/complementation evidence (Watanabe et al. 1999) that PIG-L is
+      required for GPI biosynthesis - the rat gene was cloned by complementing a CHO mutant
+      defective in the second step, and its yeast homologue Gpi12p is essential for GPI and
+      cell viability. Core biological process.
+    action: ACCEPT
+    reason: Loss/restoration of GlcNAc-PI de-N-acetylase activity and cell-surface
+      GPI-anchored protein expression on manipulating PIG-L/Gpi12p demonstrates PIGL&#39;s
+      required role in GPI anchor biosynthesis.
+    supported_by:
+    - reference_id: PMID:10085243
+      supporting_text: the cell-surface expression of GPI-anchored proteins and GlcNAc-PI
+    - reference_id: PMID:10085243
+      supporting_text: indispensable in yeasts
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162857
+  qualifier: located_in
+  review:
+    summary: Reactome traceable annotation placing the PIG-L enzyme and its substrates in
+      the ER membrane for the second-step reaction. Correct.
+    action: ACCEPT
+    reason: Consistent with the experimental ER membrane localization; Reactome curates the
+      reaction as occurring in the ER membrane with PIG-L as the catalyst.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162857
+      supporting_text: as is the PIG-L enzyme that catalyzes it
+- term:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  evidence_type: NAS
+  original_reference_id: PMID:10085243
+  qualifier: enables
+  review:
+    summary: Non-traceable/author-statement annotation of the deacetylase molecular function
+      from the original PIG-L paper (Watanabe et al. 1999), which established GlcNAc-PI
+      de-N-acetylase activity for recombinant PIG-L. Correct core function.
+    action: ACCEPT
+    reason: The molecular function is correct and is directly supported by the enzymatic
+      assays in this reference and by later human EXP evidence (PMID:14742432).
+    supported_by:
+    - reference_id: PMID:10085243
+      supporting_text: has GlcNAc-PI de-N-acetylase activity in vitro
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:10085243
+  qualifier: involved_in
+  review:
+    summary: Author-statement annotation of involvement in GPI biosynthesis from the
+      original PIG-L characterization. Correct core biological process.
+    action: ACCEPT
+    reason: PIG-L catalyzes the essential second step of GPI biosynthesis; the process
+      annotation is well supported by the same reference and by disease genetics
+      (CHIME/GPI-deficiency).
+    supported_by:
+    - reference_id: PMID:10085243
+      supporting_text: The second step of GPI biosynthesis is
+    - reference_id: PMID:10085243
+      supporting_text: indispensable in yeasts
+core_functions:
+- description: N-acetylglucosaminyl-phosphatidylinositol de-N-acetylase (EC 3.5.1.89)
+    catalyzing the second step of GPI anchor biosynthesis in the ER membrane - hydrolysis of
+    GlcNAc-PI to GlcN-PI plus acetate.
+  molecular_function:
+    id: GO:0000225
+    label: N-acetylglucosaminylphosphatidylinositol deacetylase activity
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  supported_by:
+  - reference_id: PMID:14742432
+    supporting_text: catalyzed by N-acetylglucosaminylphosphatidylinositol deacetylase (PIG-L).
+  - reference_id: PMID:10085243
+    supporting_text: The second step of GPI biosynthesis is
+  - reference_id: file:human/PIGL/PIGL-uniprot.txt
+    supporting_text: Catalyzes the second step of glycosylphosphatidylinositol
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10085243
+  title: Mammalian PIG-L and its yeast homologue Gpi12p are N-acetylglucosaminylphosphatidylinositol
+    de-N-acetylases essential in glycosylphosphatidylinositol biosynthesis.
+  findings:
+  - statement: Recombinant PIG-L has GlcNAc-PI de-N-acetylase activity in vitro, and the
+      de-N-acetylation second step of GPI biosynthesis is conserved and essential from yeast
+      (Gpi12p) to mammals.
+    supporting_text: has GlcNAc-PI de-N-acetylase activity in vitro
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Original cloning/functional paper for PIG-L (rat gene complementing a CHO
+      mutant defective in the second step); abstract-only in cache but directly establishes
+      the deacetylase activity and its essential role in GPI biosynthesis. Cited by GOA as
+      NAS (MF) and IMP (BP).
+- id: PMID:14742432
+  title: Subcellular localization and targeting of N-acetylglucosaminyl phosphatidylinositol
+    de-N-acetylase, the second enzyme in the glycosylphosphatidylinositol biosynthetic
+    pathway.
+  findings:
+  - statement: Human PIG-L is a single-pass type I ER membrane protein whose GlcNAc-PI
+      de-N-acetylase activity is localized to the endoplasmic reticulum, retained there by a
+      multi-component localization signal.
+    supporting_text: We show that human PIG-L is a type I membrane protein
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Human enzyme-activity and ER-membrane localization/topology paper;
+      abstract-only in cache but explicitly assays human PIG-L. Supports the EXP MF and
+      EXP/IDA ER membrane annotations.
+- id: Reactome:R-HSA-162710
+  title: Synthesis of glycosylphosphatidylinositol (GPI)
+  findings:
+  - statement: GPI is synthesized in the endoplasmic reticulum via a pathway of nine
+      reactions; PIGL contributes the second reaction.
+    supporting_text: GPI is synthesized in the endoplasmic reticulum.
+- id: Reactome:R-HSA-162857
+  title: N-acetylglucosaminyl-PI + H2O -&gt; glucosaminyl-PI + acetate
+  findings:
+  - statement: The second GPI-synthesis reaction hydrolyzes N-acetylglucosaminyl-PI to
+      glucosaminyl-PI and acetate in the ER membrane, catalyzed by PIG-L.
+    supporting_text: as is the PIG-L enzyme that catalyzes it
+- id: file:human/PIGL/PIGL-uniprot.txt
+  title: UniProtKB Q9Y2B2 (PIGL_HUMAN)
+  findings:
+  - statement: PIGL catalyzes the second step of GPI biosynthesis (de-N-acetylation of
+      GlcNAc-PI) and is an ER membrane, single-pass type I membrane protein of the PIGL
+      family; variants cause CHIME syndrome.
+    supporting_text: Catalyzes the second step of glycosylphosphatidylinositol
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
