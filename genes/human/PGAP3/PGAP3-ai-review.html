@@ -1,0 +1,3150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGAP3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGAP3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96FM1" target="_blank" class="term-link">
+                        Q96FM1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGAP3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96FM1" data-a="DESCRIPTION: PGAP3 (Post-GPI Attachment to Proteins factor 3; P..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PGAP3 (Post-GPI Attachment to Proteins factor 3; PERLD1; CAB2/hCOS16) is a Golgi multi-pass membrane protein that acts as a GPI-specific phospholipase A2 in the fatty-acid remodeling of glycosylphosphatidylinositol (GPI) anchors. It catalyzes the first remodeling step, removing the unsaturated (sn-2) fatty acyl chain from the inositol phospholipid of the mature GPI anchor to generate a lyso-GPI intermediate; PGAP2 then reacylates the anchor with a saturated (stearoyl) chain. This remodeling is required for GPI-anchored proteins to associate with membrane microdomains (lipid rafts) at the cell surface. PGAP3 is the functional ortholog of yeast Per1p. Loss of function causes hyperphosphatasia with impaired intellectual development syndrome 4 (HPMRS4 / Mabry syndrome), an autosomal recessive disorder with developmental delay, intellectual disability and elevated serum alkaline phosphatase (a GPI-anchored enzyme).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180046" target="_blank" class="term-link">
+                                    GO:0180046
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchored protein biosynthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0180046" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the overall pathway of GPI-anchored protein biosynthesis. PGAP3 performs a Golgi lipid-remodeling step required for GPI-APs to reach a fully functional, raft-associated state, so involvement in this broad process is well supported. A more specific remodeling term is also annotated (GO:0120574).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the established role of PGAP3 in GPI-anchor maturation; IBA is at an appropriate pathway-level of specificity for this multi-step process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                                        PMID:29374258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a saturated fatty acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0000139" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) is_active_in Golgi membrane. This matches the experimentally determined steady-state localization of PGAP3 and the compartment where fatty-acid remodeling of GPI anchors occurs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Golgi membrane is where PGAP3 carries out its remodeling activity; supported by IDA localization and by the known Golgi site of GPI fatty-acid remodeling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAP3/PGAP3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                                        PMID:29374258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a saturated fatty acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016788" target="_blank" class="term-link">
+                                    GO:0016788
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on ester bonds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0016788" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) molecular-function annotation as an ester-bond hydrolase. PGAP3 is a GPI-specific phospholipase A2 (EC 3.1.1.-) that hydrolyzes the ester bond linking the sn-2 unsaturated fatty acid to the GPI inositol phospholipid, so ester-bond hydrolase activity is correct, if general.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct at the family/phylogenetic level; the phospholipase A2 (acyl-ester hydrolase) activity of PGAP3 is a specialization of this ester-bond hydrolase term. A more specific phospholipase A2 term would be an appropriate refinement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAP3/PGAP3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">May catalyze the first step of the fatty acid</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                                        PMID:17021251
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PER1 is required for the production of
+lyso-GPI, suggesting that Per1p possesses or regulates the GPI-phospholipase A2
+activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0000139" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell mapping SL-0134) annotation to Golgi membrane. Consistent with the experimentally supported Golgi localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IDA and IBA Golgi membrane annotations and correctly derived from the curated UniProt subcellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAP3/PGAP3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0006506" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (InterPro IPR007217, Per1-like) annotation to GPI anchor biosynthetic process. The Per1-like family carries out GPI-anchor lipid remodeling, part of the overall biosynthetic/maturation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro-to-GO mapping is biologically appropriate for the PGAP3/Per1 family; PGAP3 acts in GPI-anchor maturation. Duplicated by experimental IMP annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link">
+                                        PMID:24439110
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified mutations in PGAP3, encoding a protein that is involved in GPI-anchor
+maturation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32814053
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Interactome Mapping Provides a Network of Neurodegenerative ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0005515" data-r="PMID:32814053" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#39;protein binding&#39; from a large-scale neurodegenerative-disease interactome (yeast two-hybrid) reporting an interaction with GTF3C3 (Q9Y5Q9). This is an uninformative bare protein-binding term from a high-throughput screen with no established functional relationship to GPI remodeling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding conveys no specific molecular function; the interactor (GTF3C3, a TFIIIC transcription-factor subunit) has no known connection to GPI-anchor biology, and the evidence is a single high-throughput Y2H hit. Retained (not removed) per policy on experimental IPI annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                                        PMID:32814053
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">candidate interactions and is generated by systematic yeast two-hybrid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI &#39;protein binding&#39; from the BioPlex proteome-scale AP-MS interactome reporting an interaction with TBRG4 (Q969Z0). Bare protein-binding term from a high-throughput screen without an established functional link to PGAP3&#39;s remodeling role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005515 protein binding is uninformative; the interactor (TBRG4, a mitochondrial RNA-processing protein) has no known relationship to Golgi GPI remodeling, and the evidence is a single proteome-scale AP-MS association. Retained (not removed) per policy on experimental IPI annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The first, BioPlex 3.0, results from affinity purification
+of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162
+interactions</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120574" target="_blank" class="term-link">
+                                    GO:0120574
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor remodelling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17021251
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PER1 is required for GPI-phospholipase A2 activity and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0120574" data-r="PMID:17021251" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP to GPI anchor remodelling based on the yeast PER1 study, which established PER1 as required for GPI lipid remodeling (production of lyso-GPI / GPI-phospholipase A2 activity) and showed that human PERLD1 (PGAP3) is a functional homolog of PER1. This is the most specific and accurate BP term for PGAP3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly captures the core evolved function of PGAP3 - remodeling of the GPI anchor after its attachment to protein - and is supported by cross-species complementation demonstrating conserved function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                                        PMID:17021251
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We also found that human PERLD1 is a functional homologue of PER1</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                                        PMID:17021251
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PER1 is required for the production of
+lyso-GPI, suggesting that Per1p possesses or regulates the GPI-phospholipase A2
+activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120574" target="_blank" class="term-link">
+                                    GO:0120574
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor remodelling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24439110
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PGAP3 impair GPI-anchor maturation, causing a s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0120574" data-r="PMID:24439110" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP to GPI anchor remodelling from the human genetics/functional study showing that biallelic PGAP3 loss-of-function variants impair GPI-anchor maturation, cause elevated surface expression of abnormally remodeled GPI-APs, and are validated in CHO functional assays. This is the core, most specific BP for PGAP3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported experimental annotation to the specific remodeling process; patient variants and CHO cell functional studies demonstrate PGAP3&#39;s role in the later GPI-anchor remodeling steps.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link">
+                                        PMID:24439110
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the later
+GPI-anchor remodelling steps for normal neuronal development</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link">
+                                        PMID:24439110
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">functional studies on Chinese hamster ovary cell lines</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180046" target="_blank" class="term-link">
+                                    GO:0180046
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchored protein biosynthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29374258
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a Golgi GPI-N-acetylgalactosamine transfer...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0180046" data-r="PMID:29374258" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP to GPI anchored protein biosynthesis from the PGAP4 study, in which PGAP3-knockout cells were used and the Golgi fatty-acid remodeling role of PGAP3 (removal of the sn-2 unsaturated fatty acid, before PGAP2 reacylation) is directly described. Supports involvement in the broad GPI-AP biosynthesis/maturation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PGAP3 performs an obligatory Golgi remodeling step in producing mature, functional GPI-anchored proteins; the annotation is at an appropriate pathway level and is duplicated by the IBA annotation to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                                        PMID:29374258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a saturated fatty acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                    GO:0000139
+                                </a>
+                            </span>
+                            <span class="term-label">Golgi membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24439110
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mutations in PGAP3 impair GPI-anchor maturation, causing a s...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0000139" data-r="PMID:24439110" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA localization to the Golgi membrane. The HPMRS4 study characterized wild-type and mutant PGAP3 localization, confirming Golgi apparatus residence of the wild-type protein (with ER retention of certain pathogenic mutants).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental evidence for the steady-state Golgi membrane localization where PGAP3 acts; the primary and most reliable localization annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAP3/PGAP3-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Golgi apparatus membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                    GO:0031410
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12460457" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12460457
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of the CAB2/hCOS16 gene required for the repa...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0031410" data-r="PMID:12460457" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA to cytoplasmic vesicle from the early CAB2/hCOS16 study, which reported that a CAB2 (PGAP3)-GFP fusion translocated into vesicles. This predates recognition of PGAP3 as a GPI-remodeling enzyme; the well-established, functionally relevant location is the Golgi.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Localization to vesicular structures is plausible for a secretory-pathway membrane protein but is peripheral to PGAP3&#39;s core Golgi remodeling function and derives from an overexpressed GFP-fusion in a study focused on chromosome 17q12 amplicon genes, not GPI biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12460457" target="_blank" class="term-link">
+                                        PMID:12460457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CAB2 translocates into vesicles</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29374258
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a Golgi GPI-N-acetylgalactosamine transfer...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0006506" data-r="PMID:29374258" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP to GPI anchor biosynthetic process (UniProt-assigned), supported by the same functional context in which PGAP3 performs the Golgi fatty-acid remodeling step of GPI-anchor maturation. Duplicates the InterPro IEA annotation to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct pathway-level BP for PGAP3&#39;s role in producing mature GPI anchors; the remodeling activity is an integral part of GPI-anchor biosynthesis/maturation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                                        PMID:29374258
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a saturated fatty acid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016788" target="_blank" class="term-link">
+                                    GO:0016788
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, acting on ester bonds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17021251
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PER1 is required for GPI-phospholipase A2 activity and invol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96FM1" data-a="GO:0016788" data-r="PMID:17021251" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP molecular-function annotation as an ester-bond hydrolase, based on the PER1 study demonstrating that PER1/PERLD1(PGAP3) is required for GPI-phospholipase A2 activity and lyso-GPI production. PGAP3 hydrolyzes the sn-2 acyl-ester bond of the GPI inositol phospholipid.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The phospholipase A2 (acyl-ester hydrolase) activity of PGAP3 is a specific instance of ester-bond hydrolase activity; a dedicated phospholipase A2 term would be an appropriate future refinement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                                        PMID:17021251
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PER1 is required for the production of
+lyso-GPI, suggesting that Per1p possesses or regulates the GPI-phospholipase A2
+activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GPI-specific phospholipase A2 that hydrolyzes the ester bond linking the unsaturated (sn-2) fatty acyl chain to the inositol phospholipid of the mature GPI anchor, generating a lyso-GPI intermediate - the first step of Golgi GPI fatty-acid remodeling (before PGAP2 reacylation with a saturated stearoyl chain).</h3>
+                <span class="vote-buttons" data-g="Q96FM1" data-a="FUNCTION: GPI-specific phospholipase A2 that hydrolyzes the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016788" target="_blank" class="term-link">
+                            hydrolase activity, acting on ester bonds
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120574" target="_blank" class="term-link">
+                                GPI anchor remodelling
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000139" target="_blank" class="term-link">
+                                Golgi membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PGAP3/PGAP3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Involved in the fatty acid remodeling steps of GPI-anchor</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PGAP3/PGAP3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">removing the unsaturated acyl chain at sn-2 of inositol</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PGAP3/PGAP3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">generating a lyso-GPI intermediate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                                PMID:17021251
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">PER1 is required for the production of
+lyso-GPI, suggesting that Per1p possesses or regulates the GPI-phospholipase A2
+activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                                PMID:29374258
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a saturated fatty acid</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PGAP3/PGAP3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q96FM1 (PGAP3_HUMAN)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12460457" target="_blank" class="term-link">
+                            PMID:12460457
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of the CAB2/hCOS16 gene required for the repair of DNA double-strand breaks on a core amplified region of the 17q12 locus in breast and gastric cancers.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17021251" target="_blank" class="term-link">
+                            PMID:17021251
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PER1 is required for GPI-phospholipase A2 activity and involved in lipid remodeling of GPI-anchored proteins.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24439110" target="_blank" class="term-link">
+                            PMID:24439110
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mutations in PGAP3 impair GPI-anchor maturation, causing a subtype of hyperphosphatasia with mental retardation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29374258" target="_blank" class="term-link">
+                            PMID:29374258
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a Golgi GPI-N-acetylgalactosamine transferase with tandem transmembrane regions in the catalytic domain.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32814053" target="_blank" class="term-link">
+                            PMID:32814053
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins and Uncovers Widespread Protein Aggregation in Affected Brains.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGAP3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96FM1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pgap3-q96fm1-review-notes">PGAP3 (Q96FM1) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Human PGAP3 = Post-GPI Attachment to Proteins factor 3 = PERLD1 = CAB2/hCOS16 = COS16 homolog.</li>
+<li>HGNC:23719; located 17q12 (within the PPP1R1B-STARD3-ERBB2-GRB7 amplicon).</li>
+<li>320 aa, multi-pass Golgi membrane protein (7 predicted TM helices), N-glycosylated at N40.</li>
+<li>Member of the PGAP3/PER1 (Per1-like, Pfam PF04080 / InterPro IPR007217) family.</li>
+</ul>
+<h2 id="core-biology-from-uniprot-q96fm1-cited-papers">Core biology (from UniProt Q96FM1 + cited papers)</h2>
+<ul>
+<li><strong>GPI-specific phospholipase A2</strong>. Carries out the <strong>first step of GPI fatty-acid remodeling</strong><br />
+  in the Golgi: removes the <strong>unsaturated acyl chain at sn-2 of the inositol phospholipid</strong><br />
+  (phosphatidylinositol) of the mature GPI anchor, generating a lyso-GPI intermediate.<br />
+  PGAP2 then reacylates with a saturated (stearic) chain. This remodeling is required for<br />
+  GPI-anchored proteins (GPI-APs) to associate with lipid rafts / detergent-resistant membranes.</li>
+<li>UniProt FUNCTION + CATALYTIC ACTIVITY (Rhea RHEA:83847), EC 3.1.1.-.</li>
+<li>[PMID:29374258 (PGAP4 paper) intro, "In the Golgi, GPI-APs undergo fatty acid remodeling where<br />
+    PGAP3 removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with<br />
+    stearic acid, a saturated fatty acid"].</li>
+<li>Yeast PER1 is the ortholog; human PERLD1/PGAP3 functionally complements per1Δ<br />
+    [PMID:17021251 "human PERLD1 is a functional homologue of PER1"; "PER1 is required for the<br />
+    production of lyso-GPI, suggesting that Per1p possesses or regulates the GPI-phospholipase A2<br />
+    activity"].</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Golgi apparatus membrane (GO:0000139): UniProt SUBCELLULAR LOCATION; IDA <a href="https://pubmed.ncbi.nlm.nih.gov/24439110">PMID:24439110</a>;<br />
+  IBA is_active_in; IEA (SubCell SL-0134). HPMRS4 P105R and D305G mutants are ER-retained.</li>
+<li>GO:0031410 cytoplasmic vesicle (IDA, PMID:12460457): from the CAB2/hCOS16 GFP-fusion study<br />
+  reporting translocation into vesicles. Peripheral/older assignment; the well-supported steady-state<br />
+  location is Golgi. Keep as non-core.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Hyperphosphatasia with impaired intellectual development syndrome 4 (HPMRS4 / Mabry syndrome),<br />
+  MIM 615716, autosomal recessive; elevated serum ALP (a GPI-anchored enzyme) <a href="https://pubmed.ncbi.nlm.nih.gov/24439110">PMID:24439110</a>.</li>
+</ul>
+<h2 id="interactions-go0005515-protein-binding-ipi">Interactions (GO:0005515 protein binding, IPI)</h2>
+<ul>
+<li>GTF3C3 (Q9Y5Q9) [PMID:32814053, ND interactome Y2H]; TBRG4 (Q969Z0) [PMID:33961781, BioPlex AP-MS].<br />
+  Both are large-scale high-throughput screens; neither has an established functional relationship<br />
+  to GPI remodeling. Uninformative bare <code>protein binding</code> -&gt; MARK_AS_OVER_ANNOTATED (do not REMOVE<br />
+  per policy).</li>
+</ul>
+<h2 id="goa-mf-term-used-for-core_functions">GOA MF term used for core_functions</h2>
+<ul>
+<li>GOA carries <strong>GO:0016788 "hydrolase activity, acting on ester bonds"</strong> (both the IBA and the<br />
+  IMP MF annotations). Per instructions, use this exact current GOA term as the core molecular_function.<br />
+  (A more specific phospholipase A2 term would be biologically apt, but the task requires the exact<br />
+  GOA-carried MF term.)</li>
+</ul>
+<h2 id="quote-verification-log-all-verbatim-substrings-confirmed-via-python-in-check-against-cached-files">Quote-verification log (all verbatim substrings confirmed via python <code>in</code> check against cached files)</h2>
+<ul>
+<li>PMID:29374258: "In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3 removes an<br />
+  sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation with stearic acid, a<br />
+  saturated fatty acid" (also PGAP3-KO used experimentally in that paper).</li>
+<li>PMID:17021251: wrapped substrings for lyso-GPI/phospholipase A2 and PERLD1 homologue.</li>
+<li>PMID:24439110: "identified mutations in PGAP3, encoding a protein that is involved in GPI-anchor \nmaturation";<br />
+  "elevated serum alkaline phosphatase (ALP), a GPI-anchored enzyme"; "functional studies on Chinese<br />
+  hamster ovary cell lines"; "the later \nGPI-anchor remodelling steps for normal neuronal development".</li>
+<li>PMID:12460457: "CAB2 translocates into vesicles".</li>
+<li>file:human/PGAP3/PGAP3-uniprot.txt used for FUNCTION/CATALYTIC ACTIVITY/SUBCELLULAR LOCATION quotes.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96FM1
+gene_symbol: PGAP3
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PGAP3 (Post-GPI Attachment to Proteins factor 3; PERLD1; CAB2/hCOS16)
+  is a Golgi multi-pass membrane protein that acts as a GPI-specific phospholipase
+  A2 in the fatty-acid remodeling of glycosylphosphatidylinositol (GPI) anchors. It
+  catalyzes the first remodeling step, removing the unsaturated (sn-2) fatty acyl
+  chain from the inositol phospholipid of the mature GPI anchor to generate a lyso-GPI
+  intermediate; PGAP2 then reacylates the anchor with a saturated (stearoyl) chain.
+  This remodeling is required for GPI-anchored proteins to associate with membrane
+  microdomains (lipid rafts) at the cell surface. PGAP3 is the functional ortholog
+  of yeast Per1p. Loss of function causes hyperphosphatasia with impaired intellectual
+  development syndrome 4 (HPMRS4 / Mabry syndrome), an autosomal recessive disorder
+  with developmental delay, intellectual disability and elevated serum alkaline phosphatase
+  (a GPI-anchored enzyme).
+alternative_products:
+- name: &#39;1&#39;
+  id: Q96FM1-1
+- name: &#39;2&#39;
+  id: Q96FM1-2
+  sequence_note: VSP_034158
+- name: &#39;3&#39;
+  id: Q96FM1-3
+  sequence_note: VSP_057229
+existing_annotations:
+- term:
+    id: GO:0180046
+    label: GPI anchored protein biosynthesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetic (IBA) annotation to the overall pathway of GPI-anchored protein
+      biosynthesis. PGAP3 performs a Golgi lipid-remodeling step required for GPI-APs
+      to reach a fully functional, raft-associated state, so involvement in this broad
+      process is well supported. A more specific remodeling term is also annotated
+      (GO:0120574).
+    action: ACCEPT
+    reason: Consistent with the established role of PGAP3 in GPI-anchor maturation;
+      IBA is at an appropriate pathway-level of specificity for this multi-step process.
+    supported_by:
+    - reference_id: PMID:29374258
+      supporting_text: In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3
+        removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation
+        with stearic acid, a saturated fatty acid
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetic (IBA) is_active_in Golgi membrane. This matches the experimentally
+      determined steady-state localization of PGAP3 and the compartment where fatty-acid
+      remodeling of GPI anchors occurs.
+    action: ACCEPT
+    reason: The Golgi membrane is where PGAP3 carries out its remodeling activity;
+      supported by IDA localization and by the known Golgi site of GPI fatty-acid remodeling.
+    supported_by:
+    - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+    - reference_id: PMID:29374258
+      supporting_text: In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3
+        removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation
+        with stearic acid, a saturated fatty acid
+- term:
+    id: GO:0016788
+    label: hydrolase activity, acting on ester bonds
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetic (IBA) molecular-function annotation as an ester-bond hydrolase.
+      PGAP3 is a GPI-specific phospholipase A2 (EC 3.1.1.-) that hydrolyzes the ester
+      bond linking the sn-2 unsaturated fatty acid to the GPI inositol phospholipid,
+      so ester-bond hydrolase activity is correct, if general.
+    action: ACCEPT
+    reason: Correct at the family/phylogenetic level; the phospholipase A2 (acyl-ester
+      hydrolase) activity of PGAP3 is a specialization of this ester-bond hydrolase
+      term. A more specific phospholipase A2 term would be an appropriate refinement.
+    supported_by:
+    - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+      supporting_text: May catalyze the first step of the fatty acid
+    - reference_id: PMID:17021251
+      supporting_text: &#34;PER1 is required for the production of \nlyso-GPI, suggesting\
+        \ that Per1p possesses or regulates the GPI-phospholipase A2 \nactivity&#34;
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic (UniProt SubCell mapping SL-0134) annotation to Golgi membrane.
+      Consistent with the experimentally supported Golgi localization.
+    action: ACCEPT
+    reason: Redundant with the IDA and IBA Golgi membrane annotations and correctly
+      derived from the curated UniProt subcellular location.
+    supported_by:
+    - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Electronic (InterPro IPR007217, Per1-like) annotation to GPI anchor biosynthetic
+      process. The Per1-like family carries out GPI-anchor lipid remodeling, part of
+      the overall biosynthetic/maturation pathway.
+    action: ACCEPT
+    reason: The InterPro-to-GO mapping is biologically appropriate for the PGAP3/Per1
+      family; PGAP3 acts in GPI-anchor maturation. Duplicated by experimental IMP annotations
+      to the same term.
+    supported_by:
+    - reference_id: PMID:24439110
+      supporting_text: &#34;identified mutations in PGAP3, encoding a protein that is involved\
+        \ in GPI-anchor \nmaturation&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32814053
+  qualifier: enables
+  review:
+    summary: IPI &#39;protein binding&#39; from a large-scale neurodegenerative-disease interactome
+      (yeast two-hybrid) reporting an interaction with GTF3C3 (Q9Y5Q9). This is an
+      uninformative bare protein-binding term from a high-throughput screen with no
+      established functional relationship to GPI remodeling.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#39;GO:0005515 protein binding conveys no specific molecular function; the
+      interactor (GTF3C3, a TFIIIC transcription-factor subunit) has no known connection
+      to GPI-anchor biology, and the evidence is a single high-throughput Y2H hit.
+      Retained (not removed) per policy on experimental IPI annotations.&#39;
+    supported_by:
+    - reference_id: PMID:32814053
+      supporting_text: candidate interactions and is generated by systematic yeast
+        two-hybrid
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: IPI &#39;protein binding&#39; from the BioPlex proteome-scale AP-MS interactome
+      reporting an interaction with TBRG4 (Q969Z0). Bare protein-binding term from
+      a high-throughput screen without an established functional link to PGAP3&#39;s remodeling
+      role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &#39;GO:0005515 protein binding is uninformative; the interactor (TBRG4, a
+      mitochondrial RNA-processing protein) has no known relationship to Golgi GPI
+      remodeling, and the evidence is a single proteome-scale AP-MS association. Retained
+      (not removed) per policy on experimental IPI annotations.&#39;
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &#34;The first, BioPlex 3.0, results from affinity purification \n\
+        of 10,128 human proteins-half the proteome-in 293T cells and includes 118,162\
+        \ \ninteractions&#34;
+- term:
+    id: GO:0120574
+    label: GPI anchor remodelling
+  evidence_type: IMP
+  original_reference_id: PMID:17021251
+  qualifier: involved_in
+  review:
+    summary: IMP to GPI anchor remodelling based on the yeast PER1 study, which established
+      PER1 as required for GPI lipid remodeling (production of lyso-GPI / GPI-phospholipase
+      A2 activity) and showed that human PERLD1 (PGAP3) is a functional homolog of
+      PER1. This is the most specific and accurate BP term for PGAP3.
+    action: ACCEPT
+    reason: Directly captures the core evolved function of PGAP3 - remodeling of the
+      GPI anchor after its attachment to protein - and is supported by cross-species
+      complementation demonstrating conserved function.
+    supported_by:
+    - reference_id: PMID:17021251
+      supporting_text: We also found that human PERLD1 is a functional homologue of
+        PER1
+    - reference_id: PMID:17021251
+      supporting_text: &#34;PER1 is required for the production of \nlyso-GPI, suggesting\
+        \ that Per1p possesses or regulates the GPI-phospholipase A2 \nactivity&#34;
+- term:
+    id: GO:0120574
+    label: GPI anchor remodelling
+  evidence_type: IMP
+  original_reference_id: PMID:24439110
+  qualifier: involved_in
+  review:
+    summary: IMP to GPI anchor remodelling from the human genetics/functional study
+      showing that biallelic PGAP3 loss-of-function variants impair GPI-anchor maturation,
+      cause elevated surface expression of abnormally remodeled GPI-APs, and are validated
+      in CHO functional assays. This is the core, most specific BP for PGAP3.
+    action: ACCEPT
+    reason: Well-supported experimental annotation to the specific remodeling process;
+      patient variants and CHO cell functional studies demonstrate PGAP3&#39;s role in
+      the later GPI-anchor remodeling steps.
+    supported_by:
+    - reference_id: PMID:24439110
+      supporting_text: &#34;the later \nGPI-anchor remodelling steps for normal neuronal\
+        \ development&#34;
+    - reference_id: PMID:24439110
+      supporting_text: functional studies on Chinese hamster ovary cell lines
+- term:
+    id: GO:0180046
+    label: GPI anchored protein biosynthesis
+  evidence_type: IMP
+  original_reference_id: PMID:29374258
+  qualifier: involved_in
+  review:
+    summary: IMP to GPI anchored protein biosynthesis from the PGAP4 study, in which
+      PGAP3-knockout cells were used and the Golgi fatty-acid remodeling role of PGAP3
+      (removal of the sn-2 unsaturated fatty acid, before PGAP2 reacylation) is directly
+      described. Supports involvement in the broad GPI-AP biosynthesis/maturation pathway.
+    action: ACCEPT
+    reason: PGAP3 performs an obligatory Golgi remodeling step in producing mature,
+      functional GPI-anchored proteins; the annotation is at an appropriate pathway
+      level and is duplicated by the IBA annotation to the same term.
+    supported_by:
+    - reference_id: PMID:29374258
+      supporting_text: In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3
+        removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation
+        with stearic acid, a saturated fatty acid
+- term:
+    id: GO:0000139
+    label: Golgi membrane
+  evidence_type: IDA
+  original_reference_id: PMID:24439110
+  qualifier: located_in
+  review:
+    summary: IDA localization to the Golgi membrane. The HPMRS4 study characterized
+      wild-type and mutant PGAP3 localization, confirming Golgi apparatus residence
+      of the wild-type protein (with ER retention of certain pathogenic mutants).
+    action: ACCEPT
+    reason: Direct experimental evidence for the steady-state Golgi membrane localization
+      where PGAP3 acts; the primary and most reliable localization annotation.
+    supported_by:
+    - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Golgi apparatus membrane&#39;
+- term:
+    id: GO:0031410
+    label: cytoplasmic vesicle
+  evidence_type: IDA
+  original_reference_id: PMID:12460457
+  qualifier: located_in
+  review:
+    summary: IDA to cytoplasmic vesicle from the early CAB2/hCOS16 study, which reported
+      that a CAB2 (PGAP3)-GFP fusion translocated into vesicles. This predates recognition
+      of PGAP3 as a GPI-remodeling enzyme; the well-established, functionally relevant
+      location is the Golgi.
+    action: KEEP_AS_NON_CORE
+    reason: Localization to vesicular structures is plausible for a secretory-pathway
+      membrane protein but is peripheral to PGAP3&#39;s core Golgi remodeling function
+      and derives from an overexpressed GFP-fusion in a study focused on chromosome
+      17q12 amplicon genes, not GPI biology.
+    supported_by:
+    - reference_id: PMID:12460457
+      supporting_text: CAB2 translocates into vesicles
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IMP
+  original_reference_id: PMID:29374258
+  qualifier: involved_in
+  review:
+    summary: IMP to GPI anchor biosynthetic process (UniProt-assigned), supported by
+      the same functional context in which PGAP3 performs the Golgi fatty-acid remodeling
+      step of GPI-anchor maturation. Duplicates the InterPro IEA annotation to the
+      same term.
+    action: ACCEPT
+    reason: Correct pathway-level BP for PGAP3&#39;s role in producing mature GPI anchors;
+      the remodeling activity is an integral part of GPI-anchor biosynthesis/maturation.
+    supported_by:
+    - reference_id: PMID:29374258
+      supporting_text: In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3
+        removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation
+        with stearic acid, a saturated fatty acid
+- term:
+    id: GO:0016788
+    label: hydrolase activity, acting on ester bonds
+  evidence_type: IMP
+  original_reference_id: PMID:17021251
+  qualifier: enables
+  review:
+    summary: IMP molecular-function annotation as an ester-bond hydrolase, based on
+      the PER1 study demonstrating that PER1/PERLD1(PGAP3) is required for GPI-phospholipase
+      A2 activity and lyso-GPI production. PGAP3 hydrolyzes the sn-2 acyl-ester bond
+      of the GPI inositol phospholipid.
+    action: ACCEPT
+    reason: The phospholipase A2 (acyl-ester hydrolase) activity of PGAP3 is a specific
+      instance of ester-bond hydrolase activity; a dedicated phospholipase A2 term
+      would be an appropriate future refinement.
+    supported_by:
+    - reference_id: PMID:17021251
+      supporting_text: &#34;PER1 is required for the production of \nlyso-GPI, suggesting\
+        \ that Per1p possesses or regulates the GPI-phospholipase A2 \nactivity&#34;
+core_functions:
+- description: GPI-specific phospholipase A2 that hydrolyzes the ester bond linking
+    the unsaturated (sn-2) fatty acyl chain to the inositol phospholipid of the mature
+    GPI anchor, generating a lyso-GPI intermediate - the first step of Golgi GPI fatty-acid
+    remodeling (before PGAP2 reacylation with a saturated stearoyl chain).
+  molecular_function:
+    id: GO:0016788
+    label: hydrolase activity, acting on ester bonds
+  directly_involved_in:
+  - id: GO:0120574
+    label: GPI anchor remodelling
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0000139
+    label: Golgi membrane
+  supported_by:
+  - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+    supporting_text: Involved in the fatty acid remodeling steps of GPI-anchor
+  - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+    supporting_text: removing the unsaturated acyl chain at sn-2 of inositol
+  - reference_id: file:human/PGAP3/PGAP3-uniprot.txt
+    supporting_text: generating a lyso-GPI intermediate
+  - reference_id: PMID:17021251
+    supporting_text: &#34;PER1 is required for the production of \nlyso-GPI, suggesting\
+      \ that Per1p possesses or regulates the GPI-phospholipase A2 \nactivity&#34;
+  - reference_id: PMID:29374258
+    supporting_text: In the Golgi, GPI-APs undergo fatty acid remodeling where PGAP3
+      removes an sn-2-linked unsaturated fatty acid and PGAP2 is involved in reacylation
+      with stearic acid, a saturated fatty acid
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: file:human/PGAP3/PGAP3-uniprot.txt
+  title: UniProtKB entry Q96FM1 (PGAP3_HUMAN)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Curated UniProt record; source for FUNCTION, CATALYTIC ACTIVITY (Rhea
+      RHEA:83847, EC 3.1.1.-), Golgi subcellular location, topology, and HPMRS4 disease
+      association.
+- id: PMID:12460457
+  title: Identification of the CAB2/hCOS16 gene required for the repair of DNA double-strand
+    breaks on a core amplified region of the 17q12 locus in breast and gastric cancers.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: First cloning of CAB2/hCOS16 (=PGAP3) as a 17q12 amplicon gene; reports
+      GFP-fusion translocation into vesicles. Predates the enzymatic characterization;
+      DNA-repair/Mn2+ framing is not related to PGAP3&#39;s GPI-remodeling function.
+- id: PMID:17021251
+  title: PER1 is required for GPI-phospholipase A2 activity and involved in lipid
+    remodeling of GPI-anchored proteins.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Establishes the GPI-phospholipase A2 / lyso-GPI-forming activity of
+      the PER1 family and shows human PERLD1 (PGAP3) functionally complements yeast
+      per1; foundational for PGAP3&#39;s molecular function.
+- id: PMID:24439110
+  title: Mutations in PGAP3 impair GPI-anchor maturation, causing a subtype of hyperphosphatasia
+    with mental retardation.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Human genetics plus CHO functional studies defining HPMRS4 and confirming
+      PGAP3&#39;s role in GPI-anchor remodeling; source of Golgi IDA localization and disease
+      variants.
+- id: PMID:29374258
+  title: Identification of a Golgi GPI-N-acetylgalactosamine transferase with tandem
+    transmembrane regions in the catalytic domain.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PGAP4 paper; used PGAP3-knockout cells and gives a clear verbatim
+      description of PGAP3 removing the sn-2 unsaturated fatty acid in Golgi GPI remodeling
+      (before PGAP2 reacylation).
+- id: PMID:32814053
+  title: Interactome Mapping Provides a Network of Neurodegenerative Disease Proteins
+    and Uncovers Widespread Protein Aggregation in Affected Brains.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Large-scale Y2H neurodegenerative-disease interactome; source of the
+      GTF3C3 protein-binding IPI. High-throughput; no established functional link to
+      PGAP3&#39;s GPI-remodeling role.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: BioPlex proteome-scale AP-MS interactome; source of the TBRG4 protein-binding
+      IPI. High-throughput; no established functional link to PGAP3.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
