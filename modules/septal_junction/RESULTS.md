@@ -68,9 +68,9 @@ FraE ortholog call even though its InterPro family is broad.
 components are reciprocal orthologs at 52–72% identity (more divergent than *A. variabilis*),
 and the fraC–fraD–fraE operon is syntenic (Cylst_1330 / Cylst_1329 / Cylst_1328): FraD
 **K9WUY7**, FraC **K9WTD1**, FraE **K9WTV4**, SepN **K9WXR0**, SepJ **K9WRN1**, AmiC2
-**K9X2S2**. Notably this genome has **no tandem AmiC1** — the AmiC2 ortholog (K9X2S2) is
-standalone and both 7120 AmiC exemplars reciprocate to it, so the AmiC1/AmiC2 duplication
-appears to be a *Nostoc/Anabaena*-specific event rather than ancestral to the module.
+**K9X2S2**. Notably this genome has **no distinct AmiC1** — the AmiC2 ortholog (K9X2S2) is
+single-copy and both 7120 AmiC exemplars reciprocate to it (see the AmiC-duplication note
+below).
 
 **The module IS conserved in the Stigonematales (deepest-branching heterocyst-formers).**
 
@@ -93,9 +93,17 @@ Stigonematales:
 
 So FraD/SepN and the whole module reach the true-branching Stigonematales, consistent with
 the SepN discovery paper's report of SepN across Nostocaceae, Oscillatoriales **and
-Stigonematales** (PMID:36470860). Like *Cylindrospermum*, these genomes carry a **single
-standalone AmiC** (no tandem AmiC1), reinforcing that the AmiC1/AmiC2 duplication is a
-*Nostoc/Anabaena*-specific event.
+Stigonematales** (PMID:36470860).
+
+**AmiC1/AmiC2 duplication — patchy, likely ancestral with losses (corrected).** RBH per
+exemplar across the four extra genomes shows the tandem amidase pair is *not*
+*Nostoc/Anabaena*-specific: *Fischerella thermalis* (Stigonematales) has **both** an AmiC2
+ortholog (G6FW05 / FJSC11DRAFT_3096) and an AmiC1 ortholog (G6FW03 / FJSC11DRAFT_3094),
+whereas *Cylindrospermum stagnale* and *Chlorogloeopsis fritschii* each have only a **single
+AmiC** (the AmiC2 ortholog; the AmiC1 exemplar's best hit reverse-maps to AmiC2). Presence
+in both *Nostoc/Anabaena* and the deep-branching *Fischerella* makes an **ancestral
+duplication with lineage-specific AmiC1 loss** (in *Cylindrospermum* and *Chlorogloeopsis*)
+the more parsimonious reading than independent duplications.
 
 **Methodological lesson (why this matters for the tool):** a "no hits" result can be a
 metadata error (wrong taxon / a mis-assembled or non-target proteome), not a biological
