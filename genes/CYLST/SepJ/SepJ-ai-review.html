@@ -1,0 +1,2474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SepJ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SepJ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/K9WRN1" target="_blank" class="term-link">
+                        K9WRN1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Cylindrospermum stagnale PCC 7417</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Aliases:</span>
+                <div class="aliases">
+
+                    <span class="badge">K9WRN1</span>
+
+                    <span class="badge">FraG</span>
+
+                    <span class="badge">Cylst_0707</span>
+
+                </div>
+            </div>
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "SepJ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="K9WRN1" data-a="DESCRIPTION: K9WRN1 (locus Cylst_0707) is a large (847-residue)..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>K9WRN1 (locus Cylst_0707) is a large (847-residue) multidomain integral cytoplasmic (inner) membrane protein of the filamentous, heterocyst-forming cyanobacterium Cylindrospermum stagnale PCC 7417, and is the SepJ/FraG ortholog of the well-characterized septal protein SepJ (FraG, alr2338) of Nostoc/Anabaena sp. PCC 7120. Like its ortholog it has an N-terminal coiled-coil region within a long extramembrane N-terminal section, a central proline/serine/threonine-rich low-complexity linker, and a C-terminal multi-pass integral-membrane permease domain of the drug/metabolite transporter (DMT / EamA) superfamily. By orthology, SepJ is a structural, multimer-forming component of the cyanobacterial septal junction machinery that localizes to the intercellular septa (cell poles): its coiled-coil domain anchors adjacent cells and binds septal peptidoglycan, and the protein is required for filament integrity, septal-junction/nanopore formation and the gated intercellular transfer of small molecules (cell-cell communication) that underpins diazotrophic growth. Although the C-terminal permease domain resembles small-molecule transporters, no specific transport substrate has been established, so its characterized role is architectural rather than catalytic.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>septal junction</h3>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="septal junction" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> A proteinaceous cell-cell junction of filamentous cyanobacteria that traverses the septal peptidoglycan through a nanopore and directly connects the cytoplasms of adjacent cells in a filament, mediating and gating the intercellular diffusion of small molecules.</p>
+
+
+
+            <p><strong>Justification:</strong> There is no dedicated GO cellular-component term for the bacterial septal junction. GO:0005918 &#34;septate junction&#34; denotes the arthropod epithelial junction and is not appropriate. SepJ (FraG) is required for septal-junction formation and is a candidate structural component, and would be annotated to this term.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030054" target="_blank" class="term-link">
+                    cell junction
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="K9WRN1" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from the UniProt subcellular-location mapping (&#34;Cell membrane; Multi-pass membrane protein&#34;). This is already the correct, specific bacterial cytoplasmic/inner-membrane location. By orthology to PCC 7120 SepJ - an integral cytoplasmic-membrane protein localized at the intercellular septa - this location is experimentally corroborated, so ACCEPT.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                        PMID:28979840
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are cytoplasmic membrane proteins that are located at the cell poles in the intercellular septa of the filament</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:CYLST/SepJ/SepJ-notes.md
+
+                                </span>
+
+                                <div class="support-text">UniProt records &#34;SUBCELLULAR LOCATION: Cell membrane; Multi-pass membrane protein&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="K9WRN1" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from the InterPro signature of the C-terminal EamA/DMT permease domain (IPR000620). Correct in essence (SepJ is an integral membrane protein) but very general. The specific location is known from the PCC 7120 ortholog (integral cytoplasmic/inner-membrane protein at the intercellular septa), so MODIFY the general &#34;membrane&#34; term to the more precise plasma membrane (GO:0005886), the bacterial cytoplasmic/inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> K9WRN1 has a C-terminal multi-pass integral-membrane permease domain (~9 TM helices) and, by orthology to SepJ, is a cytoplasmic-membrane protein at the cell poles; MODIFY the general &#34;membrane&#34; term to plasma membrane (GO:0005886).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    plasma membrane
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                        PMID:28979840
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are cytoplasmic membrane proteins that are located at the cell poles in the intercellular septa of the filament</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link">
+                                        PMID:17369306
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepJ is a multidomain protein whose N-terminal region is predicted to be periplasmic and whose C-terminal domain resembles an export permease.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                                    GO:0005198
+                                </a>
+                            </span>
+                            <span class="term-label">structural molecule activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28979840
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Septal protein SepJ from the heterocyst-forming cyanobacteri...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9WRN1" data-a="GO:0005198" data-r="PMID:28979840" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ is a structural component of the septal junction that joins cells in the filament: the ortholog assembles into high-molecular-weight multimeric complexes in the membrane and binds peptidoglycan through its coiled-coil domain. This non-catalytic, architectural role - not any established transporter activity - is the characterized molecular function, best captured by structural molecule activity.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                        PMID:28979840
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepJ (predicted MW, 81.3 kDa) solubilized from Anabaena membranes was found in complexes of about 296-334 kDa, suggesting that SepJ forms multimeric complexes.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                        PMID:28979840
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These observations support the idea that SepJ is a component of the septal junctions that join the cells in the Anabaena filament.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" target="_blank" class="term-link">
+                                        PMID:21299655
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepJ provides filamentous cyanobacteria with a cell-cell anchoring function</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:CYLST/SepJ/SepJ-notes.md
+
+                                </span>
+
+                                <div class="support-text">K9WRN1 is a reciprocal best hit (RBH) with the PCC 7120 SepJ exemplar A0ACD7RSI0 (alr2338): forward E = 1.7e-206, 52.3% amino-acid identity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007267" target="_blank" class="term-link">
+                                    GO:0007267
+                                </a>
+                            </span>
+                            <span class="term-label">cell-cell signaling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21299655
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional dissection of the three-domain SepJ protein joini...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9WRN1" data-a="GO:0007267" data-r="PMID:21299655" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ is required for the intercellular transfer of small molecules along the filament (calcein/fluorescent-tracer exchange) and for a normal number of septal nanopores, i.e. for gated cell-cell communication. In the ortholog, fraC/fraD mutants that mislocalize SepJ are impaired in calcein transfer, and SepJ domain deletions impair tracer transfer.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" target="_blank" class="term-link">
+                                        PMID:21299655
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the coiled-coil domain is required for polar localization of SepJ, filament integrity, normal intercellular transfer of small fluorescent tracers and diazotrophy.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20487302" target="_blank" class="term-link">
+                                        PMID:20487302
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The fraC and fraD mutants showed an impaired localization of SepJ at the intercellular septa and were hampered in the intercellular transfer of the fluorescent probe calcein.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link">
+                                        PMID:17369306
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">raises the possibility that it is involved in the movement of metabolites or regulatory compounds between neighboring cells.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                    GO:0030428
+                                </a>
+                            </span>
+                            <span class="term-label">cell septum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17369306
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Septum-localized protein required for filament integrity and...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="K9WRN1" data-a="GO:0030428" data-r="PMID:17369306" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ localizes as a focused spot at the intercellular septa (cell poles), and during cell division the ortholog forms a ring at the division site. This focused septal localization is a defining, experimentally established feature of SepJ and is not captured by the general GOA membrane annotations.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link">
+                                        PMID:17369306
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is localized at the intercellular septa, and when cell division starts, it is localized in a ring whose position is similar to that of a Z ring.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" target="_blank" class="term-link">
+                                        PMID:21299655
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SepJ is a protein conspicuously located at the cell poles in the intercellular septa of the filaments</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Acts (by orthology to PCC 7120 SepJ) as a structural, multimer-forming component of the cyanobacterial septal junction machinery at the intercellular septa: its N-terminal coiled-coil domain anchors adjacent cells and binds septal peptidoglycan, while the whole protein is required for filament integrity, septal-junction/nanopore formation and gated intercellular molecular exchange (cell-cell communication) that underpins diazotrophic growth. The C-terminal DMT/EamA permease domain is implicated in intercellular molecular exchange, but no specific transport substrate has been established, so the core molecular function is annotated as a structural (non-catalytic) role rather than a transporter activity.</h3>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="FUNCTION: Acts (by orthology to PCC 7120 SepJ) as a structur..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007267" target="_blank" class="term-link">
+                                cell-cell signaling
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030428" target="_blank" class="term-link">
+                                cell septum
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                PMID:28979840
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our results indicate that SepJ forms multimers, that it interacts with PG, and that the coiled-coil domain is involved in this interaction.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                                PMID:28979840
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These observations support the idea that SepJ is a component of the septal junctions that join the cells in the Anabaena filament.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link">
+                                PMID:17369306
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the protein is localized at the intercellular septa, and when cell division starts, it is localized in a ring whose position is similar to that of a Z ring.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:CYLST/SepJ/SepJ-notes.md
+
+                        </span>
+
+                        <div class="finding-text">K9WRN1 is a reciprocal best hit (RBH) with the PCC 7120 SepJ exemplar A0ACD7RSI0 (alr2338): forward E = 1.7e-206, 52.3% amino-acid identity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" target="_blank" class="term-link">
+                            PMID:17369306
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Septum-localized protein required for filament integrity and diazotrophy in the heterocyst-forming cyanobacterium Anabaena sp. strain PCC 7120.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" target="_blank" class="term-link">
+                            PMID:21299655
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional dissection of the three-domain SepJ protein joining the cells in cyanobacterial trichomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20487302" target="_blank" class="term-link">
+                            PMID:20487302
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Fra proteins influencing filament integrity, diazotrophy and localization of septal protein SepJ in the heterocyst-forming cyanobacterium Anabaena sp.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" target="_blank" class="term-link">
+                            PMID:28979840
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Septal protein SepJ from the heterocyst-forming cyanobacterium Anabaena forms multimers and interacts with peptidoglycan.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:CYLST/SepJ/SepJ-notes.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SepJ (FraG, Cylst_0707 / K9WRN1) research notes</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Cylst_0707 (K9WRN1) functionally equivalent to PCC 7120 SepJ - does its deletion cause filament fragmentation and loss of diazotrophy in C. stagnale, and does the protein localize to the intercellular septa?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="Q: Is Cylst_0707 (K9WRN1) functionally equivalent to ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the SepJ C-terminal DMT/EamA permease domain transport a specific small-molecule substrate across the cytoplasmic membrane, or is its role purely architectural within the septal junction?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="Q: Does the SepJ C-terminal DMT/EamA permease domain ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct a Cylst_0707 deletion/insertion mutant and assay filament integrity, septal SepJ-GFP localization, septal nanopore number and intercellular fluorescent-tracer (FRAP) transfer, and diazotrophic growth, comparing against the PCC 7120 sepJ phenotypes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: K9WRN1 is the functional SepJ ortholog in C. stagnale, required for filament integrity and intercellular communication.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="EXPERIMENT: Construct a Cylst_0707 deletion/insertion mutant a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the isolated C-terminal permease domain in proteoliposomes and screen candidate small-molecule substrates (amino acids, sucrose, regulatory peptides) by transport assays; correlate with intercellular FRAP tracer exchange in permease-domain point mutants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The SepJ permease domain transports a defined metabolite/regulator between cells.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="K9WRN1" data-a="EXPERIMENT: Reconstitute the isolated C-terminal permease doma..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(SepJ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="K9WRN1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sepj-frag-in-cylindrospermum-stagnale-pcc-7417-research-notes">SepJ (FraG) in <em>Cylindrospermum stagnale</em> PCC 7417 — research notes</h1>
+<p>UniProt: <strong>K9WRN1</strong> (K9WRN1_9NOST, unreviewed), 847 aa, MW ~91.6 kDa, ordered locus<br />
+<strong>Cylst_0707</strong>, <em>Cylindrospermum stagnale</em> PCC 7417, NCBITaxon:56107. UniProt names it a<br />
+"DMT (Drug/metabolite transporter) superfamily permease" and records "Belongs to the EamA<br />
+transporter family". This is the <strong>SepJ/FraG ortholog</strong> of the well-studied septal protein<br />
+SepJ (FraG, alr2338) of <em>Nostoc</em>/<em>Anabaena</em> sp. PCC 7120.</p>
+<p>This review is an <strong>orthology-based (ISS) review</strong>: there are no gene-specific functional<br />
+publications for the <em>C. stagnale</em> protein itself, so the functional annotations are<br />
+transferred from the experimentally characterized PCC 7120 ortholog (see<br />
+<code>genes/NOSS1/SepJ/SepJ-ai-review.yaml</code> and <code>genes/NOSS1/SepJ/SepJ-notes.md</code>), applying the<br />
+same evidential caution used there.</p>
+<h2 id="orthology-evidence">Orthology evidence</h2>
+<p>The ortholog assignment comes from the septal-junction module genome scan<br />
+(<code>modules/septal_junction.yaml</code>, <code>modules/septal_junction/RESULTS.md</code>), which used<br />
+phmmer / reciprocal best hits (RBH) of the PCC 7120 exemplar against reference proteomes<br />
+including <em>C. stagnale</em> PCC 7417 (taxon 56107 is a POS target in <code>scan_targets.json</code>):</p>
+<ul>
+<li><strong>K9WRN1 is a reciprocal best hit (RBH) with the PCC 7120 SepJ exemplar A0ACD7RSI0<br />
+  (alr2338): forward E = 1.7e-206, 52.3% amino-acid identity</strong> — a clean one-to-one<br />
+  ortholog, comparable to the <em>N. punctiforme</em> ortholog B2J1N1 (E = 2.3e-214, 53% identity)<br />
+  and consistent with <em>C. stagnale</em> being a filamentous, heterocyst-forming member of the<br />
+  Nostocaceae.</li>
+<li>The reciprocal control is clean: in positive (heterocyst-forming) genomes the SepJ<br />
+  exemplar recovers a strong RBH ortholog, whereas in unicellular negative genomes the best<br />
+  hit is a weak paralog (e.g. <em>Synechocystis</em> P72732 at 34% identity, E = 1e-47) rather than<br />
+  a genuine SepJ ortholog.</li>
+</ul>
+<p><strong>Caveat on the domain grounding.</strong> The C-terminal domain of SepJ belongs to the <strong>broad EamA<br />
+/ DMT (drug-metabolite transporter) superfamily (InterPro IPR000620; Pfam PF00892), which has<br />
+many paralogs in every cyanobacterial genome</strong> (the <em>C. stagnale</em> genome contains several DMT<br />
+permeases), so InterPro family membership alone does not discriminate SepJ from other DMT<br />
+permeases. The orthology call therefore rests on the strong exemplar homology (RBH,<br />
+E = 1.7e-206, 52.3% identity) plus the shared multidomain architecture, not on the broad<br />
+domain family.</p>
+<h2 id="protein-family-domain-architecture">Protein family / domain architecture</h2>
+<p>Like the PCC 7120 ortholog, K9WRN1 is a <strong>large (847-residue) multidomain protein</strong> with an<br />
+N-terminal coiled-coil region and a C-terminal integral-membrane EamA/DMT permease domain.<br />
+From the UniProt record (<code>SepJ-uniprot.txt</code>):</p>
+<ul>
+<li><strong>N-terminal coiled-coil</strong> predicted at residues 40–81 (SAM:Coils), embedded in a long<br />
+  extramembrane N-terminal section rich in disordered, Pro/Ser/Thr-type low-complexity<br />
+  linker (disordered regions ~230–262 and ~448–512; polar/low-complexity biases).</li>
+<li><strong>C-terminal integral-membrane permease domain</strong> with ~9 predicted transmembrane helices<br />
+  (Phobius; first TM at 556–581) and an annotated <strong>EamA domain at ~694–831</strong> (Pfam PF00892).</li>
+<li>UniProt records "SUBCELLULAR LOCATION: Cell membrane; Multi-pass membrane protein" and<br />
+  "Belongs to the EamA transporter family", with Coiled-coil, Membrane, Transmembrane and<br />
+  Transmembrane-helix keywords.</li>
+</ul>
+<p>This mirrors the three-region architecture of PCC 7120 SepJ: an N-terminal coiled-coil, a<br />
+central Pro/Ser/Thr-rich linker, and a C-terminal DMT/EamA permease domain<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21299655" title="SepJ is a protein conspicuously located at the cell poles in the intercellular septa of the filaments">PMID:21299655</a>.</p>
+<h2 id="function-transferred-from-the-pcc-7120-ortholog">Function transferred from the PCC 7120 ortholog</h2>
+<p>In PCC 7120, SepJ (FraG) is a central component of the septal machinery that joins adjacent<br />
+cells in the filament. It is:</p>
+<ul>
+<li>an integral <strong>cytoplasmic (inner/plasma) membrane</strong> protein localized as a focused spot at<br />
+  the intercellular <strong>septa (cell poles)</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/17369306" title="the protein is localized at the   intercellular septa, and when cell division starts, it is localized in a ring whose position   is similar to that of a Z ring.">PMID:17369306</a> <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" title="SepJ (also known as FraG 13), FraC, and   FraD are cytoplasmic membrane proteins that are located at the cell poles in the   intercellular septa of the filament">PMID:28979840</a>;</li>
+<li>a <strong>structural, multimer-forming</strong> component of the septal junctions that binds<br />
+  peptidoglycan through its coiled-coil domain <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" title="SepJ (predicted MW, 81.3 kDa)   solubilized from Anabaena membranes was found in complexes of about 296-334 kDa, suggesting   that SepJ forms multimeric complexes.">PMID:28979840</a> <a href="https://pubmed.ncbi.nlm.nih.gov/28979840" title="Our results indicate that SepJ forms   multimers, that it interacts with PG, and that the coiled-coil domain is involved in this   interaction.">PMID:28979840</a>;</li>
+<li>required for <strong>filament integrity and gated intercellular molecular exchange (cell-cell<br />
+  communication)</strong> underpinning diazotrophy <a href="https://pubmed.ncbi.nlm.nih.gov/21299655" title="the coiled-coil domain is required   for polar localization of SepJ, filament integrity, normal intercellular transfer of small   fluorescent tracers and diazotrophy.">PMID:21299655</a> <a href="https://pubmed.ncbi.nlm.nih.gov/20487302" title="The fraC and fraD mutants showed an   impaired localization of SepJ at the intercellular septa and were hampered in the   intercellular transfer of the fluorescent probe calcein.">PMID:20487302</a>.</li>
+</ul>
+<h2 id="transporter-substrate-open-question">Transporter-substrate open question</h2>
+<p>The C-terminal domain's similarity to DMT/EamA transporters, together with SepJ's septal<br />
+position, prompted the hypothesis that it moves small molecules between cells<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/17369306" title="raises the possibility that it is involved in the movement of metabolites or regulatory compounds between neighboring cells.">PMID:17369306</a>. However, <strong>no specific transport substrate<br />
+for the SepJ permease domain has ever been experimentally established</strong>. Following the PCC 7120<br />
+review, the core molecular function is therefore annotated as a <strong>structural (non-catalytic)<br />
+role (GO:0005198 structural molecule activity)</strong> rather than as a transporter activity, and the<br />
+broad-domain-derived membrane IEA is not promoted to an asserted transport MF.</p>
+<h2 id="annotation-plan-mirrors-pcc-7120-nosp7-sepj">Annotation plan (mirrors PCC 7120 / NOSP7 SepJ)</h2>
+<p>Existing GOA for K9WRN1 (<code>SepJ-goa.tsv</code>) = two IEA cellular-component annotations:</p>
+<ul>
+<li><strong>GO:0005886 plasma membrane</strong> (IEA, GO_REF:0000044, UniProtKB-SubCell SL-0039) — <strong>ACCEPT</strong>.<br />
+  This is already the correct, specific bacterial cytoplasmic/inner-membrane location, and it<br />
+  is experimentally corroborated by orthology to PCC 7120 SepJ (integral cytoplasmic-membrane<br />
+  protein at the intercellular septa).</li>
+<li><strong>GO:0016020 membrane</strong> (IEA, GO_REF:0000002, InterPro IPR000620 EamA) — <strong>MODIFY</strong> →<br />
+  GO:0005886 plasma membrane. Correct in essence (SepJ is an integral membrane protein) but<br />
+  overly general; the specific location is known from the ortholog.</li>
+</ul>
+<p>NEW orthology-based (ISS) core annotations transferred from PCC 7120 SepJ:</p>
+<ul>
+<li><strong>GO:0005198 structural molecule activity</strong> (MF) — structural, multimer-forming, PG-binding<br />
+  component of the septal junction. NOT a transporter MF (substrate unestablished).</li>
+<li><strong>GO:0007267 cell-cell signaling</strong> (BP) — gated intercellular molecular transfer / cell-cell<br />
+  communication along the filament.</li>
+<li><strong>GO:0030428 cell septum</strong> (CC) — focused septal/cell-pole localization.</li>
+</ul>
+<p>Core function: structural molecule activity, involved_in cell-cell signaling, located_in<br />
+plasma membrane + cell septum. No transporter MF asserted (substrate unestablished).</p>
+<h2 id="key-references-all-cached-pcc-7120-ortholog-studies">Key references (all cached; PCC 7120 ortholog studies)</h2>
+<ul>
+<li>PMID:17369306 — Flores et al. 2007, J Bacteriol. Original <em>sepJ</em>; septal localization,<br />
+  Z-ring, filament integrity + diazotrophy; multidomain permease-like C-terminus. Full text.</li>
+<li>PMID:21299655 — Mariscal et al. 2011, Mol Microbiol. Three-domain functional dissection;<br />
+  coiled-coil = anchoring, permease = intercellular exchange. Abstract cached.</li>
+<li>PMID:20487302 — Merino-Puerto et al. 2010, Mol Microbiol. FraC/FraD required for SepJ<br />
+  localization and intercellular calcein transfer. Abstract cached.</li>
+<li>PMID:28979840 — Ramos-León et al. 2017, FEBS Open Bio. SepJ multimers + peptidoglycan<br />
+  interaction; two-junction-types statement. Full text. PRIMARY for the structural role.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: K9WRN1
+gene_symbol: SepJ
+aliases:
+  - K9WRN1
+  - FraG
+  - Cylst_0707
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:56107
+  label: Cylindrospermum stagnale PCC 7417
+description: &gt;-
+  K9WRN1 (locus Cylst_0707) is a large (847-residue) multidomain integral cytoplasmic
+  (inner) membrane protein of the filamentous, heterocyst-forming cyanobacterium
+  Cylindrospermum stagnale PCC 7417, and is the SepJ/FraG ortholog of the well-characterized
+  septal protein SepJ (FraG, alr2338) of Nostoc/Anabaena sp. PCC 7120. Like its ortholog it
+  has an N-terminal coiled-coil region within a long extramembrane N-terminal section, a
+  central proline/serine/threonine-rich low-complexity linker, and a C-terminal multi-pass
+  integral-membrane permease domain of the drug/metabolite transporter (DMT / EamA)
+  superfamily. By orthology, SepJ is a structural, multimer-forming component of the
+  cyanobacterial septal junction machinery that localizes to the intercellular septa (cell
+  poles): its coiled-coil domain anchors adjacent cells and binds septal peptidoglycan, and
+  the protein is required for filament integrity, septal-junction/nanopore formation and the
+  gated intercellular transfer of small molecules (cell-cell communication) that underpins
+  diazotrophic growth. Although the C-terminal permease domain resembles small-molecule
+  transporters, no specific transport substrate has been established, so its characterized
+  role is architectural rather than catalytic.
+references:
+  - id: PMID:17369306
+    title: &#34;Septum-localized protein required for filament integrity and diazotrophy in the heterocyst-forming cyanobacterium Anabaena sp. strain PCC 7120.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Flores et al. 2007 (J Bacteriol). Original description of the PCC 7120 ortholog sepJ
+        (= alr2338): SepJ-GFP localizes to the intercellular septa and forms a Z-ring-like ring
+        during division; the mutant fragments, arrests heterocyst maturation and cannot fix N2;
+        multidomain protein with a permease-like C-terminal domain. Full text cached; PMID
+        matches title. Used here as the ISS basis for K9WRN1 (septal location, multidomain
+        architecture).
+  - id: PMID:21299655
+    title: &#34;Functional dissection of the three-domain SepJ protein joining the cells in cyanobacterial trichomes.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Mariscal et al. 2011 (Mol Microbiol). Domain-swap/deletion dissection of PCC 7120 SepJ:
+        coiled-coil domain drives polar localization, filament integrity, tracer transfer and
+        diazotrophy; the permease domain provides intercellular molecular exchange. Abstract
+        cached; PMID matches title. ISS basis for the cell-cell signaling / anchoring role.
+  - id: PMID:20487302
+    title: &#34;Fra proteins influencing filament integrity, diazotrophy and localization of septal protein SepJ in the heterocyst-forming cyanobacterium Anabaena sp.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Merino-Puerto et al. 2010 (Mol Microbiol). FraC/FraD are required for correct SepJ
+        septal localization and for intercellular calcein transfer; places SepJ among the
+        septal proteins governing intercellular communication. Abstract cached; PMID matches
+        title.
+  - id: PMID:28979840
+    title: &#34;Septal protein SepJ from the heterocyst-forming cyanobacterium Anabaena forms multimers and interacts with peptidoglycan.&#34;
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Ramos-León et al. 2017 (FEBS Open Bio). Primary evidence that PCC 7120 SepJ forms
+        multimeric complexes and binds peptidoglycan (via its coiled-coil domain), and that
+        SepJ/FraC/FraD are cytoplasmic-membrane proteins at the intercellular septa. Full text
+        cached; PMID matches title. PRIMARY ISS basis for the structural role and plasma
+        membrane location.
+  - id: file:CYLST/SepJ/SepJ-notes.md
+    title: SepJ (FraG, Cylst_0707 / K9WRN1) research notes
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Local notes documenting the orthology evidence (reciprocal best hit with the PCC 7120
+        SepJ exemplar A0ACD7RSI0 / alr2338 at forward E = 1.7e-206, 52.3% amino-acid identity),
+        the broad EamA/DMT domain caveat, the multidomain architecture from the UniProt record,
+        and the annotation plan mirroring the PCC 7120 SepJ review.
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+existing_annotations:
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic annotation from the UniProt subcellular-location mapping (&#34;Cell membrane;
+        Multi-pass membrane protein&#34;). This is already the correct, specific bacterial
+        cytoplasmic/inner-membrane location. By orthology to PCC 7120 SepJ - an integral
+        cytoplasmic-membrane protein localized at the intercellular septa - this location is
+        experimentally corroborated, so ACCEPT.
+      action: ACCEPT
+      supported_by:
+        - reference_id: PMID:28979840
+          supporting_text: &gt;-
+            are cytoplasmic membrane proteins that are located at the cell poles in the
+            intercellular septa of the filament
+        - reference_id: file:CYLST/SepJ/SepJ-notes.md
+          supporting_text: &gt;-
+            UniProt records &#34;SUBCELLULAR LOCATION: Cell membrane; Multi-pass membrane protein&#34;
+  - term:
+      id: GO:0016020
+      label: membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Electronic annotation from the InterPro signature of the C-terminal EamA/DMT permease
+        domain (IPR000620). Correct in essence (SepJ is an integral membrane protein) but very
+        general. The specific location is known from the PCC 7120 ortholog (integral
+        cytoplasmic/inner-membrane protein at the intercellular septa), so MODIFY the general
+        &#34;membrane&#34; term to the more precise plasma membrane (GO:0005886), the bacterial
+        cytoplasmic/inner membrane.
+      action: MODIFY
+      reason: &gt;-
+        K9WRN1 has a C-terminal multi-pass integral-membrane permease domain (~9 TM helices)
+        and, by orthology to SepJ, is a cytoplasmic-membrane protein at the cell poles; MODIFY
+        the general &#34;membrane&#34; term to plasma membrane (GO:0005886).
+      proposed_replacement_terms:
+        - id: GO:0005886
+          label: plasma membrane
+      supported_by:
+        - reference_id: PMID:28979840
+          supporting_text: &gt;-
+            are cytoplasmic membrane proteins that are located at the cell poles in the
+            intercellular septa of the filament
+        - reference_id: PMID:17369306
+          supporting_text: &gt;-
+            SepJ is a multidomain protein whose N-terminal region is predicted to be periplasmic
+            and whose C-terminal domain resembles an export permease.
+  # NEW orthology-based (ISS) core annotations transferred from the experimentally
+  # characterized PCC 7120 SepJ ortholog (A0ACD7RSI0 / alr2338; reciprocal best hit,
+  # forward E = 1.7e-206, 52.3% identity). These capture experimentally established functions
+  # not represented in the two IEA CC annotations of GOA.
+  - term:
+      id: GO:0005198
+      label: structural molecule activity
+    evidence_type: ISS
+    original_reference_id: PMID:28979840
+    review:
+      summary: &gt;-
+        NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ is a structural component of
+        the septal junction that joins cells in the filament: the ortholog assembles into
+        high-molecular-weight multimeric complexes in the membrane and binds peptidoglycan
+        through its coiled-coil domain. This non-catalytic, architectural role - not any
+        established transporter activity - is the characterized molecular function, best
+        captured by structural molecule activity.
+      action: NEW
+      supported_by:
+        - reference_id: PMID:28979840
+          supporting_text: &gt;-
+            SepJ (predicted MW, 81.3 kDa) solubilized from Anabaena membranes was found in
+            complexes of about 296-334 kDa, suggesting that SepJ forms multimeric complexes.
+        - reference_id: PMID:28979840
+          supporting_text: &gt;-
+            These observations support the idea that SepJ is a component of the septal junctions
+            that join the cells in the Anabaena filament.
+        - reference_id: PMID:21299655
+          supporting_text: &gt;-
+            SepJ provides filamentous cyanobacteria with a cell-cell anchoring function
+        - reference_id: file:CYLST/SepJ/SepJ-notes.md
+          supporting_text: &gt;-
+            K9WRN1 is a reciprocal best hit (RBH) with the PCC 7120 SepJ exemplar A0ACD7RSI0
+            (alr2338): forward E = 1.7e-206, 52.3% amino-acid identity
+  - term:
+      id: GO:0007267
+      label: cell-cell signaling
+    evidence_type: ISS
+    original_reference_id: PMID:21299655
+    review:
+      summary: &gt;-
+        NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ is required for the
+        intercellular transfer of small molecules along the filament (calcein/fluorescent-tracer
+        exchange) and for a normal number of septal nanopores, i.e. for gated cell-cell
+        communication. In the ortholog, fraC/fraD mutants that mislocalize SepJ are impaired in
+        calcein transfer, and SepJ domain deletions impair tracer transfer.
+      action: NEW
+      supported_by:
+        - reference_id: PMID:21299655
+          supporting_text: &gt;-
+            the coiled-coil domain is required for polar localization of SepJ, filament
+            integrity, normal intercellular transfer of small fluorescent tracers and diazotrophy.
+        - reference_id: PMID:20487302
+          supporting_text: &gt;-
+            The fraC and fraD mutants showed an impaired localization of SepJ at the
+            intercellular septa and were hampered in the intercellular transfer of the
+            fluorescent probe calcein.
+        - reference_id: PMID:17369306
+          supporting_text: &gt;-
+            raises the possibility that it is involved in the movement of metabolites or
+            regulatory compounds between neighboring cells.
+  - term:
+      id: GO:0030428
+      label: cell septum
+    evidence_type: ISS
+    original_reference_id: PMID:17369306
+    review:
+      summary: &gt;-
+        NEW (proposed, ISS from PCC 7120 SepJ). By orthology, SepJ localizes as a focused spot
+        at the intercellular septa (cell poles), and during cell division the ortholog forms a
+        ring at the division site. This focused septal localization is a defining,
+        experimentally established feature of SepJ and is not captured by the general GOA
+        membrane annotations.
+      action: NEW
+      supported_by:
+        - reference_id: PMID:17369306
+          supporting_text: &gt;-
+            the protein is localized at the intercellular septa, and when cell division starts,
+            it is localized in a ring whose position is similar to that of a Z ring.
+        - reference_id: PMID:21299655
+          supporting_text: &gt;-
+            SepJ is a protein conspicuously located at the cell poles in the intercellular septa
+            of the filaments
+core_functions:
+  - description: &gt;-
+      Acts (by orthology to PCC 7120 SepJ) as a structural, multimer-forming component of the
+      cyanobacterial septal junction machinery at the intercellular septa: its N-terminal
+      coiled-coil domain anchors adjacent cells and binds septal peptidoglycan, while the whole
+      protein is required for filament integrity, septal-junction/nanopore formation and gated
+      intercellular molecular exchange (cell-cell communication) that underpins diazotrophic
+      growth. The C-terminal DMT/EamA permease domain is implicated in intercellular molecular
+      exchange, but no specific transport substrate has been established, so the core molecular
+      function is annotated as a structural (non-catalytic) role rather than a transporter
+      activity.
+    molecular_function:
+      id: GO:0005198
+      label: structural molecule activity
+    directly_involved_in:
+      - id: GO:0007267
+        label: cell-cell signaling
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+      - id: GO:0030428
+        label: cell septum
+    supported_by:
+      - reference_id: PMID:28979840
+        supporting_text: &gt;-
+          Our results indicate that SepJ forms multimers, that it interacts with PG, and that the
+          coiled-coil domain is involved in this interaction.
+      - reference_id: PMID:28979840
+        supporting_text: &gt;-
+          These observations support the idea that SepJ is a component of the septal junctions
+          that join the cells in the Anabaena filament.
+      - reference_id: PMID:17369306
+        supporting_text: &gt;-
+          the protein is localized at the intercellular septa, and when cell division starts, it
+          is localized in a ring whose position is similar to that of a Z ring.
+      - reference_id: file:CYLST/SepJ/SepJ-notes.md
+        supporting_text: &gt;-
+          K9WRN1 is a reciprocal best hit (RBH) with the PCC 7120 SepJ exemplar A0ACD7RSI0
+          (alr2338): forward E = 1.7e-206, 52.3% amino-acid identity
+proposed_new_terms:
+  - proposed_name: septal junction
+    proposed_definition: &gt;-
+      A proteinaceous cell-cell junction of filamentous cyanobacteria that traverses the septal
+      peptidoglycan through a nanopore and directly connects the cytoplasms of adjacent cells in
+      a filament, mediating and gating the intercellular diffusion of small molecules.
+    justification: &gt;-
+      There is no dedicated GO cellular-component term for the bacterial septal junction.
+      GO:0005918 &#34;septate junction&#34; denotes the arthropod epithelial junction and is not
+      appropriate. SepJ (FraG) is required for septal-junction formation and is a candidate
+      structural component, and would be annotated to this term.
+    proposed_parent:
+      id: GO:0030054
+      label: cell junction
+suggested_questions:
+  - question: &gt;-
+      Is Cylst_0707 (K9WRN1) functionally equivalent to PCC 7120 SepJ - does its deletion cause
+      filament fragmentation and loss of diazotrophy in C. stagnale, and does the protein
+      localize to the intercellular septa?
+  - question: &gt;-
+      Does the SepJ C-terminal DMT/EamA permease domain transport a specific small-molecule
+      substrate across the cytoplasmic membrane, or is its role purely architectural within the
+      septal junction?
+suggested_experiments:
+  - hypothesis: &gt;-
+      K9WRN1 is the functional SepJ ortholog in C. stagnale, required for filament integrity
+      and intercellular communication.
+    description: &gt;-
+      Construct a Cylst_0707 deletion/insertion mutant and assay filament integrity, septal
+      SepJ-GFP localization, septal nanopore number and intercellular fluorescent-tracer (FRAP)
+      transfer, and diazotrophic growth, comparing against the PCC 7120 sepJ phenotypes.
+  - hypothesis: &gt;-
+      The SepJ permease domain transports a defined metabolite/regulator between cells.
+    description: &gt;-
+      Reconstitute the isolated C-terminal permease domain in proteoliposomes and screen
+      candidate small-molecule substrates (amino acids, sucrose, regulatory peptides) by
+      transport assays; correlate with intercellular FRAP tracer exchange in permease-domain
+      point mutants.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
