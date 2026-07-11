@@ -198,6 +198,19 @@ was withheld from the prompt). Two were pseudoenzyme over-annotations, resolving
   DDB1-binding interface is degenerate and DDB1 is absent from all 43 experimental interactors,
   so the CRL4-assembly step is unconfirmed.
 
+**Dispute confirmation (OpenScientist).** Separately, 12 SFT predictions we had *disputed*
+(`NPI`/`PLI`) were re-tested the same blinded way to check our own rejections — all were upheld
+as misassignments, with two refinements. **pmp20**'s peroxiredoxin `NPI` stands but the rationale
+was corrected (it is a 1-Cys peroxiredoxin with an intact peroxidatic site — not a "lost resolving
+cysteine" — that is nonetheless directly assayed as inactive: GOA `NOT|enables` glutathione
+peroxidase), and **SPAC8E11.10**'s NADP⁺-alcohol-dehydrogenase call was softened `NPI → LSP` (a
+defensible broad activity class, less precise than its sorbose-reductase function). The confirmed
+cases recapitulate the same failure modes — pseudoenzyme/paralog over-annotation (LysB
+lysozyme≠chitinase; DnaJ/DnaK co-chaperones, not redox enzymes; alo1, mlcD, rdgBbeta wrong
+paralog/substrate; comK/fliY misread domain labels), and wrong-input-sequence (**csr-1**, which
+also surfaced a real accession bug: Q21992 is deleted and maps to larp-1). Full reports live under
+each gene's `*-hypotheses/` directory.
+
 ### 2. Localization defaults to cytoplasm
 
 When InterPro annotations lack transmembrane or signal peptide information, BioReason systematically defaults to cytoplasmic localization. This fails for:
