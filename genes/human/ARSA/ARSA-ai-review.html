@@ -1,0 +1,4784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARSA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ARSA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15289" target="_blank" class="term-link">
+                        P15289
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ARSA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15289" data-a="DESCRIPTION: ARSA (arylsulfatase A, also called cerebroside-sul..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ARSA (arylsulfatase A, also called cerebroside-sulfatase or cerebroside-3-sulfatase; EC 3.1.6.8) is a lysosomal sulfatase of the glycosphingolipid degradation pathway. It hydrolytically removes the 3-O-sulfate from sulfatide (3-O-sulfogalactosylceramide, cerebroside-3-sulfate) to give galactosylceramide (cerebroside) plus sulfate, and also desulfates other sulfated glycolipids such as seminolipid and lactosylceramide sulfate (SM3). Catalysis requires the lipid-presenting activator protein saposin B (a cleavage product of PSAP) and a catalytic Calpha-formylglycine residue at Cys69 that is generated post-translationally in the endoplasmic reticulum by the formylglycine-generating enzyme SUMF1; a Ca2+ ion is bound in the active site. The enzyme is synthesized and matured in the ER and delivered to the lysosomal lumen via the mannose-6-phosphate receptor pathway, where it acts at acidic pH. Loss of ARSA activity causes intralysosomal accumulation of sulfatide and the demyelinating lysosomal storage disorder metachromatic leukodystrophy (MLD).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004065" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Family-level molecular function inferred phylogenetically across the arylsulfatase clade. ARSA is a bona fide arylsulfatase that hydrolyzes aryl sulfate esters (used as surrogate diagnostic substrates) and, physiologically, the natural sulfatide substrate. This is a correct broad MF; the more specific cerebroside-sulfatase term captures the physiological reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA is well-reviewed and correctly places ARSA in the arylsulfatase family. Retained as the broader family MF; the specific physiological MF is GO:0004098.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link">
+                                        PMID:2562955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transfection of monkey and baby hamster kidney cells resulted in an up to 200-fold increase of the arylsulfatase A activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004098" target="_blank" class="term-link">
+                                    GO:0004098
+                                </a>
+                            </span>
+                            <span class="term-label">cerebroside-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004098" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific molecular function: hydrolysis of the 3-O-sulfate of sulfatide (cerebroside-3-sulfate) to give cerebroside (galactosylceramide) and sulfate (RHEA:21300, EC 3.1.6.8). This is the precise, physiologically correct MF for ARSA and is independently supported by direct assay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Automated RHEA/EC mapping matches the experimentally established reaction and the IDA/EXP annotations below.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ARSA/ARSA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">cerebroside-3-sulfate (sulfatide) into cerebroside and sulfate, a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005764" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARSA is a lysosomal acid hydrolase; the lysosome is its functional site of action. Consistent with the SubCell mapping and with the experimentally supported lysosomal localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization for a lysosomal sulfatase; corroborated by TAS (PMID:2562955) and Reactome lysosomal-lumen annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link">
+                                        PMID:2562955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The arylsulfatase A was located in lysosome-like</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005783" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARSA transits the ER, where the catalytic Calpha-formylglycine is generated before lysosomal delivery. This is a maturation/transit compartment rather than the site of catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real localization during biosynthesis (formylglycine generation and folding), but not where ARSA performs its physiological reaction; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9342345" target="_blank" class="term-link">
+                                        PMID:9342345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the oxidation of its thiol group to an aldehyde is catalyzed in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21516116
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Next-generation sequencing to generate interactome datasets.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005515" data-r="PMID:21516116" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a high-throughput interactome-mapping study (Stitch-seq). Uninformative about ARSA molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a systematic interactome screen; carries no specific functional information and is subsumed by the informative sulfatase MF terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                                        PMID:21516116
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Next-generation sequencing to generate interactome datasets.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from a proteome-scale human interactome map. The interaction partner (TRIP13) does not inform ARSA&#39;s lysosomal sulfatase function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a large-scale interactome dataset; uninformative.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the human interactome network.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25910212
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread macromolecular interaction perturbations in human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005515" data-r="PMID:25910212" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from an interactome-perturbation study; uninformative about ARSA&#39;s molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from systematic interactome data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                                        PMID:25910212
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26871637
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Widespread Expansion of Protein Interaction Capabilities by ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005515" data-r="PMID:26871637" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotation from an alternative-splicing interactome study; uninformative about ARSA function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a high-throughput splice-isoform interactome screen.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link">
+                                        PMID:26871637
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare protein-binding annotations from the HuRI human binary interactome map (multiple partners including ANXA11, CCDC22, PKN1, TRIP13). None specify a functional molecular interaction relevant to ARSA&#39;s lysosomal sulfatase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic protein binding from a systematic binary interactome dataset; uninformative and subsumed by the specific sulfatase MF terms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25553303" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25553303
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Ultra-performance liquid chromatography-tandem mass spectrom...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004065" data-r="PMID:25553303" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of leukocyte ARSA activity, including using a natural sulfatide substrate, measured by UPLC-MS/MS. Confirms arylsulfatase A enzymatic activity (EC 3.1.6.8) for the human protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental direct measurement of ARSA enzymatic activity; supports the core catalytic MF at the family level.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25553303" target="_blank" class="term-link">
+                                        PMID:25553303
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">measuring arylsulfatase A (ARSA; EC3.1.6.8) activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25553303" target="_blank" class="term-link">
+                                        PMID:25553303
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">using a natural sulfatide substrate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006689" target="_blank" class="term-link">
+                                    GO:0006689
+                                </a>
+                            </span>
+                            <span class="term-label">ganglioside catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11919180" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11919180
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Kidney sulfatides in mouse models of inherited glycosphingol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0006689" data-r="PMID:11919180" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> In Arsa-null mice, ganglio-series sulfatides (e.g. SB1a) accumulate, showing ARSA is required to degrade sulfated members of the ganglio-series glycosphingolipid pathway. ARSA acts on the sulfated (sulfatide) members rather than on sialylated gangliosides per se, so this is an adjacent/peripheral role rather than the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported experimentally, but ARSA&#39;s direct chemistry is desulfation of galactosyl-3-sulfate glycolipids; its contribution to the ganglioside catabolic pathway is via the sulfated intermediates. Kept as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11919180" target="_blank" class="term-link">
+                                        PMID:11919180
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Arylsulfatase A is required to degrade SB1a. It is probably the sole</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11919180" target="_blank" class="term-link">
+                                        PMID:11919180
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sphingolipid-sulfatase cleaving the galactosyl-3-sulfate bond.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0036021" target="_blank" class="term-link">
+                                    GO:0036021
+                                </a>
+                            </span>
+                            <span class="term-label">endolysosome lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IC</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27498570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27498570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Endolysosomes Are the Principal Intracellular Sites of Acid ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0036021" data-r="PMID:27498570" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curator inference (IC) that ARSA, an acid hydrolase, is active in the endolysosome lumen, based on the finding that endolysosomes are the principal intracellular sites of acid hydrolase activity. Consistent with ARSA&#39;s lysosomal acid-pH-optimum activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization of catalytic activity for an acid hydrolase; endolysosome lumen is a valid refinement of the lysosomal site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27498570" target="_blank" class="term-link">
+                                        PMID:27498570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">endolysosomes are the principal organelles in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004098" target="_blank" class="term-link">
+                                    GO:0004098
+                                </a>
+                            </span>
+                            <span class="term-label">cerebroside-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24294900" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24294900
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A new analytical bench assay for the determination of arylsu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004098" data-r="PMID:24294900" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct enzymatic assay of ARSA activity toward the natural substrate galactosyl-3-sulfate ceramide (sulfatide), establishing the physiological cerebroside-sulfatase reaction. This is the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct assay against the natural sulfatide substrate; the specific, physiologically correct MF for ARSA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24294900" target="_blank" class="term-link">
+                                        PMID:24294900
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">galactosyl-3-sulfate ceramide (or sulfatide), is performed using neat sulfatide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                    GO:0030149
+                                </a>
+                            </span>
+                            <span class="term-label">sphingolipid catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32431092" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32431092
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Arylsulfatase A pseudodeficiency in Mexico: Enzymatic activi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0030149" data-r="PMID:32431092" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARSA deficiency leads to accumulation of cerebroside sulfate (sulfatide), placing ARSA in the sphingolipid (sulfatide) catabolic pathway. This is the correct core biological process for the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sulfatide desulfation is the committed step of sulfatide degradation within sphingolipid catabolism; loss of ARSA blocks this catabolic route.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32431092" target="_blank" class="term-link">
+                                        PMID:32431092
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">lead to the accumulation of cerebroside sulfate, a glycolipid that forms part of myelin membranes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004098" target="_blank" class="term-link">
+                                    GO:0004098
+                                </a>
+                            </span>
+                            <span class="term-label">cerebroside-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10751093" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10751093
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of four arylsulfatase A missense mutations ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004098" data-r="PMID:10751093" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional characterization of MLD-causing missense mutants by expression and enzyme activity assays confirms that ARSA is the cerebroside-sulfatase whose deficiency causes metachromatic leukodystrophy.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (mutant activity) support for ARSA&#39;s cerebroside-sulfatase function; a duplicate of the specific core MF and appropriately retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10751093" target="_blank" class="term-link">
+                                        PMID:10751093
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Metachromatic leukodystrophy is a lysosomal storage disease caused by the</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10751093" target="_blank" class="term-link">
+                                        PMID:10751093
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deficiency of arylsulfatase A.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005783" target="_blank" class="term-link">
+                                    GO:0005783
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9342345" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9342345
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of cysteine to formylglycine: a protein modificat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005783" data-r="PMID:9342345" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARSA transits the ER, where the catalytic cysteine (Cys69) is oxidized to formylglycine before delivery to the lysosome. Experimental support for ER localization during maturation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct maturation compartment (formylglycine generation) but not the physiological site of catalysis; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9342345" target="_blank" class="term-link">
+                                        PMID:9342345
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A linear sequence of 16 residues surrounding the Cys-69</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005576" data-r="Reactome:R-HSA-6798751" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular localization attributed to neutrophil azurophil-granule exocytosis (Reactome degranulation pathway). This is a secretory-context/bystander location, not ARSA&#39;s functional lysosomal site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Peripheral to ARSA&#39;s role as an intracellular lysosomal sulfatase; captured only via a granule-exocytosis pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798751
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of azurophil granule lumen proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035578" target="_blank" class="term-link">
+                                    GO:0035578
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0035578" data-r="Reactome:R-HSA-6798751" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Localization to the neutrophil azurophil granule lumen (a lysosome-related organelle) from the Reactome degranulation pathway. Peripheral cell-type-specific location, not the core lysosomal function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cell-type-specific granule membership from a degranulation pathway; not central to ARSA&#39;s function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798751
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of azurophil granule lumen proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Detection in urinary exosome proteomics. High-throughput proteomic identification in a secreted vesicle fraction; a bystander location rather than the functional site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteomic detection in exosomes is common for lysosomal/secreted proteins and does not reflect ARSA&#39;s core functional localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1614362
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005788" data-r="Reactome:R-HSA-1614362" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER lumen localization during biosynthesis, from the Reactome pathway in which SUMF1 generates the formylglycine that activates arylsulfatases. Maturation compartment, not the catalytic site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with ER formylglycine generation during maturation; non-core relative to lysosomal function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1614362
+
+                                </span>
+
+                                <div class="support-text">SUMF1 mediates the oxidation of cysteine to formylglycine, producing active arylsulfatases</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005788" target="_blank" class="term-link">
+                                    GO:0005788
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2248891
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005788" data-r="Reactome:R-HSA-2248891" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ER lumen localization from the Reactome pathway describing M6PR-mediated transport of activated ARSA to the lysosome. Transit/maturation compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Maturation/transit location prior to lysosomal delivery; non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-2248891
+
+                                </span>
+
+                                <div class="support-text">M6PR transports activated ARSA to the lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1606807
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0043202" data-r="Reactome:R-HSA-1606807" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal lumen localization from the Reactome reaction in which ARSA removes sulfate from the PSAP(saposin B):sulfatide complex. This is the functional site of ARSA catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core functional compartment (lysosomal lumen) where ARSA acts on sulfatide with the saposin B activator.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-1606807
+
+                                </span>
+
+                                <div class="support-text">ARSA removes sulfate from PSAP(195-273):Sulfatide</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2248891
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0043202" data-r="Reactome:R-HSA-2248891" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal lumen localization from the Reactome pathway describing delivery of activated ARSA to the lysosome via the mannose-6-phosphate receptor. Correct functional destination.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with M6PR-mediated lysosomal targeting; the lysosomal lumen is ARSA&#39;s functional site.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-2248891
+
+                                </span>
+
+                                <div class="support-text">M6PR transports activated ARSA to the lysosome</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9840949
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0043202" data-r="Reactome:R-HSA-9840949" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lysosomal lumen localization from the Reactome reaction in which ARSA removes sulfate from SM3 (a sulfated glycolipid), reinforcing the lysosomal lumen as the site of catalysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct functional compartment; supports lysosomal-lumen localization of ARSA catalysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-9840949
+
+                                </span>
+
+                                <div class="support-text">ARSA removes sulfate from SM3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005509" target="_blank" class="term-link">
+                                    GO:0005509
+                                </a>
+                            </span>
+                            <span class="term-label">calcium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12888274" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12888274
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure of a covalent intermediate of endogenous h...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005509" data-r="PMID:12888274" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The crystal structure of endogenous human ARSA shows a Ca2+ ion in the active site (one per subunit), coordinating the substrate sulfate and the catalytic formylglycine. Structural cofactor binding, not the core catalytic MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct structural evidence for an active-site Ca2+; a genuine (non-core) cofactor binding function that supports catalysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12888274" target="_blank" class="term-link">
+                                        PMID:12888274
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">present in the active site of arylsulfatase A isolated from human placenta is</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/ARSA/ARSA-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Ca(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15962010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sulphatase activities are regulated by the interaction of su...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0008484" data-r="PMID:15962010" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General sulfatase (sulfuric ester hydrolase) activity, whose generation depends on the SUMF1-catalyzed formylglycine modification (regulated by SUMF2). Correct but this is a broad parent MF subsumed by the specific arylsulfatase/cerebroside-sulfatase terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but overly general; the informative MF terms (GO:0004065, GO:0004098) already capture ARSA&#39;s sulfatase activity at greater specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                                        PMID:15962010
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">highly conserved cysteine located within their active site into formylglycine.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004065" target="_blank" class="term-link">
+                                    GO:0004065
+                                </a>
+                            </span>
+                            <span class="term-label">arylsulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2562955
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of human arylsulfatase A.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0004065" data-r="PMID:2562955" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cloning/expression paper establishing that the ARSA cDNA encodes arylsulfatase A enzymatic activity (up to 200-fold increase on transfection). Author-asserted MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> TAS support for ARSA arylsulfatase activity, consistent with the IDA/IBA MF annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link">
+                                        PMID:2562955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transfection of monkey and baby hamster kidney cells resulted in an up to 200-fold increase of the arylsulfatase A activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2562955
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cloning and expression of human arylsulfatase A.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15289" data-a="GO:0005764" data-r="PMID:2562955" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARSA localizes to lysosomes and is delivered there in a mannose-6-phosphate receptor-dependent manner. Correct core localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Author-asserted lysosomal localization consistent with M6PR-dependent targeting and the enzyme&#39;s acid-hydrolase role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link">
+                                        PMID:2562955
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transported to dense lysosomes in a mannose 6-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lysosomal cerebroside-sulfatase (arylsulfatase A): hydrolytically removes the 3-O-sulfate from sulfatide (galactosyl-3-sulfate ceramide) to yield galactosylceramide plus sulfate, acting on the saposin-B-presented lipid substrate in the lysosomal lumen to drive sulfatide/sphingolipid catabolism.</h3>
+                <span class="vote-buttons" data-g="P15289" data-a="FUNCTION: Lysosomal cerebroside-sulfatase (arylsulfatase A):..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004098" target="_blank" class="term-link">
+                            cerebroside-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030149" target="_blank" class="term-link">
+                                sphingolipid catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24294900" target="_blank" class="term-link">
+                                PMID:24294900
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">galactosyl-3-sulfate ceramide (or sulfatide), is performed using neat sulfatide</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/ARSA/ARSA-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">cerebroside-3-sulfate (sulfatide) into cerebroside and sulfate, a</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32431092" target="_blank" class="term-link">
+                                PMID:32431092
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">lead to the accumulation of cerebroside sulfate, a glycolipid that forms part of myelin membranes</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/ARSA/ARSA-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P15289 (ARSA_HUMAN), Arylsulfatase A</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10751093" target="_blank" class="term-link">
+                            PMID:10751093
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of four arylsulfatase A missense mutations G86D, Y201C, D255H, and E312D causing metachromatic leukodystrophy.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11919180" target="_blank" class="term-link">
+                            PMID:11919180
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Kidney sulfatides in mouse models of inherited glycosphingolipid disorders: determination by nano-electrospray ionization tandem mass spectrometry.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12888274" target="_blank" class="term-link">
+                            PMID:12888274
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure of a covalent intermediate of endogenous human arylsulfatase A.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                            PMID:15962010
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sulphatase activities are regulated by the interaction of sulphatase-modifying factor 1 with SUMF2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21516116" target="_blank" class="term-link">
+                            PMID:21516116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Next-generation sequencing to generate interactome datasets.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24294900" target="_blank" class="term-link">
+                            PMID:24294900
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A new analytical bench assay for the determination of arylsulfatase a activity toward galactosyl-3-sulfate ceramide: implication for metachromatic leukodystrophy diagnosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25553303" target="_blank" class="term-link">
+                            PMID:25553303
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ultra-performance liquid chromatography-tandem mass spectrometry measurement of leukocyte arylsulfatase A activity using a natural substrate.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2562955" target="_blank" class="term-link">
+                            PMID:2562955
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cloning and expression of human arylsulfatase A.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25910212" target="_blank" class="term-link">
+                            PMID:25910212
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread macromolecular interaction perturbations in human genetic disorders.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26871637" target="_blank" class="term-link">
+                            PMID:26871637
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27498570" target="_blank" class="term-link">
+                            PMID:27498570
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Endolysosomes Are the Principal Intracellular Sites of Acid Hydrolase Activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32431092" target="_blank" class="term-link">
+                            PMID:32431092
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Arylsulfatase A pseudodeficiency in Mexico: Enzymatic activity and haplotype analysis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9342345" target="_blank" class="term-link">
+                            PMID:9342345
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Conversion of cysteine to formylglycine: a protein modification in the endoplasmic reticulum.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1606807
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ARSA removes sulfate from PSAP(195-273):Sulfatide</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1614362
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SUMF1 mediates the oxidation of cysteine to formylglycine, producing active arylsulfatases</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2248891
+
+                    </span>
+                </div>
+
+                <div class="reference-title">M6PR transports activated ARSA to the lysosome</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798751
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9840949
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ARSA removes sulfate from SM3</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond sulfatide and SM3/seminolipid, what is the full physiological substrate spectrum of ARSA in vivo, and how strictly does it depend on saposin B versus other sphingolipid activator proteins?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P15289" data-a="Q: Beyond sulfatide and SM3/seminolipid, what is the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Quantitative substrate-profiling (lipidomics) of ARSA-deficient versus wild-type lysosomes to define the in vivo sulfated-glycolipid substrate range and the saposin-B dependence of each reaction.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: lipidomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P15289" data-a="EXPERIMENT: Quantitative substrate-profiling (lipidomics) of A..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ARSA-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15289" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="arsa-arylsulfatase-a-cerebroside-sulfatase-review-notes">ARSA (Arylsulfatase A / Cerebroside-sulfatase) — review notes</h1>
+<p>UniProtKB:P15289, human, HGNC:ARSA. EC 3.1.6.8.</p>
+<h2 id="core-biology-grounded-in-uniprot-cached-literature">Core biology (grounded in UniProt + cached literature)</h2>
+<p>ARSA is a <strong>lysosomal sulfatase</strong> of the glycosphingolipid degradation pathway. It<br />
+hydrolytically removes the 3-O-sulfate from <strong>sulfatide (3-O-sulfogalactosylceramide,<br />
+cerebroside-3-sulfate)</strong> to yield <strong>galactosylceramide (cerebroside) + sulfate</strong>.</p>
+<ul>
+<li>UniProt FUNCTION: "Lysosomal enzyme that catalyzes the hydrolysis of cerebroside-3-sulfate<br />
+  (sulfatide) into cerebroside and sulfate, a reaction that requires the activator protein<br />
+  saposin B." [file:human/ARSA/ARSA-uniprot.txt]</li>
+<li>Catalytic activity (Rhea:RHEA:21300): an N-acyl-1-beta-D-(3-O-sulfo)-galactosyl-sphing-4-enine</li>
+<li>H2O = a beta-D-galactosyl-(1&lt;-&gt;1')-N-acylsphing-4-enine + sulfate + H(+); EC=3.1.6.8.</li>
+<li>Requires <strong>saposin B (from PSAP)</strong> as a lipid-presenting activator, and the catalytic<br />
+<strong>Cα-formylglycine (FGly)</strong> at Cys69, generated by SUMF1 in the ER [PMID:9342345, PMID:15962010].</li>
+<li>Cofactor: 1 Ca(2+) per subunit (crystallography) <a href="https://pubmed.ncbi.nlm.nih.gov/12888274">PMID:12888274</a>.</li>
+<li>Localises to lysosome / lysosomal lumen; matures through ER (formylglycine generation) and is<br />
+  delivered to lysosomes via the mannose-6-phosphate receptor [PMID:2562955, PMID:9342345].</li>
+<li>Also desulfates other sulfated glycolipids (SM3, seminolipid, SB1a ganglio-series sulfatides);<br />
+  "It is probably the sole sphingolipid-sulfatase cleaving the galactosyl-3-sulfate bond"<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11919180">PMID:11919180</a>.</li>
+<li>Deficiency causes <strong>metachromatic leukodystrophy (MLD)</strong> — intralysosomal accumulation of<br />
+  cerebroside-3-sulfate, demyelination [UniProt DISEASE].</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions summary</h2>
+<h3 id="molecular-function">Molecular function</h3>
+<ul>
+<li>GO:0004098 cerebroside-sulfatase activity — the <strong>precise</strong> MF; supported by IDA (PMID:24294900,<br />
+  natural sulfatide substrate), EXP (PMID:10751093), IEA(RHEA/EC). ACCEPT (core MF).</li>
+<li>GO:0004065 arylsulfatase activity — broader parent MF (aryl sulfate ester surrogate substrate<br />
+  assay). IBA is well-reviewed phylogenetically; IDA (PMID:25553303) and TAS (PMID:2562955) also<br />
+  present. ACCEPT (retain broader family MF; core is the more specific cerebroside-sulfatase term).</li>
+<li>GO:0008484 sulfuric ester hydrolase activity — grandparent MF, IDA from SUMF1/SUMF2 modification<br />
+  paper. Correct but general; MARK_AS_OVER_ANNOTATED (subsumed by the two specific sulfatase MFs).</li>
+<li>GO:0005509 calcium ion binding — IDA from crystal structure (1 Ca2+/subunit in active site).<br />
+  ACCEPT (real, non-core structural cofactor binding).</li>
+<li>GO:0005515 protein binding — all IPI from HT interactome screens (Stitch-seq, HuRI, splice-iso<br />
+  interactome). Uninformative bare <code>protein binding</code>. MARK_AS_OVER_ANNOTATED (policy: not REMOVE).</li>
+</ul>
+<h3 id="biological-process">Biological process</h3>
+<ul>
+<li>GO:0030149 sphingolipid catabolic process — IDA. Correct parent BP for sulfatide degradation.<br />
+  ACCEPT (core BP).</li>
+<li>GO:0006689 ganglioside catabolic process — IDA (PMID:11919180). ARSA degrades ganglio-series<br />
+  sulfatides (SB1a) but true gangliosides carry sialic not sulfate; ARSA's role is on the<br />
+  sulfated members. KEEP_AS_NON_CORE (peripheral / adjacent pathway).</li>
+</ul>
+<h3 id="cellular-component">Cellular component</h3>
+<ul>
+<li>GO:0005764 lysosome (IEA + TAS PMID:2562955), GO:0043202 lysosomal lumen (TAS Reactome),<br />
+  GO:0036021 endolysosome lumen (IC PMID:27498570) — all correct site of action. ACCEPT lysosome/<br />
+  lumen; endolysosome lumen ACCEPT (site where acid hydrolases are active).</li>
+<li>GO:0005783 endoplasmic reticulum / GO:0005788 ER lumen — transit/maturation compartment<br />
+  (formylglycine generation, PMID:9342345). KEEP_AS_NON_CORE.</li>
+<li>GO:0005576 extracellular region, GO:0035578 azurophil granule lumen (Reactome neutrophil<br />
+  degranulation), GO:0070062 extracellular exosome (HDA proteomics) — bystander/secretory-proteomics<br />
+  locations, not the functional site. MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="core-functions-chosen">Core functions chosen</h2>
+<ul>
+<li>MF: GO:0004098 cerebroside-sulfatase activity (exact GOA sulfatase MF, most specific)</li>
+<li>BP: GO:0030149 sphingolipid catabolic process (directly_involved_in)</li>
+<li>CC: GO:0043202 lysosomal lumen (located_in)</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15289
+gene_symbol: ARSA
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  ARSA (arylsulfatase A, also called cerebroside-sulfatase or cerebroside-3-sulfatase;
+  EC 3.1.6.8) is a lysosomal sulfatase of the glycosphingolipid degradation pathway. It
+  hydrolytically removes the 3-O-sulfate from sulfatide (3-O-sulfogalactosylceramide,
+  cerebroside-3-sulfate) to give galactosylceramide (cerebroside) plus sulfate, and also
+  desulfates other sulfated glycolipids such as seminolipid and lactosylceramide sulfate
+  (SM3). Catalysis requires the lipid-presenting activator protein saposin B (a cleavage
+  product of PSAP) and a catalytic Calpha-formylglycine residue at Cys69 that is generated
+  post-translationally in the endoplasmic reticulum by the formylglycine-generating enzyme
+  SUMF1; a Ca2+ ion is bound in the active site. The enzyme is synthesized and matured in
+  the ER and delivered to the lysosomal lumen via the mannose-6-phosphate receptor pathway,
+  where it acts at acidic pH. Loss of ARSA activity causes intralysosomal accumulation of
+  sulfatide and the demyelinating lysosomal storage disorder metachromatic leukodystrophy
+  (MLD).
+alternative_products:
+- name: &#39;1&#39;
+  id: P15289-1
+- name: &#39;2&#39;
+  id: P15289-2
+  sequence_note: VSP_046190
+existing_annotations:
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Family-level molecular function inferred phylogenetically across the arylsulfatase
+      clade. ARSA is a bona fide arylsulfatase that hydrolyzes aryl sulfate esters (used
+      as surrogate diagnostic substrates) and, physiologically, the natural sulfatide
+      substrate. This is a correct broad MF; the more specific cerebroside-sulfatase term
+      captures the physiological reaction.
+    action: ACCEPT
+    reason: &gt;-
+      IBA is well-reviewed and correctly places ARSA in the arylsulfatase family. Retained
+      as the broader family MF; the specific physiological MF is GO:0004098.
+    supported_by:
+    - reference_id: PMID:2562955
+      supporting_text: &#34;Transfection of monkey and baby hamster kidney cells resulted in an up to 200-fold increase of the arylsulfatase A activity.&#34;
+- term:
+    id: GO:0004098
+    label: cerebroside-sulfatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Specific molecular function: hydrolysis of the 3-O-sulfate of sulfatide
+      (cerebroside-3-sulfate) to give cerebroside (galactosylceramide) and sulfate
+      (RHEA:21300, EC 3.1.6.8). This is the precise, physiologically correct MF for ARSA
+      and is independently supported by direct assay.
+    action: ACCEPT
+    reason: &gt;-
+      Automated RHEA/EC mapping matches the experimentally established reaction and the
+      IDA/EXP annotations below.
+    supported_by:
+    - reference_id: file:human/ARSA/ARSA-uniprot.txt
+      supporting_text: &#34;cerebroside-3-sulfate (sulfatide) into cerebroside and sulfate, a&#34;
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARSA is a lysosomal acid hydrolase; the lysosome is its functional site of action.
+      Consistent with the SubCell mapping and with the experimentally supported lysosomal
+      localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core localization for a lysosomal sulfatase; corroborated by TAS
+      (PMID:2562955) and Reactome lysosomal-lumen annotations.
+    supported_by:
+    - reference_id: PMID:2562955
+      supporting_text: &#34;The arylsulfatase A was located in lysosome-like&#34;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARSA transits the ER, where the catalytic Calpha-formylglycine is generated before
+      lysosomal delivery. This is a maturation/transit compartment rather than the site of
+      catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real localization during biosynthesis (formylglycine generation and folding), but
+      not where ARSA performs its physiological reaction; retained as non-core.
+    supported_by:
+    - reference_id: PMID:9342345
+      supporting_text: &#34;the oxidation of its thiol group to an aldehyde is catalyzed in the&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:21516116
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a high-throughput interactome-mapping study
+      (Stitch-seq). Uninformative about ARSA molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a systematic interactome screen; carries no specific
+      functional information and is subsumed by the informative sulfatase MF terms.
+    supported_by:
+    - reference_id: PMID:21516116
+      supporting_text: &#34;Next-generation sequencing to generate interactome datasets.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from a proteome-scale human interactome map. The
+      interaction partner (TRIP13) does not inform ARSA&#39;s lysosomal sulfatase function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a large-scale interactome dataset; uninformative.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: &#34;A proteome-scale map of the human interactome network.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25910212
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from an interactome-perturbation study; uninformative
+      about ARSA&#39;s molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from systematic interactome data.
+    supported_by:
+    - reference_id: PMID:25910212
+      supporting_text: &#34;Widespread macromolecular interaction perturbations in human genetic disorders.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:26871637
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotation from an alternative-splicing interactome study;
+      uninformative about ARSA function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a high-throughput splice-isoform interactome screen.
+    supported_by:
+    - reference_id: PMID:26871637
+      supporting_text: &#34;Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare protein-binding annotations from the HuRI human binary interactome map (multiple
+      partners including ANXA11, CCDC22, PKN1, TRIP13). None specify a functional molecular
+      interaction relevant to ARSA&#39;s lysosomal sulfatase activity.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic protein binding from a systematic binary interactome dataset; uninformative
+      and subsumed by the specific sulfatase MF terms.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &#34;A reference map of the human binary protein interactome.&#34;
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:25553303
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of leukocyte ARSA activity, including using a natural sulfatide
+      substrate, measured by UPLC-MS/MS. Confirms arylsulfatase A enzymatic activity
+      (EC 3.1.6.8) for the human protein.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental direct measurement of ARSA enzymatic activity; supports the core
+      catalytic MF at the family level.
+    supported_by:
+    - reference_id: PMID:25553303
+      supporting_text: &#34;measuring arylsulfatase A (ARSA; EC3.1.6.8) activity&#34;
+    - reference_id: PMID:25553303
+      supporting_text: &#34;using a natural sulfatide substrate&#34;
+- term:
+    id: GO:0006689
+    label: ganglioside catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:11919180
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      In Arsa-null mice, ganglio-series sulfatides (e.g. SB1a) accumulate, showing ARSA is
+      required to degrade sulfated members of the ganglio-series glycosphingolipid pathway.
+      ARSA acts on the sulfated (sulfatide) members rather than on sialylated gangliosides
+      per se, so this is an adjacent/peripheral role rather than the core function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported experimentally, but ARSA&#39;s direct chemistry is desulfation of
+      galactosyl-3-sulfate glycolipids; its contribution to the ganglioside catabolic
+      pathway is via the sulfated intermediates. Kept as non-core.
+    supported_by:
+    - reference_id: PMID:11919180
+      supporting_text: &#34;Arylsulfatase A is required to degrade SB1a. It is probably the sole&#34;
+    - reference_id: PMID:11919180
+      supporting_text: &#34;sphingolipid-sulfatase cleaving the galactosyl-3-sulfate bond.&#34;
+- term:
+    id: GO:0036021
+    label: endolysosome lumen
+  evidence_type: IC
+  original_reference_id: PMID:27498570
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Curator inference (IC) that ARSA, an acid hydrolase, is active in the endolysosome
+      lumen, based on the finding that endolysosomes are the principal intracellular sites
+      of acid hydrolase activity. Consistent with ARSA&#39;s lysosomal acid-pH-optimum activity.
+    action: ACCEPT
+    reason: &gt;-
+      Correct localization of catalytic activity for an acid hydrolase; endolysosome lumen
+      is a valid refinement of the lysosomal site of action.
+    supported_by:
+    - reference_id: PMID:27498570
+      supporting_text: &#34;endolysosomes are the principal organelles in&#34;
+- term:
+    id: GO:0004098
+    label: cerebroside-sulfatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:24294900
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct enzymatic assay of ARSA activity toward the natural substrate
+      galactosyl-3-sulfate ceramide (sulfatide), establishing the physiological
+      cerebroside-sulfatase reaction. This is the core molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Direct assay against the natural sulfatide substrate; the specific, physiologically
+      correct MF for ARSA.
+    supported_by:
+    - reference_id: PMID:24294900
+      supporting_text: &#34;galactosyl-3-sulfate ceramide (or sulfatide), is performed using neat sulfatide&#34;
+- term:
+    id: GO:0030149
+    label: sphingolipid catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:32431092
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ARSA deficiency leads to accumulation of cerebroside sulfate (sulfatide), placing
+      ARSA in the sphingolipid (sulfatide) catabolic pathway. This is the correct core
+      biological process for the enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Sulfatide desulfation is the committed step of sulfatide degradation within
+      sphingolipid catabolism; loss of ARSA blocks this catabolic route.
+    supported_by:
+    - reference_id: PMID:32431092
+      supporting_text: &#34;lead to the accumulation of cerebroside sulfate, a glycolipid that forms part of myelin membranes&#34;
+- term:
+    id: GO:0004098
+    label: cerebroside-sulfatase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10751093
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Functional characterization of MLD-causing missense mutants by expression and enzyme
+      activity assays confirms that ARSA is the cerebroside-sulfatase whose deficiency
+      causes metachromatic leukodystrophy.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (mutant activity) support for ARSA&#39;s cerebroside-sulfatase function; a
+      duplicate of the specific core MF and appropriately retained.
+    supported_by:
+    - reference_id: PMID:10751093
+      supporting_text: &#34;Metachromatic leukodystrophy is a lysosomal storage disease caused by the&#34;
+    - reference_id: PMID:10751093
+      supporting_text: &#34;deficiency of arylsulfatase A.&#34;
+- term:
+    id: GO:0005783
+    label: endoplasmic reticulum
+  evidence_type: EXP
+  original_reference_id: PMID:9342345
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARSA transits the ER, where the catalytic cysteine (Cys69) is oxidized to
+      formylglycine before delivery to the lysosome. Experimental support for ER
+      localization during maturation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct maturation compartment (formylglycine generation) but not the physiological
+      site of catalysis; retained as non-core.
+    supported_by:
+    - reference_id: PMID:9342345
+      supporting_text: &#34;A linear sequence of 16 residues surrounding the Cys-69&#34;
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Extracellular localization attributed to neutrophil azurophil-granule exocytosis
+      (Reactome degranulation pathway). This is a secretory-context/bystander location, not
+      ARSA&#39;s functional lysosomal site.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Peripheral to ARSA&#39;s role as an intracellular lysosomal sulfatase; captured only via
+      a granule-exocytosis pathway.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798751
+      supporting_text: &#34;Exocytosis of azurophil granule lumen proteins&#34;
+- term:
+    id: GO:0035578
+    label: azurophil granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Localization to the neutrophil azurophil granule lumen (a lysosome-related organelle)
+      from the Reactome degranulation pathway. Peripheral cell-type-specific location, not
+      the core lysosomal function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Cell-type-specific granule membership from a degranulation pathway; not central to
+      ARSA&#39;s function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798751
+      supporting_text: &#34;Exocytosis of azurophil granule lumen proteins&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Detection in urinary exosome proteomics. High-throughput proteomic identification in
+      a secreted vesicle fraction; a bystander location rather than the functional site.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Proteomic detection in exosomes is common for lysosomal/secreted proteins and does
+      not reflect ARSA&#39;s core functional localization.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &#34;In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.&#34;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1614362
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER lumen localization during biosynthesis, from the Reactome pathway in which SUMF1
+      generates the formylglycine that activates arylsulfatases. Maturation compartment,
+      not the catalytic site.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with ER formylglycine generation during maturation; non-core relative to
+      lysosomal function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1614362
+      supporting_text: &#34;SUMF1 mediates the oxidation of cysteine to formylglycine, producing active arylsulfatases&#34;
+- term:
+    id: GO:0005788
+    label: endoplasmic reticulum lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2248891
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ER lumen localization from the Reactome pathway describing M6PR-mediated transport of
+      activated ARSA to the lysosome. Transit/maturation compartment.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Maturation/transit location prior to lysosomal delivery; non-core.
+    supported_by:
+    - reference_id: Reactome:R-HSA-2248891
+      supporting_text: &#34;M6PR transports activated ARSA to the lysosome&#34;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1606807
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Lysosomal lumen localization from the Reactome reaction in which ARSA removes sulfate
+      from the PSAP(saposin B):sulfatide complex. This is the functional site of ARSA
+      catalysis.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core functional compartment (lysosomal lumen) where ARSA acts on sulfatide
+      with the saposin B activator.
+    supported_by:
+    - reference_id: Reactome:R-HSA-1606807
+      supporting_text: &#34;ARSA removes sulfate from PSAP(195-273):Sulfatide&#34;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2248891
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Lysosomal lumen localization from the Reactome pathway describing delivery of
+      activated ARSA to the lysosome via the mannose-6-phosphate receptor. Correct
+      functional destination.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with M6PR-mediated lysosomal targeting; the lysosomal lumen is ARSA&#39;s
+      functional site.
+    supported_by:
+    - reference_id: Reactome:R-HSA-2248891
+      supporting_text: &#34;M6PR transports activated ARSA to the lysosome&#34;
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9840949
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Lysosomal lumen localization from the Reactome reaction in which ARSA removes sulfate
+      from SM3 (a sulfated glycolipid), reinforcing the lysosomal lumen as the site of
+      catalysis.
+    action: ACCEPT
+    reason: &gt;-
+      Correct functional compartment; supports lysosomal-lumen localization of ARSA
+      catalysis.
+    supported_by:
+    - reference_id: Reactome:R-HSA-9840949
+      supporting_text: &#34;ARSA removes sulfate from SM3&#34;
+- term:
+    id: GO:0005509
+    label: calcium ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:12888274
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The crystal structure of endogenous human ARSA shows a Ca2+ ion in the active site
+      (one per subunit), coordinating the substrate sulfate and the catalytic formylglycine.
+      Structural cofactor binding, not the core catalytic MF.
+    action: ACCEPT
+    reason: &gt;-
+      Direct structural evidence for an active-site Ca2+; a genuine (non-core) cofactor
+      binding function that supports catalysis.
+    supported_by:
+    - reference_id: PMID:12888274
+      supporting_text: &#34;present in the active site of arylsulfatase A isolated from human placenta is&#34;
+    - reference_id: file:human/ARSA/ARSA-uniprot.txt
+      supporting_text: &#34;Binds 1 Ca(2+) ion per subunit.&#34;
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15962010
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General sulfatase (sulfuric ester hydrolase) activity, whose generation depends on
+      the SUMF1-catalyzed formylglycine modification (regulated by SUMF2). Correct but this
+      is a broad parent MF subsumed by the specific arylsulfatase/cerebroside-sulfatase terms.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      True but overly general; the informative MF terms (GO:0004065, GO:0004098) already
+      capture ARSA&#39;s sulfatase activity at greater specificity.
+    supported_by:
+    - reference_id: PMID:15962010
+      supporting_text: &#34;highly conserved cysteine located within their active site into formylglycine.&#34;
+- term:
+    id: GO:0004065
+    label: arylsulfatase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2562955
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cloning/expression paper establishing that the ARSA cDNA encodes arylsulfatase A
+      enzymatic activity (up to 200-fold increase on transfection). Author-asserted MF.
+    action: ACCEPT
+    reason: &gt;-
+      TAS support for ARSA arylsulfatase activity, consistent with the IDA/IBA MF
+      annotations.
+    supported_by:
+    - reference_id: PMID:2562955
+      supporting_text: &#34;Transfection of monkey and baby hamster kidney cells resulted in an up to 200-fold increase of the arylsulfatase A activity.&#34;
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: TAS
+  original_reference_id: PMID:2562955
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      ARSA localizes to lysosomes and is delivered there in a mannose-6-phosphate
+      receptor-dependent manner. Correct core localization.
+    action: ACCEPT
+    reason: &gt;-
+      Author-asserted lysosomal localization consistent with M6PR-dependent targeting and
+      the enzyme&#39;s acid-hydrolase role.
+    supported_by:
+    - reference_id: PMID:2562955
+      supporting_text: &#34;transported to dense lysosomes in a mannose 6-phosphate&#34;
+core_functions:
+- description: &gt;-
+    Lysosomal cerebroside-sulfatase (arylsulfatase A): hydrolytically removes the
+    3-O-sulfate from sulfatide (galactosyl-3-sulfate ceramide) to yield galactosylceramide
+    plus sulfate, acting on the saposin-B-presented lipid substrate in the lysosomal lumen
+    to drive sulfatide/sphingolipid catabolism.
+  molecular_function:
+    id: GO:0004098
+    label: cerebroside-sulfatase activity
+  directly_involved_in:
+  - id: GO:0030149
+    label: sphingolipid catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  supported_by:
+  - reference_id: PMID:24294900
+    supporting_text: &#34;galactosyl-3-sulfate ceramide (or sulfatide), is performed using neat sulfatide&#34;
+  - reference_id: file:human/ARSA/ARSA-uniprot.txt
+    supporting_text: &#34;cerebroside-3-sulfate (sulfatide) into cerebroside and sulfate, a&#34;
+  - reference_id: PMID:32431092
+    supporting_text: &#34;lead to the accumulation of cerebroside sulfate, a glycolipid that forms part of myelin membranes&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/ARSA/ARSA-uniprot.txt
+  title: UniProtKB entry P15289 (ARSA_HUMAN), Arylsulfatase A
+  findings: []
+- id: PMID:10751093
+  title: Characterization of four arylsulfatase A missense mutations G86D, Y201C,
+    D255H, and E312D causing metachromatic leukodystrophy.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Functional characterization of MLD missense mutants; confirms ARSA is the
+      cerebroside-sulfatase deficient in MLD.
+- id: PMID:11919180
+  title: &#39;Kidney sulfatides in mouse models of inherited glycosphingolipid disorders:
+    determination by nano-electrospray ionization tandem mass spectrometry.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      In vivo Arsa-null mouse data; establishes ARSA as the sphingolipid-sulfatase cleaving
+      the galactosyl-3-sulfate bond.
+- id: PMID:12888274
+  title: Crystal structure of a covalent intermediate of endogenous human arylsulfatase
+    A.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Structure shows active-site Ca2+ and the formylglycine covalent intermediate.
+- id: PMID:15962010
+  title: Sulphatase activities are regulated by the interaction of sulphatase-modifying
+    factor 1 with SUMF2.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes SUMF1-generated formylglycine as required for sulfatase activity;
+      relevant to ARSA maturation, general to sulfatases.
+- id: PMID:21516116
+  title: Next-generation sequencing to generate interactome datasets.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput interactome method paper; source of a generic protein-binding IPI.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteomic detection of ARSA in urinary exosomes; bystander localization.
+- id: PMID:24294900
+  title: &#39;A new analytical bench assay for the determination of arylsulfatase a activity
+    toward galactosyl-3-sulfate ceramide: implication for metachromatic leukodystrophy
+    diagnosis.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct assay of ARSA against natural sulfatide substrate; supports the specific
+      cerebroside-sulfatase MF.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale interactome map; source of a generic protein-binding IPI.
+- id: PMID:25553303
+  title: Ultra-performance liquid chromatography-tandem mass spectrometry measurement
+    of leukocyte arylsulfatase A activity using a natural substrate.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct measurement of leukocyte ARSA activity using a natural sulfatide substrate.
+- id: PMID:2562955
+  title: Cloning and expression of human arylsulfatase A.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning/expression establishing ARSA enzymatic activity and M6PR-dependent lysosomal
+      targeting.
+- id: PMID:25910212
+  title: Widespread macromolecular interaction perturbations in human genetic disorders.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Interactome-perturbation study; source of a generic protein-binding IPI.
+- id: PMID:26871637
+  title: Widespread Expansion of Protein Interaction Capabilities by Alternative Splicing.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Splice-isoform interactome screen; source of a generic protein-binding IPI.
+- id: PMID:27498570
+  title: Endolysosomes Are the Principal Intracellular Sites of Acid Hydrolase Activity.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Basis for the IC that ARSA (an acid hydrolase) is active in the endolysosome lumen.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome map; source of multiple generic protein-binding IPIs.
+- id: PMID:32431092
+  title: &#39;Arylsulfatase A pseudodeficiency in Mexico: Enzymatic activity and haplotype
+    analysis.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ARSA deficiency leads to cerebroside-sulfate accumulation; supports the sphingolipid
+      catabolic BP.
+- id: PMID:9342345
+  title: &#39;Conversion of cysteine to formylglycine: a protein modification in the endoplasmic
+    reticulum.&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shows the ARSA Cys69-&gt;formylglycine conversion occurs in the ER; supports ER
+      maturation localization.
+- id: Reactome:R-HSA-1606807
+  title: ARSA removes sulfate from PSAP(195-273):Sulfatide
+  findings: []
+- id: Reactome:R-HSA-1614362
+  title: SUMF1 mediates the oxidation of cysteine to formylglycine, producing active
+    arylsulfatases
+  findings: []
+- id: Reactome:R-HSA-2248891
+  title: M6PR transports activated ARSA to the lysosome
+  findings: []
+- id: Reactome:R-HSA-6798751
+  title: Exocytosis of azurophil granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-9840949
+  title: ARSA removes sulfate from SM3
+  findings: []
+suggested_questions:
+- question: &gt;-
+    Beyond sulfatide and SM3/seminolipid, what is the full physiological substrate spectrum
+    of ARSA in vivo, and how strictly does it depend on saposin B versus other sphingolipid
+    activator proteins?
+suggested_experiments:
+- description: &gt;-
+    Quantitative substrate-profiling (lipidomics) of ARSA-deficient versus wild-type
+    lysosomes to define the in vivo sulfated-glycolipid substrate range and the saposin-B
+    dependence of each reaction.
+  experiment_type: lipidomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
