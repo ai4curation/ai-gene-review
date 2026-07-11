@@ -1164,6 +1164,14 @@ def template_vars(record: GeneHypothesisRecord, *, genes_root: Path) -> dict[str
     if record.source_file and record.source_file.exists():
         source_data = load_yaml(record.source_file)
         uniprot_accession = str(source_data.get("id") or record.gene)
+    else:
+        # Free-text hypotheses carry no source record, so fall back to the gene
+        # review's own UniProt accession (`id:`) rather than the directory name,
+        # which is often a locus tag (e.g. MJ1511) that is not a real accession.
+        review_path = genes_root / record.organism / record.gene / f"{record.gene}-ai-review.yaml"
+        if review_path.exists():
+            review_data = load_yaml(review_path)
+            uniprot_accession = str(review_data.get("id") or record.gene)
 
     return {
         "organism": record.organism,

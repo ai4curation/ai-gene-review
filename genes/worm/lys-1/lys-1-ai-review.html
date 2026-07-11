@@ -1,0 +1,3577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lys-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lys-1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O62415" target="_blank" class="term-link">
+                        O62415
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lys-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O62415" data-a="DESCRIPTION: LYS-1 is one of the protist-type (Entamoeba-type) ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LYS-1 is one of the protist-type (Entamoeba-type) lysozymes of Caenorhabditis elegans, a nematode that carries an unusually large and divergent lysozyme family (15 genes split into protist-type lys and invertebrate-type ilys classes). Structurally it is a glycoside hydrolase family 25 (GH25) protein with an N-terminal signal peptide. LYS-1 functions as an infection-inducible antibacterial effector of the intestinal innate immune response: it is one of the most strongly induced genes upon infection by the Gram-negative bacterium Serratia marcescens, and its overexpression increases resistance to that pathogen, while RNAi knockdown reduces survival on the Gram-positive bacterium Staphylococcus aureus. It is also transcriptionally upregulated by Bacillus thuringiensis and is part of the ELT-2/GATA-controlled intestinal infection-response program, and it is a DAF-16/FOXO target that links the immune response to the dauer developmental decision. The protein localizes to vesicles in the apical region of intestinal cells and is expressed in the intestine and a subset of head neurons. Although the GH25 fold implies muramidase (peptidoglycan-hydrolysing) activity, this catalytic activity has never been demonstrated for LYS-1 at the protein level, and the sequence lacks the conserved active-site residues, so its actual enzymatic function is uncertain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007165" target="_blank" class="term-link">
+                                    GO:0007165
+                                </a>
+                            </span>
+                            <span class="term-label">signal transduction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0007165" data-r="GO_REF:0000033" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IBA is a phylogenetic propagation from a PANTHER subfamily seeded by non-lysozyme members (including a Dictyostelium protein). Lysozymes are secreted antibacterial hydrolases/effectors, not signal-transducing proteins, and there is no evidence that LYS-1 transduces any signal.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-broad phylogenetic inference inconsistent with the biology of a lysozyme-family antibacterial effector. No experimental or sequence feature supports a signal transduction role for LYS-1; the specific, experimentally supported role is antibacterial defense (captured by the defense-response terms below).
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">PROPAGATION BAD</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">FUNCTIONAL DIVERGENCE</span>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000574946</span>
+
+                                    &middot; PTN000574946 (PANTHER ancestral node)
+
+
+                                    <span class="badge">SOURCE WEAK OR INFERRED</span>
+
+
+                                    <div class="propagation-comment">Ancestral node whose GO:0007165 assignment was seeded from dictyBase:DDB_G0273175 (a Dictyostelium protein). &#34;Signal transduction&#34; is not a function of a GH25 lysozyme-family antibacterial effector; the propagation transfers an unrelated, overly generic process to LYS-1.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0045087" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The innate-immune-response assignment is correct for LYS-1, but this IBA is redundant with the stronger experimental IMP (PMID:21209831) and HEP (PMID:16968778) annotations to the same term. Retained as valid biological process context rather than as a distinct line of evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process but redundant with experimental annotations to the same term; the more specific defense-response-to-Gram-positive/Gram-negative terms carry the core biology.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003796" target="_blank" class="term-link">
+                                    GO:0003796
+                                </a>
+                            </span>
+                            <span class="term-label">lysozyme activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0003796" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is a family/domain-based (InterPro IPR002053, GH25) inference of muramidase activity. It has never been demonstrated for LYS-1: no C. elegans lysozyme has been characterized at the protein level, and UniProt flags a CAUTION that LYS-1 &#34;Lacks conserved active site residues, suggesting it has no catalytic activity.&#34; The activity therefore cannot be confirmed, and there is positive sequence evidence that it may be absent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cannot verify: no biochemical/enzymatic assay of purified LYS-1 exists, and the UniProt active-site CAUTION suggests possible loss of catalytic activity. Per guidelines this is an author-flagged unresolved MF, not a confident REMOVE (family activity cannot be definitively excluded without biochemistry). This is the central molecular-function knowledge gap for this gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All available data is based on genetic analysis, whereas none of the lysozymes have been characterized at the protein level.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006950" target="_blank" class="term-link">
+                                    GO:0006950
+                                </a>
+                            </span>
+                            <span class="term-label">response to stress</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0006950" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A very generic ARBA machine-learned assignment. The specific infection/defense-response terms below describe LYS-1&#39;s biology far more informatively; a bare response-to-stress term adds little.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Too general to be informative and subsumed by the specific defense response / innate immune response annotations that are experimentally supported.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009253" target="_blank" class="term-link">
+                                    GO:0009253
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0009253" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biological-process counterpart of the unverified lysozyme activity (InterPro/GH25 inference). Because peptidoglycan hydrolysis by LYS-1 has not been demonstrated and the sequence may lack catalytic residues, this process cannot be confirmed for this paralog.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Depends on an unverified catalytic (muramidase) activity; no direct evidence LYS-1 cleaves peptidoglycan. Tied to the lysozyme-activity knowledge gap.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                                        PMID:21931778
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All available data is based on genetic analysis, whereas none of the lysozymes have been characterized at the protein level.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016998" target="_blank" class="term-link">
+                                    GO:0016998
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall macromolecule catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0016998" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A more general parent of peptidoglycan catabolism, from the same family-based InterPro inference; same caveat that the underlying catalytic activity is undemonstrated for LYS-1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same unverified-catalysis basis as the peptidoglycan/lysozyme-activity annotations; cannot confirm cell-wall macromolecule catabolism for LYS-1.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060205" target="_blank" class="term-link">
+                                    GO:0060205
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0060205" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniProt Subcellular Location keyword propagation matching the curated localization of LYS-1 to the lumen of apical intestinal vesicles. Redundant with the EXP annotation from PMID:12176330.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct location but electronically propagated and redundant with the experimental EXP/IDA vesicle annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060205" target="_blank" class="term-link">
+                                    GO:0060205
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12176330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inducible antibacterial defense system in C. elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0060205" data-r="PMID:12176330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimentally curated localization of LYS-1 to the lumen of vesicles in the apical region of intestinal cells, from the primary characterization of the inducible antibacterial defense system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Curator-assigned experimental localization consistent with a secreted intestinal antibacterial effector stored in apical vesicles.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16968778" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16968778
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A conserved role for a GATA transcription factor in regulati...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0045087" data-r="PMID:16968778" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput expression evidence: lys-1 is part of the intestinal ELT-2/GATA-regulated infection-response gene program identified in a genome-wide study of epithelial innate immunity. Consistent with its infection-inducible antibacterial role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Expression-based support for involvement in the innate immune response; corroborates the experimental IMP annotation but is itself expression- level evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                    GO:0045087
+                                </a>
+                            </span>
+                            <span class="term-label">innate immune response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21209831
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNAi screen of DAF-16/FOXO target genes in C. elegans links ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0045087" data-r="PMID:21209831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNAi knockdown of lys-1 significantly reduces C. elegans survival on the pathogen Staphylococcus aureus (TD50 4.7 vs 6.8 days for control, p&lt;0.0001), demonstrating that lys-1 is required for a normal innate immune/pathogen-resistance response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct loss-of-function (RNAi) phenotype establishing a functional role in the innate immune response; core immune-defense biology of the gene.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link">
+                                        PMID:21209831
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Two genes, lys-1 and clc-1, were required for normal resistance to S. aureus.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                    GO:0050830
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-positive bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21209831
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    RNAi screen of DAF-16/FOXO target genes in C. elegans links ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0050830" data-r="PMID:21209831" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Staphylococcus aureus is a Gram-positive bacterium, and lys-1 RNAi reduces survival on it (TD50 4.7 vs 6.8 days, p&lt;0.0001), directly supporting a role in defense against Gram-positive bacteria. This is the most specific, experimentally supported process term for the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Specific, experimentally demonstrated defense function against a Gram-positive pathogen; a core biological process of LYS-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link">
+                                        PMID:21209831
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The TD50 (time required for 50% of the nematodes to die) for lys-1 was 4.7 days (p&lt;0.0001)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031410" target="_blank" class="term-link">
+                                    GO:0031410
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic vesicle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12176330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inducible antibacterial defense system in C. elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0031410" data-r="PMID:12176330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct-assay localization of LYS-1 to cytoplasmic vesicles in intestinal cells, from the primary characterization paper.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally observed subcellular localization consistent with storage of the effector in intestinal vesicles.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045177" target="_blank" class="term-link">
+                                    GO:0045177
+                                </a>
+                            </span>
+                            <span class="term-label">apical part of cell</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12176330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inducible antibacterial defense system in C. elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0045177" data-r="PMID:12176330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LYS-1 localizes to the apical region of intestinal cells (apically positioned vesicles), consistent with secretion toward the gut lumen where ingested bacteria are encountered.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported apical localization appropriate for a gut-luminal antibacterial effector.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                    GO:0050829
+                                </a>
+                            </span>
+                            <span class="term-label">defense response to Gram-negative bacterium</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12176330
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Inducible antibacterial defense system in C. elegans.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O62415" data-a="GO:0050829" data-r="PMID:12176330" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> lys-1 is among the most robustly induced genes upon infection by the Gram-negative bacterium Serratia marcescens, and its overexpression augments resistance to that pathogen, supporting a role in defense against Gram-negative bacteria. The evidence code is IEP (expression), reinforced by the overexpression gain-of-resistance phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Infection-inducible expression plus overexpression-conferred resistance establish a defense role against a Gram-negative pathogen; a core biological process of LYS-1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link">
+                                        PMID:12176330
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">overexpression of the lysozyme gene lys-1 augments the resistance of C. elegans to S. marcescens.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Infection-inducible antibacterial effector of the C. elegans intestinal innate immune response, acting against both Gram-negative (S. marcescens) and Gram-positive (S. aureus) bacteria. LYS-1 is stored in the lumen of apical intestinal vesicles, positioned for release toward ingested bacteria in the gut. It is a GH25 protist-type lysozyme; a muramidase (peptidoglycan-hydrolysing) molecular function is implied by the fold but has not been demonstrated and may be absent (no conserved active-site residues), so no specific molecular_function is asserted here.</h3>
+                <span class="vote-buttons" data-g="O62415" data-a="FUNCTION: Infection-inducible antibacterial effector of the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050829" target="_blank" class="term-link">
+                                defense response to Gram-negative bacterium
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050830" target="_blank" class="term-link">
+                                defense response to Gram-positive bacterium
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045087" target="_blank" class="term-link">
+                                innate immune response
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0060205" target="_blank" class="term-link">
+                                cytoplasmic vesicle lumen
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045177" target="_blank" class="term-link">
+                                apical part of cell
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link">
+                                PMID:12176330
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">overexpression of the lysozyme gene lys-1 augments the resistance of C. elegans to S. marcescens.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link">
+                                PMID:21209831
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Two genes, lys-1 and clc-1, were required for normal resistance to S. aureus.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" target="_blank" class="term-link">
+                            PMID:12176330
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inducible antibacterial defense system in C. elegans.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">lys-1 is among the most robustly infection-induced genes and its overexpression augments resistance to the Gram-negative bacterium Serratia marcescens; the protein localizes to apical intestinal vesicles.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16968778" target="_blank" class="term-link">
+                            PMID:16968778
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A conserved role for a GATA transcription factor in regulating epithelial innate immune responses.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide study establishing the intestinal ELT-2/GATA-regulated epithelial infection-response gene program of which lys-1 is a member (basis of the HEP innate-immune-response annotation).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" target="_blank" class="term-link">
+                            PMID:21209831
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RNAi screen of DAF-16/FOXO target genes in C. elegans links pathogenesis and dauer formation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">lys-1 RNAi significantly reduces survival on Staphylococcus aureus (TD50 4.7 vs 6.8 days, p&lt;0.0001), showing lys-1 is required for normal resistance; lys-1 is a DAF-16/FOXO target with a synthetic dauer-formation phenotype.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" target="_blank" class="term-link">
+                            PMID:21931778
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protist-type lysozymes of the nematode Caenorhabditis elegans contribute to resistance against pathogenic Bacillus thuringiensis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Classifies lys-1 as a chromosome V protist-type lysozyme within the 15-gene C. elegans lysozyme family, shows lys-1 is transcriptionally upregulated by B. thuringiensis in all tested strains, and states explicitly that no C. elegans lysozyme has been characterized at the protein level (basis of the muramidase-activity knowledge gap).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified LYS-1 protein possess muramidase/bacteriolytic activity, or has this GH25 protist-type lysozyme lost catalytic function and act by a non-enzymatic antibacterial mechanism?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Schulenburg H</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O62415" data-a="Q: Does purified LYS-1 protein possess muramidase/bac..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the phenotype of a lys-1 loss-of-function null, and to what extent is lys-1 redundant with other protist-type lysozymes in defense against ingested pathogens?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Schulenburg H, Ewbank JJ</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O62415" data-a="Q: What is the phenotype of a lys-1 loss-of-function ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify recombinant LYS-1, then assay (i) muramidase activity on Micrococcus luteus cell walls and defined peptidoglycan substrates, (ii) bacteriolytic/growth-inhibitory activity against S. aureus and S. marcescens, and (iii) direct binding to bacterial cell-surface components; pair with active-site mutagenesis and, if possible, structure determination.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: LYS-1 either hydrolyzes bacterial peptidoglycan (canonical lysozyme mechanism) or, lacking active-site residues, kills/inhibits bacteria by a non-catalytic binding/permeabilizing mechanism.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemistry / enzymology / structural biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O62415" data-a="EXPERIMENT: Express and purify recombinant LYS-1, then assay (..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate a lys-1 null allele (CRISPR) and test survival and intestinal pathogen load on a panel of Gram-negative and Gram-positive pathogens (S. marcescens, S. aureus, B. thuringiensis, P. aeruginosa), comparing single mutant, paralog combinations, and rescue/overexpression lines.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: lys-1 contributes non-redundantly to intestinal antibacterial defense in vivo.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics / host-pathogen survival and CFU assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O62415" data-a="EXPERIMENT: Generate a lys-1 null allele (CRISPR) and test sur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is not known whether LYS-1 has any muramidase / lysozyme (peptidoglycan-hydrolysing) enzymatic activity. All functional evidence is genetic (infection-inducible expression, RNAi, overexpression); the protein has never been purified or assayed, and its sequence lacks the conserved GH25 active-site residues, raising the possibility that it is a pseudo-muramidase.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> What is firmly established is that LYS-1 is a GH25 protist-type lysozyme whose gene is infection-inducible and functionally required for normal antibacterial defense (S. marcescens, S. aureus). What is unknown is the biochemical activity of the protein: whether it cleaves peptidoglycan, permeabilizes/agglutinates bacteria by another mechanism, or acts non-catalytically.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Whether LYS-1 kills bacteria enzymatically (like canonical lysozymes) or by a non-catalytic mechanism determines the correct molecular-function annotation and whether the current InterPro-based lysozyme-activity / peptidoglycan-catabolism annotations should stand. This is a recurring issue across the expanded, divergent C. elegans lysozyme family.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Express and purify recombinant LYS-1 and assay muramidase / bacteriolytic activity (e.g. on Micrococcus cell walls and defined peptidoglycan) and its ability to bind/permeabilize target bacteria; complement with active-site residue mutagenesis and structural analysis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"All available data is based on genetic analysis, whereas none of the lysozymes have been characterized at the protein level."</em> — PMID:21931778</li>
+
+                <li><em>"our study (and most previous studies) only indicates, but does not strictly prove a defence function of these enzymes. Unequivocal evidence would require analysis of the purified protein, especially its ability to interact with the pathogen at the molecular level."</em> — PMID:21931778</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular substrate or microbial target of LYS-1 is undefined: it is unknown which bacterial surface molecule(s) LYS-1 acts on, and whether its antibacterial spectrum extends beyond S. marcescens, S. aureus and B. thuringiensis.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LYS-1 is known to be required for resistance to S. aureus and to protect against S. marcescens when overexpressed, and it is transcriptionally induced by these plus B. thuringiensis. What is unknown is the direct biochemical target/substrate and the full microbial spectrum.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying the target molecule would clarify the mechanism (enzymatic versus binding/permeabilizing) and the range of pathogens LYS-1 counters, informing both its MF annotation and its place in the surveillance-immunity effector repertoire.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical target/substrate identification with purified protein (peptidoglycan/cell-wall degradation assays, pull-downs of bacterial ligands) and broader pathogen-panel survival/CFU assays with defined lys-1 loss- and gain-of-function strains.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Unequivocal evidence would require analysis of the purified protein, especially its ability to interact with the pathogen at the molecular level."</em> — PMID:21931778</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether lys-1 is individually necessary in vivo or is functionally redundant within the 15-member C. elegans lysozyme family is unresolved. The defense phenotypes rest on RNAi knockdown and overexpression rather than a characterized single-gene null, and many lysozyme paralogs share overlapping infection-induction profiles.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> lys-1 RNAi reduces S. aureus survival and lys-1 overexpression increases S. marcescens resistance, establishing a contribution to defense. What is unknown is the phenotype of a clean lys-1 loss-of-function null and the degree of redundancy with paralogs such as lys-2, lys-3 and lys-7.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Redundancy determines whether lys-1 is a non-redundant defense gene or one of several partially interchangeable effectors, which affects how strongly its individual loss impacts host survival and how its biological role should be weighted.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Generate and phenotype a lys-1 null allele (and higher-order lysozyme combinatorial mutants) across a pathogen panel, quantifying survival and pathogen load relative to wild type and to single-paralog mutants.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the nematode Caenorhabditis elegans harbours 15 phylogenetically diverse lysozyme genes"</em> — PMID:21931778</li>
+
+                <li><em>"Whether lys-1 is individually necessary in vivo, or redundant within the 15-member lysozyme family, is not resolved."</em> — file:worm/lys-1/lys-1-notes.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lys-1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O62415" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">26 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T21:01:44.126493</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lys-1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-c-elegans-lys-1-lysozyme-like-protein-1-y22f5a4-uniprot-o62415">Comprehensive Research Report: <em>C. elegans</em> lys-1 (Lysozyme-Like Protein 1, Y22F5A.4, UniProt: O62415)</h2>
+<h3 id="1-gene-identity-and-protein-classification">1. Gene Identity and Protein Classification</h3>
+<p>The <em>lys-1</em> gene (ORF Y22F5A.4) in <em>Caenorhabditis elegans</em> encodes Lysozyme-Like Protein 1 (LYS-1), a member of the glycosyl hydrolase family 25 (GH25). The <em>C. elegans</em> genome encodes 10 protist-type lysozymes (lys-1 through lys-10), all belonging to the GH25 family, as well as six invertebrate-type lysozymes (ilys-1 through ilys-6) (simonsen2012strengthinnumbers pages 4-5, schulenburg2004evolutionofthe pages 7-8). The protist-type lysozymes in <em>C. elegans</em> are structurally most similar to lysozymes found in the amoeboid protozoon <em>Entamoeba histolytica</em>, rather than to the chicken-type (GH22) or insect-type lysozyme families that are well-characterized in vertebrates and arthropods (schulenburg2004evolutionofthe pages 7-8, mallo2002inducibleantibacterialdefense pages 2-3). This phylogenetic relationship suggests an ancient protist-type lysozyme lineage retained in nematodes.</p>
+<h3 id="2-enzymatic-function-and-substrate-specificity">2. Enzymatic Function and Substrate Specificity</h3>
+<p>LYS-1 is classified as a muramidase (EC 3.2.1.17) based on its membership in the GH25 family. GH25 muramidases catalyze the hydrolysis of the β-1,4-glycosidic bond between <em>N</em>-acetylmuramic acid (MurNAc/NAM) and <em>N</em>-acetylglucosamine (GlcNAc/NAG) in the carbohydrate backbone of bacterial peptidoglycan (moroz2021fungalgh25muramidases pages 1-2). Characterized GH25 enzymes exhibit both β-1,4-<em>N</em>-acetyl- and β-1,4-<em>N</em>,6-<em>O</em>-diacetylmuramidase activities (moroz2021fungalgh25muramidases pages 1-2). The catalytic mechanism of GH25 muramidases involves substrate-assisted catalysis: an aspartate residue acts as a general acid, donating a proton to the glycosidic oxygen, while the <em>N</em>-acetyl group of the substrate itself acts as the enzymatic nucleophile to stabilize the oxocarbenium ion-like transition state (moroz2021fungalgh25muramidases pages 13-16). This mechanism is shared with family GH20 chitobiases.</p>
+<p>While no direct biochemical characterization of recombinant LYS-1 has been published, its enzymatic activity as a peptidoglycan-degrading muramidase is strongly inferred from its GH25 family membership and conserved domain architecture (simonsen2012strengthinnumbers pages 4-5, moroz2021fungalgh25muramidases pages 1-2). As antimicrobial proteins, lysozymes function by breaking down peptidoglycan, the major structural component of bacterial cell walls, causing bacterial cell lysis (simonsen2012strengthinnumbers pages 4-5). In <em>E. histolytica</em>, the related protist-type lysozymes are known to act synergistically with amoebapores to break up bacteria, and a similar synergistic action with <em>C. elegans</em> amoebapore-like peptides (SPP family) has been hypothesized (mallo2002inducibleantibacterialdefense pages 2-3).</p>
+<h3 id="3-tissue-expression-and-subcellular-localization">3. Tissue Expression and Subcellular Localization</h3>
+<p>LYS-1 is primarily expressed in intestinal cells throughout the length of the nematode body, consistent with its role as an antimicrobial effector at the primary site of pathogen encounter (mallo2002inducibleantibacterialdefense pages 3-4, alper2007specificityandcomplexity pages 3-4). Using <em>lys-1::GFP</em> reporter constructs, expression has been detected at multiple positions along the intestine, including mid-body, anterior-to-mid-body, and posterior regions (alper2007specificityandcomplexity pages 3-4). In addition to intestinal expression, <em>lys-1::GFP</em> is also expressed in specific neuronal populations, including the six IL1 and six IL2 neurons, a few additional neurons in the head ganglia, and two posterior phasmid chemosensory neurons (mallo2002inducibleantibacterialdefense pages 3-4, alper2007specificityandcomplexity pages 3-4, mallo2002inducibleantibacterialdefense pages 2-3). The functional significance of neuronal expression remains unclear.</p>
+<p>At the subcellular level, LYS-1::GFP localizes to vesicles within intestinal cells. These vesicles are distinct from secondary lysosomes and show a high concentration at the apical surface of intestinal cells, suggesting trafficking toward the intestinal lumen (mallo2002inducibleantibacterialdefense pages 3-4, schulenburg2004evolutionofthe pages 7-8). This localization pattern is reminiscent of the granular exocytosis mechanisms described in <em>E. histolytica</em> and secretory lysosomes in cytotoxic T lymphocytes (schulenburg2004evolutionofthe pages 7-8). The apical/luminal secretion is consistent with LYS-1 acting directly on bacteria present in the intestinal lumen, the primary site where <em>S. marcescens</em> and other pathogens colonize (mallo2002inducibleantibacterialdefense pages 3-4).</p>
+<h3 id="4-signaling-pathways-regulating-lys-1-expression">4. Signaling Pathways Regulating lys-1 Expression</h3>
+<p>The expression of <em>lys-1</em> is regulated by multiple conserved innate immune signaling pathways:</p>
+<p><strong>TIR-1/NSY-1 (SARM-MAPKKK) pathway:</strong> RNAi-mediated knockdown of either <em>nsy-1</em> (a MAPKKK) or <em>tir-1</em> (a TIR domain adaptor protein upstream of NSY-1) leads to strong reduction of <em>lys-1</em> expression, demonstrating that this pathway is a major positive regulator of constitutive <em>lys-1</em> transcription (alper2007specificityandcomplexity pages 5-7, alper2007specificityandcomplexity pages 4-5). The effects of <em>tir-1</em> and <em>nsy-1</em> knockdown on <em>lys-1</em> are nearly identical, consistent with their action in the same signaling cascade.</p>
+<p><strong>PMK-1/p38 MAPK pathway:</strong> Several studies have confirmed that <em>lys-1</em> is a PMK-1-dependent immune gene. In studies of probiotic-mediated immune stimulation, upregulation of <em>lys-1</em> by heat-inactivated <em>Lactobacillus curvatus</em> was abolished in <em>pmk-1</em> mutants, demonstrating PMK-1 dependence (dinic2021probioticmediatedp38mapk pages 4-5). Additionally, the bZIP transcription factor ZIP-11, which acts in a feedback loop with the PMK-1/p38 pathway, was shown to regulate <em>lys-1</em> among other PMK-1-dependent immune genes (zheng2021thebziptranscription pages 6-8).</p>
+<p><strong>TGF-β/DBL-1 pathway and PMK-1 dual regulation:</strong> One study explicitly noted that "the lysozyme-like protein Lys-1 is regulated by both TGF-β and PMK-1 signaling pathways" (liu2013componentsofthe pages 4-5, liu2013componentsofthe pages 2-2).</p>
+<p><strong>DAF-2/DAF-16 insulin-like signaling pathway:</strong> <em>lys-1</em> has been identified as a putative target of the DAF-16/FOXO transcription factor. In a genetic screen for DAF-16 target genes, RNAi knockdown of <em>lys-1</em> resulted in a synthetic dauer-constitutive (SynDaf) phenotype in a sensitized background, linking <em>lys-1</em> to the insulin-like signaling network that regulates both immunity and dauer formation (jensen2010rnaiscreenof pages 2-3, jensen2010rnaiscreenof pages 4-5).</p>
+<h3 id="5-pathogen-specific-induction">5. Pathogen-Specific Induction</h3>
+<p>The transcriptional induction of <em>lys-1</em> exhibits pathogen specificity. In the original study by Mallo et al. (2002), <em>lys-1</em> was identified as one of the most robustly induced genes following infection with the Gram-negative bacterium <em>Serratia marcescens</em>, confirmed by both microarray and Northern blot analyses at 24 and 48 hours post-infection (mallo2002inducibleantibacterialdefense pages 2-3, mallo2002inducibleantibacterialdefense pages 1-2). Subsequent work by Alper et al. (2007) found that <em>lys-1</em> was induced by <em>Pseudomonas aeruginosa</em> but not by <em>S. marcescens</em> in their experimental conditions, highlighting that quantitative differences in induction can depend on experimental context, timing, and bacterial strain (alper2007specificityandcomplexity pages 5-7). More recent studies have confirmed <em>lys-1</em> upregulation in the context of <em>Staphylococcus aureus</em> infection (jensen2010rnaiscreenof pages 2-3) and various other pathogenic and probiotic bacterial challenges (dinic2021probioticmediatedp38mapk pages 4-5).</p>
+<h3 id="6-functional-evidence-from-genetic-experiments">6. Functional Evidence from Genetic Experiments</h3>
+<p><strong>Overexpression:</strong> Transgenic <em>C. elegans</em> overexpressing the <em>lys-1::GFP</em> fusion construct showed significantly increased survival when challenged with the protease-deficient <em>S. marcescens</em> strain Db1140, providing direct evidence that LYS-1 contributes to antibacterial defense (mallo2002inducibleantibacterialdefense pages 1-2, mallo2002inducibleantibacterialdefense pages 3-4). Importantly, overexpression did not confer protection against the more virulent wild-type Db11 strain, likely because bacterial proteases produced by virulent <em>S. marcescens</em> can counteract LYS-1's protective effects (mallo2002inducibleantibacterialdefense pages 3-4, schulenburg2004evolutionofthe pages 6-7). Overexpression of <em>lys-1</em> has also been noted to augment resistance to <em>S. marcescens</em> in other reports (mallo2002inducibleantibacterialdefense pages 1-2).</p>
+<p><strong>Knockdown:</strong> RNAi knockdown of <em>lys-1</em> in wild-type worms had little effect on survival against <em>S. marcescens</em>, suggesting that multiple redundant defense factors contribute to antibacterial immunity in <em>C. elegans</em> (mallo2002inducibleantibacterialdefense pages 3-4, schulenburg2004evolutionofthe pages 6-7). However, in a sensitized RNAi-hypersensitive background (<em>rrf-3</em>), <em>lys-1</em> RNAi significantly reduced survival upon <em>S. aureus</em> challenge, indicating that LYS-1 does contribute to pathogen resistance when other defense mechanisms are limiting (jensen2010rnaiscreenof pages 2-3, jensen2010rnaiscreenof pages 4-5).</p>
+<h3 id="7-broader-biological-context-innate-immunity-and-dauer-formation">7. Broader Biological Context: Innate Immunity and Dauer Formation</h3>
+<p>An intriguing link has been established between <em>lys-1</em>-mediated innate immunity and the developmental decision to enter the dauer larval stage. Jensen et al. (2010) showed that <em>lys-1</em> knockdown causes a synthetic dauer-constitutive phenotype when combined with the <em>sdf-9</em> mutation, suggesting that infection-induced stress or compromised immunity can feed back into the dauer signaling circuit (jensen2010rnaiscreenof pages 2-3, jensen2010rnaiscreenof pages 4-5). This is consistent with the broader model that pathogen exposure increases dauer pheromone production and promotes dauer entry as a behavioral response to pathogenic environments (jensen2010rnaiscreenof pages 3-4).</p>
+<h3 id="8-summary">8. Summary</h3>
+<p>The following table summarizes the key properties of LYS-1:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Summary</th>
+<th>Evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>lys-1</strong>; encodes lysozyme-like protein 1 in <em>Caenorhabditis elegans</em></td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3, alper2007specificityandcomplexity pages 1-2)</td>
+</tr>
+<tr>
+<td>ORF</td>
+<td><strong>Y22F5A.4</strong></td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3)</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td><strong>O62415</strong></td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3)</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>Protist-type lysozyme; glycosyl hydrolase family 25 (<strong>GH25</strong>), one of 10 <em>C. elegans</em> protist-type lysozymes (lys-1 to lys-10)</td>
+<td>(simonsen2012strengthinnumbers pages 4-5, schulenburg2004evolutionofthe pages 7-8, mallo2002inducibleantibacterialdefense pages 2-3)</td>
+</tr>
+<tr>
+<td>Enzymatic activity</td>
+<td>Predicted <strong>muramidase/lysozyme</strong> that hydrolyzes bacterial peptidoglycan; direct biochemical activity has not been shown for LYS-1 itself, but inferred from GH25 family membership</td>
+<td>(simonsen2012strengthinnumbers pages 4-5, moroz2021fungalgh25muramidases pages 1-2, moroz2021fungalgh25muramidases pages 13-16)</td>
+</tr>
+<tr>
+<td>Substrate</td>
+<td>Bacterial <strong>peptidoglycan</strong>, specifically the β-1,4 glycosidic bond between <strong>MurNAc/NAM</strong> and <strong>GlcNAc/NAG</strong> in the glycan backbone</td>
+<td>(vollmer2008bacterialpeptidoglycan(murein) pages 6-7, moroz2021fungalgh25muramidases pages 1-2)</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td>Inferred GH25 mechanism: substrate-assisted catalysis with an <strong>Asp</strong> acting as general acid; the substrate N-acetyl group contributes to catalysis</td>
+<td>(moroz2021fungalgh25muramidases pages 13-16)</td>
+</tr>
+<tr>
+<td>Tissue expression</td>
+<td>Strongly expressed in <strong>intestinal cells</strong>; also reported in <strong>IL1/IL2 neurons</strong>, head ganglia neurons, and posterior <strong>phasmid chemosensory neurons</strong> in reporter analyses</td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3, mallo2002inducibleantibacterialdefense pages 3-4, alper2007specificityandcomplexity pages 3-4)</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Vesicular</strong> localization in intestinal cells, with vesicles concentrated near the <strong>apical surface</strong>; distinct from secondary lysosomes and suggestive of trafficking toward the <strong>intestinal lumen</strong></td>
+<td>(schulenburg2004evolutionofthe pages 7-8, mallo2002inducibleantibacterialdefense pages 3-4)</td>
+</tr>
+<tr>
+<td>Likely site of action</td>
+<td>Likely acts in or toward the <strong>intestinal lumen</strong>, consistent with defense against ingested bacteria and luminal pathogens</td>
+<td>(schulenburg2004evolutionofthe pages 7-8, mallo2002inducibleantibacterialdefense pages 3-4)</td>
+</tr>
+<tr>
+<td>Signaling pathways regulating expression</td>
+<td>Expression requires <strong>TIR-1/NSY-1</strong> innate immune signaling; lys-1 is also reported to be regulated by <strong>PMK-1/p38 MAPK</strong> and <strong>TGF-β/DBL-1</strong> pathways; lys-1 is additionally described as a <strong>DAF-16/FOXO target</strong> in the insulin-like signaling network</td>
+<td>(alper2007specificityandcomplexity pages 5-7, alper2007specificityandcomplexity pages 4-5, liu2013componentsofthe pages 4-5, jensen2010rnaiscreenof pages 2-3, dinic2021probioticmediatedp38mapk pages 4-5)</td>
+</tr>
+<tr>
+<td>Pathogen induction</td>
+<td>Reported as induced during infection by <strong>Serratia marcescens</strong> and <strong>Pseudomonas aeruginosa</strong>; one study found induction by <strong>P. aeruginosa but not S. marcescens</strong>, indicating pathogen- and condition-specific regulation across assays</td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3, mallo2002inducibleantibacterialdefense pages 1-2, alper2007specificityandcomplexity pages 5-7)</td>
+</tr>
+<tr>
+<td>Functional evidence: overexpression</td>
+<td>Transgenic overexpression/lys-1::GFP animals showed <strong>increased resistance</strong> to the less virulent <em>S. marcescens</em> strain <strong>Db1140</strong>, but not to the more virulent strain <strong>Db11</strong></td>
+<td>(mallo2002inducibleantibacterialdefense pages 1-2, mallo2002inducibleantibacterialdefense pages 3-4)</td>
+</tr>
+<tr>
+<td>Functional evidence: knockdown</td>
+<td><strong>lys-1 RNAi</strong> abolished reporter expression but had little effect on survival against <em>S. marcescens</em> Db1140, suggesting redundancy; in a separate study, <strong>lys-1 RNAi increased sensitivity to Staphylococcus aureus</strong> and promoted dauer-related phenotypes in a sensitized background</td>
+<td>(schulenburg2004evolutionofthe pages 6-7, jensen2010rnaiscreenof pages 2-3, jensen2010rnaiscreenof pages 4-5, mallo2002inducibleantibacterialdefense pages 3-4)</td>
+</tr>
+<tr>
+<td>Biological role</td>
+<td>Antibacterial <strong>innate immune effector</strong> positioned at host-environment interfaces, especially the intestine; likely contributes to bacterial cell-wall degradation and host defense in combination with other effectors</td>
+<td>(schulenburg2004evolutionofthe pages 7-8, alper2007specificityandcomplexity pages 1-2, simonsen2012strengthinnumbers pages 4-5)</td>
+</tr>
+<tr>
+<td>Evolutionary relationships</td>
+<td>LYS-1 is evolutionarily closer to <strong>protist/Entamoeba histolytica</strong> lysozymes than to classical vertebrate chicken-type or insect lysozymes; this supports an ancient <strong>protist-type</strong> lysozyme lineage in nematodes</td>
+<td>(mallo2002inducibleantibacterialdefense pages 2-3, schulenburg2004evolutionofthe pages 7-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the main annotated and experimentally supported properties of C. elegans LYS-1, including molecular identity, inferred enzymatic activity, localization, regulation, pathogen responsiveness, and functional evidence. It is useful as a compact evidence map for gene functional annotation.</em></p>
+<p>In summary, <em>C. elegans</em> LYS-1 is a protist-type lysozyme of the glycosyl hydrolase family 25 that functions as an antimicrobial effector in the nematode's innate immune system. Based on its GH25 family membership, LYS-1 is predicted to catalyze the hydrolysis of the β-1,4-glycosidic bond between MurNAc and GlcNAc in bacterial peptidoglycan, using a substrate-assisted catalytic mechanism (moroz2021fungalgh25muramidases pages 1-2, moroz2021fungalgh25muramidases pages 13-16). The protein is expressed constitutively in intestinal cells, where it localizes to vesicles that traffic toward the apical surface for likely secretion into the intestinal lumen—the primary site of bacterial encounter (mallo2002inducibleantibacterialdefense pages 3-4, schulenburg2004evolutionofthe pages 7-8). Its expression is transcriptionally regulated by the TIR-1/NSY-1 SARM-MAPKKK pathway and the PMK-1/p38 MAPK cascade, as well as by the TGF-β/DBL-1 and DAF-2/DAF-16 insulin-like signaling pathways (alper2007specificityandcomplexity pages 5-7, alper2007specificityandcomplexity pages 4-5, liu2013componentsofthe pages 4-5, jensen2010rnaiscreenof pages 2-3, dinic2021probioticmediatedp38mapk pages 4-5). Functionally, overexpression of LYS-1 enhances resistance to bacterial pathogens, while its knockdown increases susceptibility, particularly to <em>Staphylococcus aureus</em> (mallo2002inducibleantibacterialdefense pages 1-2, jensen2010rnaiscreenof pages 2-3, mallo2002inducibleantibacterialdefense pages 3-4). The redundancy of the lysozyme family in <em>C. elegans</em>, with at least 16 lysozyme genes across two distinct families, likely reflects the central importance of peptidoglycan degradation in the nematode's bacterivorous lifestyle and innate immune defense (simonsen2012strengthinnumbers pages 4-5, schulenburg2004evolutionofthe pages 7-8).</p>
+<p>References</p>
+<ol>
+<li>
+<p>(simonsen2012strengthinnumbers pages 4-5): Karina T. Simonsen, Sandra F. Gallego, Nils J. Færgeman, and Birgitte H. Kallipolitis. Strength in numbers. Virulence, 3:477-484, Oct 2012. URL: https://doi.org/10.4161/viru.21906, doi:10.4161/viru.21906. This article has 36 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schulenburg2004evolutionofthe pages 7-8): Hinrich Schulenburg, C. Léopold Kurz, and Jonathan J. Ewbank. Evolution of the innate immune system: the worm perspective. Immunological Reviews, 198:36-58, Apr 2004. URL: https://doi.org/10.1111/j.0105-2896.2004.0125.x, doi:10.1111/j.0105-2896.2004.0125.x. This article has 317 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mallo2002inducibleantibacterialdefense pages 2-3): Gustavo V. Mallo, C.Léopold Kurz, Carole Couillault, Nathalie Pujol, Samuel Granjeaud, Yuji Kohara, and Jonathan J. Ewbank. Inducible antibacterial defense system in c. elegans. Current Biology, 12:1209-1214, Jul 2002. URL: https://doi.org/10.1016/s0960-9822(02)00928-4, doi:10.1016/s0960-9822(02)00928-4. This article has 614 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moroz2021fungalgh25muramidases pages 1-2): Olga V. Moroz, Elena Blagova, Edward Taylor, Johan P. Turkenburg, Lars K. Skov, Garry P. Gippert, Kirk M. Schnorr, Li Ming, Liu Ye, Mikkel Klausen, Marianne T. Cohn, Esben G. W. Schmidt, Søren Nymand-Grarup, Gideon J. Davies, and Keith S. Wilson. Fungal gh25 muramidases: new family members with applications in animal nutrition and a crystal structure at 0.78å resolution. PLOS ONE, 16:e0248190, Mar 2021. URL: https://doi.org/10.1371/journal.pone.0248190, doi:10.1371/journal.pone.0248190. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(moroz2021fungalgh25muramidases pages 13-16): Olga V. Moroz, Elena Blagova, Edward Taylor, Johan P. Turkenburg, Lars K. Skov, Garry P. Gippert, Kirk M. Schnorr, Li Ming, Liu Ye, Mikkel Klausen, Marianne T. Cohn, Esben G. W. Schmidt, Søren Nymand-Grarup, Gideon J. Davies, and Keith S. Wilson. Fungal gh25 muramidases: new family members with applications in animal nutrition and a crystal structure at 0.78å resolution. PLOS ONE, 16:e0248190, Mar 2021. URL: https://doi.org/10.1371/journal.pone.0248190, doi:10.1371/journal.pone.0248190. This article has 12 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mallo2002inducibleantibacterialdefense pages 3-4): Gustavo V. Mallo, C.Léopold Kurz, Carole Couillault, Nathalie Pujol, Samuel Granjeaud, Yuji Kohara, and Jonathan J. Ewbank. Inducible antibacterial defense system in c. elegans. Current Biology, 12:1209-1214, Jul 2002. URL: https://doi.org/10.1016/s0960-9822(02)00928-4, doi:10.1016/s0960-9822(02)00928-4. This article has 614 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alper2007specificityandcomplexity pages 3-4): Scott Alper, Sandra J. McBride, Brad Lackford, Jonathan H. Freedman, and David A. Schwartz. Specificity and complexity of the <i>caenorhabditis elegans</i> innate immune response. Aug 2007. URL: https://doi.org/10.1128/mcb.02070-06, doi:10.1128/mcb.02070-06. This article has 232 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alper2007specificityandcomplexity pages 5-7): Scott Alper, Sandra J. McBride, Brad Lackford, Jonathan H. Freedman, and David A. Schwartz. Specificity and complexity of the <i>caenorhabditis elegans</i> innate immune response. Aug 2007. URL: https://doi.org/10.1128/mcb.02070-06, doi:10.1128/mcb.02070-06. This article has 232 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alper2007specificityandcomplexity pages 4-5): Scott Alper, Sandra J. McBride, Brad Lackford, Jonathan H. Freedman, and David A. Schwartz. Specificity and complexity of the <i>caenorhabditis elegans</i> innate immune response. Aug 2007. URL: https://doi.org/10.1128/mcb.02070-06, doi:10.1128/mcb.02070-06. This article has 232 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dinic2021probioticmediatedp38mapk pages 4-5): Miroslav Dinić, Stefan Jakovljević, Jelena Đokić, Nikola Popović, Dušan Radojević, Ivana Strahinić, and Nataša Golić. Probiotic-mediated p38 mapk immune signaling prolongs the survival of caenorhabditis elegans exposed to pathogenic bacteria. Scientific Reports, Oct 2021. URL: https://doi.org/10.1038/s41598-021-00698-5, doi:10.1038/s41598-021-00698-5. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zheng2021thebziptranscription pages 6-8): Zhongfan Zheng, Yilixiati Aihemaiti, Junqiang Liu, Muhammad Irfan Afridi, Shengmei Yang, Xiumei Zhang, Yongfu Xu, Chunhong Chen, and Haijun Tu. The bzip transcription factor zip-11 is required for the innate immune regulation in caenorhabditis elegans. Frontiers in Immunology, Nov 2021. URL: https://doi.org/10.3389/fimmu.2021.744454, doi:10.3389/fimmu.2021.744454. This article has 8 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2013componentsofthe pages 4-5): Jinghua Liu, Jeff Hafting, Alan T. Critchley, Arjun H. Banskota, and Balakrishnan Prithiviraj. Components of the cultivated red seaweed chondrus crispus enhance the immune response of caenorhabditis elegans to pseudomonas aeruginosa through the <i>pmk-1</i> , <i>daf-2/daf-16</i> , and <i>skn-1</i> pathways. Applied and Environmental Microbiology, 79:7343-7350, Dec 2013. URL: https://doi.org/10.1128/aem.01927-13, doi:10.1128/aem.01927-13. This article has 85 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liu2013componentsofthe pages 2-2): Jinghua Liu, Jeff Hafting, Alan T. Critchley, Arjun H. Banskota, and Balakrishnan Prithiviraj. Components of the cultivated red seaweed chondrus crispus enhance the immune response of caenorhabditis elegans to pseudomonas aeruginosa through the <i>pmk-1</i> , <i>daf-2/daf-16</i> , and <i>skn-1</i> pathways. Applied and Environmental Microbiology, 79:7343-7350, Dec 2013. URL: https://doi.org/10.1128/aem.01927-13, doi:10.1128/aem.01927-13. This article has 85 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jensen2010rnaiscreenof pages 2-3): Victor L. Jensen, Karina T. Simonsen, Yu-Hui Lee, Donha Park, and Donald L. Riddle. Rnai screen of daf-16/foxo target genes in c. elegans links pathogenesis and dauer formation. PLoS ONE, 5:e15902, Dec 2010. URL: https://doi.org/10.1371/journal.pone.0015902, doi:10.1371/journal.pone.0015902. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jensen2010rnaiscreenof pages 4-5): Victor L. Jensen, Karina T. Simonsen, Yu-Hui Lee, Donha Park, and Donald L. Riddle. Rnai screen of daf-16/foxo target genes in c. elegans links pathogenesis and dauer formation. PLoS ONE, 5:e15902, Dec 2010. URL: https://doi.org/10.1371/journal.pone.0015902, doi:10.1371/journal.pone.0015902. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mallo2002inducibleantibacterialdefense pages 1-2): Gustavo V. Mallo, C.Léopold Kurz, Carole Couillault, Nathalie Pujol, Samuel Granjeaud, Yuji Kohara, and Jonathan J. Ewbank. Inducible antibacterial defense system in c. elegans. Current Biology, 12:1209-1214, Jul 2002. URL: https://doi.org/10.1016/s0960-9822(02)00928-4, doi:10.1016/s0960-9822(02)00928-4. This article has 614 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schulenburg2004evolutionofthe pages 6-7): Hinrich Schulenburg, C. Léopold Kurz, and Jonathan J. Ewbank. Evolution of the innate immune system: the worm perspective. Immunological Reviews, 198:36-58, Apr 2004. URL: https://doi.org/10.1111/j.0105-2896.2004.0125.x, doi:10.1111/j.0105-2896.2004.0125.x. This article has 317 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jensen2010rnaiscreenof pages 3-4): Victor L. Jensen, Karina T. Simonsen, Yu-Hui Lee, Donha Park, and Donald L. Riddle. Rnai screen of daf-16/foxo target genes in c. elegans links pathogenesis and dauer formation. PLoS ONE, 5:e15902, Dec 2010. URL: https://doi.org/10.1371/journal.pone.0015902, doi:10.1371/journal.pone.0015902. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alper2007specificityandcomplexity pages 1-2): Scott Alper, Sandra J. McBride, Brad Lackford, Jonathan H. Freedman, and David A. Schwartz. Specificity and complexity of the <i>caenorhabditis elegans</i> innate immune response. Aug 2007. URL: https://doi.org/10.1128/mcb.02070-06, doi:10.1128/mcb.02070-06. This article has 232 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vollmer2008bacterialpeptidoglycan(murein) pages 6-7): Waldemar Vollmer, Bernard Joris, Paulette Charlier, and Simon Foster. Bacterial peptidoglycan (murein) hydrolases. FEMS microbiology reviews, 32 2:259-86, Mar 2008. URL: https://doi.org/10.1111/j.1574-6976.2007.00099.x, doi:10.1111/j.1574-6976.2007.00099.x. This article has 1226 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lys-1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>simonsen2012strengthinnumbers pages 4-5</li>
+<li>mallo2002inducibleantibacterialdefense pages 2-3</li>
+<li>alper2007specificityandcomplexity pages 3-4</li>
+<li>schulenburg2004evolutionofthe pages 7-8</li>
+<li>mallo2002inducibleantibacterialdefense pages 3-4</li>
+<li>zheng2021thebziptranscription pages 6-8</li>
+<li>alper2007specificityandcomplexity pages 5-7</li>
+<li>jensen2010rnaiscreenof pages 2-3</li>
+<li>mallo2002inducibleantibacterialdefense pages 1-2</li>
+<li>jensen2010rnaiscreenof pages 3-4</li>
+<li>alper2007specificityandcomplexity pages 4-5</li>
+<li>liu2013componentsofthe pages 4-5</li>
+<li>liu2013componentsofthe pages 2-2</li>
+<li>jensen2010rnaiscreenof pages 4-5</li>
+<li>schulenburg2004evolutionofthe pages 6-7</li>
+<li>alper2007specificityandcomplexity pages 1-2</li>
+<li>https://doi.org/10.4161/viru.21906,</li>
+<li>https://doi.org/10.1111/j.0105-2896.2004.0125.x,</li>
+<li>https://doi.org/10.1016/s0960-9822(02</li>
+<li>https://doi.org/10.1371/journal.pone.0248190,</li>
+<li>https://doi.org/10.1128/mcb.02070-06,</li>
+<li>https://doi.org/10.1038/s41598-021-00698-5,</li>
+<li>https://doi.org/10.3389/fimmu.2021.744454,</li>
+<li>https://doi.org/10.1128/aem.01927-13,</li>
+<li>https://doi.org/10.1371/journal.pone.0015902,</li>
+<li>https://doi.org/10.1111/j.1574-6976.2007.00099.x,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lys-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O62415" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lys-1-caenorhabditis-elegans-research-notes">lys-1 (Caenorhabditis elegans) — research notes</h1>
+<p>UniProt: O62415 (LYS1_CAEEL) · WormBase: WBGene00003090 / Y22F5A.4 · Chromosome V<br />
+Gene product: Lysozyme-like protein 1 (LYS-1). Precursor with N-terminal signal peptide.</p>
+<h2 id="summary-of-what-is-known-vs-not-known">Summary of what is KNOWN vs NOT KNOWN</h2>
+<h3 id="known">KNOWN</h3>
+<ul>
+<li>lys-1 is a member of the C. elegans <strong>protist-type (Entamoeba-type)</strong> lysozyme family<br />
+  (<code>lys</code> genes), one of two lysozyme classes in the worm (the other being the<br />
+  invertebrate-type <code>ilys</code> genes). C. elegans has an unusually large, divergent lysozyme<br />
+  family: <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="the nematode Caenorhabditis elegans harbours 15 phylogenetically   diverse lysozyme genes, belonging to two distinct types, the protist- or Entamoeba-type   (lys genes) and the invertebrate-type (ilys genes) lysozymes.">PMID:21931778</a>. lys-1 is one of the<br />
+  chromosome V protist-type lysozymes: <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="Reddish/yellowish bar colours refer   to the lysozymes from chromosome V (lys-1, lys-2, lys-3, and lys-7)">PMID:21931778</a>.</li>
+<li>Structurally it belongs to the <strong>glycosyl hydrolase family 25 (GH25)</strong> (UniProt SIMILARITY:<br />
+  "Belongs to the glycosyl hydrolase 25 family."; InterPro Glyco_hydro_25 IPR002053; PROSITE<br />
+  Ch-type lysozyme domain PS51904; CDD cd06416 GH25_Lys1-like; PANTHER PTHR23208:SF41).</li>
+<li>lys-1 is an <strong>infection-inducible antibacterial effector</strong>. It is among the most strongly<br />
+  induced genes upon infection with the Gram-negative bacterium <em>Serratia marcescens</em>:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12176330" title="Among the most robustly induced are genes encoding lectins and lysozymes,   known to be involved in immune responses in other organisms.">PMID:12176330</a>. Overexpression is<br />
+  protective: <a href="https://pubmed.ncbi.nlm.nih.gov/12176330" title="overexpression of the lysozyme gene lys-1 augments the   resistance of C. elegans to S. marcescens.">PMID:12176330</a>.</li>
+<li>lys-1 is required for normal resistance to the Gram-positive bacterium <em>Staphylococcus<br />
+  aureus</em>. RNAi knockdown reduces survival on S. aureus:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21209831" title="we show that two of these genes, lys-1 and clc-1, are required for normal   resistance to Staphylococcus aureus.">PMID:21209831</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/21209831" title="The TD50 (time required for 50% of   the nematodes to die) for lys-1 was 4.7 days (p&lt;0.0001) ... compared to 6.8 days for the   GFP RNAi control.">PMID:21209831</a>.</li>
+<li>lys-1 is a <strong>DAF-16/FOXO transcriptional target</strong> and behaves as a synthetic dauer-formation<br />
+  (SynDaf) gene, linking innate immunity to the insulin/IGF-1 signalling (dauer) axis:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21209831" title="Two of the latter genes, lys-1 and cpr-1, are known to participate in innate   immunity">PMID:21209831</a> (the whole screen was of DAF-16 targets; lys-1 gave a SynDaf phenotype, Table 1,<br />
+  19.1% dauer).</li>
+<li>lys-1 is induced by additional pathogens. It is transcriptionally upregulated by<br />
+<em>Bacillus thuringiensis</em> in all three tested C. elegans strains:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="significant upregulation was found for lys-1 and lys-2 in all three C.   elegans strains">PMID:21931778</a>. It is also part of the intestinal ELT-2/GATA-regulated infection response<br />
+  program (HEP annotation, PMID:16968778 genome-wide study of intestinal innate immune genes).</li>
+<li>Expression / localization (from the UniProt curated summary of PMID:12176330 full text; the<br />
+  cached publication is abstract-only, so these come from the curator who read the full paper):<br />
+  expressed in intestine and in a subset of head neurons (IL2, IL6 and other head ganglia<br />
+  neurons); the protein localizes to vesicles in the apical region of intestinal cells<br />
+  (cytoplasmic vesicle / cytoplasmic vesicle lumen; apical part of cell).</li>
+<li>Direct genetic/overexpression evidence links lys-1 to defence against two pathogens:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="four lysozyme genes were directly shown by overexpression and mutant or   RNAi-knock down analysis to contribute to the nematode's defence against pathogens: lys-1   against Serratia marcescens and Staphylococcus aureus">PMID:21931778</a>.</li>
+</ul>
+<h3 id="not-known-knowledge-gaps">NOT KNOWN (knowledge gaps)</h3>
+<ul>
+<li><strong>Whether LYS-1 actually has muramidase / lysozyme enzymatic (peptidoglycan-hydrolysing)<br />
+  activity is NOT demonstrated.</strong> All functional data are genetic (expression, RNAi,<br />
+  overexpression); the protein has never been purified or assayed biochemically:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="All available data is based on genetic analysis, whereas none of the   lysozymes have been characterized at the protein level.">PMID:21931778</a>;<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="our study (and most previous studies) only indicates, but does not strictly   prove a defence function of these enzymes. Unequivocal evidence would require analysis of   the purified protein, especially its ability to interact with the pathogen at the molecular   level.">PMID:21931778</a>.<br />
+  Critically, UniProt flags a <strong>CAUTION</strong> on the sequence itself:<br />
+  "Lacks conserved active site residues, suggesting it has no catalytic activity."<br />
+  (UniProt O62415, CC CAUTION line, ECO:0000305). So the <code>lysozyme activity</code> and<br />
+<code>peptidoglycan catabolic process</code> / <code>cell wall macromolecule catabolic process</code> annotations<br />
+  are family-level IEA (InterPro) inferences that may not hold for this specific paralog.</li>
+<li>The <strong>molecular substrate / target microbe surface molecule</strong> of LYS-1 (if any) is unknown;<br />
+  no biochemical demonstration of peptidoglycan cleavage or bacteriolysis by LYS-1 exists.</li>
+<li>Whether lys-1 is <strong>individually necessary</strong> in vivo, or <strong>redundant</strong> within the 15-member<br />
+  lysozyme family, is not resolved. The evidence for a defence role is RNAi/overexpression, not<br />
+  a clean single-gene loss-of-function null; the large paralog family and overlapping infection<br />
+  induction profiles suggest possible redundancy <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="the encountered genetic   diversity may reflect functional diversity">PMID:21931778</a>.</li>
+<li>Whether lys-1 has a <strong>digestive / nutritional (non-immune)</strong> role, as lysozymes do in some<br />
+  organisms <a href="https://pubmed.ncbi.nlm.nih.gov/21931778" title="They ... play important roles in both immunity and digestion">PMID:21931778</a>, is<br />
+  untested in C. elegans.</li>
+</ul>
+<h2 id="per-annotation-reasoning-goa">Per-annotation reasoning (GOA)</h2>
+<ol>
+<li>GO:0007165 signal transduction (IBA, GO_REF:0000033) — This IBA is propagated from a<br />
+   PANTHER subfamily (PTN000574946, seeded from <em>Dictyostelium</em>). Lysozymes are secreted<br />
+   antibacterial hydrolases / effectors, not signalling proteins; there is no evidence LYS-1<br />
+   transduces a signal. This is a spurious/over-broad phylogenetic propagation. → REMOVE.</li>
+<li>GO:0045087 innate immune response (IBA, GO_REF:0000033) — supported by whole picture and by<br />
+   the experimental IMP/HEP annotations below; but IBA here is redundant with the stronger<br />
+   experimental annotations. Keep as non-core (BP context). → KEEP_AS_NON_CORE.</li>
+<li>GO:0003796 lysozyme activity (IEA, InterPro IPR002053) — family/domain-based MF inference.<br />
+   NOT experimentally demonstrated for LYS-1, and UniProt CAUTION says it lacks conserved<br />
+   active-site residues. This is the central MF uncertainty. → UNDECIDED / MARK_AS_OVER_ANNOTATED<br />
+   (I will use UNDECIDED: cannot verify demonstrated activity, and cannot definitively rule out<br />
+   family activity without biochemistry; the CAUTION suggests possible pseudo-muramidase).</li>
+<li>GO:0006950 response to stress (IEA, ARBA GO_REF:0000117) — extremely generic; ARBA<br />
+   machine-learned. The specific defense-response terms below capture the biology far better.<br />
+   → MARK_AS_OVER_ANNOTATED (too generic to be informative).</li>
+<li>GO:0009253 peptidoglycan catabolic process (IEA, InterPro) — the BP counterpart of the<br />
+   unverified lysozyme MF; same caveat. → UNDECIDED.</li>
+<li>GO:0016998 cell wall macromolecule catabolic process (IEA, InterPro) — same family-inference<br />
+   caveat, and it is a more general parent of peptidoglycan catabolism. → UNDECIDED.</li>
+<li>GO:0060205 cytoplasmic vesicle lumen (IEA, UniProtKB-SubCell GO_REF:0000044) — SubCell<br />
+   propagation matching the curated location. Redundant with the EXP annotation; keep non-core.<br />
+   → KEEP_AS_NON_CORE.</li>
+<li>GO:0060205 cytoplasmic vesicle lumen (EXP, PMID:12176330) — curated location from the<br />
+   primary paper (apical intestinal vesicles). → ACCEPT (CC location).</li>
+<li>GO:0045087 innate immune response (HEP, PMID:16968778) — expression-based (ELT-2/GATA<br />
+   intestinal infection-response program). Consistent. → KEEP_AS_NON_CORE.</li>
+<li>GO:0045087 innate immune response (IMP, PMID:21209831) — RNAi reduces S. aureus survival;<br />
+    solid experimental BP. → ACCEPT.</li>
+<li>GO:0050830 defense response to Gram-positive bacterium (IMP, PMID:21209831) — S. aureus is<br />
+    Gram-positive; RNAi reduces survival on it. Directly supported and specific. → ACCEPT (core).</li>
+<li>GO:0031410 cytoplasmic vesicle (IDA, PMID:12176330) — curated location. → ACCEPT (CC).</li>
+<li>GO:0045177 apical part of cell (IDA, PMID:12176330) — apical intestinal localization.<br />
+    → ACCEPT (CC).</li>
+<li>GO:0050829 defense response to Gram-negative bacterium (IEP, PMID:12176330) — induced by<br />
+    S. marcescens (Gram-negative) and overexpression protects. IEP = expression-based; the<br />
+    overexpression protection strengthens it. → ACCEPT (core BP).</li>
+</ol>
+<h2 id="family-paralog-context-do-not-confuse-lys-1-with-paralogs">Family / paralog context (do not confuse lys-1 with paralogs)</h2>
+<ul>
+<li>lys-1, lys-2, lys-3, lys-7 are chromosome V protist-type lysozymes; lys-4/5/6/10 chr IV;<br />
+  lys-8 chr II [PMID:21931778 Figure 1 legend].</li>
+<li>Functionally characterized paralogs by genetics: lys-2 (P. aeruginosa, B. thuringiensis),<br />
+  lys-5 &amp; lys-7 (B. thuringiensis and others), ilys-3 (M. nematophilum) <a href="https://pubmed.ncbi.nlm.nih.gov/21931778">PMID:21931778</a>.<br />
+  These are DIFFERENT genes; lys-1's own direct evidence is S. marcescens + S. aureus.</li>
+</ul>
+<h2 id="provenance-notes">Provenance notes</h2>
+<ul>
+<li>PMID:12176330 (Mallo et al., Curr Biol 2002) — cached copy is ABSTRACT-ONLY<br />
+  (full_text_available: false). Localization/tissue-specificity claims (apical intestinal<br />
+  vesicles; IL2/IL6 neurons) are in the UniProt curated record from the full text, not in the<br />
+  cached abstract. Do not quote those as verbatim supporting_text from the cache.</li>
+<li>PMID:21209831 (Jensen et al., PLoS ONE 2010) — FULL TEXT cached. Strong source for S. aureus<br />
+  RNAi phenotype and DAF-16/dauer link.</li>
+<li>PMID:21931778 (Boehnisch et al., PLoS ONE 2011) — FULL TEXT cached. Best source for<br />
+  protist-type classification, B. thuringiensis induction of lys-1, and the explicit "no<br />
+  protein-level characterization" statements underpinning the knowledge gaps.</li>
+<li>PMID:16968778 (Shapira et al., PNAS 2006) — ABSTRACT-ONLY. ELT-2/GATA intestinal<br />
+  infection-response program; source of the HEP innate-immune-response annotation.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O62415
+gene_symbol: lys-1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  LYS-1 is one of the protist-type (Entamoeba-type) lysozymes of Caenorhabditis
+  elegans, a nematode that carries an unusually large and divergent lysozyme
+  family (15 genes split into protist-type lys and invertebrate-type ilys
+  classes). Structurally it is a glycoside hydrolase family 25 (GH25) protein
+  with an N-terminal signal peptide. LYS-1 functions as an infection-inducible
+  antibacterial effector of the intestinal innate immune response: it is one of
+  the most strongly induced genes upon infection by the Gram-negative bacterium
+  Serratia marcescens, and its overexpression increases resistance to that
+  pathogen, while RNAi knockdown reduces survival on the Gram-positive bacterium
+  Staphylococcus aureus. It is also transcriptionally upregulated by Bacillus
+  thuringiensis and is part of the ELT-2/GATA-controlled intestinal
+  infection-response program, and it is a DAF-16/FOXO target that links the
+  immune response to the dauer developmental decision. The protein localizes to
+  vesicles in the apical region of intestinal cells and is expressed in the
+  intestine and a subset of head neurons. Although the GH25 fold implies
+  muramidase (peptidoglycan-hydrolysing) activity, this catalytic activity has
+  never been demonstrated for LYS-1 at the protein level, and the sequence lacks
+  the conserved active-site residues, so its actual enzymatic function is
+  uncertain.
+existing_annotations:
+  - term:
+      id: GO:0007165
+      label: signal transduction
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        This IBA is a phylogenetic propagation from a PANTHER subfamily seeded
+        by non-lysozyme members (including a Dictyostelium protein). Lysozymes
+        are secreted antibacterial hydrolases/effectors, not signal-transducing
+        proteins, and there is no evidence that LYS-1 transduces any signal.
+      action: REMOVE
+      reason: &gt;-
+        Over-broad phylogenetic inference inconsistent with the biology of a
+        lysozyme-family antibacterial effector. No experimental or sequence
+        feature supports a signal transduction role for LYS-1; the specific,
+        experimentally supported role is antibacterial defense (captured by the
+        defense-response terms below).
+      propagation_review:
+        root_cause: PROPAGATION_BAD
+        failure_modes:
+          - FUNCTIONAL_DIVERGENCE
+          - GRANULARITY_MISMATCH
+        source_entities:
+          - source_id: PANTHER:PTN000574946
+            source_label: PTN000574946 (PANTHER ancestral node)
+            source_status: SOURCE_WEAK_OR_INFERRED
+            comment: &gt;-
+              Ancestral node whose GO:0007165 assignment was seeded from
+              dictyBase:DDB_G0273175 (a Dictyostelium protein). &#34;Signal
+              transduction&#34; is not a function of a GH25 lysozyme-family
+              antibacterial effector; the propagation transfers an unrelated,
+              overly generic process to LYS-1.
+  - term:
+      id: GO:0045087
+      label: innate immune response
+    evidence_type: IBA
+    original_reference_id: GO_REF:0000033
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        The innate-immune-response assignment is correct for LYS-1, but this IBA
+        is redundant with the stronger experimental IMP (PMID:21209831) and HEP
+        (PMID:16968778) annotations to the same term. Retained as valid biological
+        process context rather than as a distinct line of evidence.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Correct process but redundant with experimental annotations to the same
+        term; the more specific defense-response-to-Gram-positive/Gram-negative
+        terms carry the core biology.
+  - term:
+      id: GO:0003796
+      label: lysozyme activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: &gt;-
+        This is a family/domain-based (InterPro IPR002053, GH25) inference of
+        muramidase activity. It has never been demonstrated for LYS-1: no C.
+        elegans lysozyme has been characterized at the protein level, and UniProt
+        flags a CAUTION that LYS-1 &#34;Lacks conserved active site residues,
+        suggesting it has no catalytic activity.&#34; The activity therefore cannot
+        be confirmed, and there is positive sequence evidence that it may be
+        absent.
+      action: UNDECIDED
+      reason: &gt;-
+        Cannot verify: no biochemical/enzymatic assay of purified LYS-1 exists,
+        and the UniProt active-site CAUTION suggests possible loss of catalytic
+        activity. Per guidelines this is an author-flagged unresolved MF, not a
+        confident REMOVE (family activity cannot be definitively excluded without
+        biochemistry). This is the central molecular-function knowledge gap for
+        this gene.
+      supported_by:
+        - reference_id: PMID:21931778
+          supporting_text: &gt;-
+            All available data is based on genetic analysis, whereas none of the
+            lysozymes have been characterized at the protein level.
+  - term:
+      id: GO:0006950
+      label: response to stress
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        A very generic ARBA machine-learned assignment. The specific
+        infection/defense-response terms below describe LYS-1&#39;s biology far more
+        informatively; a bare response-to-stress term adds little.
+      action: MARK_AS_OVER_ANNOTATED
+      reason: &gt;-
+        Too general to be informative and subsumed by the specific defense
+        response / innate immune response annotations that are experimentally
+        supported.
+  - term:
+      id: GO:0009253
+      label: peptidoglycan catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        The biological-process counterpart of the unverified lysozyme activity
+        (InterPro/GH25 inference). Because peptidoglycan hydrolysis by LYS-1 has
+        not been demonstrated and the sequence may lack catalytic residues, this
+        process cannot be confirmed for this paralog.
+      action: UNDECIDED
+      reason: &gt;-
+        Depends on an unverified catalytic (muramidase) activity; no direct
+        evidence LYS-1 cleaves peptidoglycan. Tied to the lysozyme-activity
+        knowledge gap.
+      supported_by:
+        - reference_id: PMID:21931778
+          supporting_text: &gt;-
+            All available data is based on genetic analysis, whereas none of the
+            lysozymes have been characterized at the protein level.
+  - term:
+      id: GO:0016998
+      label: cell wall macromolecule catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        A more general parent of peptidoglycan catabolism, from the same
+        family-based InterPro inference; same caveat that the underlying
+        catalytic activity is undemonstrated for LYS-1.
+      action: UNDECIDED
+      reason: &gt;-
+        Same unverified-catalysis basis as the peptidoglycan/lysozyme-activity
+        annotations; cannot confirm cell-wall macromolecule catabolism for LYS-1.
+  - term:
+      id: GO:0060205
+      label: cytoplasmic vesicle lumen
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        UniProt Subcellular Location keyword propagation matching the curated
+        localization of LYS-1 to the lumen of apical intestinal vesicles.
+        Redundant with the EXP annotation from PMID:12176330.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Correct location but electronically propagated and redundant with the
+        experimental EXP/IDA vesicle annotations.
+  - term:
+      id: GO:0060205
+      label: cytoplasmic vesicle lumen
+    evidence_type: EXP
+    original_reference_id: PMID:12176330
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Experimentally curated localization of LYS-1 to the lumen of vesicles in
+        the apical region of intestinal cells, from the primary characterization
+        of the inducible antibacterial defense system.
+      action: ACCEPT
+      reason: &gt;-
+        Curator-assigned experimental localization consistent with a secreted
+        intestinal antibacterial effector stored in apical vesicles.
+  - term:
+      id: GO:0045087
+      label: innate immune response
+    evidence_type: HEP
+    original_reference_id: PMID:16968778
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        High-throughput expression evidence: lys-1 is part of the intestinal
+        ELT-2/GATA-regulated infection-response gene program identified in a
+        genome-wide study of epithelial innate immunity. Consistent with its
+        infection-inducible antibacterial role.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        Expression-based support for involvement in the innate immune response;
+        corroborates the experimental IMP annotation but is itself expression-
+        level evidence.
+  - term:
+      id: GO:0045087
+      label: innate immune response
+    evidence_type: IMP
+    original_reference_id: PMID:21209831
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        RNAi knockdown of lys-1 significantly reduces C. elegans survival on the
+        pathogen Staphylococcus aureus (TD50 4.7 vs 6.8 days for control,
+        p&lt;0.0001), demonstrating that lys-1 is required for a normal innate
+        immune/pathogen-resistance response.
+      action: ACCEPT
+      reason: &gt;-
+        Direct loss-of-function (RNAi) phenotype establishing a functional role
+        in the innate immune response; core immune-defense biology of the gene.
+      supported_by:
+        - reference_id: PMID:21209831
+          supporting_text: &gt;-
+            Two genes, lys-1 and clc-1, were required for normal resistance to S.
+            aureus.
+  - term:
+      id: GO:0050830
+      label: defense response to Gram-positive bacterium
+    evidence_type: IMP
+    original_reference_id: PMID:21209831
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Staphylococcus aureus is a Gram-positive bacterium, and lys-1 RNAi
+        reduces survival on it (TD50 4.7 vs 6.8 days, p&lt;0.0001), directly
+        supporting a role in defense against Gram-positive bacteria. This is the
+        most specific, experimentally supported process term for the gene.
+      action: ACCEPT
+      reason: &gt;-
+        Specific, experimentally demonstrated defense function against a
+        Gram-positive pathogen; a core biological process of LYS-1.
+      supported_by:
+        - reference_id: PMID:21209831
+          supporting_text: &gt;-
+            The TD50 (time required for 50% of the nematodes to die) for lys-1
+            was 4.7 days (p&lt;0.0001)
+  - term:
+      id: GO:0031410
+      label: cytoplasmic vesicle
+    evidence_type: IDA
+    original_reference_id: PMID:12176330
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Direct-assay localization of LYS-1 to cytoplasmic vesicles in intestinal
+        cells, from the primary characterization paper.
+      action: ACCEPT
+      reason: &gt;-
+        Experimentally observed subcellular localization consistent with storage
+        of the effector in intestinal vesicles.
+  - term:
+      id: GO:0045177
+      label: apical part of cell
+    evidence_type: IDA
+    original_reference_id: PMID:12176330
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        LYS-1 localizes to the apical region of intestinal cells (apically
+        positioned vesicles), consistent with secretion toward the gut lumen
+        where ingested bacteria are encountered.
+      action: ACCEPT
+      reason: &gt;-
+        Experimentally supported apical localization appropriate for a
+        gut-luminal antibacterial effector.
+  - term:
+      id: GO:0050829
+      label: defense response to Gram-negative bacterium
+    evidence_type: IEP
+    original_reference_id: PMID:12176330
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        lys-1 is among the most robustly induced genes upon infection by the
+        Gram-negative bacterium Serratia marcescens, and its overexpression
+        augments resistance to that pathogen, supporting a role in defense
+        against Gram-negative bacteria. The evidence code is IEP (expression),
+        reinforced by the overexpression gain-of-resistance phenotype.
+      action: ACCEPT
+      reason: &gt;-
+        Infection-inducible expression plus overexpression-conferred resistance
+        establish a defense role against a Gram-negative pathogen; a core
+        biological process of LYS-1.
+      supported_by:
+        - reference_id: PMID:12176330
+          supporting_text: &gt;-
+            overexpression of the lysozyme gene lys-1 augments the resistance of
+            C. elegans to S. marcescens.
+core_functions:
+  - description: &gt;-
+      Infection-inducible antibacterial effector of the C. elegans intestinal
+      innate immune response, acting against both Gram-negative (S. marcescens)
+      and Gram-positive (S. aureus) bacteria. LYS-1 is stored in the lumen of
+      apical intestinal vesicles, positioned for release toward ingested
+      bacteria in the gut. It is a GH25 protist-type lysozyme; a muramidase
+      (peptidoglycan-hydrolysing) molecular function is implied by the fold but
+      has not been demonstrated and may be absent (no conserved active-site
+      residues), so no specific molecular_function is asserted here.
+    directly_involved_in:
+      - id: GO:0050829
+        label: defense response to Gram-negative bacterium
+      - id: GO:0050830
+        label: defense response to Gram-positive bacterium
+      - id: GO:0045087
+        label: innate immune response
+    locations:
+      - id: GO:0060205
+        label: cytoplasmic vesicle lumen
+      - id: GO:0045177
+        label: apical part of cell
+    supported_by:
+      - reference_id: PMID:12176330
+        supporting_text: &gt;-
+          overexpression of the lysozyme gene lys-1 augments the resistance of
+          C. elegans to S. marcescens.
+      - reference_id: PMID:21209831
+        supporting_text: &gt;-
+          Two genes, lys-1 and clc-1, were required for normal resistance to S.
+          aureus.
+knowledge_gaps:
+  - gap_statement: &gt;-
+      It is not known whether LYS-1 has any muramidase / lysozyme
+      (peptidoglycan-hydrolysing) enzymatic activity. All functional evidence is
+      genetic (infection-inducible expression, RNAi, overexpression); the protein
+      has never been purified or assayed, and its sequence lacks the conserved
+      GH25 active-site residues, raising the possibility that it is a
+      pseudo-muramidase.
+    boundary: &gt;-
+      What is firmly established is that LYS-1 is a GH25 protist-type lysozyme
+      whose gene is infection-inducible and functionally required for normal
+      antibacterial defense (S. marcescens, S. aureus). What is unknown is the
+      biochemical activity of the protein: whether it cleaves peptidoglycan,
+      permeabilizes/agglutinates bacteria by another mechanism, or acts
+      non-catalytically.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Whether LYS-1 kills bacteria enzymatically (like canonical lysozymes) or by
+      a non-catalytic mechanism determines the correct molecular-function
+      annotation and whether the current InterPro-based lysozyme-activity /
+      peptidoglycan-catabolism annotations should stand. This is a recurring issue
+      across the expanded, divergent C. elegans lysozyme family.
+    resolution: &gt;-
+      Express and purify recombinant LYS-1 and assay muramidase / bacteriolytic
+      activity (e.g. on Micrococcus cell walls and defined peptidoglycan) and its
+      ability to bind/permeabilize target bacteria; complement with active-site
+      residue mutagenesis and structural analysis.
+    provenance:
+      - reference_id: PMID:21931778
+        supporting_text: &gt;-
+          All available data is based on genetic analysis, whereas none of the
+          lysozymes have been characterized at the protein level.
+      - reference_id: PMID:21931778
+        supporting_text: &gt;-
+          our study (and most previous studies) only indicates, but does not
+          strictly prove a defence function of these enzymes. Unequivocal
+          evidence would require analysis of the purified protein, especially its
+          ability to interact with the pathogen at the molecular level.
+  - gap_statement: &gt;-
+      The molecular substrate or microbial target of LYS-1 is undefined: it is
+      unknown which bacterial surface molecule(s) LYS-1 acts on, and whether its
+      antibacterial spectrum extends beyond S. marcescens, S. aureus and B.
+      thuringiensis.
+    boundary: &gt;-
+      LYS-1 is known to be required for resistance to S. aureus and to protect
+      against S. marcescens when overexpressed, and it is transcriptionally
+      induced by these plus B. thuringiensis. What is unknown is the direct
+      biochemical target/substrate and the full microbial spectrum.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: MF_DARK
+    status: OPEN
+    significance: &gt;-
+      Identifying the target molecule would clarify the mechanism (enzymatic
+      versus binding/permeabilizing) and the range of pathogens LYS-1 counters,
+      informing both its MF annotation and its place in the surveillance-immunity
+      effector repertoire.
+    resolution: &gt;-
+      Biochemical target/substrate identification with purified protein
+      (peptidoglycan/cell-wall degradation assays, pull-downs of bacterial
+      ligands) and broader pathogen-panel survival/CFU assays with defined lys-1
+      loss- and gain-of-function strains.
+    provenance:
+      - reference_id: PMID:21931778
+        supporting_text: &gt;-
+          Unequivocal evidence would require analysis of the purified protein,
+          especially its ability to interact with the pathogen at the molecular
+          level.
+  - gap_statement: &gt;-
+      Whether lys-1 is individually necessary in vivo or is functionally
+      redundant within the 15-member C. elegans lysozyme family is unresolved.
+      The defense phenotypes rest on RNAi knockdown and overexpression rather
+      than a characterized single-gene null, and many lysozyme paralogs share
+      overlapping infection-induction profiles.
+    boundary: &gt;-
+      lys-1 RNAi reduces S. aureus survival and lys-1 overexpression increases S.
+      marcescens resistance, establishing a contribution to defense. What is
+      unknown is the phenotype of a clean lys-1 loss-of-function null and the
+      degree of redundancy with paralogs such as lys-2, lys-3 and lys-7.
+    gap_kind:
+      - BIOLOGY
+    dark_aspect: BP_DARK
+    status: OPEN
+    significance: &gt;-
+      Redundancy determines whether lys-1 is a non-redundant defense gene or one
+      of several partially interchangeable effectors, which affects how strongly
+      its individual loss impacts host survival and how its biological role should
+      be weighted.
+    resolution: &gt;-
+      Generate and phenotype a lys-1 null allele (and higher-order lysozyme
+      combinatorial mutants) across a pathogen panel, quantifying survival and
+      pathogen load relative to wild type and to single-paralog mutants.
+    provenance:
+      - reference_id: PMID:21931778
+        supporting_text: &gt;-
+          the nematode Caenorhabditis elegans harbours 15 phylogenetically
+          diverse lysozyme genes
+      - reference_id: file:worm/lys-1/lys-1-notes.md
+        supporting_text: &gt;-
+          Whether lys-1 is individually necessary in vivo, or redundant within
+          the 15-member lysozyme family, is not resolved.
+suggested_questions:
+  - question: &gt;-
+      Does purified LYS-1 protein possess muramidase/bacteriolytic activity, or
+      has this GH25 protist-type lysozyme lost catalytic function and act by a
+      non-enzymatic antibacterial mechanism?
+    experts:
+      - Schulenburg H
+  - question: &gt;-
+      What is the phenotype of a lys-1 loss-of-function null, and to what extent
+      is lys-1 redundant with other protist-type lysozymes in defense against
+      ingested pathogens?
+    experts:
+      - Schulenburg H
+      - Ewbank JJ
+suggested_experiments:
+  - hypothesis: &gt;-
+      LYS-1 either hydrolyzes bacterial peptidoglycan (canonical lysozyme
+      mechanism) or, lacking active-site residues, kills/inhibits bacteria by a
+      non-catalytic binding/permeabilizing mechanism.
+    description: &gt;-
+      Express and purify recombinant LYS-1, then assay (i) muramidase activity on
+      Micrococcus luteus cell walls and defined peptidoglycan substrates, (ii)
+      bacteriolytic/growth-inhibitory activity against S. aureus and S.
+      marcescens, and (iii) direct binding to bacterial cell-surface components;
+      pair with active-site mutagenesis and, if possible, structure
+      determination.
+    experiment_type: biochemistry / enzymology / structural biology
+  - hypothesis: &gt;-
+      lys-1 contributes non-redundantly to intestinal antibacterial defense in
+      vivo.
+    description: &gt;-
+      Generate a lys-1 null allele (CRISPR) and test survival and intestinal
+      pathogen load on a panel of Gram-negative and Gram-positive pathogens (S.
+      marcescens, S. aureus, B. thuringiensis, P. aeruginosa), comparing single
+      mutant, paralog combinations, and rescue/overexpression lines.
+    experiment_type: genetics / host-pathogen survival and CFU assays
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000033
+    title: Annotation inferences using phylogenetic trees
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary
+      mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: PMID:12176330
+    title: Inducible antibacterial defense system in C. elegans.
+    findings:
+      - statement: &gt;-
+          lys-1 is among the most robustly infection-induced genes and its
+          overexpression augments resistance to the Gram-negative bacterium
+          Serratia marcescens; the protein localizes to apical intestinal
+          vesicles.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Primary characterization of the inducible antibacterial defense system;
+        directly establishes lys-1 induction and overexpression-conferred
+        resistance to S. marcescens. Cached copy is abstract-only, so localization
+        details derive from the UniProt-curated full text; the overexpression
+        claim is a verbatim quote from the cached abstract.
+  - id: PMID:16968778
+    title: A conserved role for a GATA transcription factor in regulating epithelial innate
+      immune responses.
+    findings:
+      - statement: &gt;-
+          Genome-wide study establishing the intestinal ELT-2/GATA-regulated
+          epithelial infection-response gene program of which lys-1 is a member
+          (basis of the HEP innate-immune-response annotation).
+        reference_section_type: ABSTRACT
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Abstract-only cache. Establishes the ELT-2/GATA intestinal innate-immunity
+        program; supports lys-1&#39;s expression-based innate-immune-response
+        annotation as a program member rather than as a directly assayed gene here.
+  - id: PMID:21209831
+    title: RNAi screen of DAF-16/FOXO target genes in C. elegans links pathogenesis and dauer
+      formation.
+    findings:
+      - statement: &gt;-
+          lys-1 RNAi significantly reduces survival on Staphylococcus aureus
+          (TD50 4.7 vs 6.8 days, p&lt;0.0001), showing lys-1 is required for normal
+          resistance; lys-1 is a DAF-16/FOXO target with a synthetic
+          dauer-formation phenotype.
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full text cached and verified. Strong experimental support for the S.
+        aureus (Gram-positive) defense and innate-immune-response IMP annotations,
+        and for the DAF-16/dauer link.
+  - id: PMID:21931778
+    title: Protist-type lysozymes of the nematode Caenorhabditis elegans contribute to resistance
+      against pathogenic Bacillus thuringiensis.
+    findings:
+      - statement: &gt;-
+          Classifies lys-1 as a chromosome V protist-type lysozyme within the
+          15-gene C. elegans lysozyme family, shows lys-1 is transcriptionally
+          upregulated by B. thuringiensis in all tested strains, and states
+          explicitly that no C. elegans lysozyme has been characterized at the
+          protein level (basis of the muramidase-activity knowledge gap).
+        reference_section_type: RESULTS
+    reference_review:
+      relevance: HIGH
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Full text cached and verified. Key source for the protist-type
+        classification, B. thuringiensis induction of lys-1, and the field&#39;s
+        explicit admission that lysozyme enzymatic function is undemonstrated at
+        the protein level.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ppgn-1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ppgn-1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G5EDB6" target="_blank" class="term-link">
+                        G5EDB6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ppgn-1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G5EDB6" data-a="DESCRIPTION: ppgn-1 (Y38F2AR.7) encodes the Caenorhabditis eleg..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>ppgn-1 (Y38F2AR.7) encodes the Caenorhabditis elegans paraplegin-subfamily subunit of the mitochondrial m-AAA protease, an ATP-dependent proteolytic machine embedded in the inner mitochondrial membrane. The protein has the diagnostic two-module architecture of this family: an N-terminal AAA+ ATPase module that uses ATP binding and hydrolysis to unfold and translocate substrates, and a C-terminal M41 (FtsH-type) zinc-metallopeptidase module that cleaves peptide bonds; the catalytic residues of both modules (Walker A P-loop GPPGCGKT, Walker B IIYIDE, and the HExxH zinc-binding motif HEAGH) are intact in the ppgn-1 sequence. It is predicted to be an integral, multi-pass inner-membrane protein with matrix-facing catalytic domains and an N-terminal mitochondrial targeting region. Within the conserved m-AAA complex, family members carry out two coupled activities: quality-control degradation of misfolded or unassembled inner-membrane proteins, and regulated proteolytic maturation of specific substrates (the paradigm being processing of the ribosomal protein MrpL32 to control mitochondrial ribosome assembly and translation). The orthologous human subunit is paraplegin (SPG7), whose loss causes autosomal-recessive hereditary spastic paraplegia. The specific in vivo role, substrates, and complex partners of ppgn-1 in C. elegans have not been experimentally determined; C. elegans additionally carries the well-studied AFG3L2-type m-AAA subunit spg-7.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034982" target="_blank" class="term-link">
+                                    GO:0034982
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial protein processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0034982" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) propagation of the conserved m-AAA processing role from paraplegin/AFG3L2 orthologs. Consistent with ppgn-1&#39;s intact M41 protease domain and the family paradigm of regulated substrate maturation (e.g. MrpL32). Retained as a core function, with the caveat that no C. elegans substrate has been shown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ppgn-1 is a clear paraplegin-subfamily m-AAA subunit (PANTHER PTHR43655:SF8) with a complete M41 zinc-peptidase module (HExxH motif HEAGH intact at residue 555), so the conserved processing activity is appropriately propagated. The direct substrate in the worm is unknown (see knowledge_gaps).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                                        PMID:16239145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mitochondrial ribosomal protein MrpL32 is processed by the m-AAA protease, allowing its association with preassembled ribosomal particles and completion of ribosome assembly in close proximity to the inner membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005745" target="_blank" class="term-link">
+                                    GO:0005745
+                                </a>
+                            </span>
+                            <span class="term-label">m-AAA complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0005745" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA propagation that ppgn-1 is a subunit of the inner-membrane m-AAA protease complex. Well supported by orthology to paraplegin (a conserved m-AAA subunit) and by the shared two-module (AAA+ + M41) architecture. Core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Paraplegin is a conserved subunit of the m-AAA complex; ppgn-1 is its C. elegans ortholog. The specific composition of the worm complex (homo-oligomer vs hetero-oligomer with the AFG3L2-type subunit spg-7) is not experimentally established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16647881" target="_blank" class="term-link">
+                                        PMID:16647881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA protease in mitochondria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0004222" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA propagation of zinc-dependent endopeptidase activity from the family. Directly corroborated for the ppgn-1 sequence by the intact M41 HExxH zinc-binding catalytic motif (HEAGH at residue 555, within the Peptidase_M41 domain). Core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The C-terminal M41 peptidase domain (InterPro IPR000642) and the intact HExxH motif support metalloendopeptidase chemistry for this specific protein, not merely by family membership.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9635427" target="_blank" class="term-link">
+                                        PMID:9635427
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1, and YME1, which have both proteolytic and chaperon-like activities at the inner mitochondrial membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004176" target="_blank" class="term-link">
+                                    GO:0004176
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-dependent peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0004176" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro (IEA) assignment of ATP-dependent peptidase activity. This is the most complete single molecular-function term for an m-AAA protease because it captures the coupling of the AAA+ ATPase to the M41 peptidase. Supported by the intact Walker A/B (GPPGCGKT, IIYIDE) and HExxH motifs in the ppgn-1 sequence. Core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ppgn-1 has both an intact AAA+ ATPase module (Walker A GPPGCGKT at 325, Walker B IIYIDE at 380) and an intact M41 peptidase module (HExxH at 555), the defining combination for ATP-dependent proteolysis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                                        PMID:16239145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases that ensures the quality control of mitochondrial inner-membrane proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0004222" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second annotation of metalloendopeptidase activity, here from the InterPro M41 signature (IEA). Same well-supported molecular function as the IBA annotation above; kept as a corroborating electronic assignment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA metalloendopeptidase annotation but independently supported by the InterPro Peptidase_M41 signature (IPR000642) and the intact HExxH motif.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro (IEA) assignment of ATP binding, an activity of the AAA+ module. Corroborated by the intact Walker A P-loop (GPPGCGKT at residue 325) in the ppgn-1 sequence. A component activity of the ATP-dependent protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The N-terminal AAA+ ATPase domain (SMART SM00382; InterPro IPR003959) with an intact Walker A motif provides a direct structural basis for ATP binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location mapping (IEA) to mitochondrion. Correct but non-specific: the family resides in the inner mitochondrial membrane, captured more precisely in core_functions (GO:0005743). Retained but marked non-core because it is a generic parent of the informative location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the orthologous localization (paraplegin localizes to mitochondria) and with two predicted TM helices; the more informative term is mitochondrial inner membrane, so this generic term is not the core localization statement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9635427" target="_blank" class="term-link">
+                                        PMID:9635427
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Immunofluorescence analysis and import experiments showed that Paraplegin localizes to mitochondria.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro (IEA) generic proteolysis term. Correct but uninformative: the specific biological roles (protein quality-control degradation and mitochondrial protein processing) are captured in core_functions. Retained as a non-core parent term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006508 is a high-level parent of the specific m-AAA processes; it is not wrong, but the informative annotations are mitochondrial protein processing (GO:0034982) and protein quality control (GO:0006515).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0016020" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location mapping (IEA) to the generic term membrane. The protein is a multi-pass integral membrane protein, but the informative location is the mitochondrial inner membrane (GO:0005743), used in core_functions. Non-core parent.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct (two predicted TM helices at 111-133 and 225-245; UniProt multi-pass membrane protein) but far too generic to be a core localization statement.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro (IEA) assignment of ATP hydrolysis activity, the motor activity of the AAA+ module that drives substrate unfolding/translocation. Corroborated by the intact Walker B motif (IIYIDE at residue 380) in the ppgn-1 sequence. A component activity of the ATP-dependent protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The AAA+ ATPase module with intact Walker A and Walker B motifs supports ATP hydrolysis; this is the energy-providing half of the ATP-dependent protease.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0005743" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed refinement of the generic mitochondrion/membrane localizations to the specific compartment where m-AAA proteases reside. Inferred from orthology to paraplegin and from the two predicted TM helices flanking matrix-facing catalytic domains (canonical m-AAA topology).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The generic GOA terms (GO:0005739 mitochondrion, GO:0016020 membrane) understate the known compartment. The m-AAA protease is an integral protein of the mitochondrial inner membrane; this ISS annotation captures the informative location while the worm-specific topology remains to be experimentally mapped.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16647881" target="_blank" class="term-link">
+                                        PMID:16647881
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The m-AAA protease carries out protein quality control in the inner membrane of the mitochondria</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006515" target="_blank" class="term-link">
+                                    GO:0006515
+                                </a>
+                            </span>
+                            <span class="term-label">protein quality control for misfolded or incompletely synthesized proteins</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G5EDB6" data-a="GO:0006515" data-r="" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed refinement of the generic proteolysis annotation to the specific quality-control process performed by the m-AAA protease: ATP-dependent degradation of misfolded/unassembled inner-membrane proteins. Inferred from orthology and the intact AAA+ + M41 catalytic modules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0006508 (proteolysis) is uninformative; the conserved biological role of the family is inner-membrane protein quality control. This ISS annotation records that specific process, complementing the mitochondrial protein processing (GO:0034982) role. The endogenous worm substrates are not yet identified.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                                        PMID:16239145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases that ensures the quality control of mitochondrial inner-membrane proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent proteolytic quality control of the inner mitochondrial membrane. As a subunit of the m-AAA protease, ppgn-1 couples ATP-driven substrate unfolding and translocation (AAA+ module) to zinc-dependent peptide-bond hydrolysis (M41 module) to degrade misfolded or unassembled inner-membrane proteins to peptides. Inferred from orthology to paraplegin/AFG3L2 and from the intact Walker A/B and HExxH catalytic motifs in the ppgn-1 sequence; the endogenous C. elegans substrates are not yet identified.</h3>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="FUNCTION: ATP-dependent proteolytic quality control of the i..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004176" target="_blank" class="term-link">
+                            ATP-dependent peptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006515" target="_blank" class="term-link">
+                                protein quality control for misfolded or incompletely synthesized proteins
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005745" target="_blank" class="term-link">
+                            m-AAA complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                                PMID:16239145
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases that ensures the quality control of mitochondrial inner-membrane proteins.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21610694" target="_blank" class="term-link">
+                                PMID:21610694
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">m-AAA proteases exert dual functions in the mitochondrial inner membrane: they mediate the processing of specific regulatory proteins and ensure protein quality control degrading misfolded polypeptides to peptides.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Regulated proteolytic maturation (processing) of specific mitochondrial substrates. Beyond bulk degradation, m-AAA proteases perform limited, sequence-specific cleavage that matures regulatory substrates; the conserved paradigm is processing of the ribosomal protein MrpL32, which is required for mitochondrial ribosome assembly and translation. ppgn-1 is inferred to contribute this metalloendopeptidase-based processing activity within the worm m-AAA complex; the specific worm substrate(s) remain undetermined.</h3>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="FUNCTION: Regulated proteolytic maturation (processing) of s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034982" target="_blank" class="term-link">
+                                mitochondrial protein processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005745" target="_blank" class="term-link">
+                            m-AAA complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                                PMID:16239145
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The mitochondrial ribosomal protein MrpL32 is processed by the m-AAA protease, allowing its association with preassembled ribosomal particles and completion of ribosome assembly in close proximity to the inner membrane.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9635427" target="_blank" class="term-link">
+                            PMID:9635427
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Spastic paraplegia and OXPHOS impairment caused by mutations in paraplegin, a nuclear-encoded mitochondrial metalloprotease.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Paraplegin (the ortholog of ppgn-1) is a nuclear-encoded mitochondrial metalloprotease homologous to the yeast mitochondrial AAA ATPases (AFG3, RCA1, YME1) that combine proteolytic and chaperone-like activities at the inner mitochondrial membrane, and it localizes to mitochondria.</div>
+
+                        <div class="finding-text">"Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1, and YME1, which have both proteolytic and chaperon-like activities at the inner mitochondrial membrane."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" target="_blank" class="term-link">
+                            PMID:16239145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The m-AAA protease defective in hereditary spastic paraplegia controls ribosome assembly in mitochondria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">AAA proteases are a conserved family of membrane-bound ATP-dependent proteases that ensure quality control of mitochondrial inner-membrane proteins, and the m-AAA protease processes the ribosomal protein MrpL32 to allow completion of ribosome assembly at the inner membrane.</div>
+
+                        <div class="finding-text">"AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases that ensures the quality control of mitochondrial inner-membrane proteins."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16647881" target="_blank" class="term-link">
+                            PMID:16647881
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Translating m-AAA protease function in mitochondria to hereditary spastic paraplegia.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Paraplegin is a conserved subunit of the ubiquitous, ATP-dependent m-AAA protease in mitochondria, which carries out protein quality control in the inner mitochondrial membrane.</div>
+
+                        <div class="finding-text">"paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA protease in mitochondria."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21610694" target="_blank" class="term-link">
+                            PMID:21610694
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Presequence-dependent folding ensures MrpL32 processing by the m-AAA protease in mitochondria.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">m-AAA proteases have dual functions in the inner mitochondrial membrane: regulated processing of specific substrates and quality-control degradation of misfolded polypeptides to peptides.</div>
+
+                        <div class="finding-text">"m-AAA proteases exert dual functions in the mitochondrial inner membrane: they mediate the processing of specific regulatory proteins and ensure protein quality control degrading misfolded polypeptides to peptides."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does ppgn-1 form a functional m-AAA protease complex on its own, or does it require the AFG3L2-type subunit spg-7, and are the two subunits functionally redundant in C. elegans?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: C. elegans mitochondrial biologists, m-AAA protease / AAA+ protease structural biochemists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="Q: Does ppgn-1 form a functional m-AAA protease compl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the endogenous substrates of ppgn-1 in C. elegans, and does it mature a MrpL32 homolog to regulate mitochondrial ribosome assembly as in yeast and mouse?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Mitochondrial proteostasis / ribosome assembly researchers</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="Q: What are the endogenous substrates of ppgn-1 in C...." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate a ppgn-1 null allele (CRISPR) and, in parallel with spg-7 RNAi/mutant, assay respiration, mitochondrial morphology, UPRmt (hsp-6p::GFP), fertility and lifespan to determine ppgn-1&#39;s non-redundant contribution.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Reverse genetics / phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="EXPERIMENT: Generate a ppgn-1 null allele (CRISPR) and, in par..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Endogenously tag ppgn-1, purify from worm mitochondria, and identify complex partners (test for spg-7 hetero-oligomerization) and, using a catalytically dead HExxH mutant as a substrate trap, capture processed/degraded substrates.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Affinity purification / mass spectrometry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="EXPERIMENT: Endogenously tag ppgn-1, purify from worm mitochon..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine ppgn-1 tissue expression and sub-mitochondrial topology with an endogenous fluorescent tag and protease-protection assays, to confirm the predicted inner-membrane, matrix-facing catalytic-domain topology.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Localization</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G5EDB6" data-a="EXPERIMENT: Determine ppgn-1 tissue expression and sub-mitocho..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> ppgn-1 has no experimental functional characterization in C. elegans: no loss-of-function (mutant or RNAi) phenotype, no localization, and no biochemical assay has been reported for this gene. Every GO annotation is phylogenetic (IBA) or electronic (IEA), and the only UniProt-linked reference is an unpublished nucleotide sequence submission.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">WHOLLY_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The protein is confidently a paraplegin-subfamily m-AAA protease subunit (PANTHER PTHR43655:SF8; AAA+ + M41 architecture) with intact catalytic motifs, and the human ortholog paraplegin (SPG7) and yeast/mouse orthologs are well characterized. What is missing is any direct evidence for ppgn-1 itself in the worm.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without any worm-level data, ppgn-1&#39;s function is entirely an orthology inference; its non-redundant contribution (if any) to C. elegans mitochondrial physiology is unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Generate and phenotype a ppgn-1 deletion/RNAi allele (respiration, mitochondrial morphology, UPRmt reporters, fertility, lifespan), and determine its expression and subcellular localization with an endogenous tag.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1, and YME1, which have both proteolytic and chaperon-like activities at the inner mitochondrial membrane."</em> — PMID:9635427</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous substrate(s) of ppgn-1 in C. elegans are unidentified. It is unknown whether the worm protease matures a functional homolog of MrpL32 (regulated processing) and/or which misfolded inner-membrane proteins it degrades (quality control), and whether ppgn-1 and the AFG3L2-type subunit spg-7 act on the same or distinct substrate sets.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The conserved m-AAA protease has a defined dual activity (processing vs degradation), and MrpL32 maturation is the textbook processing substrate in yeast and mouse. ppgn-1 retains an intact HExxH metallopeptidase active site, so it is catalytically capable in principle.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Substrate identity is what distinguishes a housekeeping protease from a specific regulatory node; it is the rate-limiting unknown for placing ppgn-1 in a pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Substrate-trapping (catalytically inactive HExxH mutant) plus comparative proteomics of ppgn-1 vs spg-7 loss-of-function to identify processed/stabilized substrates.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"m-AAA proteases exert dual functions in the mitochondrial inner membrane: they mediate the processing of specific regulatory proteins and ensure protein quality control degrading misfolded polypeptides to peptides."</em> — PMID:21610694</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The oligomeric composition of the C. elegans m-AAA complex containing ppgn-1 is undetermined: whether ppgn-1 forms a homo-oligomer, assembles into a hetero-oligomer with the AFG3L2-type subunit spg-7, and whether the two worm subunits are functionally redundant, is untested.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In mammals the m-AAA protease is a hexamer of paraplegin (SPG7) and/or AFG3L2, and one catalytically dead subunit can be tolerated within an otherwise active complex. C. elegans has both a paraplegin-type (ppgn-1) and an AFG3L2-type (spg-7) subunit, but their assembly relationship is not reported.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Complex composition determines whether ppgn-1 loss can be buffered by spg-7 and how to interpret single-gene phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Co-immunoprecipitation / blue-native PAGE of endogenously tagged ppgn-1 and spg-7, and epistasis/double-mutant analysis to test redundancy.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA protease in mitochondria."</em> — PMID:16647881</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether ppgn-1 (as opposed to its paralog spg-7) contributes to any organismal process in C. elegans - the mitochondrial unfolded-protein response, respiration, mitochondrial dynamics, fertility, longevity, or stress/pathogen resistance - is unknown. The large C. elegans mito-protease functional literature concerns spg-7 and cannot be attributed to ppgn-1.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Loss of m-AAA proteases across organisms causes respiratory deficiency, altered mitochondrial morphology and axonal degeneration; none of these readouts has been tested specifically for ppgn-1 in the worm.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Assigning ppgn-1 a biological process (vs treating it as a redundant paralog) requires worm phenotypes; this determines its relevance to mitochondrial surveillance and stress signaling.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Test ppgn-1 loss-of-function against UPRmt (hsp-6p::GFP), respiration, mitochondrial morphology, and pathogen/stress-resistance assays, side by side with spg-7.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Inactivation of AAA proteases causes pleiotropic phenotypes in various organisms, including respiratory deficiencies, mitochondrial morphology defects, and axonal degeneration in hereditary spastic paraplegia (HSP)."</em> — PMID:16239145</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ppgn-1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDB6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ppgn-1-y38f2ar7-wbgene00021425-uniprot-g5edb6-research-notes">ppgn-1 (Y38F2AR.7 / WBGene00021425 / UniProt G5EDB6) — research notes</h1>
+<p>Research journal for the AI GO-annotation review. Provenance is recorded inline as<br />
+<code>[PMID:xxxx "verbatim quote"]</code>. This is a <strong>dark gene</strong>: the deliverable is a precise,<br />
+defensible statement of what is and is not known.</p>
+<h2 id="1-identity-verified-from-the-uniprot-record">1. Identity (verified from the UniProt record)</h2>
+<ul>
+<li>UniProt <strong>G5EDB6</strong> (TrEMBL, unreviewed), <em>Caenorhabditis elegans</em>, NCBITaxon:6239.</li>
+<li>Gene symbol <strong>ppgn-1</strong>; ORF <strong>Y38F2AR.7</strong>; WormBase <strong>WBGene00021425</strong>; RefSeq NP_500191.3.</li>
+<li>Protein name (UniProt SubName): <strong>Paraplegin</strong>. 747 aa, 82.8 kDa.</li>
+<li>The <em>only</em> primary reference on the UniProt entry is an unpublished nucleotide-sequence<br />
+  submission: Yamanaka, Yamada-Inagawa, Nishizono, Ogura (2006), title "Paraplegin<br />
+  homologue in C. elegans" (EMBL AB257343 / BAE96353.1). No functional paper.</li>
+<li>Domain architecture (UniProt/InterPro): N-terminal <strong>AAA+ ATPase</strong> module<br />
+  (AAA+ core IPR003959; AAA_lid_3 IPR041569; SMART AAA domain 317–462) and C-terminal<br />
+<strong>peptidase M41</strong> zinc-metallopeptidase module (IPR000642). Two predicted TM helices<br />
+  (Phobius: 111–133 and 225–245). N-terminal disordered/basic region 41–101 (matrix<br />
+  targeting/presequence-like). Cofactor Zn²⁺ (ARBA). SubCellular: Mitochondrion,<br />
+  multi-pass membrane protein.</li>
+<li>PANTHER classification: <strong>PTHR43655</strong> "ATP-DEPENDENT PROTEASE", subfamily<br />
+<strong>PTHR43655:SF8 PARAPLEGIN</strong>. MEROPS peptidase clan/family <strong>M41.A12</strong>.</li>
+<li>Reactome (electronic, projected): R-CEL-8949664 "Processing of SMDT1";<br />
+  R-CEL-9837999 "Mitochondrial protein degradation".</li>
+</ul>
+<p><strong>Bottom line on identity:</strong> despite the surrounding project framing, ppgn-1 is NOT an<br />
+epidermal/innate-immune/wound gene. It is the <em>C. elegans</em> <strong>paraplegin-subfamily<br />
+subunit of the mitochondrial m-AAA protease</strong> — an ATP-dependent, membrane-embedded<br />
+zinc metalloprotease of the inner mitochondrial membrane. All curation below is against<br />
+that identity.</p>
+<h2 id="2-what-the-m-aaa-protease-family-does-known-orthologuefamily-biology">2. What the m-AAA protease family does (KNOWN — orthologue/family biology)</h2>
+<p>The family is well characterised in yeast, mouse and human; ppgn-1's GO annotations are<br />
+IBA/IEA propagations from these orthologues.</p>
+<ul>
+<li>m-AAA proteases are a conserved, membrane-bound, ATP-dependent proteolytic machine of<br />
+  the mitochondrial inner membrane that performs protein quality control:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16239145" title="AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases that ensures the quality control of mitochondrial inner-membrane proteins">PMID:16239145</a>.</li>
+<li>Human <strong>paraplegin</strong> (SPG7) is a bona fide subunit of this complex, and the complex is<br />
+  ATP-dependent: <a href="https://pubmed.ncbi.nlm.nih.gov/16647881" title="paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA protease in mitochondria">PMID:16647881</a><br />
+  and <a href="https://pubmed.ncbi.nlm.nih.gov/16647881" title="The m-AAA protease carries out protein quality control in the inner membrane of the mitochondria">PMID:16647881</a>.</li>
+<li>The founding paper established paraplegin as a nuclear-encoded mitochondrial<br />
+  metalloprotease homologous to the yeast AAA ATPases with dual proteolytic + chaperone<br />
+  activity: <a href="https://pubmed.ncbi.nlm.nih.gov/9635427" title="Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1, and YME1, which have both proteolytic and chaperon-like activities at the inner mitochondrial membrane">PMID:9635427</a><br />
+  and localises to mitochondria: <a href="https://pubmed.ncbi.nlm.nih.gov/9635427" title="Immunofluorescence analysis and import experiments showed that Paraplegin localizes to mitochondria">PMID:9635427</a>.</li>
+<li>Besides bulk degradation, the m-AAA protease has a <strong>regulated processing</strong> role: it<br />
+  matures specific substrates. The conserved paradigm is maturation of the ribosomal<br />
+  protein MrpL32: <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" title="The mitochondrial ribosomal protein MrpL32 is processed by the m-AAA protease, allowing its association with preassembled ribosomal particles and completion of ribosome assembly in close proximity to the inner membrane">PMID:16239145</a>.<br />
+  This dual degrade-vs-process behaviour is explicit in the literature:<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21610694" title="m-AAA proteases exert dual functions in the mitochondrial inner membrane: they mediate the processing of specific regulatory proteins and ensure protein quality control degrading misfolded polypeptides to peptides">PMID:21610694</a>.</li>
+<li>Loss of function is pleiotropic across organisms (respiration, mito morphology, axon<br />
+  degeneration): <a href="https://pubmed.ncbi.nlm.nih.gov/16239145" title="Inactivation of AAA proteases causes pleiotropic phenotypes in various organisms, including respiratory deficiencies, mitochondrial morphology defects, and axonal degeneration in hereditary spastic paraplegia (HSP)">PMID:16239145</a>.</li>
+<li>In mammals the physiological complex is a hetero-/homo-hexamer of paraplegin (SPG7)<br />
+  and/or AFG3L2 (WITH/FROM of the ppgn-1 IBA annotations lists human SPG7 = UniProtKB<br />
+  Q9UQ90 and AFG3L2 = UniProtKB Q9Y4W6, plus mouse Afg3l1/Afg3l2 and yeast Yta10/Yta12).</li>
+</ul>
+<h2 id="3-bioinformatic-verification-for-this-protein-known-from-ppgn-1-sequence">3. Bioinformatic verification for THIS protein (KNOWN — from ppgn-1 sequence)</h2>
+<p>To guard against propagating enzyme annotations onto a possible pseudoenzyme, I scanned<br />
+the ppgn-1 sequence itself (see <code>ppgn-1-bioinformatics/</code>, reproducible<br />
+<code>analyze_motifs.py</code>). All three catalytic motifs are intact and correctly ordered:</p>
+<ul>
+<li>Walker A / P-loop <strong>GPPGCGKT</strong> at 325 (ATP binding).</li>
+<li>Walker B <strong>IIYIDE</strong> at 380 (Mg-ATP hydrolysis).</li>
+<li><strong>HExxH</strong> zinc-binding catalytic motif <strong>HEAGH</strong> at 555, within the M41 domain,<br />
+  followed downstream by an acidic residue (…MLEHT<strong>D</strong>) — a complete FtsH-type Zn²⁺<br />
+  active site.</li>
+</ul>
+<p>Interpretation: ppgn-1 is a <strong>catalytically competent</strong> m-AAA protease at the sequence<br />
+level, not a degenerate pseudoenzyme. This supports the enzymatic GO terms for this<br />
+specific protein, not merely by family membership. See<br />
+<code>file:worm/ppgn-1/ppgn-1-bioinformatics/RESULTS.md</code>.</p>
+<h2 id="4-c-elegans-context-and-the-paralog-trap-not-known-for-ppgn-1">4. C. elegans context — and the paralog trap (NOT-known for ppgn-1)</h2>
+<ul>
+<li><em>C. elegans</em> has (at least) two m-AAA protease subunit genes: the well-studied<br />
+<strong>spg-7</strong> (WBGene00004978; the AFG3L2-type subunit, and the gene whose RNAi is the<br />
+  canonical trigger of the mitochondrial unfolded-protein response, UPR^mt, and of<br />
+  detoxification/immune gene induction — WormBase/literature summaries) and the<br />
+  understudied <strong>ppgn-1</strong> (paraplegin subfamily, this gene).</li>
+<li><strong>Crucial curation caveat:</strong> the large <em>C. elegans</em> mitochondrial-protease functional<br />
+  literature (UPR^mt, drug resistance, detoxification, pathogen resistance) is about<br />
+<strong>spg-7</strong>, NOT ppgn-1. None of it can be attributed to ppgn-1. The GOA annotations for<br />
+  ppgn-1 are correctly all IBA/IEA (no experimental evidence code), reflecting this.</li>
+<li>WITH/FROM of the ppgn-1 IBA annotations includes WB:WBGene00004978 (spg-7) as a<br />
+  co-orthologue in the PANTHER tree, i.e. the two worm genes are placed together in the<br />
+  m-AAA clade.</li>
+</ul>
+<h2 id="5-explicit-known-vs-not-known-ledger-for-ppgn-1">5. Explicit KNOWN vs NOT-known ledger for ppgn-1</h2>
+<p>KNOWN (high confidence, from orthology + domain/motif evidence):<br />
+- Encodes a paraplegin-subfamily m-AAA protease subunit (AAA+ ATPase + M41 Zn-peptidase).<br />
+- Retains intact ATP-binding (Walker A), ATP-hydrolysis (Walker B) and Zn-peptidase<br />
+  (HExxH) catalytic motifs → catalytically competent in principle.<br />
+- Predicted mitochondrial, integral inner-membrane (two TM helices), matrix-facing<br />
+  catalytic domains — the canonical m-AAA topology.<br />
+- Family function: ATP-dependent proteolytic quality control + regulated processing of<br />
+  inner-membrane / matrix substrates.</p>
+<p>NOT KNOWN (the real gaps for ppgn-1 specifically):<br />
+- <strong>No</strong> <em>C. elegans</em> experimental characterisation of ppgn-1: no mutant/RNAi phenotype,<br />
+  no localisation, no biochemistry has been reported for this gene (all GO evidence is<br />
+  IBA/IEA; the only UniProt reference is an unpublished sequence submission).<br />
+- <strong>Substrates unknown</strong>: which inner-membrane proteins ppgn-1 degrades or matures in the<br />
+  worm is undetermined (no worm equivalent of the MrpL32 result attributed to ppgn-1).<br />
+- <strong>Complex composition unknown</strong>: whether ppgn-1 assembles with the AFG3L2-type subunit<br />
+  spg-7 into a hetero-hexamer, forms a homo-oligomer, or is catalytically redundant with<br />
+  spg-7 is untested.<br />
+- <strong>Physiological role unknown</strong>: whether ppgn-1 (as opposed to spg-7) contributes to<br />
+  UPR^mt, respiration, mitochondrial morphology, fertility, longevity, stress/pathogen<br />
+  responses, or is functionally dispensable, is unknown.<br />
+- <strong>Regulation unknown</strong>: expression, tissue distribution (Bgee: "Expressed in germ line<br />
+  and 4 other cell types" — coarse, electronic), and conditions under which it acts are<br />
+  uncharacterised.</p>
+<h2 id="6-annotation-review-plan-summary">6. Annotation-review plan (summary)</h2>
+<p>All 10 GOA annotations are IBA/IEA and are consistent with a catalytically competent<br />
+paraplegin-subfamily m-AAA protease; none is contradicted, so none is REMOVEd.<br />
+- Core, well-supported family propagations → ACCEPT: mitochondrial protein processing<br />
+  (IBA), m-AAA complex (IBA), metalloendopeptidase activity (IBA + IEA), ATP-dependent<br />
+  peptidase activity (IEA), ATP binding (IEA), ATP hydrolysis activity (IEA).<br />
+- Correct but non-specific / non-core → KEEP_AS_NON_CORE with a note: proteolysis<br />
+  (GO:0006508, generic parent of the specific processing/QC role), mitochondrion<br />
+  (GO:0005739, generic parent of inner membrane), membrane (GO:0016020, generic parent<br />
+  of inner membrane).<br />
+- The persistent uncertainty (no worm data) is captured in <code>knowledge_gaps</code>, not by<br />
+  down-grading correct family propagations.</p>
+<h2 id="7-deep-research-status">7. Deep research status</h2>
+<p><code>just deep-research-falcon worm ppgn-1 --fallback perplexity-lite</code> was run FOREGROUND and<br />
+retried. Falcon timed out at the 600 s server limit on both attempts; the perplexity-lite<br />
+fallback returned HTTP 401 (account quota exhausted). No <code>-deep-research-*.md</code> file was<br />
+produced. Per repo policy I did not fabricate one. This review therefore rests on the<br />
+UniProt/InterPro record, the GOA evidence codes, the primary m-AAA/paraplegin literature<br />
+cited above (PubMed-verified, cached in <code>publications/</code>), and the reproducible sequence<br />
+analysis in <code>ppgn-1-bioinformatics/</code>.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G5EDB6" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ppgn-1-g5edb6-catalytic-motif-analysis">ppgn-1 (G5EDB6) — catalytic motif analysis</h1>
+<h2 id="question">Question</h2>
+<p>The GO annotations for ppgn-1 (Y38F2AR.7, <em>C. elegans</em> paraplegin subfamily) are all<br />
+IBA/IEA — propagated from the m-AAA protease family, with no <em>C. elegans</em> experimental<br />
+support. A legitimate worry for any family propagation is that the target is a<br />
+<strong>pseudoenzyme</strong>: a fold-retaining paralog that has lost the catalytic residues (cf.<br />
+human AFG3L1P pseudogene, or the peptidase-dead YME1L variants). If ppgn-1 had lost its<br />
+Walker A/B or HExxH residues, the enzymatic annotations (metalloendopeptidase, ATP<br />
+binding, ATP hydrolysis, ATP-dependent peptidase) would be over-annotations for this<br />
+specific protein even though they are correct for the family.</p>
+<h2 id="method">Method</h2>
+<p><code>analyze_motifs.py</code> parses the amino-acid sequence directly from <code>../ppgn-1-uniprot.txt</code><br />
+(nothing hard-coded) and scans for the three diagnostic motifs of an m-AAA protease:</p>
+<ul>
+<li><strong>Walker A / P-loop</strong> (<code>G-x(4)-G-K-[S/T]</code>) — binds the β/γ phosphates of ATP.</li>
+<li><strong>Walker B</strong> (<code>hhhh-D-E</code>) — the Asp/Glu that coordinate Mg²⁺ and activate water for ATP hydrolysis.</li>
+<li><strong>HExxH</strong> — the M41/FtsH zinc-binding catalytic motif (two His coordinate the catalytic Zn²⁺; the Glu polarises the attacking water).</li>
+</ul>
+<p>Run with <code>uv run python analyze_motifs.py</code>.</p>
+<h2 id="result-reproducible">Result (reproducible)</h2>
+<div class="codehilite"><pre><span></span><code><span class="n">length</span><span class="o">:</span><span class="w"> </span><span class="mi">747</span><span class="w"> </span><span class="n">aa</span>
+<span class="n">Walker</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">(</span><span class="n">P</span><span class="o">-</span><span class="n">loop</span><span class="o">,</span><span class="w"> </span><span class="n">ATP</span><span class="w"> </span><span class="n">binding</span><span class="o">):</span><span class="w">            </span><span class="n">FOUND</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">325</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">GPPGCGKT</span>
+<span class="n">Walker</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">(</span><span class="n">Mg</span><span class="o">-</span><span class="n">ATP</span><span class="w"> </span><span class="n">hydrolysis</span><span class="o">):</span><span class="w">              </span><span class="n">FOUND</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">380</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">IIYIDE</span>
+<span class="n">HExxH</span><span class="w"> </span><span class="o">(</span><span class="n">M41</span><span class="w"> </span><span class="n">zinc</span><span class="o">-</span><span class="n">binding</span><span class="w"> </span><span class="n">catalytic</span><span class="w"> </span><span class="n">motif</span><span class="o">):</span><span class="w">  </span><span class="n">FOUND</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="mi">555</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">HEAGH</span>
+<span class="n">HExxH</span><span class="w"> </span><span class="n">context</span><span class="w"> </span><span class="o">[</span><span class="mi">555</span><span class="o">..</span><span class="mi">589</span><span class="o">]:</span><span class="w"> </span><span class="n">HEAGHALVGWMLEHTDALLKVTIIPRTSAALGFAQ</span>
+</code></pre></div>
+
+<p>All three catalytic elements are intact and in the expected order (AAA+ ATPase module<br />
+N-terminal, M41 peptidase module C-terminal), consistent with the domain architecture<br />
+UniProt/InterPro annotate (AAA+ core IPR003959; Peptidase M41 IPR000642). The HExxH lies<br />
+within the M41 domain and is followed downstream by an acidic residue (…MLEHT<strong>D</strong>),<br />
+consistent with a complete FtsH-type Zn²⁺ active site.</p>
+<h2 id="interpretation">Interpretation</h2>
+<p>At the sequence level ppgn-1 is a <strong>catalytically competent</strong> m-AAA protease subunit, not<br />
+a degenerate pseudoenzyme: it retains the residues required for both ATP binding/hydrolysis<br />
+and zinc-dependent peptide-bond cleavage. This supports (for this specific protein, not<br />
+merely by family membership) the molecular-function annotations <code>ATP binding</code>,<br />
+<code>ATP hydrolysis activity</code>, <code>metalloendopeptidase activity</code>, and <code>ATP-dependent peptidase
+activity</code>.</p>
+<h2 id="caveats-what-this-does-not-show">Caveats / what this does NOT show</h2>
+<ul>
+<li>Motif presence proves catalytic <em>potential</em>, not that the enzyme is active <em>in vivo</em>,<br />
+  what its physiological substrates are, or which partner subunit(s) it assembles with.</li>
+<li>It does not establish whether ppgn-1 is catalytically required in a complex or serves a<br />
+  more structural role alongside the <em>C. elegans</em> AFG3L2-type subunit (spg-7). Mammalian<br />
+  m-AAA complexes tolerate one catalytically dead subunit within an otherwise active<br />
+  hexamer.</li>
+<li>Sub-mitochondrial topology (matrix-facing catalytic domains flanked by two TM helices)<br />
+  is inferred from UniProt Phobius predictions, not experimentally mapped here.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G5EDB6
+gene_symbol: ppgn-1
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  ppgn-1 (Y38F2AR.7) encodes the Caenorhabditis elegans paraplegin-subfamily subunit
+  of the mitochondrial m-AAA protease, an ATP-dependent proteolytic machine embedded in
+  the inner mitochondrial membrane. The protein has the diagnostic two-module
+  architecture of this family: an N-terminal AAA+ ATPase module that uses ATP binding and
+  hydrolysis to unfold and translocate substrates, and a C-terminal M41 (FtsH-type)
+  zinc-metallopeptidase module that cleaves peptide bonds; the catalytic residues of both
+  modules (Walker A P-loop GPPGCGKT, Walker B IIYIDE, and the HExxH zinc-binding motif
+  HEAGH) are intact in the ppgn-1 sequence. It is predicted to be an integral, multi-pass
+  inner-membrane protein with matrix-facing catalytic domains and an N-terminal
+  mitochondrial targeting region. Within the conserved m-AAA complex, family members
+  carry out two coupled activities: quality-control degradation of misfolded or
+  unassembled inner-membrane proteins, and regulated proteolytic maturation of specific
+  substrates (the paradigm being processing of the ribosomal protein MrpL32 to control
+  mitochondrial ribosome assembly and translation). The orthologous human subunit is
+  paraplegin (SPG7), whose loss causes autosomal-recessive hereditary spastic paraplegia.
+  The specific in vivo role, substrates, and complex partners of ppgn-1 in C. elegans
+  have not been experimentally determined; C. elegans additionally carries the
+  well-studied AFG3L2-type m-AAA subunit spg-7.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:9635427
+  title: &#34;Spastic paraplegia and OXPHOS impairment caused by mutations in paraplegin,
+    a nuclear-encoded mitochondrial metalloprotease.&#34;
+  findings:
+  - statement: &gt;-
+      Paraplegin (the ortholog of ppgn-1) is a nuclear-encoded mitochondrial
+      metalloprotease homologous to the yeast mitochondrial AAA ATPases (AFG3, RCA1,
+      YME1) that combine proteolytic and chaperone-like activities at the inner
+      mitochondrial membrane, and it localizes to mitochondria.
+    supporting_text: &gt;-
+      Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1,
+      and YME1, which have both proteolytic and chaperon-like activities at the inner
+      mitochondrial membrane.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified founding paper defining paraplegin as the mitochondrial m-AAA
+      metalloprotease subunit orthologous to ppgn-1; establishes family identity,
+      mitochondrial localization, and dual protease/chaperone character. Concerns human
+      SPG7, not C. elegans ppgn-1, so it supports the annotations by orthology only.
+- id: PMID:16239145
+  title: &#34;The m-AAA protease defective in hereditary spastic paraplegia controls ribosome
+    assembly in mitochondria.&#34;
+  findings:
+  - statement: &gt;-
+      AAA proteases are a conserved family of membrane-bound ATP-dependent proteases that
+      ensure quality control of mitochondrial inner-membrane proteins, and the m-AAA
+      protease processes the ribosomal protein MrpL32 to allow completion of ribosome
+      assembly at the inner membrane.
+    supporting_text: &gt;-
+      AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases
+      that ensures the quality control of mitochondrial inner-membrane proteins.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; defines the conserved MF/BP of the family (ATP-dependent
+      inner-membrane quality control and the MrpL32 processing paradigm) that the ppgn-1
+      IBA annotations propagate. Yeast/mouse study, not C. elegans.
+- id: PMID:16647881
+  title: &#34;Translating m-AAA protease function in mitochondria to hereditary spastic paraplegia.&#34;
+  findings:
+  - statement: &gt;-
+      Paraplegin is a conserved subunit of the ubiquitous, ATP-dependent m-AAA protease
+      in mitochondria, which carries out protein quality control in the inner
+      mitochondrial membrane.
+    supporting_text: &gt;-
+      paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA
+      protease in mitochondria.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified review supporting the m-AAA complex membership (part_of GO:0005745)
+      and the inner-membrane quality-control role by orthology to paraplegin.
+- id: PMID:21610694
+  title: &#34;Presequence-dependent folding ensures MrpL32 processing by the m-AAA protease
+    in mitochondria.&#34;
+  findings:
+  - statement: &gt;-
+      m-AAA proteases have dual functions in the inner mitochondrial membrane: regulated
+      processing of specific substrates and quality-control degradation of misfolded
+      polypeptides to peptides.
+    supporting_text: &gt;-
+      m-AAA proteases exert dual functions in the mitochondrial inner membrane: they
+      mediate the processing of specific regulatory proteins and ensure protein quality
+      control degrading misfolded polypeptides to peptides.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified; articulates the processing-vs-degradation dual role underlying the
+      distinction between the two core functions. Yeast substrate mechanism, not worm.
+existing_annotations:
+- term:
+    id: GO:0034982
+    label: mitochondrial protein processing
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) propagation of the conserved m-AAA processing role from
+      paraplegin/AFG3L2 orthologs. Consistent with ppgn-1&#39;s intact M41 protease domain
+      and the family paradigm of regulated substrate maturation (e.g. MrpL32). Retained
+      as a core function, with the caveat that no C. elegans substrate has been shown.
+    action: ACCEPT
+    reason: &gt;-
+      ppgn-1 is a clear paraplegin-subfamily m-AAA subunit (PANTHER PTHR43655:SF8) with a
+      complete M41 zinc-peptidase module (HExxH motif HEAGH intact at residue 555), so the
+      conserved processing activity is appropriately propagated. The direct substrate in
+      the worm is unknown (see knowledge_gaps).
+    supported_by:
+    - reference_id: PMID:16239145
+      supporting_text: &gt;-
+        The mitochondrial ribosomal protein MrpL32 is processed by the m-AAA protease,
+        allowing its association with preassembled ribosomal particles and completion of
+        ribosome assembly in close proximity to the inner membrane.
+- term:
+    id: GO:0005745
+    label: m-AAA complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      IBA propagation that ppgn-1 is a subunit of the inner-membrane m-AAA protease
+      complex. Well supported by orthology to paraplegin (a conserved m-AAA subunit) and
+      by the shared two-module (AAA+ + M41) architecture. Core.
+    action: ACCEPT
+    reason: &gt;-
+      Paraplegin is a conserved subunit of the m-AAA complex; ppgn-1 is its C. elegans
+      ortholog. The specific composition of the worm complex (homo-oligomer vs
+      hetero-oligomer with the AFG3L2-type subunit spg-7) is not experimentally
+      established.
+    supported_by:
+    - reference_id: PMID:16647881
+      supporting_text: &gt;-
+        paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent
+        m-AAA protease in mitochondria.
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IBA propagation of zinc-dependent endopeptidase activity from the family. Directly
+      corroborated for the ppgn-1 sequence by the intact M41 HExxH zinc-binding catalytic
+      motif (HEAGH at residue 555, within the Peptidase_M41 domain). Core molecular
+      function.
+    action: ACCEPT
+    reason: &gt;-
+      The C-terminal M41 peptidase domain (InterPro IPR000642) and the intact HExxH motif
+      support metalloendopeptidase chemistry for this specific protein, not merely by
+      family membership.
+    supported_by:
+    - reference_id: PMID:9635427
+      supporting_text: &gt;-
+        Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1,
+        and YME1, which have both proteolytic and chaperon-like activities at the inner
+        mitochondrial membrane.
+- term:
+    id: GO:0004176
+    label: ATP-dependent peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro (IEA) assignment of ATP-dependent peptidase activity. This is the most
+      complete single molecular-function term for an m-AAA protease because it captures
+      the coupling of the AAA+ ATPase to the M41 peptidase. Supported by the intact
+      Walker A/B (GPPGCGKT, IIYIDE) and HExxH motifs in the ppgn-1 sequence. Core.
+    action: ACCEPT
+    reason: &gt;-
+      ppgn-1 has both an intact AAA+ ATPase module (Walker A GPPGCGKT at 325, Walker B
+      IIYIDE at 380) and an intact M41 peptidase module (HExxH at 555), the defining
+      combination for ATP-dependent proteolysis.
+    supported_by:
+    - reference_id: PMID:16239145
+      supporting_text: &gt;-
+        AAA proteases comprise a conserved family of membrane bound ATP-dependent
+        proteases that ensures the quality control of mitochondrial inner-membrane
+        proteins.
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second annotation of metalloendopeptidase activity, here from the InterPro M41
+      signature (IEA). Same well-supported molecular function as the IBA annotation
+      above; kept as a corroborating electronic assignment.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the IBA metalloendopeptidase annotation but independently supported
+      by the InterPro Peptidase_M41 signature (IPR000642) and the intact HExxH motif.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro (IEA) assignment of ATP binding, an activity of the AAA+ module.
+      Corroborated by the intact Walker A P-loop (GPPGCGKT at residue 325) in the ppgn-1
+      sequence. A component activity of the ATP-dependent protease.
+    action: ACCEPT
+    reason: &gt;-
+      The N-terminal AAA+ ATPase domain (SMART SM00382; InterPro IPR003959) with an
+      intact Walker A motif provides a direct structural basis for ATP binding.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular-location mapping (IEA) to mitochondrion. Correct but non-specific: the
+      family resides in the inner mitochondrial membrane, captured more precisely in
+      core_functions (GO:0005743). Retained but marked non-core because it is a generic
+      parent of the informative location.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Consistent with the orthologous localization (paraplegin localizes to mitochondria)
+      and with two predicted TM helices; the more informative term is mitochondrial inner
+      membrane, so this generic term is not the core localization statement.
+    supported_by:
+    - reference_id: PMID:9635427
+      supporting_text: &gt;-
+        Immunofluorescence analysis and import experiments showed that Paraplegin
+        localizes to mitochondria.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro (IEA) generic proteolysis term. Correct but uninformative: the specific
+      biological roles (protein quality-control degradation and mitochondrial protein
+      processing) are captured in core_functions. Retained as a non-core parent term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GO:0006508 is a high-level parent of the specific m-AAA processes; it is not wrong,
+      but the informative annotations are mitochondrial protein processing (GO:0034982)
+      and protein quality control (GO:0006515).
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular-location mapping (IEA) to the generic term membrane. The protein is a
+      multi-pass integral membrane protein, but the informative location is the
+      mitochondrial inner membrane (GO:0005743), used in core_functions. Non-core parent.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct (two predicted TM helices at 111-133 and 225-245; UniProt multi-pass
+      membrane protein) but far too generic to be a core localization statement.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro (IEA) assignment of ATP hydrolysis activity, the motor activity of the
+      AAA+ module that drives substrate unfolding/translocation. Corroborated by the
+      intact Walker B motif (IIYIDE at residue 380) in the ppgn-1 sequence. A component
+      activity of the ATP-dependent protease.
+    action: ACCEPT
+    reason: &gt;-
+      The AAA+ ATPase module with intact Walker A and Walker B motifs supports ATP
+      hydrolysis; this is the energy-providing half of the ATP-dependent protease.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: ISS
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Proposed refinement of the generic mitochondrion/membrane localizations to the
+      specific compartment where m-AAA proteases reside. Inferred from orthology to
+      paraplegin and from the two predicted TM helices flanking matrix-facing catalytic
+      domains (canonical m-AAA topology).
+    action: NEW
+    reason: &gt;-
+      The generic GOA terms (GO:0005739 mitochondrion, GO:0016020 membrane) understate the
+      known compartment. The m-AAA protease is an integral protein of the mitochondrial
+      inner membrane; this ISS annotation captures the informative location while the
+      worm-specific topology remains to be experimentally mapped.
+    supported_by:
+    - reference_id: PMID:16647881
+      supporting_text: &gt;-
+        The m-AAA protease carries out protein quality control in the inner membrane of
+        the mitochondria
+- term:
+    id: GO:0006515
+    label: protein quality control for misfolded or incompletely synthesized proteins
+  evidence_type: ISS
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed refinement of the generic proteolysis annotation to the specific
+      quality-control process performed by the m-AAA protease: ATP-dependent degradation
+      of misfolded/unassembled inner-membrane proteins. Inferred from orthology and the
+      intact AAA+ + M41 catalytic modules.
+    action: NEW
+    reason: &gt;-
+      GO:0006508 (proteolysis) is uninformative; the conserved biological role of the
+      family is inner-membrane protein quality control. This ISS annotation records that
+      specific process, complementing the mitochondrial protein processing (GO:0034982)
+      role. The endogenous worm substrates are not yet identified.
+    supported_by:
+    - reference_id: PMID:16239145
+      supporting_text: &gt;-
+        AAA proteases comprise a conserved family of membrane bound ATP-dependent
+        proteases that ensures the quality control of mitochondrial inner-membrane
+        proteins.
+core_functions:
+- description: &gt;-
+    ATP-dependent proteolytic quality control of the inner mitochondrial membrane. As a
+    subunit of the m-AAA protease, ppgn-1 couples ATP-driven substrate unfolding and
+    translocation (AAA+ module) to zinc-dependent peptide-bond hydrolysis (M41 module) to
+    degrade misfolded or unassembled inner-membrane proteins to peptides. Inferred from
+    orthology to paraplegin/AFG3L2 and from the intact Walker A/B and HExxH catalytic
+    motifs in the ppgn-1 sequence; the endogenous C. elegans substrates are not yet
+    identified.
+  molecular_function:
+    id: GO:0004176
+    label: ATP-dependent peptidase activity
+  directly_involved_in:
+  - id: GO:0006515
+    label: protein quality control for misfolded or incompletely synthesized proteins
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0005745
+    label: m-AAA complex
+  supported_by:
+  - reference_id: PMID:16239145
+    supporting_text: &gt;-
+      AAA proteases comprise a conserved family of membrane bound ATP-dependent proteases
+      that ensures the quality control of mitochondrial inner-membrane proteins.
+  - reference_id: PMID:21610694
+    supporting_text: &gt;-
+      m-AAA proteases exert dual functions in the mitochondrial inner membrane: they
+      mediate the processing of specific regulatory proteins and ensure protein quality
+      control degrading misfolded polypeptides to peptides.
+- description: &gt;-
+    Regulated proteolytic maturation (processing) of specific mitochondrial substrates.
+    Beyond bulk degradation, m-AAA proteases perform limited, sequence-specific cleavage
+    that matures regulatory substrates; the conserved paradigm is processing of the
+    ribosomal protein MrpL32, which is required for mitochondrial ribosome assembly and
+    translation. ppgn-1 is inferred to contribute this metalloendopeptidase-based
+    processing activity within the worm m-AAA complex; the specific worm substrate(s)
+    remain undetermined.
+  molecular_function:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  directly_involved_in:
+  - id: GO:0034982
+    label: mitochondrial protein processing
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0005745
+    label: m-AAA complex
+  supported_by:
+  - reference_id: PMID:16239145
+    supporting_text: &gt;-
+      The mitochondrial ribosomal protein MrpL32 is processed by the m-AAA protease,
+      allowing its association with preassembled ribosomal particles and completion of
+      ribosome assembly in close proximity to the inner membrane.
+knowledge_gaps:
+- gap_statement: &gt;-
+    ppgn-1 has no experimental functional characterization in C. elegans: no
+    loss-of-function (mutant or RNAi) phenotype, no localization, and no biochemical
+    assay has been reported for this gene. Every GO annotation is phylogenetic (IBA) or
+    electronic (IEA), and the only UniProt-linked reference is an unpublished nucleotide
+    sequence submission.
+  boundary: &gt;-
+    The protein is confidently a paraplegin-subfamily m-AAA protease subunit (PANTHER
+    PTHR43655:SF8; AAA+ + M41 architecture) with intact catalytic motifs, and the human
+    ortholog paraplegin (SPG7) and yeast/mouse orthologs are well characterized. What is
+    missing is any direct evidence for ppgn-1 itself in the worm.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: WHOLLY_DARK
+  status: OPEN
+  significance: &gt;-
+    Without any worm-level data, ppgn-1&#39;s function is entirely an orthology inference; its
+    non-redundant contribution (if any) to C. elegans mitochondrial physiology is unknown.
+  resolution: &gt;-
+    Generate and phenotype a ppgn-1 deletion/RNAi allele (respiration, mitochondrial
+    morphology, UPRmt reporters, fertility, lifespan), and determine its expression and
+    subcellular localization with an endogenous tag.
+  provenance:
+  - reference_id: PMID:9635427
+    supporting_text: &gt;-
+      Paraplegin is highly homologous to the yeast mitochondrial ATPases, AFG3, RCA1,
+      and YME1, which have both proteolytic and chaperon-like activities at the inner
+      mitochondrial membrane.
+- gap_statement: &gt;-
+    The endogenous substrate(s) of ppgn-1 in C. elegans are unidentified. It is unknown
+    whether the worm protease matures a functional homolog of MrpL32 (regulated
+    processing) and/or which misfolded inner-membrane proteins it degrades (quality
+    control), and whether ppgn-1 and the AFG3L2-type subunit spg-7 act on the same or
+    distinct substrate sets.
+  boundary: &gt;-
+    The conserved m-AAA protease has a defined dual activity (processing vs degradation),
+    and MrpL32 maturation is the textbook processing substrate in yeast and mouse. ppgn-1
+    retains an intact HExxH metallopeptidase active site, so it is catalytically capable
+    in principle.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Substrate identity is what distinguishes a housekeeping protease from a specific
+    regulatory node; it is the rate-limiting unknown for placing ppgn-1 in a pathway.
+  resolution: &gt;-
+    Substrate-trapping (catalytically inactive HExxH mutant) plus comparative proteomics
+    of ppgn-1 vs spg-7 loss-of-function to identify processed/stabilized substrates.
+  provenance:
+  - reference_id: PMID:21610694
+    supporting_text: &gt;-
+      m-AAA proteases exert dual functions in the mitochondrial inner membrane: they
+      mediate the processing of specific regulatory proteins and ensure protein quality
+      control degrading misfolded polypeptides to peptides.
+- gap_statement: &gt;-
+    The oligomeric composition of the C. elegans m-AAA complex containing ppgn-1 is
+    undetermined: whether ppgn-1 forms a homo-oligomer, assembles into a hetero-oligomer
+    with the AFG3L2-type subunit spg-7, and whether the two worm subunits are
+    functionally redundant, is untested.
+  boundary: &gt;-
+    In mammals the m-AAA protease is a hexamer of paraplegin (SPG7) and/or AFG3L2, and one
+    catalytically dead subunit can be tolerated within an otherwise active complex. C.
+    elegans has both a paraplegin-type (ppgn-1) and an AFG3L2-type (spg-7) subunit, but
+    their assembly relationship is not reported.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    Complex composition determines whether ppgn-1 loss can be buffered by spg-7 and how to
+    interpret single-gene phenotypes.
+  resolution: &gt;-
+    Co-immunoprecipitation / blue-native PAGE of endogenously tagged ppgn-1 and spg-7, and
+    epistasis/double-mutant analysis to test redundancy.
+  provenance:
+  - reference_id: PMID:16647881
+    supporting_text: &gt;-
+      paraplegin, which is a conserved subunit of the ubiquitous and ATP-dependent m-AAA
+      protease in mitochondria.
+- gap_statement: &gt;-
+    Whether ppgn-1 (as opposed to its paralog spg-7) contributes to any organismal process
+    in C. elegans - the mitochondrial unfolded-protein response, respiration, mitochondrial
+    dynamics, fertility, longevity, or stress/pathogen resistance - is unknown. The large
+    C. elegans mito-protease functional literature concerns spg-7 and cannot be attributed
+    to ppgn-1.
+  boundary: &gt;-
+    Loss of m-AAA proteases across organisms causes respiratory deficiency, altered
+    mitochondrial morphology and axonal degeneration; none of these readouts has been
+    tested specifically for ppgn-1 in the worm.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Assigning ppgn-1 a biological process (vs treating it as a redundant paralog) requires
+    worm phenotypes; this determines its relevance to mitochondrial surveillance and
+    stress signaling.
+  resolution: &gt;-
+    Test ppgn-1 loss-of-function against UPRmt (hsp-6p::GFP), respiration, mitochondrial
+    morphology, and pathogen/stress-resistance assays, side by side with spg-7.
+  provenance:
+  - reference_id: PMID:16239145
+    supporting_text: &gt;-
+      Inactivation of AAA proteases causes pleiotropic phenotypes in various organisms,
+      including respiratory deficiencies, mitochondrial morphology defects, and axonal
+      degeneration in hereditary spastic paraplegia (HSP).
+suggested_questions:
+- question: &gt;-
+    Does ppgn-1 form a functional m-AAA protease complex on its own, or does it require
+    the AFG3L2-type subunit spg-7, and are the two subunits functionally redundant in
+    C. elegans?
+  experts:
+  - C. elegans mitochondrial biologists
+  - m-AAA protease / AAA+ protease structural biochemists
+- question: &gt;-
+    What are the endogenous substrates of ppgn-1 in C. elegans, and does it mature a
+    MrpL32 homolog to regulate mitochondrial ribosome assembly as in yeast and mouse?
+  experts:
+  - Mitochondrial proteostasis / ribosome assembly researchers
+suggested_experiments:
+- experiment_type: Reverse genetics / phenotyping
+  description: &gt;-
+    Generate a ppgn-1 null allele (CRISPR) and, in parallel with spg-7 RNAi/mutant, assay
+    respiration, mitochondrial morphology, UPRmt (hsp-6p::GFP), fertility and lifespan to
+    determine ppgn-1&#39;s non-redundant contribution.
+- experiment_type: Affinity purification / mass spectrometry
+  description: &gt;-
+    Endogenously tag ppgn-1, purify from worm mitochondria, and identify complex partners
+    (test for spg-7 hetero-oligomerization) and, using a catalytically dead HExxH mutant
+    as a substrate trap, capture processed/degraded substrates.
+- experiment_type: Localization
+  description: &gt;-
+    Determine ppgn-1 tissue expression and sub-mitochondrial topology with an endogenous
+    fluorescent tag and protease-protection assays, to confirm the predicted inner-membrane,
+    matrix-facing catalytic-domain topology.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

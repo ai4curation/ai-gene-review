@@ -1,0 +1,4551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MVD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53602" target="_blank" class="term-link">
+                        P53602
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "MVD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53602" data-a="DESCRIPTION: MVD is human diphosphomevalonate decarboxylase (me..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MVD is human diphosphomevalonate decarboxylase (mevalonate-5-diphosphate decarboxylase; EC 4.1.1.33), the enzyme that catalyses the final step of the mevalonate pathway. It performs the ATP-dependent decarboxylation of (R)-5-diphosphomevalonate (mevalonate-5-diphosphate) to isopentenyl diphosphate (IPP), releasing CO2, ADP and inorganic phosphate. IPP is the fundamental five-carbon (C5) isoprenoid building block from which all downstream isoprenoids are assembled, so MVD sits at the point where the mevalonate pathway delivers activated isoprene units for sterol (cholesterol) biosynthesis and for the non-sterol isoprenoid branches (dolichol, ubiquinone, and the prenyl groups used in protein prenylation). The protein is a member of the GHMP kinase superfamily, binds ATP, and functions as a homodimer of ~43-kDa subunits. It is a soluble cytosolic enzyme. In humans, loss-of-function and missense variants in MVD (together with MVK, the two principal porokeratosis genes) cause porokeratosis (POROK7), a disorder of faulty epidermal keratinization characterised by the cornoid lamella.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core catalytic molecular function of MVD, propagated by phylogenetic inference across the diphosphomevalonate decarboxylase family and strongly corroborated by direct human experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of MVD (EC 4.1.1.33): ATP-dependent decarboxylation of (R)-5-diphosphomevalonate to isopentenyl diphosphate. The IBA is consistent with human biochemical and structural characterization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the ATP dependent decarboxylation of (R)-5-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                    GO:0019287
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, mevalonate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0019287" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Precise biological process for MVD: it produces isopentenyl diphosphate (IPP) as the final step of the mevalonate pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MVD&#39;s product is IPP, and the enzyme catalyses the terminal mevalonate-pathway step that generates it. This term captures the direct biological process at the correct level of specificity and is the best core BP term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Functions in
+CC       the mevalonate (MVA) pathway leading to isopentenyl diphosphate (IPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MVD is a soluble cytosolic enzyme; the phylogenetically inferred cytosolic localization matches direct human experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct subcellular fractionation, immunofluorescence and immunoelectron microscopy established a cytosolic localization for human MVD, with no peroxisomal signal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found a
+cytosolic localization for both endogenous human mevalonate pyrophosphate
+decarboxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/InterPro/RHEA/EC) assignment of the core catalytic function, redundant with the experimental and IBA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly maps the specific diphosphomevalonate decarboxylase activity (EC 4.1.1.33, RHEA:23732) to MVD; concordant with experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=4.1.1.33</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broader cytoplasmic localization from the UniProt subcellular-location mapping; correct but less specific than cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt annotates MVD as cytoplasmic, consistent with its established cytosolic localization. This parent term is correct though the more specific GO:0005829 (cytosol) is preferred.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005829" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated cytosol localization consistent with experimental evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct; MVD is cytosolic (established experimentally in PMID:14972328).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">but no indication for a peroxisomal localization</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                    GO:0008299
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0008299" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broader isoprenoid biosynthesis framing; MVD produces IPP, the universal isoprenoid precursor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but general parent of the more precise GO:0019287. Retained as an accurate higher-level BP: MVD&#39;s product IPP is the substrate for all isoprenoid biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The reaction is required for production of polyisoprenoids and sterols from acetyl-CoA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0016831" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad InterPro2GO molecular-function parent of the specific diphosphomevalonate decarboxylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MVD is a decarboxylase (carboxy-lyase), so this term is not wrong, but it is an uninformative parent of the specific GO:0004163 diphosphomevalonate decarboxylase activity which is experimentally established. Replace with the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    diphosphomevalonate decarboxylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                    GO:0019287
+                                </a>
+                            </span>
+                            <span class="term-label">isopentenyl diphosphate biosynthetic process, mevalonate pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0019287" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (InterPro2GO) assignment of the precise mevalonate-pathway IPP biosynthesis process, redundant with the IBA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific; MVD produces IPP as the terminal mevalonate-pathway step.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Functions in
+CC       the mevalonate (MVA) pathway leading to isopentenyl diphosphate (IPP)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0006695" data-r="GO_REF:0000041" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UniPathway-derived link to cholesterol biosynthesis. MVD feeds the sterol branch but its direct product is IPP, upstream of the sterol/non-sterol branch point.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cholesterol biosynthesis is a downstream consequence of MVD activity rather than its direct process: MVD makes IPP, which supplies both sterol (cholesterol) and many non-sterol isoprenoid branches (dolichol, ubiquinone, prenyl groups). The accurate direct BP is the mevalonate-pathway IPP biosynthesis (GO:0019287). Retain as a valid non-core downstream pathway association.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">a key precursor for the biosynthesis of isoprenoids and sterol</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Steroid biosynthesis; cholesterol biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14972328
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human mevalonate pyrophosphate decarboxylase is localized in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005737" data-r="PMID:14972328" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental cytoplasmic/cytosolic localization of human MVD.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the localization study; MVD is active in the cytosol (cytoplasm). GO:0005829 (cytosol) is the more specific form of the same finding.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found a
+cytosolic localization for both endogenous human mevalonate pyrophosphate
+decarboxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18823933
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human mevalonate diphosphate decarboxylase: characterization...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="PMID:18823933" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental characterization of recombinant human MVD&#39;s diphosphomevalonate decarboxylase activity, including kinetics and active-site mutagenesis, backed by a crystal structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Gold-standard experimental support for the core catalytic function. Kinetic parameters were measured and active-site residues (R161, N17) validated; R161Q causes ~1000-fold loss of activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                        PMID:18823933
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">R161Q exhibits a approximately
+1000-fold diminution in specific activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8626466
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and expression of the cDNAs encoding human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="PMID:8626466" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cloning/expression paper showing recombinant human MVD has decarboxylase activity (2.4 units/mg).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental confirmation of the core catalytic function; duplicate of the other GO:0004163 catalytic annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" target="_blank" class="term-link">
+                                        PMID:8626466
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant human enzyme is a
+homodimer of 43-kDa subunits with a specific activity of 2.4 units/mg.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9392419
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Post-translational regulation of mevalonate kinase by interm...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="PMID:9392419" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant human MDDase (MVD) was expressed, purified and assayed as part of a mevalonate-pathway feedback-inhibition study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the decarboxylase activity; MVD&#39;s KM for (R)-5-diphosphomevalonate was determined. Duplicate of the core catalytic annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link">
+                                        PMID:9392419
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mevalonate diphosphate decarboxylase (MDDase)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">KM=7.4 uM for (R)-5-diphosphomevalonate {ECO:0000269|PubMed:9392419}</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1655836
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005829" data-r="Reactome:R-HSA-1655836" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing MVD in the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally established cytosolic localization of MVD.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human mevalonate pyrophosphate decarboxylase is localized in the
+cytosol.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-191414
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005829" data-r="Reactome:R-HSA-191414" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion (MVD decarboxylates MVA5PP to IPPP reaction) placing MVD in the cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally established cytosolic localization; the cited Reactome reaction is exactly the MVD decarboxylation of mevalonate-5-diphosphate to IPP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human mevalonate pyrophosphate decarboxylase is localized in the
+cytosol.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11792727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11792727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Absence of functional peroxisomes does not lead to deficienc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="PMID:11792727" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MVD (MPD) decarboxylase activity measured directly in human/mouse tissue in a study of MVA-pathway enzyme activities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct activity measurement of MVD supports the core catalytic function (duplicate of the other GO:0004163 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11792727" target="_blank" class="term-link">
+                                        PMID:11792727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mislocalization of enzymes to the cytosol does not lead to decreased activity or</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                                    GO:0004163
+                                </a>
+                            </span>
+                            <span class="term-label">diphosphomevalonate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14680974
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cholesterol biosynthesis is not defective in peroxisome biog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0004163" data-r="PMID:14680974" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MVD (mevalonate pyrophosphate decarboxylase) activity measured directly among presqualene MVA/isoprenoid enzymes in PBD fibroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct activity measurement supports the core catalytic function (duplicate of the other GO:0004163 annotations).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                                        PMID:14680974
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">mevalonate pyrophosphate decarboxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006695" target="_blank" class="term-link">
+                                    GO:0006695
+                                </a>
+                            </span>
+                            <span class="term-label">cholesterol biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14680974
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cholesterol biosynthesis is not defective in peroxisome biog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0006695" data-r="PMID:14680974" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Author-stated (NAS) placement of MVD in the cholesterol/isoprenoid biosynthetic pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MVD is one of the presqualene enzymes of the cholesterol/isoprenoid pathway, but cholesterol synthesis is downstream of MVD&#39;s direct product IPP (which also feeds non-sterol branches). Accurate as a non-core downstream pathway association; the precise direct BP is the mevalonate-pathway IPP biosynthesis.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                                        PMID:14680974
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">five different
+enzymes of the presqualene segment of the cholesterol/isoprenoid biosynthetic
+pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008284" target="_blank" class="term-link">
+                                    GO:0008284
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of cell population proliferation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9270019" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9270019
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of proliferation and Ras localization in transfor...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0008284" data-r="PMID:9270019" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Inhibiting MVD with 6-fluoromevalonate (Fmev) blocks production of downstream mevalonate products, prevents Ras prenylation/membrane localization, and suppresses proliferation of transformed cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a pathway-level, indirect effect: MVD activity is required to make IPP and hence the prenyl groups that drive Ras-dependent proliferation. It reflects a physiological consequence of MVD&#39;s metabolic role rather than a distinct signalling function of the protein. Retain as a non-core process rather than a core molecular function. Per curation policy this experimental (IMP) annotation is not removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9270019" target="_blank" class="term-link">
+                                        PMID:9270019
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">6-fluoromevalonate (Fmev), an inhibitor of diphosphomevalonate decarboxylase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9270019" target="_blank" class="term-link">
+                                        PMID:9270019
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">completely
+prevented the proliferation of U-937 cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                    GO:0008299
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11792727" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11792727
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Absence of functional peroxisomes does not lead to deficienc...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0008299" data-r="PMID:11792727" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for MVD participation in isoprenoid/cholesterol biosynthesis (MVA-pathway enzyme activities measured).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Broad but accurate: MVD produces IPP, the universal isoprenoid precursor. GO:0019287 is the more precise BP; this parent is retained as correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11792727" target="_blank" class="term-link">
+                                        PMID:11792727
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">enzymes
+involved in cholesterol biosynthesis</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                    GO:0008299
+                                </a>
+                            </span>
+                            <span class="term-label">isoprenoid biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14680974
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cholesterol biosynthesis is not defective in peroxisome biog...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0008299" data-r="PMID:14680974" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental support for MVD participation in the cholesterol/isoprenoid biosynthetic pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate higher-level BP; MVD&#39;s product IPP is the isoprenoid building block. GO:0019287 is the precise process; this parent is retained as correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                                        PMID:14680974
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">cholesterol/isoprenoid biosynthetic
+pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030544" target="_blank" class="term-link">
+                                    GO:0030544
+                                </a>
+                            </span>
+                            <span class="term-label">Hsp70 protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12646231" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12646231
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mortalin-MPD (mevalonate pyrophosphate decarboxylase) intera...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0030544" data-r="PMID:12646231" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MVD (MPD) was identified in a yeast two-hybrid screen and co-IP as an interactor of mortalin (mot-2/GRP75), a member of the HSP70 family, in a study of proliferation control.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A physical interaction with an HSP70-family chaperone (mortalin) is a protein-binding-type annotation that does not describe MVD&#39;s core catalytic molecular function; it is peripheral to why MVD exists (isoprenoid synthesis). Per curation policy this experimental (IPI) annotation is not removed but is flagged as an over-annotation relative to the enzyme&#39;s function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12646231" target="_blank" class="term-link">
+                                        PMID:12646231
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mevalonate pyrophosphate decarboxylase (MPD) was
+identified as one of the mortalin binding partners</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8626466
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular cloning and expression of the cDNAs encoding human...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0042803" data-r="PMID:8626466" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recombinant human MVD is a homodimer of ~43-kDa subunits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is an experimentally supported structural property of the enzyme (also stated as SUBUNIT: Homodimer in UniProt), but it is a quaternary structure feature rather than MVD&#39;s core catalytic function. Retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" target="_blank" class="term-link">
+                                        PMID:8626466
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The recombinant human enzyme is a
+homodimer of 43-kDa subunits</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005777" target="_blank" class="term-link">
+                                    GO:0005777
+                                </a>
+                            </span>
+                            <span class="term-label">peroxisome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14972328
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human mevalonate pyrophosphate decarboxylase is localized in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005777" data-r="PMID:14972328" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MVD is explicitly NOT located in the peroxisome; earlier peroxisomal claims were refuted by direct localization studies.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The negated annotation is correct and important: careful subcellular fractionation and microscopy found no peroxisomal MVD, overturning earlier reports of a peroxisomal targeting signal. UniProt records the same correction in its CAUTION note.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">but no indication for a peroxisomal localization</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/MVD/MVD-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">However, was later shown to be cytosolic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14972328
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human mevalonate pyrophosphate decarboxylase is localized in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53602" data-a="GO:0005829" data-r="PMID:14972328" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that human MVD is a cytosolic protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The definitive localization study; MVD is cytosolic in fibroblasts, liver, CV1 and HEK293 cells by fractionation, immunofluorescence and immunoelectron microscopy.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                        PMID:14972328
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found a
+cytosolic localization for both endogenous human mevalonate pyrophosphate
+decarboxylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent decarboxylation of (R)-5-diphosphomevalonate (mevalonate-5-diphosphate) to isopentenyl diphosphate (IPP), CO2, ADP and phosphate, the final step of the mevalonate pathway that generates the universal C5 isoprenoid unit.</h3>
+                <span class="vote-buttons" data-g="P53602" data-a="FUNCTION: ATP-dependent decarboxylation of (R)-5-diphosphome..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                            diphosphomevalonate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019287" target="_blank" class="term-link">
+                                isopentenyl diphosphate biosynthetic process, mevalonate pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                PMID:18823933
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/MVD/MVD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the ATP dependent decarboxylation of (R)-5-</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>As the terminal mevalonate-pathway enzyme, MVD supplies IPP for the broader isoprenoid biosynthetic program (sterols and non-sterol isoprenoids), acting as a soluble cytosolic enzyme.</h3>
+                <span class="vote-buttons" data-g="P53602" data-a="FUNCTION: As the terminal mevalonate-pathway enzyme, MVD sup..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004163" target="_blank" class="term-link">
+                            diphosphomevalonate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008299" target="_blank" class="term-link">
+                                isoprenoid biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                                PMID:18823933
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The reaction is required for production of polyisoprenoids and sterols from acetyl-CoA.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                                PMID:14972328
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We found a
+cytosolic localization for both endogenous human mevalonate pyrophosphate
+decarboxylase</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/MVD/MVD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P53602 (MVD1_HUMAN), Diphosphomevalonate decarboxylase</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11792727" target="_blank" class="term-link">
+                            PMID:11792727
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Absence of functional peroxisomes does not lead to deficiency of enzymes involved in cholesterol biosynthesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12646231" target="_blank" class="term-link">
+                            PMID:12646231
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mortalin-MPD (mevalonate pyrophosphate decarboxylase) interactions and their role in control of cellular proliferation.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14680974" target="_blank" class="term-link">
+                            PMID:14680974
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cholesterol biosynthesis is not defective in peroxisome biogenesis defective fibroblasts.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14972328" target="_blank" class="term-link">
+                            PMID:14972328
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human mevalonate pyrophosphate decarboxylase is localized in the cytosol.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" target="_blank" class="term-link">
+                            PMID:18823933
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human mevalonate diphosphate decarboxylase: characterization, investigation of the mevalonate diphosphate binding site, and crystal structure.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" target="_blank" class="term-link">
+                            PMID:8626466
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular cloning and expression of the cDNAs encoding human and yeast mevalonate pyrophosphate decarboxylase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9270019" target="_blank" class="term-link">
+                            PMID:9270019
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of proliferation and Ras localization in transformed cells by products of mevalonate metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9392419" target="_blank" class="term-link">
+                            PMID:9392419
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Post-translational regulation of mevalonate kinase by intermediates of the cholesterol and nonsterol isoprene biosynthetic pathways.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1655836
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression of Diphosphomevalonate Decarboxylase (MVD)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-191414
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MVD decarboxylates MVA5PP to IPPP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Beyond its metabolic role, does the MVD-mortalin (HSP70) interaction have a regulatory function on MVD stability or activity, or is it primarily relevant to mortalin-controlled proliferation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53602" data-a="Q: Beyond its metabolic role, does the MVD-mortalin (..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided kinetic characterization of the full panel of POROK7 missense variants to quantify how each affects diphosphomevalonate decarboxylase activity and homodimer stability, correlating biochemical severity with clinical presentation.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P53602" data-a="EXPERIMENT: Structure-guided kinetic characterization of the f..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(MVD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53602" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mvd-diphosphomevalonate-decarboxylase-review-notes">MVD (Diphosphomevalonate decarboxylase) — review notes</h1>
+<p>UniProtKB: P53602 (MVD1_HUMAN), gene MVD (synonym MPD). 400 aa, ~43 kDa subunit. HGNC:7529.</p>
+<h2 id="core-function">Core function</h2>
+<p>MVD catalyses the final step of the mevalonate (MVA) pathway: the ATP-dependent<br />
+decarboxylation of (R)-5-diphosphomevalonate (mevalonate-5-diphosphate) to isopentenyl<br />
+diphosphate (IPP) + CO2 (+ ADP + Pi). EC 4.1.1.33; RHEA:23732.</p>
+<ul>
+<li>[file:human/MVD/MVD-uniprot.txt "Catalyzes the ATP dependent decarboxylation of (R)-5-diphosphomevalonate to form isopentenyl diphosphate (IPP)"]</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18823933" title="Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate">PMID:18823933</a></li>
+<li>Reaction (UniProt): (R)-5-diphosphomevalonate + ATP = isopentenyl diphosphate + ADP + CO2 + phosphate.</li>
+</ul>
+<p>IPP is the fundamental C5 isoprenoid building block; this reaction feeds sterol<br />
+(cholesterol) and non-sterol isoprenoid biosynthesis (dolichol, ubiquinone, prenyl<br />
+groups for protein prenylation).<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" title="The reaction is required for production of polyisoprenoids and sterols from acetyl-CoA.">PMID:18823933</a></p>
+<h2 id="structure-family">Structure / family</h2>
+<ul>
+<li>GHMP kinase superfamily member. <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" title="MDD is a member of the GHMP kinase (galactokinase, homoserine kinase, mevalonate kinase, phosphomevalonate kinase) family of proteins.">PMID:18823933</a></li>
+<li>Homodimer of ~43-kDa subunits. <a href="https://pubmed.ncbi.nlm.nih.gov/8626466" title="The recombinant human enzyme is a homodimer of 43-kDa subunits with a specific activity of 2.4 units/mg.">PMID:8626466</a> Also UniProt SUBUNIT: Homodimer.</li>
+<li>Crystal structure 3D4J (2.4 Å); R161 and N17 are active-site residues important for binding/orientation of mevalonate diphosphate. R161Q ~1000-fold loss of activity. <a href="https://pubmed.ncbi.nlm.nih.gov/18823933" title="R161Q exhibits a approximately 1000-fold diminution in specific activity">PMID:18823933</a></li>
+<li>ATP-binding (KW: ATP-binding; Nucleotide-binding). [file:human/MVD/MVD-uniprot.txt "F:ATP binding; IEA:UniProtKB-KW"]</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic. Earlier claims of peroxisomal targeting were refuted.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/14972328" title="We found a cytosolic localization for both endogenous human mevalonate pyrophosphate decarboxylase ... but no indication for a peroxisomal localization.">PMID:14972328</a></li>
+<li>UniProt CAUTION: "Was originally thought to be located in the peroxisome (PubMed:11108725). However, was later shown to be cytosolic (PubMed:14972328)."</li>
+<li>GOA carries a NOT located_in peroxisome (IDA, PMID:14972328) — consistent.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Porokeratosis 7, multiple types (POROK7; MIM:614714), a disorder of faulty<br />
+  keratinization (cornoid lamella). MVD and MVK are the principal porokeratosis genes.<br />
+  Many POROK7 missense variants; R161Q abolishes decarboxylase activity.<br />
+  [PMID:26202976 — "Genomic variations of the mevalonate pathway in porokeratosis"]<br />
+  (variant paper; also UniProt DISEASE + VARIANT annotations)</li>
+</ul>
+<h2 id="notes-on-specific-annotations">Notes on specific annotations</h2>
+<ul>
+<li>Multiple EXP/IDA GO:0004163 annotations (PMID:18823933, 8626466, 9392419, 11792727,<br />
+  14680974) — core catalytic function, all ACCEPT (one as core, rest KEEP_AS_NON_CORE<br />
+  duplicates).</li>
+<li>GO:0008299 isoprenoid biosynthetic process — the enzyme's product IPP is the isoprenoid<br />
+  precursor; ACCEPT as a broader BP framing. GO:0019287 (isopentenyl diphosphate<br />
+  biosynthetic process, mevalonate pathway) is the precise BP — core.</li>
+<li>GO:0006695 cholesterol biosynthetic process (NAS/IEA UniPathway) — MVA pathway feeds<br />
+  cholesterol synthesis but MVD is upstream of the sterol branch point; the direct product<br />
+  is IPP, and IPP also feeds non-sterol isoprenoids. Cholesterol is a downstream<br />
+  consequence, not MVD's direct BP. KEEP_AS_NON_CORE (over-specific; the mevalonate/IPP<br />
+  BP is the accurate direct process).</li>
+<li>GO:0016831 carboxy-lyase activity (IEA, InterPro) — true but a broad parent of the<br />
+  specific GO:0004163; MODIFY toward the specific term (or accept as broader). Marked as<br />
+  over-annotated/parent; propose replacement GO:0004163.</li>
+<li>GO:0030544 Hsp70 protein binding (IPI, PMID:12646231) — mortalin (mot-2/GRP75, HSP70<br />
+  family) interaction from a Y2H screen; bare protein-binding-type MF, not the core<br />
+  catalytic function. Per policy, do NOT REMOVE an experimental IPI whose full text is<br />
+  unverified → MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0042803 protein homodimerization activity (IDA, PMID:8626466) — supported (homodimer),<br />
+  KEEP_AS_NON_CORE.</li>
+<li>GO:0008284 positive regulation of cell population proliferation (IMP, PMID:9270019) —<br />
+  the paper shows Fmev (an MVD inhibitor) blocks proliferation via loss of downstream<br />
+  prenylated Ras; this is an indirect pathway-level effect (mevalonate products drive<br />
+  proliferation), not a distinct MVD signalling function. KEEP_AS_NON_CORE.</li>
+<li>Localization terms: cytosol (GO:0005829) ACCEPT; cytoplasm (GO:0005737) ACCEPT as<br />
+  broader parent; NOT peroxisome ACCEPT (correct negation).</li>
+</ul>
+<h2 id="provenance">Provenance</h2>
+<p>Deep research provider (falcon) was out of credits (HTTP 402) at review time; no<br />
+-deep-research-falcon.md generated. Review grounded in MVD-uniprot.txt, seeded GOA, and<br />
+cached publications/PMID_*.md (all 8 cited PMIDs present).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53602
+gene_symbol: MVD
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  MVD is human diphosphomevalonate decarboxylase (mevalonate-5-diphosphate
+  decarboxylase; EC 4.1.1.33), the enzyme that catalyses the final step of the
+  mevalonate pathway. It performs the ATP-dependent decarboxylation of
+  (R)-5-diphosphomevalonate (mevalonate-5-diphosphate) to isopentenyl
+  diphosphate (IPP), releasing CO2, ADP and inorganic phosphate. IPP is the
+  fundamental five-carbon (C5) isoprenoid building block from which all
+  downstream isoprenoids are assembled, so MVD sits at the point where the
+  mevalonate pathway delivers activated isoprene units for sterol (cholesterol)
+  biosynthesis and for the non-sterol isoprenoid branches (dolichol, ubiquinone,
+  and the prenyl groups used in protein prenylation). The protein is a member of
+  the GHMP kinase superfamily, binds ATP, and functions as a homodimer of
+  ~43-kDa subunits. It is a soluble cytosolic enzyme. In humans, loss-of-function
+  and missense variants in MVD (together with MVK, the two principal
+  porokeratosis genes) cause porokeratosis (POROK7), a disorder of faulty
+  epidermal keratinization characterised by the cornoid lamella.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:human/MVD/MVD-uniprot.txt
+  title: UniProtKB entry P53602 (MVD1_HUMAN), Diphosphomevalonate decarboxylase
+  findings: []
+- id: PMID:11792727
+  title: Absence of functional peroxisomes does not lead to deficiency of enzymes
+    involved in cholesterol biosynthesis.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Shows MVD (and other MVA-pathway enzymes) retain activity in
+      peroxisome-deficient cells; supports cytosolic function, not a specific catalytic
+      characterization of MVD.
+- id: PMID:12646231
+  title: Mortalin-MPD (mevalonate pyrophosphate decarboxylase) interactions and their
+    role in control of cellular proliferation.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: Yeast two-hybrid / co-IP interaction between MPD (MVD) and mortalin
+      (mot-2/GRP75, an HSP70-family protein). Supports the Hsp70-binding IPI but this
+      is an interaction finding, not MVD&#39;s core molecular function.
+- id: PMID:14680974
+  title: Cholesterol biosynthesis is not defective in peroxisome biogenesis defective
+    fibroblasts.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Measures MVD (MPD) activity among five presqualene MVA/isoprenoid
+      enzymes in PBD fibroblasts; supports enzymatic activity and cytosolic function.
+- id: PMID:14972328
+  title: Human mevalonate pyrophosphate decarboxylase is localized in the cytosol.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Definitive subcellular localization study; MVD is cytosolic with no
+      peroxisomal localization. Directly supports the cytosol/NOT-peroxisome annotations.
+- id: PMID:18823933
+  title: &#39;Human mevalonate diphosphate decarboxylase: characterization, investigation
+    of the mevalonate diphosphate binding site, and crystal structure.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text available. Recombinant human MDD characterization, kinetics,
+      active-site mutagenesis (R161, N17) and 2.4 A crystal structure (3D4J). Directly
+      establishes the diphosphomevalonate decarboxylase activity and reaction.
+- id: PMID:8626466
+  title: Molecular cloning and expression of the cDNAs encoding human and yeast mevalonate
+    pyrophosphate decarboxylase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Cloning and expression of human MVD; recombinant enzyme is a homodimer
+      of 43-kDa subunits with measurable decarboxylase activity. Supports catalytic
+      activity and homodimerization.
+- id: PMID:9270019
+  title: Regulation of proliferation and Ras localization in transformed cells by
+    products of mevalonate metabolism.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Uses 6-fluoromevalonate (Fmev, an MVD inhibitor) to block downstream
+      mevalonate products and Ras prenylation, suppressing proliferation. Supports a
+      pathway-level role in proliferation but the effect is indirect (via prenylated
+      products), not a direct MVD signalling function.
+- id: PMID:9392419
+  title: Post-translational regulation of mevalonate kinase by intermediates of the
+    cholesterol and nonsterol isoprene biosynthetic pathways.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Expressed and assayed recombinant human MDDase (MVD) alongside MKase
+      and PMKase; the focus is feedback inhibition of MKase, but MVD activity and
+      kinetics (KM for mevalonate diphosphate) were determined. Supports catalytic
+      activity.
+- id: Reactome:R-HSA-1655836
+  title: Expression of Diphosphomevalonate Decarboxylase (MVD)
+  findings: []
+- id: Reactome:R-HSA-191414
+  title: MVD decarboxylates MVA5PP to IPPP
+  findings: []
+existing_annotations:
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core catalytic molecular function of MVD, propagated by phylogenetic
+      inference across the diphosphomevalonate decarboxylase family and strongly
+      corroborated by direct human experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining molecular function of MVD (EC 4.1.1.33): ATP-dependent
+      decarboxylation of (R)-5-diphosphomevalonate to isopentenyl diphosphate.
+      The IBA is consistent with human biochemical and structural characterization.
+    supported_by:
+    - reference_id: PMID:18823933
+      supporting_text: &#34;Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;Catalyzes the ATP dependent decarboxylation of (R)-5-&#34;
+- term:
+    id: GO:0019287
+    label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Precise biological process for MVD: it produces isopentenyl diphosphate
+      (IPP) as the final step of the mevalonate pathway.
+    action: ACCEPT
+    reason: &gt;-
+      MVD&#39;s product is IPP, and the enzyme catalyses the terminal mevalonate-pathway
+      step that generates it. This term captures the direct biological process at
+      the correct level of specificity and is the best core BP term.
+    supported_by:
+    - reference_id: PMID:18823933
+      supporting_text: &#34;catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;Functions in\nCC       the mevalonate (MVA) pathway leading to isopentenyl diphosphate (IPP)&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      MVD is a soluble cytosolic enzyme; the phylogenetically inferred cytosolic
+      localization matches direct human experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Direct subcellular fractionation, immunofluorescence and immunoelectron
+      microscopy established a cytosolic localization for human MVD, with no
+      peroxisomal signal.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;We found a\ncytosolic localization for both endogenous human mevalonate pyrophosphate\ndecarboxylase&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (ARBA/InterPro/RHEA/EC) assignment of the core catalytic function,
+      redundant with the experimental and IBA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly maps the specific diphosphomevalonate decarboxylase activity
+      (EC 4.1.1.33, RHEA:23732) to MVD; concordant with experimental evidence.
+    supported_by:
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;EC=4.1.1.33&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Broader cytoplasmic localization from the UniProt subcellular-location
+      mapping; correct but less specific than cytosol.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt annotates MVD as cytoplasmic, consistent with its established
+      cytosolic localization. This parent term is correct though the more specific
+      GO:0005829 (cytosol) is preferred.
+    supported_by:
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated cytosol localization consistent with experimental evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Correct; MVD is cytosolic (established experimentally in PMID:14972328).
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;but no indication for a peroxisomal localization&#34;
+- term:
+    id: GO:0008299
+    label: isoprenoid biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broader isoprenoid biosynthesis framing; MVD produces IPP, the universal
+      isoprenoid precursor.
+    action: ACCEPT
+    reason: &gt;-
+      True but general parent of the more precise GO:0019287. Retained as an
+      accurate higher-level BP: MVD&#39;s product IPP is the substrate for all
+      isoprenoid biosynthesis.
+    supported_by:
+    - reference_id: PMID:18823933
+      supporting_text: &#34;The reaction is required for production of polyisoprenoids and sterols from acetyl-CoA.&#34;
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Broad InterPro2GO molecular-function parent of the specific
+      diphosphomevalonate decarboxylase activity.
+    action: MODIFY
+    reason: &gt;-
+      MVD is a decarboxylase (carboxy-lyase), so this term is not wrong, but it is
+      an uninformative parent of the specific GO:0004163 diphosphomevalonate
+      decarboxylase activity which is experimentally established. Replace with the
+      specific term.
+    proposed_replacement_terms:
+    - id: GO:0004163
+      label: diphosphomevalonate decarboxylase activity
+    supported_by:
+    - reference_id: PMID:18823933
+      supporting_text: &#34;catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate&#34;
+- term:
+    id: GO:0019287
+    label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated (InterPro2GO) assignment of the precise mevalonate-pathway IPP
+      biosynthesis process, redundant with the IBA.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific; MVD produces IPP as the terminal mevalonate-pathway step.
+    supported_by:
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;Functions in\nCC       the mevalonate (MVA) pathway leading to isopentenyl diphosphate (IPP)&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UniPathway-derived link to cholesterol biosynthesis. MVD feeds the sterol
+      branch but its direct product is IPP, upstream of the sterol/non-sterol
+      branch point.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cholesterol biosynthesis is a downstream consequence of MVD activity rather
+      than its direct process: MVD makes IPP, which supplies both sterol
+      (cholesterol) and many non-sterol isoprenoid branches (dolichol, ubiquinone,
+      prenyl groups). The accurate direct BP is the mevalonate-pathway IPP
+      biosynthesis (GO:0019287). Retain as a valid non-core downstream pathway
+      association.
+    supported_by:
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;a key precursor for the biosynthesis of isoprenoids and sterol&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;PATHWAY: Steroid biosynthesis; cholesterol biosynthesis.&#34;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:14972328
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Experimental cytoplasmic/cytosolic localization of human MVD.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the localization study; MVD is active in the cytosol
+      (cytoplasm). GO:0005829 (cytosol) is the more specific form of the same
+      finding.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;We found a\ncytosolic localization for both endogenous human mevalonate pyrophosphate\ndecarboxylase&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:18823933
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental characterization of recombinant human MVD&#39;s
+      diphosphomevalonate decarboxylase activity, including kinetics and active-site
+      mutagenesis, backed by a crystal structure.
+    action: ACCEPT
+    reason: &gt;-
+      Gold-standard experimental support for the core catalytic function. Kinetic
+      parameters were measured and active-site residues (R161, N17) validated; R161Q
+      causes ~1000-fold loss of activity.
+    supported_by:
+    - reference_id: PMID:18823933
+      supporting_text: &#34;Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate&#34;
+    - reference_id: PMID:18823933
+      supporting_text: &#34;R161Q exhibits a approximately \n1000-fold diminution in specific activity&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8626466
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Cloning/expression paper showing recombinant human MVD has decarboxylase
+      activity (2.4 units/mg).
+    action: ACCEPT
+    reason: &gt;-
+      Experimental confirmation of the core catalytic function; duplicate of the
+      other GO:0004163 catalytic annotations.
+    supported_by:
+    - reference_id: PMID:8626466
+      supporting_text: &#34;The recombinant human enzyme is a \nhomodimer of 43-kDa subunits with a specific activity of 2.4 units/mg.&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:9392419
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Recombinant human MDDase (MVD) was expressed, purified and assayed as part of
+      a mevalonate-pathway feedback-inhibition study.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the decarboxylase activity; MVD&#39;s KM for
+      (R)-5-diphosphomevalonate was determined. Duplicate of the core catalytic
+      annotation.
+    supported_by:
+    - reference_id: PMID:9392419
+      supporting_text: &#34;mevalonate diphosphate decarboxylase (MDDase)&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;KM=7.4 uM for (R)-5-diphosphomevalonate {ECO:0000269|PubMed:9392419}&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1655836
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion placing MVD in the cytosol.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally established cytosolic localization of MVD.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;Human mevalonate pyrophosphate decarboxylase is localized in the \ncytosol.&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-191414
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable assertion (MVD decarboxylates MVA5PP to IPPP reaction)
+      placing MVD in the cytosol.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally established cytosolic localization; the
+      cited Reactome reaction is exactly the MVD decarboxylation of
+      mevalonate-5-diphosphate to IPP.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;Human mevalonate pyrophosphate decarboxylase is localized in the \ncytosol.&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11792727
+  qualifier: enables
+  review:
+    summary: &gt;-
+      MVD (MPD) decarboxylase activity measured directly in human/mouse tissue in a
+      study of MVA-pathway enzyme activities.
+    action: ACCEPT
+    reason: &gt;-
+      Direct activity measurement of MVD supports the core catalytic function
+      (duplicate of the other GO:0004163 annotations).
+    supported_by:
+    - reference_id: PMID:11792727
+      supporting_text: &#34;mislocalization of enzymes to the cytosol does not lead to decreased activity or&#34;
+- term:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:14680974
+  qualifier: enables
+  review:
+    summary: &gt;-
+      MVD (mevalonate pyrophosphate decarboxylase) activity measured directly among
+      presqualene MVA/isoprenoid enzymes in PBD fibroblasts.
+    action: ACCEPT
+    reason: &gt;-
+      Direct activity measurement supports the core catalytic function (duplicate
+      of the other GO:0004163 annotations).
+    supported_by:
+    - reference_id: PMID:14680974
+      supporting_text: &#34;mevalonate pyrophosphate decarboxylase&#34;
+- term:
+    id: GO:0006695
+    label: cholesterol biosynthetic process
+  evidence_type: NAS
+  original_reference_id: PMID:14680974
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Author-stated (NAS) placement of MVD in the cholesterol/isoprenoid
+      biosynthetic pathway.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      MVD is one of the presqualene enzymes of the cholesterol/isoprenoid pathway,
+      but cholesterol synthesis is downstream of MVD&#39;s direct product IPP (which
+      also feeds non-sterol branches). Accurate as a non-core downstream pathway
+      association; the precise direct BP is the mevalonate-pathway IPP biosynthesis.
+    supported_by:
+    - reference_id: PMID:14680974
+      supporting_text: &#34;five different \nenzymes of the presqualene segment of the cholesterol/isoprenoid biosynthetic \npathway&#34;
+- term:
+    id: GO:0008284
+    label: positive regulation of cell population proliferation
+  evidence_type: IMP
+  original_reference_id: PMID:9270019
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Inhibiting MVD with 6-fluoromevalonate (Fmev) blocks production of downstream
+      mevalonate products, prevents Ras prenylation/membrane localization, and
+      suppresses proliferation of transformed cells.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a pathway-level, indirect effect: MVD activity is required to make IPP
+      and hence the prenyl groups that drive Ras-dependent proliferation. It reflects
+      a physiological consequence of MVD&#39;s metabolic role rather than a distinct
+      signalling function of the protein. Retain as a non-core process rather than a
+      core molecular function. Per curation policy this experimental (IMP) annotation
+      is not removed.
+    supported_by:
+    - reference_id: PMID:9270019
+      supporting_text: &#34;6-fluoromevalonate (Fmev), an inhibitor of diphosphomevalonate decarboxylase&#34;
+    - reference_id: PMID:9270019
+      supporting_text: &#34;completely \nprevented the proliferation of U-937 cells&#34;
+- term:
+    id: GO:0008299
+    label: isoprenoid biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11792727
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental support for MVD participation in isoprenoid/cholesterol
+      biosynthesis (MVA-pathway enzyme activities measured).
+    action: ACCEPT
+    reason: &gt;-
+      Broad but accurate: MVD produces IPP, the universal isoprenoid precursor.
+      GO:0019287 is the more precise BP; this parent is retained as correct.
+    supported_by:
+    - reference_id: PMID:11792727
+      supporting_text: &#34;enzymes \ninvolved in cholesterol biosynthesis&#34;
+- term:
+    id: GO:0008299
+    label: isoprenoid biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:14680974
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental support for MVD participation in the cholesterol/isoprenoid
+      biosynthetic pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate higher-level BP; MVD&#39;s product IPP is the isoprenoid building block.
+      GO:0019287 is the precise process; this parent is retained as correct.
+    supported_by:
+    - reference_id: PMID:14680974
+      supporting_text: &#34;cholesterol/isoprenoid biosynthetic \npathway&#34;
+- term:
+    id: GO:0030544
+    label: Hsp70 protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:12646231
+  qualifier: enables
+  review:
+    summary: &gt;-
+      MVD (MPD) was identified in a yeast two-hybrid screen and co-IP as an
+      interactor of mortalin (mot-2/GRP75), a member of the HSP70 family, in a study
+      of proliferation control.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A physical interaction with an HSP70-family chaperone (mortalin) is a
+      protein-binding-type annotation that does not describe MVD&#39;s core catalytic
+      molecular function; it is peripheral to why MVD exists (isoprenoid synthesis).
+      Per curation policy this experimental (IPI) annotation is not removed but is
+      flagged as an over-annotation relative to the enzyme&#39;s function.
+    supported_by:
+    - reference_id: PMID:12646231
+      supporting_text: &#34;Mevalonate pyrophosphate decarboxylase (MPD) was \nidentified as one of the mortalin binding partners&#34;
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:8626466
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Recombinant human MVD is a homodimer of ~43-kDa subunits.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homodimerization is an experimentally supported structural property of the
+      enzyme (also stated as SUBUNIT: Homodimer in UniProt), but it is a quaternary
+      structure feature rather than MVD&#39;s core catalytic function. Retain as non-core.
+    supported_by:
+    - reference_id: PMID:8626466
+      supporting_text: &#34;The recombinant human enzyme is a \nhomodimer of 43-kDa subunits&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0005777
+    label: peroxisome
+  evidence_type: IDA
+  original_reference_id: PMID:14972328
+  qualifier: located_in
+  negated: true
+  review:
+    summary: &gt;-
+      MVD is explicitly NOT located in the peroxisome; earlier peroxisomal claims
+      were refuted by direct localization studies.
+    action: ACCEPT
+    reason: &gt;-
+      The negated annotation is correct and important: careful subcellular
+      fractionation and microscopy found no peroxisomal MVD, overturning earlier
+      reports of a peroxisomal targeting signal. UniProt records the same correction
+      in its CAUTION note.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;but no indication for a peroxisomal localization&#34;
+    - reference_id: file:human/MVD/MVD-uniprot.txt
+      supporting_text: &#34;However, was later shown to be cytosolic&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IDA
+  original_reference_id: PMID:14972328
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence that human MVD is a cytosolic protein.
+    action: ACCEPT
+    reason: &gt;-
+      The definitive localization study; MVD is cytosolic in fibroblasts, liver,
+      CV1 and HEK293 cells by fractionation, immunofluorescence and immunoelectron
+      microscopy.
+    supported_by:
+    - reference_id: PMID:14972328
+      supporting_text: &#34;We found a\ncytosolic localization for both endogenous human mevalonate pyrophosphate\ndecarboxylase&#34;
+core_functions:
+- description: &gt;-
+    ATP-dependent decarboxylation of (R)-5-diphosphomevalonate
+    (mevalonate-5-diphosphate) to isopentenyl diphosphate (IPP), CO2, ADP and
+    phosphate, the final step of the mevalonate pathway that generates the
+    universal C5 isoprenoid unit.
+  molecular_function:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0019287
+    label: isopentenyl diphosphate biosynthetic process, mevalonate pathway
+  supported_by:
+  - reference_id: PMID:18823933
+    supporting_text: &#34;Mevalonate diphosphate decarboxyase (MDD1; EC 4.1.1.33) catalyzes the ATP dependent decarboxylation of mevalonate 5-diphosphate (MVAPP) to form isopentenyl 5-diphosphate&#34;
+  - reference_id: file:human/MVD/MVD-uniprot.txt
+    supporting_text: &#34;Catalyzes the ATP dependent decarboxylation of (R)-5-&#34;
+- description: &gt;-
+    As the terminal mevalonate-pathway enzyme, MVD supplies IPP for the broader
+    isoprenoid biosynthetic program (sterols and non-sterol isoprenoids), acting
+    as a soluble cytosolic enzyme.
+  molecular_function:
+    id: GO:0004163
+    label: diphosphomevalonate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0008299
+    label: isoprenoid biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:18823933
+    supporting_text: &#34;The reaction is required for production of polyisoprenoids and sterols from acetyl-CoA.&#34;
+  - reference_id: PMID:14972328
+    supporting_text: &#34;We found a\ncytosolic localization for both endogenous human mevalonate pyrophosphate\ndecarboxylase&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Beyond its metabolic role, does the MVD-mortalin (HSP70) interaction have a
+    regulatory function on MVD stability or activity, or is it primarily relevant
+    to mortalin-controlled proliferation?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided kinetic characterization of the full panel of POROK7 missense
+    variants to quantify how each affects diphosphomevalonate decarboxylase
+    activity and homodimer stability, correlating biochemical severity with
+    clinical presentation.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

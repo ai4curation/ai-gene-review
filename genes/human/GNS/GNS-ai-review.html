@@ -1,0 +1,4544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GNS - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GNS</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15586" target="_blank" class="term-link">
+                        P15586
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GNS";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15586" data-a="DESCRIPTION: GNS (N-acetylglucosamine-6-sulfatase; EC 3.1.6.14,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GNS (N-acetylglucosamine-6-sulfatase; EC 3.1.6.14, also called glucosamine-6-sulfatase/G6S) is a lysosomal exo-sulfatase that hydrolytically removes the 6-O-sulfate group from terminal N-acetyl-D-glucosamine-6-sulfate residues during the stepwise exolytic degradation of the glycosaminoglycans heparan sulfate and keratan sulfate. Like other members of the sulfatase family, it depends on a catalytic C-alpha-formylglycine residue generated from an active-site cysteine by the formylglycine-generating enzyme SUMF1, and it binds a catalytic Ca2+ ion. The mature enzyme is synthesized as a glycosylated precursor with a cleavable signal peptide and acts in the lysosomal lumen at acidic pH. Loss of GNS activity causes mucopolysaccharidosis type IIID (Sanfilippo syndrome D), an autosomal-recessive lysosomal storage disorder marked by heparan sulfate accumulation and progressive central nervous system degeneration.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005764" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing the active enzyme in the lysosome. This matches the UniProt subcellular location and the well-established role of GNS as an acid hydrolase acting in lysosomal glycosaminoglycan degradation. Core localization; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GNS is a lysosomal sulfatase; UniProt records subcellular location Lysosome and its function is defined by lysosomal degradation of heparan/keratan sulfate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                        PMID:1463457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan sulphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0030200" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to heparan sulfate catabolism, consistent with the enzyme&#39;s defined role in the stepwise exolytic degradation of heparan sulfate. Core biological process; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GNS removes the 6-sulfate from terminal GlcNAc-6-sulfate residues, a required step in lysosomal heparan sulfate degradation; its deficiency causes lysosomal storage of heparan sulfate (MPS IIID).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                        PMID:1463457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deficiency of glucosamine-6-sulphatase activity leads to the lysosomal storage of the glycosaminoglycan, heparan sulphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation to the exact molecular function of GNS. This is the core catalytic activity, independently supported by direct enzymology; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GO term definition (hydrolysis of the 6-sulfate group of GlcNAc-6-sulfate units of heparan and keratan sulfate) matches the experimentally established activity (EC 3.1.6.14).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                    GO:0005764
+                                </a>
+                            </span>
+                            <span class="term-label">lysosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005764" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (combined IEA methods / UniProt-SubCell) to lysosome, agreeing with the curated UniProt subcellular location. Accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the IBA lysosome annotation and with UniProt&#39;s curated Lysosome location; the IEA mapping is correct.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to the specific sulfatase activity, transferred from InterPro/EC (EC:3.1.6.14) and orthologs. Correct and matches the experimentally verified activity; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The InterPro family (IPR012251, GlcNAc_6-SO4ase) and EC 3.1.6.14 map precisely to GO:0008449; consistent with direct enzymology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                        PMID:1463457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have isolated human cDNA clones and derived amino acid sequence coding for the entire glucosamine-6-sulphatase protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030203" target="_blank" class="term-link">
+                                    GO:0030203
+                                </a>
+                            </span>
+                            <span class="term-label">glycosaminoglycan metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0030203" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic annotation to the broad glycosaminoglycan metabolic parent. Not wrong, but less informative than the specific heparan/keratan sulfate catabolic terms already annotated. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a high-level metabolic parent; the specific catabolic processes (heparan sulfate, keratan sulfate, glycosaminoglycan catabolic process) capture the function more precisely and are retained as core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Forms A and B both desulphate substrates derived from keratan sulphate and heparin.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17474147
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Systematic identification of SH3 domain-mediated human prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005515" data-r="PMID:17474147" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IPI annotation to bare &#34;protein binding&#34; from a high-throughput SH3-domain peptide-array screen (NCK1 SH3 domain, UniProtKB:P16333). &#34;Protein binding&#34; is uninformative about GNS&#39;s molecular function, and the interaction derives from a proteome-wide peptide-array method rather than a validated functional complex. Retained but flagged as over-annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#34;protein binding&#34; IPIs add no functional information; this one comes from a systematic SH3 peptide-array screen. There is no evidence that NCK1 binding is part of GNS&#39;s biological function, so it is marked as over-annotated rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link">
+                                        PMID:17474147
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A group of 12 Src homology (SH) 3 domains from eight human proteins (Swiss-Prot ID: SRC, PLCG1, P85A, NCK1, GRB2, FYN, CRK) were used to screen a peptide target array</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005539" target="_blank" class="term-link">
+                                    GO:0005539
+                                </a>
+                            </span>
+                            <span class="term-label">glycosaminoglycan binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005539" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (Ensembl ortholog transfer) to glycosaminoglycan binding. GNS acts on GAG substrates (heparan/keratan sulfate), so substrate binding is plausible, but as a binding term it is subsumed by the catalytic activity and does not add core functional information. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Binding of the GAG substrate is inherent to the enzyme&#39;s catalytic activity (GO:0008449); the standalone binding term is not independently informative of GNS&#39;s core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Aglycone structures that influence substrate binding and/or enzyme activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0030200" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation redundant with the IBA and IDA annotations to heparan sulfate catabolism. Correct core biological process; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the experimentally supported role of GNS in lysosomal heparan sulfate degradation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                        PMID:1463457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan sulphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042340" target="_blank" class="term-link">
+                                    GO:0042340
+                                </a>
+                            </span>
+                            <span class="term-label">keratan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0042340" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (Ensembl ortholog transfer) to keratan sulfate catabolism. GNS also desulfates keratan-sulfate-derived substrates, so this process is a genuine part of its function. Accept as core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt FUNCTION and EC 3.1.6.14 both name keratan sulfate as a substrate, and direct enzymology shows desulfation of keratan-sulfate-derived substrates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">of heparin sulfate and keratan sulfate.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Forms A and B both desulphate substrates derived from keratan sulphate and heparin.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043199" target="_blank" class="term-link">
+                                    GO:0043199
+                                </a>
+                            </span>
+                            <span class="term-label">sulfate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0043199" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (Ensembl ortholog transfer) to sulfate binding. Sulfate is the product moiety released by GNS and sulfate/phosphate ions are potent product inhibitors, so sulfate contact is expected, but the term is not independently informative of the core function. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Sulfate interaction is a facet of the catalytic mechanism (product/inhibitor binding) rather than a distinct core molecular function; subsumed by GO:0008449.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sulphate and phosphate ions are potent inhibitors of enzyme activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263495
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="Reactome:R-HSA-2263495" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) to the specific sulfatase activity, in the context of the keratan sulfate degradation / MPS IIID pathway. Core molecular function; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome represents the curated pathway role of GNS cleaving sulfate from GlcNAc-6-sulfate units; consistent with all other lines of evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Enzyme activity is highly specific towards glucosamine 6-sulphate or glucose 6-sulphate residues.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1463457
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A cDNA clone for human glucosamine-6-sulphatase reveals diff...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="PMID:1463457" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) annotation from the cloning/characterization paper that established the catalytic activity (EC 3.1.6.14) and the full-length human sequence. This is the primary experimental support for the core molecular function; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct demonstration of catalytic activity and derivation of the entire glucosamine-6- sulphatase coding sequence; the definitive experimental evidence for GO:0008449.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                        PMID:1463457
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan sulphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15595925
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification of a 75 kDa protein from the organelle matrix o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="PMID:15595925" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation from purification of the enzyme from human neutrophil granules and its identification as N-acetylglucosamine-6-sulphatase (EC 3.1.6.14) with confirmed activity toward N-acetylglucosamine-6-sulphate. Direct experimental support for the core activity; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purified 75 kDa neutrophil protein was identified by MS and its identity confirmed by enzymatic activity toward the GlcNAc-6-sulphate substrate, directly demonstrating GO:0008449.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">identified the protein to be N-acetylglucosamine-6-sulphatase (EC 3.1.6.14). The identity of the protein was confirmed by demostrating enzymatic activity towards the substrate N-acetylglucosamine 6-sulphate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15595925
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification of a 75 kDa protein from the organelle matrix o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0030200" data-r="PMID:15595925" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to heparan sulfate catabolism from the neutrophil-enzyme study, which showed O-desulphation activity toward heparan-sulphate-derived saccharides. Consistent with the core catabolic role; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The purified enzyme desulfated heparan-sulphate-derived saccharides, directly linking its activity to heparan sulfate degradation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The enzyme also showed O-desulphation activity towards heparan sulphate-derived saccharides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042582" target="_blank" class="term-link">
+                                    GO:0042582
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15595925
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Purification of a 75 kDa protein from the organelle matrix o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0042582" data-r="PMID:15595925" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation locating GNS to azurophil (primary) granules of human neutrophils, based on subcellular fractionation showing activity mainly in primary-granule fractions. This is a genuine, experimentally supported neutrophil-specific location, but secondary to the core lysosomal compartment where GNS performs GAG catabolism. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Azurophil (primary) granules are a specialized neutrophil location; the annotation is valid but represents a cell-type-specific compartment rather than the canonical lysosomal site of GNS&#39;s core catabolic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Subcellular fractionation of neutrophil organelles showed the presence of enzymatic activity mainly in the same fractions as primary granules.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005576" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome neutrophil-degranulation pathway) placing GNS in the extracellular region upon exocytosis of azurophil granule contents. Consistent with the biochemical observation that GNS is released from neutrophils; a secondary, context-dependent location. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reflects release of granule contents during neutrophil degranulation; not the compartment of GNS&#39;s core lysosomal catabolic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PMA treatment of the neutrophils induced release of the enzyme, indicating its matrix protein nature.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0005576" data-r="Reactome:R-HSA-6800434" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome ficolin-rich granule exocytosis pathway) placing GNS in the extracellular region upon degranulation. Same rationale as the other extracellular-region annotation; secondary location. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Context-dependent extracellular localization following granule exocytosis; not the core lysosomal compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PMA treatment of the neutrophils induced release of the enzyme, indicating its matrix protein nature.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035578" target="_blank" class="term-link">
+                                    GO:0035578
+                                </a>
+                            </span>
+                            <span class="term-label">azurophil granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798751
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0035578" data-r="Reactome:R-HSA-6798751" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) to azurophil granule lumen, consistent with the experimental demonstration that GNS is a soluble matrix protein of neutrophil primary granules. Secondary, cell-type-specific location. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Corroborated by biochemistry (matrix protein of primary granules) but represents a specialized neutrophil compartment rather than the core lysosomal site.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">indicating its matrix protein nature</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1904813" target="_blank" class="term-link">
+                                    GO:1904813
+                                </a>
+                            </span>
+                            <span class="term-label">ficolin-1-rich granule lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6800434
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:1904813" data-r="Reactome:R-HSA-6800434" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) to ficolin-1-rich granule lumen, from the neutrophil-degranulation curation. A specialized neutrophil granule subtype; secondary location. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Neutrophil-granule-subtype location derived from pathway curation; not the core lysosomal compartment for GAG catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                                        PMID:15595925
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Subcellular fractionation of neutrophil organelles showed the presence of enzymatic activity mainly in the same fractions as primary granules.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263495
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0043202" data-r="Reactome:R-HSA-2263495" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome) to the lysosomal lumen, the compartment where GNS performs GlcNAc-6- sulfate desulfation during GAG catabolism. Core localization; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GNS is a soluble luminal lysosomal hydrolase; the lysosomal lumen is its functional compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0070062" data-r="PMID:23533145" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput (HDA) detection of GNS in exosomes purified from expressed prostatic secretions in urine, from a shotgun proteomics survey of ~900 proteins. This reflects presence in a secreted vesicle fraction rather than a core functional location. Keep as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Large-scale proteomic detection in an exosome preparation; consistent with GNS being a soluble, secretable hydrolase but not indicative of its core catabolic site.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In pooled EPS-urine exosome samples, ~900 proteins were detected.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                    GO:0043202
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal lumen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1638032
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0043202" data-r="Reactome:R-HSA-1638032" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation (Reactome keratan sulfate degradation reaction) to lysosomal lumen. Redundant with the other lysosomal-lumen annotation and consistent with GNS&#39;s core compartment; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GNS acts as a soluble luminal lysosomal enzyme; lysosomal lumen is the correct core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Lysosome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15962010
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sulphatase activities are regulated by the interaction of su...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008484" data-r="PMID:15962010" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to the broad &#34;sulfuric ester hydrolase activity&#34; parent, from a study of SUMF1/SUMF2 regulation in which GNS was among the sulphatases assayed. GNS&#39;s specific activity is N-acetylglucosamine-6-sulfatase (GO:0008449), a child of this term, so the annotation should be made more specific.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0008484 is the sulfatase-family parent; the specific, experimentally established activity of GNS is GO:0008449. Replace with the specific term. The SUMF1/SUMF2 study confirms GNS is a formylglycine-dependent sulphatase whose activity is modulated by SUMF1.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    N-acetylglucosamine-6-sulfatase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                                        PMID:15962010
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we transfected Cos7 cells with several sulphatase cDNAs ( ARSA , ARSC , ARSF , IDS , SGSH , GALNS , GNS )</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/GNS/GNS-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">critical for catalytic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006027" target="_blank" class="term-link">
+                                    GO:0006027
+                                </a>
+                            </span>
+                            <span class="term-label">glycosaminoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3689315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human liver N-acetylglucosamine-6-sulphate sulphatase. Catal...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0006027" data-r="PMID:3689315" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation to glycosaminoglycan catabolic process, from the detailed catalytic-properties study establishing GNS as a highly specific exo-sulfatase acting on heparin/heparan- and keratan-sulfate-derived substrates. Core biological process (parent of the heparan/keratan catabolic terms); accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GNS is an exo-enzyme in the stepwise catabolism of glycosaminoglycans; this parent term is appropriate and directly supported by the enzymology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both forms A and B are exo-enzymes, since activity towards internal sulphate ester bonds was not observed.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                                    GO:0008449
+                                </a>
+                            </span>
+                            <span class="term-label">N-acetylglucosamine-6-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:3689315
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human liver N-acetylglucosamine-6-sulphate sulphatase. Catal...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15586" data-a="GO:0008449" data-r="PMID:3689315" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS annotation to the specific molecular function from the catalytic-properties study, which determined kinetic parameters against physiological-substrate analogues and showed high specificity for glucosamine-6-sulphate residues. Core activity; accept.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Detailed enzymology directly supports GO:0008449: high specificity for GlcNAc-6-sulphate / glucose-6-sulphate residues with catalytic efficiency greatly enhanced on physiological-like substrates.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                        PMID:3689315
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Enzyme activity is highly specific towards glucosamine 6-sulphate or glucose 6-sulphate residues.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lysosomal N-acetylglucosamine-6-sulfatase (EC 3.1.6.14) that hydrolytically removes the 6-O- sulfate group from terminal N-acetyl-D-glucosamine-6-sulfate residues, a required exolytic step in the lysosomal catabolism of heparan sulfate and keratan sulfate.</h3>
+                <span class="vote-buttons" data-g="P15586" data-a="FUNCTION: Lysosomal N-acetylglucosamine-6-sulfatase (EC 3.1...." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                            N-acetylglucosamine-6-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                heparan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043202" target="_blank" class="term-link">
+                                lysosomal lumen
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                                PMID:1463457
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan sulphate.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GNS/GNS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The same lysosomal sulfatase also acts in keratan sulfate catabolism, desulfating GlcNAc-6- sulfate residues of keratan-sulfate-derived substrates.</h3>
+                <span class="vote-buttons" data-g="P15586" data-a="FUNCTION: The same lysosomal sulfatase also acts in keratan ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008449" target="_blank" class="term-link">
+                            N-acetylglucosamine-6-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042340" target="_blank" class="term-link">
+                                keratan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005764" target="_blank" class="term-link">
+                                lysosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                                PMID:3689315
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Forms A and B both desulphate substrates derived from keratan sulphate and heparin.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/GNS/GNS-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">of heparin sulfate and keratan sulfate.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1463457" target="_blank" class="term-link">
+                            PMID:1463457
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A cDNA clone for human glucosamine-6-sulphatase reveals differences between arylsulphatases and non-arylsulphatases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GNS (glucosamine-6-sulphatase) is a lysosomal exo-hydrolase required for degradation of heparan sulphate and keratan sulphate; its deficiency causes MPS IIID with lysosomal storage of heparan sulphate. The full 552-aa precursor with a 36-aa leader was cloned and its catalytic activity (EC 3.1.6.14) established.</div>
+
+                        <div class="finding-text">"Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan sulphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15595925" target="_blank" class="term-link">
+                            PMID:15595925
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification of a 75 kDa protein from the organelle matrix of human neutrophils and identification as N-acetylglucosamine-6-sulphatase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A 75 kDa neutrophil granule-matrix protein was purified and identified by MS as N-acetylglucosamine-6-sulphatase (EC 3.1.6.14), with confirmed activity toward N-acetylglucosamine-6-sulphate and O-desulphation of heparan-sulphate-derived saccharides; it localizes to primary (azurophil) granules and is released on PMA stimulation.</div>
+
+                        <div class="finding-text">"identified the protein to be N-acetylglucosamine-6-sulphatase (EC 3.1.6.14). The identity of the protein was confirmed by demostrating enzymatic activity towards the substrate N-acetylglucosamine 6-sulphate."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15962010" target="_blank" class="term-link">
+                            PMID:15962010
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sulphatase activities are regulated by the interaction of sulphatase-modifying factor 1 with SUMF2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GNS is a formylglycine-dependent sulphatase; it was among the sulphatases whose activity is enhanced by SUMF1 (formylglycine-generating enzyme) and modulated by SUMF2. Supports the broad sulfuric-ester-hydrolase annotation, which is best refined to the specific GlcNAc-6-sulfatase activity.</div>
+
+                        <div class="finding-text">"we transfected Cos7 cells with several sulphatase cDNAs ( ARSA , ARSC , ARSF , IDS , SGSH , GALNS , GNS )"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17474147" target="_blank" class="term-link">
+                            PMID:17474147
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Systematic identification of SH3 domain-mediated human protein-protein interactions by peptide array target screening.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GNS appears as a peptide-array hit for SH3 domains (including NCK1) in a proteome-wide screen. This underlies the bare &#34;protein binding&#34; IPI, which is uninformative about GNS&#39;s molecular function.</div>
+
+                        <div class="finding-text">"A group of 12 Src homology (SH) 3 domains from eight human proteins (Swiss-Prot ID: SRC, PLCG1, P85A, NCK1, GRB2, FYN, CRK) were used to screen a peptide target array"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">GNS was detected among ~900 proteins in a shotgun-proteomics survey of urinary prostatic- secretion exosomes, underlying the extracellular-exosome location annotation.</div>
+
+                        <div class="finding-text">"In pooled EPS-urine exosome samples, ~900 proteins were detected."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3689315" target="_blank" class="term-link">
+                            PMID:3689315
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human liver N-acetylglucosamine-6-sulphate sulphatase. Catalytic properties.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human liver GNS is a highly specific exo-sulfatase for glucosamine-6-sulphate / glucose-6- sulphate residues, desulfating keratan-sulphate- and heparin-derived substrates; it shows no activity toward internal sulphate ester bonds, and sulphate/phosphate ions are potent inhibitors.</div>
+
+                        <div class="finding-text">"Both forms A and B are exo-enzymes, since activity towards internal sulphate ester bonds was not observed."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1638032
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GNS:Ca2+ cleaves sulfate from GlcNAc-6-sulfate units of keratan sulfate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2263495
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective GNS does not hydrolyse 6-sulfate from GlcNAc6S</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798751
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of azurophil granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6800434
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of ficolin-rich granule lumen proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/GNS/GNS-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry P15586 (GNS_HUMAN)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt records GNS as a lysosomal N-acetylglucosamine-6-sulfatase (EC 3.1.6.14) that hydrolyzes 6-sulfate groups of N-acetyl-D-glucosaminide units of heparan and keratan sulfate, requires a catalytic formylglycine (3-oxoalanine) residue, and whose deficiency causes MPS IIID.</div>
+
+                        <div class="finding-text">"Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does GNS have any non-lysosomal physiological role in extracellular glycosaminoglycan remodeling, given its presence and O-desulphation activity in neutrophil primary granules and its release upon degranulation?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P15586" data-a="Q: Does GNS have any non-lysosomal physiological role..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided characterization of the formylglycine-dependent active site (Cys91 -&gt; FGly, Ca2+ coordination) to map how MPS IIID missense variants (e.g. S94I, K340R, G418E) disrupt catalysis or protein stability.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="P15586" data-a="EXPERIMENT: Structure-guided characterization of the formylgly..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GNS-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15586" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gns-n-acetylglucosamine-6-sulfatase-review-notes">GNS (N-acetylglucosamine-6-sulfatase) — review notes</h1>
+<p>UniProtKB: P15586 (GNS_HUMAN). HGNC:4422. Gene on chromosome 12. EC=3.1.6.14.<br />
+552 aa precursor; signal peptide 1-36; mature chain 37-552.</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li><strong>Molecular function.</strong> Lysosomal exo-sulfatase that <strong>hydrolytically removes the<br />
+  6-O-sulfate group from terminal N-acetyl-D-glucosamine-6-sulfate (GlcNAc-6-S) residues</strong><br />
+  of heparan sulfate and keratan sulfate. UniProt FUNCTION: "Hydrolyzes 6-sulfate groups<br />
+  in N-acetyl-d-glucosaminide units of heparin sulfate and keratan sulfate"<br />
+  [file:human/GNS/GNS-uniprot.txt]. EC 3.1.6.14, catalytic activity established<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/1463457">PMID:1463457</a>. GO:0008449 N-acetylglucosamine-6-sulfatase activity is the exact,<br />
+  current MF term carried by GOA (EXP/IDA/IBA/IEA/TAS) and its GO definition matches this<br />
+  reaction verbatim.</li>
+<li><strong>Catalytic mechanism / PTM.</strong> Sulfatase-family member; requires the C-alpha-formylglycine<br />
+  (3-oxoalanine, "FGly") residue generated from the active-site cysteine (Cys91 in the<br />
+  precursor numbering) by SUMF1 (formylglycine-generating enzyme). UniProt: "The conversion<br />
+  to 3-oxoalanine ... is critical for catalytic activity" [file:human/GNS/GNS-uniprot.txt].<br />
+  Binds 1 Ca2+ per subunit. SUMF1/SUMF2 regulate GNS activity <a href="https://pubmed.ncbi.nlm.nih.gov/15962010">PMID:15962010</a>.</li>
+<li><strong>Catalytic properties.</strong> Human liver enzyme is a highly specific <strong>exo-enzyme</strong> for<br />
+  glucosamine-6-sulfate / glucose-6-sulfate residues; forms A and B desulfate keratan-<br />
+  sulfate- and heparin-derived substrates; no activity toward internal sulfate ester bonds<br />
+  [PMID:3689315, "Both forms A and B are exo-enzymes, since activity towards internal<br />
+  sulphate ester bonds was not observed."].</li>
+<li><strong>Biological process.</strong> Acts in the stepwise exolytic lysosomal <strong>catabolism of heparan<br />
+  sulfate and keratan sulfate</strong> (glycosaminoglycan catabolism). PMID:1463457:<br />
+  "Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of<br />
+  heparan sulphate and keratan sulphate."</li>
+<li><strong>Localization.</strong> Lysosome / lysosomal lumen (UniProt SUBCELLULAR LOCATION: Lysosome).<br />
+  Also detected biochemically in neutrophil primary (azurophil) granules <a href="https://pubmed.ncbi.nlm.nih.gov/15595925">PMID:15595925</a><br />
+  and in secreted/exosome fractions (large-scale proteomics) <a href="https://pubmed.ncbi.nlm.nih.gov/23533145">PMID:23533145</a> — these are<br />
+  secondary/context locations, not the core catabolic compartment.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<p>Deficiency causes <strong>mucopolysaccharidosis type IIID (MPS IIID; Sanfilippo syndrome D;<br />
+MIM 252940)</strong>, an autosomal-recessive lysosomal storage disorder with heparan-sulfate<br />
+accumulation and progressive CNS degeneration [PMID:12573255; PMID:20232353;<br />
+file:human/GNS/GNS-uniprot.txt DISEASE].</p>
+<h2 id="annotation-review-decisions">Annotation review decisions</h2>
+<ul>
+<li>GO:0008449 (MF, N-acetylglucosamine-6-sulfatase activity) — CORE. All 5 lines (EXP<br />
+  PMID:1463457; IDA PMID:15595925; IBA; IEA GO_REF:0000120; TAS Reactome + PMID:3689315)<br />
+  ACCEPT.</li>
+<li>GO:0008484 (MF, sulfuric ester hydrolase activity, IDA PMID:15962010) — parent of the<br />
+  specific sulfatase activity; MODIFY -&gt; GO:0008449 (paper tested GNS among sulphatases<br />
+  whose activity is FGly/SUMF1-dependent).</li>
+<li>GO:0005515 (MF, protein binding, IPI PMID:17474147, NCK1/SH3 peptide array) — bare<br />
+  "protein binding", high-throughput; MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0005539 glycosaminoglycan binding, GO:0043199 sulfate binding (IEA ortholog) —<br />
+  substrate-related binding inherent to catalysis; KEEP_AS_NON_CORE (not separately<br />
+  informative beyond the enzyme activity).</li>
+<li>GO:0030200 heparan sulfate proteoglycan catabolic process (IBA + IDA + IEA) — CORE BP,<br />
+  ACCEPT. GO:0006027 glycosaminoglycan catabolic process (TAS) ACCEPT (parent-level, valid).<br />
+  GO:0042340 keratan sulfate proteoglycan catabolic process (IEA) ACCEPT (UniProt/EC name<br />
+  both substrates). GO:0030203 glycosaminoglycan metabolic process (IEA InterPro) — broad<br />
+  metabolic parent; KEEP_AS_NON_CORE.</li>
+<li>CC lysosome (IBA is_active_in, IEA) + lysosomal lumen (TAS) — CORE, ACCEPT.</li>
+<li>CC azurophil granule / azurophil granule lumen / ficolin-1-rich granule lumen /<br />
+  extracellular region / extracellular exosome — secondary neutrophil-granule/secreted<br />
+  locations; KEEP_AS_NON_CORE.</li>
+</ul>
+<h2 id="core-mf-term-used-in-core_functions">Core MF term used in core_functions</h2>
+<p>GO:0008449 "N-acetylglucosamine-6-sulfatase activity" (exact current GOA term).</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15586
+gene_symbol: GNS
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GNS (N-acetylglucosamine-6-sulfatase; EC 3.1.6.14, also called glucosamine-6-sulfatase/G6S)
+  is a lysosomal exo-sulfatase that hydrolytically removes the 6-O-sulfate group from terminal
+  N-acetyl-D-glucosamine-6-sulfate residues during the stepwise exolytic degradation of the
+  glycosaminoglycans heparan sulfate and keratan sulfate. Like other members of the sulfatase
+  family, it depends on a catalytic C-alpha-formylglycine residue generated from an active-site
+  cysteine by the formylglycine-generating enzyme SUMF1, and it binds a catalytic Ca2+ ion. The
+  mature enzyme is synthesized as a glycosylated precursor with a cleavable signal peptide and
+  acts in the lysosomal lumen at acidic pH. Loss of GNS activity causes mucopolysaccharidosis
+  type IIID (Sanfilippo syndrome D), an autosomal-recessive lysosomal storage disorder marked by
+  heparan sulfate accumulation and progressive central nervous system degeneration.
+alternative_products:
+- name: &#39;1&#39;
+  id: P15586-1
+- name: &#39;2&#39;
+  id: P15586-2
+  sequence_note: VSP_056486
+existing_annotations:
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation placing the active enzyme in the lysosome. This matches the
+      UniProt subcellular location and the well-established role of GNS as an acid hydrolase acting
+      in lysosomal glycosaminoglycan degradation. Core localization; accept.
+    action: ACCEPT
+    reason: &gt;-
+      GNS is a lysosomal sulfatase; UniProt records subcellular location Lysosome and its function
+      is defined by lysosomal degradation of heparan/keratan sulfate.
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Lysosome.&#34;
+    - reference_id: PMID:1463457
+      supporting_text: &gt;-
+        Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of
+        heparan sulphate and keratan sulphate.
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to heparan sulfate catabolism, consistent with the enzyme&#39;s
+      defined role in the stepwise exolytic degradation of heparan sulfate. Core biological process;
+      accept.
+    action: ACCEPT
+    reason: &gt;-
+      GNS removes the 6-sulfate from terminal GlcNAc-6-sulfate residues, a required step in
+      lysosomal heparan sulfate degradation; its deficiency causes lysosomal storage of heparan
+      sulfate (MPS IIID).
+    supported_by:
+    - reference_id: PMID:1463457
+      supporting_text: &gt;-
+        Deficiency of glucosamine-6-sulphatase activity leads to the lysosomal storage of the
+        glycosaminoglycan, heparan sulphate
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation to the exact molecular function of GNS. This is the core
+      catalytic activity, independently supported by direct enzymology; accept.
+    action: ACCEPT
+    reason: &gt;-
+      The GO term definition (hydrolysis of the 6-sulfate group of GlcNAc-6-sulfate units of
+      heparan and keratan sulfate) matches the experimentally established activity (EC 3.1.6.14).
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units&#34;
+- term:
+    id: GO:0005764
+    label: lysosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation (combined IEA methods / UniProt-SubCell) to lysosome, agreeing with the
+      curated UniProt subcellular location. Accept.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the IBA lysosome annotation and with UniProt&#39;s curated Lysosome location; the
+      IEA mapping is correct.
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Lysosome.&#34;
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation to the specific sulfatase activity, transferred from InterPro/EC
+      (EC:3.1.6.14) and orthologs. Correct and matches the experimentally verified activity; accept.
+    action: ACCEPT
+    reason: &gt;-
+      The InterPro family (IPR012251, GlcNAc_6-SO4ase) and EC 3.1.6.14 map precisely to GO:0008449;
+      consistent with direct enzymology.
+    supported_by:
+    - reference_id: PMID:1463457
+      supporting_text: &gt;-
+        We have isolated human cDNA clones and derived amino acid sequence coding for the entire
+        glucosamine-6-sulphatase protein
+- term:
+    id: GO:0030203
+    label: glycosaminoglycan metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic annotation to the broad glycosaminoglycan metabolic parent. Not wrong,
+      but less informative than the specific heparan/keratan sulfate catabolic terms already
+      annotated. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a high-level metabolic parent; the specific catabolic processes (heparan sulfate,
+      keratan sulfate, glycosaminoglycan catabolic process) capture the function more precisely and
+      are retained as core.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Forms A and B both desulphate substrates derived from keratan sulphate and heparin.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:17474147
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IPI annotation to bare &#34;protein binding&#34; from a high-throughput SH3-domain peptide-array
+      screen (NCK1 SH3 domain, UniProtKB:P16333). &#34;Protein binding&#34; is uninformative about GNS&#39;s
+      molecular function, and the interaction derives from a proteome-wide peptide-array method
+      rather than a validated functional complex. Retained but flagged as over-annotation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, bare &#34;protein binding&#34; IPIs add no functional information; this one
+      comes from a systematic SH3 peptide-array screen. There is no evidence that NCK1 binding is
+      part of GNS&#39;s biological function, so it is marked as over-annotated rather than removed.
+    supported_by:
+    - reference_id: PMID:17474147
+      supporting_text: &gt;-
+        A group of 12 Src homology (SH) 3 domains from eight human proteins (Swiss-Prot ID: SRC,
+        PLCG1, P85A, NCK1, GRB2, FYN, CRK) were used to screen a peptide target array
+- term:
+    id: GO:0005539
+    label: glycosaminoglycan binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (Ensembl ortholog transfer) to glycosaminoglycan binding. GNS acts on
+      GAG substrates (heparan/keratan sulfate), so substrate binding is plausible, but as a binding
+      term it is subsumed by the catalytic activity and does not add core functional information.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Binding of the GAG substrate is inherent to the enzyme&#39;s catalytic activity (GO:0008449); the
+      standalone binding term is not independently informative of GNS&#39;s core function.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Aglycone structures that influence substrate binding and/or enzyme activity
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation redundant with the IBA and IDA annotations to heparan sulfate
+      catabolism. Correct core biological process; accept.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the experimentally supported role of GNS in lysosomal heparan sulfate
+      degradation.
+    supported_by:
+    - reference_id: PMID:1463457
+      supporting_text: &gt;-
+        an exo-hydrolase required for the lysosomal degradation of heparan sulphate and keratan
+        sulphate
+- term:
+    id: GO:0042340
+    label: keratan sulfate proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic annotation (Ensembl ortholog transfer) to keratan sulfate catabolism. GNS also
+      desulfates keratan-sulfate-derived substrates, so this process is a genuine part of its
+      function. Accept as core.
+    action: ACCEPT
+    reason: &gt;-
+      UniProt FUNCTION and EC 3.1.6.14 both name keratan sulfate as a substrate, and direct
+      enzymology shows desulfation of keratan-sulfate-derived substrates.
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;of heparin sulfate and keratan sulfate.&#34;
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Forms A and B both desulphate substrates derived from keratan sulphate and heparin.
+- term:
+    id: GO:0043199
+    label: sulfate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic annotation (Ensembl ortholog transfer) to sulfate binding. Sulfate is the product
+      moiety released by GNS and sulfate/phosphate ions are potent product inhibitors, so sulfate
+      contact is expected, but the term is not independently informative of the core function.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Sulfate interaction is a facet of the catalytic mechanism (product/inhibitor binding) rather
+      than a distinct core molecular function; subsumed by GO:0008449.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Sulphate and phosphate ions are potent inhibitors of enzyme activity.
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263495
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) to the specific sulfatase activity, in the context of the keratan
+      sulfate degradation / MPS IIID pathway. Core molecular function; accept.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome represents the curated pathway role of GNS cleaving sulfate from GlcNAc-6-sulfate
+      units; consistent with all other lines of evidence.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Enzyme activity is highly specific towards glucosamine 6-sulphate or glucose 6-sulphate
+        residues.
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: EXP
+  original_reference_id: PMID:1463457
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) annotation from the cloning/characterization paper that established the
+      catalytic activity (EC 3.1.6.14) and the full-length human sequence. This is the primary
+      experimental support for the core molecular function; accept.
+    action: ACCEPT
+    reason: &gt;-
+      Direct demonstration of catalytic activity and derivation of the entire glucosamine-6-
+      sulphatase coding sequence; the definitive experimental evidence for GO:0008449.
+    supported_by:
+    - reference_id: PMID:1463457
+      supporting_text: &gt;-
+        Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of
+        heparan sulphate and keratan sulphate.
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15595925
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation from purification of the enzyme from human neutrophil granules and its
+      identification as N-acetylglucosamine-6-sulphatase (EC 3.1.6.14) with confirmed activity
+      toward N-acetylglucosamine-6-sulphate. Direct experimental support for the core activity;
+      accept.
+    action: ACCEPT
+    reason: &gt;-
+      The purified 75 kDa neutrophil protein was identified by MS and its identity confirmed by
+      enzymatic activity toward the GlcNAc-6-sulphate substrate, directly demonstrating GO:0008449.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        identified the protein to be N-acetylglucosamine-6-sulphatase (EC 3.1.6.14). The identity of
+        the protein was confirmed by demostrating enzymatic activity towards the substrate
+        N-acetylglucosamine 6-sulphate.
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:15595925
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation to heparan sulfate catabolism from the neutrophil-enzyme study, which showed
+      O-desulphation activity toward heparan-sulphate-derived saccharides. Consistent with the core
+      catabolic role; accept.
+    action: ACCEPT
+    reason: &gt;-
+      The purified enzyme desulfated heparan-sulphate-derived saccharides, directly linking its
+      activity to heparan sulfate degradation.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        The enzyme also showed O-desulphation activity towards heparan sulphate-derived saccharides.
+- term:
+    id: GO:0042582
+    label: azurophil granule
+  evidence_type: IDA
+  original_reference_id: PMID:15595925
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      IDA annotation locating GNS to azurophil (primary) granules of human neutrophils, based on
+      subcellular fractionation showing activity mainly in primary-granule fractions. This is a
+      genuine, experimentally supported neutrophil-specific location, but secondary to the core
+      lysosomal compartment where GNS performs GAG catabolism. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Azurophil (primary) granules are a specialized neutrophil location; the annotation is valid
+      but represents a cell-type-specific compartment rather than the canonical lysosomal site of
+      GNS&#39;s core catabolic function.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        Subcellular fractionation of neutrophil organelles showed the presence of enzymatic activity
+        mainly in the same fractions as primary granules.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome neutrophil-degranulation pathway) placing GNS in the extracellular
+      region upon exocytosis of azurophil granule contents. Consistent with the biochemical
+      observation that GNS is released from neutrophils; a secondary, context-dependent location.
+      Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Reflects release of granule contents during neutrophil degranulation; not the compartment of
+      GNS&#39;s core lysosomal catabolic function.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        PMA treatment of the neutrophils induced release of the enzyme, indicating its matrix
+        protein nature.
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome ficolin-rich granule exocytosis pathway) placing GNS in the
+      extracellular region upon degranulation. Same rationale as the other extracellular-region
+      annotation; secondary location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Context-dependent extracellular localization following granule exocytosis; not the core
+      lysosomal compartment.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        PMA treatment of the neutrophils induced release of the enzyme, indicating its matrix
+        protein nature.
+- term:
+    id: GO:0035578
+    label: azurophil granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798751
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) to azurophil granule lumen, consistent with the experimental
+      demonstration that GNS is a soluble matrix protein of neutrophil primary granules. Secondary,
+      cell-type-specific location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Corroborated by biochemistry (matrix protein of primary granules) but represents a
+      specialized neutrophil compartment rather than the core lysosomal site.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        indicating its matrix protein nature
+- term:
+    id: GO:1904813
+    label: ficolin-1-rich granule lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6800434
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) to ficolin-1-rich granule lumen, from the neutrophil-degranulation
+      curation. A specialized neutrophil granule subtype; secondary location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Neutrophil-granule-subtype location derived from pathway curation; not the core lysosomal
+      compartment for GAG catabolism.
+    supported_by:
+    - reference_id: PMID:15595925
+      supporting_text: &gt;-
+        Subcellular fractionation of neutrophil organelles showed the presence of enzymatic activity
+        mainly in the same fractions as primary granules.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263495
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome) to the lysosomal lumen, the compartment where GNS performs GlcNAc-6-
+      sulfate desulfation during GAG catabolism. Core localization; accept.
+    action: ACCEPT
+    reason: &gt;-
+      GNS is a soluble luminal lysosomal hydrolase; the lysosomal lumen is its functional
+      compartment.
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Lysosome.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput (HDA) detection of GNS in exosomes purified from expressed prostatic
+      secretions in urine, from a shotgun proteomics survey of ~900 proteins. This reflects presence
+      in a secreted vesicle fraction rather than a core functional location. Keep as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Large-scale proteomic detection in an exosome preparation; consistent with GNS being a
+      soluble, secretable hydrolase but not indicative of its core catabolic site.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &gt;-
+        In pooled EPS-urine exosome samples, ~900 proteins were detected.
+- term:
+    id: GO:0043202
+    label: lysosomal lumen
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1638032
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS annotation (Reactome keratan sulfate degradation reaction) to lysosomal lumen. Redundant
+      with the other lysosomal-lumen annotation and consistent with GNS&#39;s core compartment; accept.
+    action: ACCEPT
+    reason: &gt;-
+      GNS acts as a soluble luminal lysosomal enzyme; lysosomal lumen is the correct core location.
+    supported_by:
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Lysosome.&#34;
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IDA
+  original_reference_id: PMID:15962010
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IDA annotation to the broad &#34;sulfuric ester hydrolase activity&#34; parent, from a study of
+      SUMF1/SUMF2 regulation in which GNS was among the sulphatases assayed. GNS&#39;s specific activity
+      is N-acetylglucosamine-6-sulfatase (GO:0008449), a child of this term, so the annotation
+      should be made more specific.
+    action: MODIFY
+    reason: &gt;-
+      GO:0008484 is the sulfatase-family parent; the specific, experimentally established activity
+      of GNS is GO:0008449. Replace with the specific term. The SUMF1/SUMF2 study confirms GNS is a
+      formylglycine-dependent sulphatase whose activity is modulated by SUMF1.
+    proposed_replacement_terms:
+    - id: GO:0008449
+      label: N-acetylglucosamine-6-sulfatase activity
+    supported_by:
+    - reference_id: PMID:15962010
+      supporting_text: &gt;-
+        we transfected Cos7 cells with several sulphatase cDNAs ( ARSA , ARSC , ARSF , IDS , SGSH ,
+        GALNS , GNS )
+    - reference_id: file:human/GNS/GNS-uniprot.txt
+      supporting_text: &#34;critical for catalytic activity&#34;
+- term:
+    id: GO:0006027
+    label: glycosaminoglycan catabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:3689315
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS annotation to glycosaminoglycan catabolic process, from the detailed catalytic-properties
+      study establishing GNS as a highly specific exo-sulfatase acting on heparin/heparan- and
+      keratan-sulfate-derived substrates. Core biological process (parent of the heparan/keratan
+      catabolic terms); accept.
+    action: ACCEPT
+    reason: &gt;-
+      GNS is an exo-enzyme in the stepwise catabolism of glycosaminoglycans; this parent term is
+      appropriate and directly supported by the enzymology.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Both forms A and B are exo-enzymes, since activity towards internal sulphate ester bonds was
+        not observed.
+- term:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  evidence_type: TAS
+  original_reference_id: PMID:3689315
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS annotation to the specific molecular function from the catalytic-properties study, which
+      determined kinetic parameters against physiological-substrate analogues and showed high
+      specificity for glucosamine-6-sulphate residues. Core activity; accept.
+    action: ACCEPT
+    reason: &gt;-
+      Detailed enzymology directly supports GO:0008449: high specificity for GlcNAc-6-sulphate /
+      glucose-6-sulphate residues with catalytic efficiency greatly enhanced on physiological-like
+      substrates.
+    supported_by:
+    - reference_id: PMID:3689315
+      supporting_text: &gt;-
+        Enzyme activity is highly specific towards glucosamine 6-sulphate or glucose 6-sulphate
+        residues.
+core_functions:
+- description: &gt;-
+    Lysosomal N-acetylglucosamine-6-sulfatase (EC 3.1.6.14) that hydrolytically removes the 6-O-
+    sulfate group from terminal N-acetyl-D-glucosamine-6-sulfate residues, a required exolytic step
+    in the lysosomal catabolism of heparan sulfate and keratan sulfate.
+  molecular_function:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  directly_involved_in:
+  - id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0043202
+    label: lysosomal lumen
+  supported_by:
+  - reference_id: PMID:1463457
+    supporting_text: &gt;-
+      Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan
+      sulphate and keratan sulphate.
+  - reference_id: file:human/GNS/GNS-uniprot.txt
+    supporting_text: &#34;Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units&#34;
+- description: &gt;-
+    The same lysosomal sulfatase also acts in keratan sulfate catabolism, desulfating GlcNAc-6-
+    sulfate residues of keratan-sulfate-derived substrates.
+  molecular_function:
+    id: GO:0008449
+    label: N-acetylglucosamine-6-sulfatase activity
+  directly_involved_in:
+  - id: GO:0042340
+    label: keratan sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0005764
+    label: lysosome
+  supported_by:
+  - reference_id: PMID:3689315
+    supporting_text: &gt;-
+      Forms A and B both desulphate substrates derived from keratan sulphate and heparin.
+  - reference_id: file:human/GNS/GNS-uniprot.txt
+    supporting_text: &#34;of heparin sulfate and keratan sulfate.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does GNS have any non-lysosomal physiological role in extracellular glycosaminoglycan
+    remodeling, given its presence and O-desulphation activity in neutrophil primary granules and
+    its release upon degranulation?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided characterization of the formylglycine-dependent active site (Cys91 -&gt; FGly,
+    Ca2+ coordination) to map how MPS IIID missense variants (e.g. S94I, K340R, G418E) disrupt
+    catalysis or protein stability.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1463457
+  title: A cDNA clone for human glucosamine-6-sulphatase reveals differences between
+    arylsulphatases and non-arylsulphatases.
+  findings:
+  - statement: &gt;-
+      GNS (glucosamine-6-sulphatase) is a lysosomal exo-hydrolase required for degradation of
+      heparan sulphate and keratan sulphate; its deficiency causes MPS IIID with lysosomal storage
+      of heparan sulphate. The full 552-aa precursor with a 36-aa leader was cloned and its
+      catalytic activity (EC 3.1.6.14) established.
+    supporting_text: &gt;-
+      Glucosamine-6-sulphatase is an exo-hydrolase required for the lysosomal degradation of heparan
+      sulphate and keratan sulphate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary cloning/characterization paper; directly establishes the core molecular function and
+      biological role. Source of the UniProt EC 3.1.6.14 and FUNCTION evidence.
+- id: PMID:15595925
+  title: Purification of a 75 kDa protein from the organelle matrix of human neutrophils
+    and identification as N-acetylglucosamine-6-sulphatase.
+  findings:
+  - statement: &gt;-
+      A 75 kDa neutrophil granule-matrix protein was purified and identified by MS as
+      N-acetylglucosamine-6-sulphatase (EC 3.1.6.14), with confirmed activity toward
+      N-acetylglucosamine-6-sulphate and O-desulphation of heparan-sulphate-derived saccharides;
+      it localizes to primary (azurophil) granules and is released on PMA stimulation.
+    supporting_text: &gt;-
+      identified the protein to be N-acetylglucosamine-6-sulphatase (EC 3.1.6.14). The identity of
+      the protein was confirmed by demostrating enzymatic activity towards the substrate
+      N-acetylglucosamine 6-sulphate.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Provides direct (IDA) support for the molecular function, heparan sulfate catabolic process,
+      and the neutrophil primary-granule / secreted locations.
+- id: PMID:15962010
+  title: Sulphatase activities are regulated by the interaction of sulphatase-modifying
+    factor 1 with SUMF2.
+  findings:
+  - statement: &gt;-
+      GNS is a formylglycine-dependent sulphatase; it was among the sulphatases whose activity is
+      enhanced by SUMF1 (formylglycine-generating enzyme) and modulated by SUMF2. Supports the
+      broad sulfuric-ester-hydrolase annotation, which is best refined to the specific
+      GlcNAc-6-sulfatase activity.
+    supporting_text: &gt;-
+      we transfected Cos7 cells with several sulphatase cDNAs ( ARSA , ARSC , ARSF , IDS , SGSH ,
+      GALNS , GNS )
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GNS is one of seven sulphatases co-transfected/assayed; supports the FGly/SUMF1 dependence of
+      GNS activity but the paper&#39;s main focus is SUMF1/SUMF2 regulation, not GNS specifically.
+- id: PMID:17474147
+  title: Systematic identification of SH3 domain-mediated human protein-protein interactions
+    by peptide array target screening.
+  findings:
+  - statement: &gt;-
+      GNS appears as a peptide-array hit for SH3 domains (including NCK1) in a proteome-wide
+      screen. This underlies the bare &#34;protein binding&#34; IPI, which is uninformative about GNS&#39;s
+      molecular function.
+    supporting_text: &gt;-
+      A group of 12 Src homology (SH) 3 domains from eight human proteins (Swiss-Prot ID: SRC,
+      PLCG1, P85A, NCK1, GRB2, FYN, CRK) were used to screen a peptide target array
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput SH3 peptide-array screen; citation is correct but supports only an
+      uninformative &#34;protein binding&#34; annotation with no evidence of biological relevance to GNS.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: &gt;-
+      GNS was detected among ~900 proteins in a shotgun-proteomics survey of urinary prostatic-
+      secretion exosomes, underlying the extracellular-exosome location annotation.
+    supporting_text: &gt;-
+      In pooled EPS-urine exosome samples, ~900 proteins were detected.
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale exosome proteomics; supports only a non-core secreted-vesicle location.
+- id: PMID:3689315
+  title: Human liver N-acetylglucosamine-6-sulphate sulphatase. Catalytic properties.
+  findings:
+  - statement: &gt;-
+      Human liver GNS is a highly specific exo-sulfatase for glucosamine-6-sulphate / glucose-6-
+      sulphate residues, desulfating keratan-sulphate- and heparin-derived substrates; it shows no
+      activity toward internal sulphate ester bonds, and sulphate/phosphate ions are potent
+      inhibitors.
+    supporting_text: &gt;-
+      Both forms A and B are exo-enzymes, since activity towards internal sulphate ester bonds was
+      not observed.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Detailed enzymology; supports the molecular function and the glycosaminoglycan catabolic
+      process (exolytic mechanism).
+- id: Reactome:R-HSA-1638032
+  title: GNS:Ca2+ cleaves sulfate from GlcNAc-6-sulfate units of keratan sulfate
+  findings: []
+- id: Reactome:R-HSA-2263495
+  title: Defective GNS does not hydrolyse 6-sulfate from GlcNAc6S
+  findings: []
+- id: Reactome:R-HSA-6798751
+  title: Exocytosis of azurophil granule lumen proteins
+  findings: []
+- id: Reactome:R-HSA-6800434
+  title: Exocytosis of ficolin-rich granule lumen proteins
+  findings: []
+- id: file:human/GNS/GNS-uniprot.txt
+  title: UniProtKB entry P15586 (GNS_HUMAN)
+  findings:
+  - statement: &gt;-
+      UniProt records GNS as a lysosomal N-acetylglucosamine-6-sulfatase (EC 3.1.6.14) that
+      hydrolyzes 6-sulfate groups of N-acetyl-D-glucosaminide units of heparan and keratan sulfate,
+      requires a catalytic formylglycine (3-oxoalanine) residue, and whose deficiency causes MPS
+      IIID.
+    supporting_text: &gt;-
+      Hydrolyzes 6-sulfate groups in N-acetyl-d-glucosaminide units
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

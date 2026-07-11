@@ -1,0 +1,4199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HGSNAT - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HGSNAT</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q68CP4" target="_blank" class="term-link">
+                        Q68CP4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "HGSNAT";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q68CP4" data-a="DESCRIPTION: HGSNAT (heparan-alpha-glucosaminide N-acetyltransf..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>HGSNAT (heparan-alpha-glucosaminide N-acetyltransferase; TMEM76; EC 2.3.1.78) is a polytopic lysosomal membrane transacetylase that carries out an essential step of heparan sulfate degradation. It transfers an acetyl group from cytosolic acetyl-CoA onto the free amino group of the terminal non-reducing alpha-glucosamine residue of intralysosomal heparan sulfate (and heparin), converting it to N-acetyl-alpha-glucosamine so that the downstream lysosomal exoglycosidase NAGLU (alpha-N-acetylglucosaminidase) can remove it and degradation can proceed. Unlike the other three enzymes of the heparan sulfate degradation pathway, which are soluble luminal hydrolases/sulfatases, HGSNAT is the only membrane-bound member and the only transferase, spanning the lysosomal membrane with 11 transmembrane helices; its active-site nucleophile (His297) is positioned to access cytoplasmic acetyl-CoA and transfer the acetyl group across the membrane to the luminal glucosamine substrate. The enzyme is synthesised as an inactive precursor that is trafficked to lysosomes via adaptor-protein/dileucine- and tyrosine-based signals, proteolytically cleaved into an N-terminal alpha-chain and C-terminal beta-chain, and assembled into active homo-oligomers. Loss-of-function mutations cause mucopolysaccharidosis type IIIC (Sanfilippo syndrome C), an autosomal recessive lysosomal storage disorder with severe progressive neurodegeneration; certain HGSNAT variants also cause non-syndromic retinitis pigmentosa (RP73).</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment that HGSNAT acts in the lysosomal membrane. This is the correct core subcellular location: HGSNAT is a multi-pass lysosomal membrane protein whose enzymatic action occurs at that membrane. Directly supported by experimental evidence in this gene (colocalization with LAMP-2; lysosomal-membrane proteomics) and consistent with the UniProt subcellular-location annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, supported experimentally in human HGSNAT and by the phylogenetic model.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                                        PMID:19823584
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    GO:0015019
+                                </a>
+                            </span>
+                            <span class="term-label">heparan-alpha-glucosaminide N-acetyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0015019" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the exact-match molecular function: acetyl-CoA:alpha-glucosaminide N-acetyltransferase activity (EC 2.3.1.78; RHEA:15125). This is the core catalytic activity of HGSNAT and is confirmed experimentally by direct N-acetyltransferase assays of the recombinant human enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact-match term for the demonstrated core catalytic activity; well supported by experimental data and the phylogenetic model.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0030200" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment placing HGSNAT in heparan sulfate proteoglycan catabolism. This is the core biological process: HGSNAT&#39;s N-acetylation step is an obligatory intermediate in stepwise lysosomal degradation of heparan sulfate, and its deficiency blocks the pathway and causes lysosomal HS storage (MPS IIIC).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core catabolic pathway; the enzyme&#39;s step is required for heparan sulfate degradation and its loss causes HS accumulation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                                        PMID:19823584
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">acetylation of the terminal glucosamine residues of heparan sulfate prior to</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">for its further catabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (UniProt SubCell mapping SL-0157) annotation of lysosomal membrane location, derived from the curated UniProt subcellular-location statement. Correct and redundant with the experimentally supported location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with curated UniProt location and experimental evidence for lysosomal membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    GO:0015019
+                                </a>
+                            </span>
+                            <span class="term-label">heparan-alpha-glucosaminide N-acetyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0015019" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the exact-match N-acetyltransferase activity based on EC 2.3.1.78 / RHEA:15125 and ortholog evidence. Correct and redundant with the experimentally and phylogenetically supported MF annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact-match MF term mapped from EC/RHEA; correct core catalytic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                    GO:0030200
+                                </a>
+                            </span>
+                            <span class="term-label">heparan sulfate proteoglycan catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0030200" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic transfer (Ensembl Compara) of the heparan sulfate proteoglycan catabolic process annotation from the experimentally characterized mouse ortholog. Correct core biological process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core catabolic pathway, transferred from an experimentally characterized ortholog; consistent with human experimental data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">for its further catabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    GO:0015019
+                                </a>
+                            </span>
+                            <span class="term-label">heparan-alpha-glucosaminide N-acetyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263492
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0015019" data-r="Reactome:R-HSA-2263492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of the exact-match N-acetyltransferase activity, from a reaction representing HGSNAT acetylation of the heparan chain (the &#34;defective&#34; reaction node modelling loss of this activity in MPS IIIC). Supports the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact-match core catalytic activity, curated by Reactome; consistent with all other evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    GO:0015019
+                                </a>
+                            </span>
+                            <span class="term-label">heparan-alpha-glucosaminide N-acetyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036056
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0015019" data-r="Reactome:R-HSA-9036056" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of the exact-match N-acetyltransferase activity (second Reactome reaction node). Redundant with the other MF annotations and supports the core catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exact-match core catalytic activity, curated by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2263492
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="Reactome:R-HSA-2263492" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of lysosomal membrane location. Correct core location, redundant with the experimentally supported CC annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, curated by Reactome; consistent with experimental data.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9036056
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="Reactome:R-HSA-9036056" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of lysosomal membrane location (second reaction node). Correct core location, redundant with other CC annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, curated by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798747
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005886" data-r="Reactome:R-HSA-6798747" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation of plasma membrane location, from the &#34;Exocytosis of tertiary granule membrane proteins&#34; reaction in the neutrophil degranulation pathway. This reflects mobilization of granule-membrane HGSNAT to the cell surface during degranulation rather than the enzyme&#39;s core lysosomal site of action. Not wrong in that specific context, but peripheral to HGSNAT&#39;s core catalytic role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Neutrophil-degranulation exocytosis context; a secondary, cell-type-restricted localization, not the core lysosomal membrane location where catalysis occurs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798747
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of tertiary granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799350
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005886" data-r="Reactome:R-HSA-6799350" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation of plasma membrane location from the &#34;Exocytosis of specific granule membrane proteins&#34; neutrophil-degranulation reaction. As above, reflects degranulation-associated surface exposure rather than the core lysosomal site of action.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Neutrophil-degranulation exocytosis context; peripheral to the core lysosomal function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6799350
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of specific granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035579" target="_blank" class="term-link">
+                                    GO:0035579
+                                </a>
+                            </span>
+                            <span class="term-label">specific granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6799350
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0035579" data-r="Reactome:R-HSA-6799350" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation placing HGSNAT in the neutrophil specific granule membrane (neutrophil degranulation pathway). A real cell-type-specific granule localization but peripheral to the core lysosomal catabolic function of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cell-type-restricted neutrophil granule localization; not the core lysosomal site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6799350
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of specific granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070821" target="_blank" class="term-link">
+                                    GO:0070821
+                                </a>
+                            </span>
+                            <span class="term-label">tertiary granule membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-6798747
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0070821" data-r="Reactome:R-HSA-6798747" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome annotation placing HGSNAT in the neutrophil tertiary granule membrane (neutrophil degranulation pathway). A real cell-type-specific granule localization but peripheral to the core lysosomal catabolic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cell-type-restricted neutrophil granule localization; not the core lysosomal site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-6798747
+
+                                </span>
+
+                                <div class="support-text">Exocytosis of tertiary granule membrane proteins</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17897319
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Integral and associated lysosomal membrane proteins.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="PMID:17897319" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct assay (lysosomal-membrane proteomics of purified placental lysosomes) identifying HGSNAT among proteins residing in the lysosomal membrane. Independent experimental support for the core lysosomal membrane location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental proteomic support for the core lysosomal membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link">
+                                        PMID:17897319
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">proteins, known to reside at least partially in the lysosomal membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link">
+                                        PMID:17897319
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In membranes purified from placental lysosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-1678660
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="Reactome:R-HSA-1678660" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of lysosomal membrane location (from the &#34;HGSNAT oligomer acetylates Heparan sulfate chain&#34; reaction). Correct core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, curated by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-2090085
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="Reactome:R-HSA-2090085" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable-author annotation of lysosomal membrane location (from the &#34;HGSNAT oligomer acetylates Heparan chain&#34; reaction). Correct core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core location, curated by Reactome.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosome membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19823584
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein misfolding as an underlying molecular defect in muco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="PMID:19823584" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay: confocal immunofluorescence of recombinant HGSNAT in human fibroblasts showed near-complete colocalization with the lysosomal markers LysoTracker Red and LAMP-2. Strong experimental support for the core lysosomal membrane location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental colocalization with lysosomal markers; core location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                                        PMID:19823584
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                    GO:0005765
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20650889
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of the biogenesis of heparan sulfate acetyl-CoA:alp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0005765" data-r="PMID:20650889" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay from the biogenesis/trafficking study: HGSNAT is a lysosomal membrane enzyme trafficked to and residing in lysosomes. Independent experimental support for the core location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the core lysosomal membrane location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transported to the lysosomes via an adaptor protein-mediated pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007041" target="_blank" class="term-link">
+                                    GO:0007041
+                                </a>
+                            </span>
+                            <span class="term-label">lysosomal transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20650889
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of the biogenesis of heparan sulfate acetyl-CoA:alp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0007041" data-r="PMID:20650889" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IDA annotation to &#34;lysosomal transport&#34; derived from the biogenesis study, which characterized the adaptor-protein/tyrosine- and dileucine-signal-mediated trafficking of the HGSNAT precursor to lysosomes. That work describes how HGSNAT itself is delivered to the lysosome, not a role for HGSNAT in transporting cargo (the sense of GO:0007041, transport of substances into/within the lysosome). HGSNAT is an acetyltransferase, not a transporter, so this is an over-interpretation of the trafficking/targeting observation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The supporting paper documents targeting/biogenesis of HGSNAT to the lysosome, not HGSNAT-mediated lysosomal cargo transport; annotating the enzyme to &#34;lysosomal transport&#34; over-extends the trafficking observation. Not removed (it is an experimental annotation whose full text was read by the curator), but flagged as an over-annotation relative to HGSNAT&#39;s actual transferase function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">transported to the lysosomes via an adaptor protein-mediated pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19823584
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein misfolding as an underlying molecular defect in muco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0016746" data-r="PMID:19823584" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of N-acetyltransferase activity of recombinant HGSNAT (activity of wild-type vs. MPS IIIC mutants was measured). The annotation captures this as the general parent term &#34;acyltransferase activity&#34;, but the specific, exact-match child term GO:0015019 (heparan-alpha-glucosaminide N-acetyltransferase activity) is warranted because the assay measured precisely this activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct in essence but too general; the measured activity is specifically heparan-alpha-glucosaminide N-acetyltransferase activity. Replace with the exact-match MF term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    heparan-alpha-glucosaminide N-acetyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                                        PMID:19823584
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assayed for N-acetyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051259" target="_blank" class="term-link">
+                                    GO:0051259
+                                </a>
+                            </span>
+                            <span class="term-label">protein complex oligomerization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20650889
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of the biogenesis of heparan sulfate acetyl-CoA:alp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0051259" data-r="PMID:20650889" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that HGSNAT assembles into ~440-kDa homo-oligomers and that homo-oligomerization is required for enzymatic activity. This is a genuine, experimentally supported property, but it describes a biogenesis/assembly step rather than HGSNAT&#39;s core molecular function (acetyltransferase) or its core catabolic pathway role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real and experimentally supported (homo-oligomerization needed for activity), but an assembly/biogenesis process peripheral to the core MF/BP; retain as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">assembled into active ∼440-kDa oligomers</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Homooligomerization is necessary for enzyme</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016746" target="_blank" class="term-link">
+                                    GO:0016746
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20650889
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Analysis of the biogenesis of heparan sulfate acetyl-CoA:alp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q68CP4" data-a="GO:0016746" data-r="PMID:20650889" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of N-acetyltransferase activity in the biogenesis study (N-acetyltransferase activity was measured to track functional maturation of HGSNAT). As with the other acyltransferase IDA, the general parent term should be refined to the exact-match child GO:0015019, which precisely describes the activity assayed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but too general; the assayed activity is specifically heparan-alpha-glucosaminide N-acetyltransferase activity. Replace with the exact-match MF term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                                    heparan-alpha-glucosaminide N-acetyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                        PMID:20650889
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">of the acetyl group to the terminal glucosamine on heparan sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Lysosomal-membrane acetyl-CoA:alpha-glucosaminide N-acetyltransferase: transfers an acetyl group from cytosolic acetyl-CoA onto the free amino group of the terminal non-reducing alpha-glucosamine residue of intralysosomal heparan sulfate, producing N-acetyl-alpha-glucosamine. This transmembrane acetylation is an obligatory step in the stepwise lysosomal catabolism of heparan sulfate: it converts the terminal residue into a substrate for the exoglycosidase NAGLU so degradation can continue. The enzyme is a polytopic (11-TM) lysosomal membrane protein and is the only membrane-bound, transferase member of the heparan sulfate degradation pathway.</h3>
+                <span class="vote-buttons" data-g="Q68CP4" data-a="FUNCTION: Lysosomal-membrane acetyl-CoA:alpha-glucosaminide ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015019" target="_blank" class="term-link">
+                            heparan-alpha-glucosaminide N-acetyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030200" target="_blank" class="term-link">
+                                heparan sulfate proteoglycan catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005765" target="_blank" class="term-link">
+                                lysosomal membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Lysosomal acetyltransferase that acetylates the non-reducing</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                                PMID:20650889
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                                PMID:19823584
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">acetylation of the terminal glucosamine residues of heparan sulfate prior to</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17897319" target="_blank" class="term-link">
+                            PMID:17897319
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Integral and associated lysosomal membrane proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Lysosomal-membrane proteomics of purified placental lysosomes identified HGSNAT among proteins residing at least partially in the lysosomal membrane.</div>
+
+                        <div class="finding-text">"proteins, known to reside at least partially in the lysosomal membrane"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19823584" target="_blank" class="term-link">
+                            PMID:19823584
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein misfolding as an underlying molecular defect in mucopolysaccharidosis III type C.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGSNAT is a lysosomal membrane enzyme (EC 2.3.1.78) that catalyses transmembrane acetylation of the terminal glucosamine residues of heparan sulfate prior to their hydrolysis by alpha-N-acetylglucosaminidase; its deficiency causes MPS IIIC.</div>
+
+                        <div class="finding-text">"acetylation of the terminal glucosamine residues of heparan sulfate prior to"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Recombinant wild-type HGSNAT colocalizes with the lysosomal markers LysoTracker and LAMP-2, whereas most MPS IIIC missense mutants misfold and are retained in the ER.</div>
+
+                        <div class="finding-text">"almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20650889" target="_blank" class="term-link">
+                            PMID:20650889
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Analysis of the biogenesis of heparan sulfate acetyl-CoA:alpha-glucosaminide N-acetyltransferase provides insights into the mechanism underlying its complete deficiency in mucopolysaccharidosis IIIC.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">HGSNAT catalyzes the transmembrane acetylation of heparan sulfate in lysosomes, required for its further catabolism.</div>
+
+                        <div class="finding-text">"catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The precursor is trafficked to lysosomes via an adaptor-protein-mediated pathway, cleaved into alpha and beta chains, and assembled into active ~440-kDa homo-oligomers.</div>
+
+                        <div class="finding-text">"assembled into active ∼440-kDa oligomers"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-1678660
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HGSNAT oligomer acetylates Heparan sulfate chain(3)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2090085
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HGSNAT oligomer acetylates Heparan chain(1)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-2263492
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective HGSNAT does not acetylate Heparan chain(1)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6798747
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of tertiary granule membrane proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-6799350
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exocytosis of specific granule membrane proteins</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9036056
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective HGSNAT does not acetylate Heparan sulfate chain(3)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/HGSNAT/HGSNAT-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q68CP4 (HGNAT_HUMAN) curated entry</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes HGSNAT as a lysosomal acetyltransferase that acetylates the terminal alpha-glucosamine of intralysosomal heparin/heparan sulfate, converting it into a substrate for luminal alpha-N-acetylglucosaminidase; it is a multi-pass lysosome membrane protein and a homo-oligomer whose oligomerization is required for activity.</div>
+
+                        <div class="finding-text">"Lysosomal acetyltransferase that acetylates the non-reducing"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the precise mechanism by which the active-site nucleophile accesses cytosolic acetyl-CoA and transfers the acetyl group across the lysosomal membrane to the luminal glucosamine substrate (ping-pong vs. direct transfer), and how do the recent cryo-EM structures explain this transmembrane catalysis?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q68CP4" data-a="Q: What is the precise mechanism by which the active-..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does the requirement for intralysosomal proteolytic cleavage and homo-oligomer assembly relate to catalytic activation, and could these steps be therapeutic targets?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q68CP4" data-a="Q: How does the requirement for intralysosomal proteo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of candidate acetyl-CoA-binding and catalytic residues in the cytosolic loops, combined with transmembrane-acetylation assays, to define the acetyl-transfer path across the membrane.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q68CP4" data-a="EXPERIMENT: Structure-guided mutagenesis of candidate acetyl-C..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Pharmacological-chaperone (e.g. glucosamine-analog) screens on a panel of misfolding MPS IIIC missense mutants to identify variants amenable to enzyme-enhancement therapy.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q68CP4" data-a="EXPERIMENT: Pharmacological-chaperone (e.g. glucosamine-analog..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(HGSNAT-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q68CP4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="hgsnat-q68cp4-review-notes">HGSNAT (Q68CP4) review notes</h1>
+<p>Human HGSNAT (heparan-alpha-glucosaminide N-acetyltransferase; TMEM76). EC 2.3.1.78.<br />
+Deep research: falcon out of credits (HTTP 402); grounded in UniProt (<code>HGSNAT-uniprot.txt</code>),<br />
+GOA (<code>HGSNAT-goa.tsv</code>), and cached publications.</p>
+<h2 id="core-biology">Core biology</h2>
+<ul>
+<li>Lysosomal <strong>membrane</strong> transmembrane transacetylase — unique among the four HS-degradation<br />
+  enzymes in being a membrane-bound <em>transferase</em> (the others are soluble hydrolases/sulfatases).</li>
+<li>Catalyzes the essential step of <strong>heparan sulfate catabolism</strong>: transfers an acetyl group from<br />
+<strong>cytosolic acetyl-CoA</strong> onto the free amino group of the terminal non-reducing<br />
+  alpha-glucosamine of intralysosomal HS/heparin, producing N-acetyl-alpha-glucosamine so that<br />
+  NAGLU (alpha-N-acetylglucosaminidase) can then remove it. [UniProt FUNCTION;<br />
+  PMID:19823584 "which catalyses transmembrane / acetylation of the terminal glucosamine residues<br />
+  of heparan sulfate prior to / their hydrolysis by alpha-N-acetylglucosaminidase"]</li>
+<li>Reaction: alpha-D-glucosaminyl-<a href="n">heparan sulfate</a> + acetyl-CoA = N-acetyl-alpha-D-glucosaminyl-<a href="n">heparan<br />
+  sulfate</a> + CoA + H+ (RHEA:15125; EC 2.3.1.78). GO:0015019 is the exact-match MF term.</li>
+<li>Membrane topology: 11 TM helices (polytopic / multi-pass); N-terminal luminal domain,<br />
+  active-site His297 (UniProt ACT_SITE; PMID:20650889 proposes His that accesses cytoplasmic<br />
+  acetyl-CoA). Signal sequence present but not cleaved; targeted to lysosome via<br />
+  AP-mediated tyrosine/dileucine motifs in C-terminal cytoplasmic tail.</li>
+<li>Homooligomer (~440 kDa); homooligomerization required for activity; precursor (77 kDa)<br />
+  cleaved intralysosomally into 29-kDa alpha and 48-kDa beta chains — cleavage essential for<br />
+  activation <a href="https://pubmed.ncbi.nlm.nih.gov/20650889">PMID:20650889</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Lysosome membrane, multi-pass (UniProt; PMID:16960811, 17033958, 17897319).</li>
+<li>Confirmed by IDA immunofluorescence colocalization with LAMP-2 (PMID:19823584, 20650889),<br />
+  HDA lysosomal-membrane proteomics (PMID:17897319), and multiple Reactome TAS.</li>
+<li>Reactome also places HGSNAT in neutrophil specific/tertiary granule membranes and plasma<br />
+  membrane (neutrophil degranulation, R-HSA-6798695). These are secretory-pathway/degranulation<br />
+  contexts, not the core lysosomal catabolic function; kept as non-core.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>MPS IIIC / Sanfilippo syndrome C (MIM 252930): autosomal recessive lysosomal storage disease;<br />
+  HS accumulation; severe CNS neurodegeneration. Most missense mutations cause misfolding/ER<br />
+  retention (PMID:19823584).</li>
+<li>Retinitis pigmentosa 73 (RP73, MIM 616544) — non-syndromic (PMID:25859010).</li>
+</ul>
+<h2 id="goa-mf-term-used-for-core_functions">GOA MF term used for core_functions</h2>
+<p>GO:0015019 "heparan-alpha-glucosaminide N-acetyltransferase activity" (exact GOA term; current,<br />
+non-obsolete; = EC 2.3.1.78 / RHEA:15125). BP core = GO:0030200 "heparan sulfate proteoglycan<br />
+catabolic process". CC = GO:0005765 "lysosomal membrane".</p>
+<h2 id="annotation-decisions-summary">Annotation decisions (summary)</h2>
+<ul>
+<li>GO:0015019 MF (IBA, IEA, 2x TAS Reactome): ACCEPT — core catalytic function, exact-match term.</li>
+<li>GO:0030200 BP (IBA, IEA): ACCEPT — core catabolic pathway.</li>
+<li>GO:0005765 lysosomal membrane (IBA is_active_in, IEA, TAS x3, HDA, IDA x2): ACCEPT — core location.</li>
+<li>GO:0016746 acyltransferase activity (IDA x2): MODIFY -&gt; GO:0015019 (parent of the specific MF; the<br />
+  IDA measured N-acetyltransferase activity, so the specific term is warranted).</li>
+<li>GO:0007041 lysosomal transport (IDA, PMID:20650889): MARK_AS_OVER_ANNOTATED — the paper studies<br />
+  biogenesis/AP-mediated <em>targeting</em> of HGSNAT to lysosomes, not HGSNAT acting as a transporter in<br />
+  the "lysosomal transport" (cargo transport) sense; over-annotation of the trafficking observation.</li>
+<li>GO:0051259 protein complex oligomerization (IDA, PMID:20650889): KEEP_AS_NON_CORE — real<br />
+  (homooligomerization required for activity) but a biogenesis/assembly process, not the core MF/BP.</li>
+<li>GO:0005886 plasma membrane (TAS Reactome x2): KEEP_AS_NON_CORE — neutrophil-degranulation<br />
+  exocytosis context, not the core lysosomal location.</li>
+<li>GO:0035579 specific granule membrane / GO:0070821 tertiary granule membrane (TAS Reactome):<br />
+  KEEP_AS_NON_CORE — neutrophil granule contexts (degranulation pathway).</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q68CP4
+gene_symbol: HGSNAT
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  HGSNAT (heparan-alpha-glucosaminide N-acetyltransferase; TMEM76; EC 2.3.1.78) is a
+  polytopic lysosomal membrane transacetylase that carries out an essential step of
+  heparan sulfate degradation. It transfers an acetyl group from cytosolic acetyl-CoA
+  onto the free amino group of the terminal non-reducing alpha-glucosamine residue of
+  intralysosomal heparan sulfate (and heparin), converting it to
+  N-acetyl-alpha-glucosamine so that the downstream lysosomal exoglycosidase NAGLU
+  (alpha-N-acetylglucosaminidase) can remove it and degradation can proceed. Unlike the
+  other three enzymes of the heparan sulfate degradation pathway, which are soluble
+  luminal hydrolases/sulfatases, HGSNAT is the only membrane-bound member and the only
+  transferase, spanning the lysosomal membrane with 11 transmembrane helices; its
+  active-site nucleophile (His297) is positioned to access cytoplasmic acetyl-CoA and
+  transfer the acetyl group across the membrane to the luminal glucosamine substrate. The
+  enzyme is synthesised as an inactive precursor that is trafficked to lysosomes via
+  adaptor-protein/dileucine- and tyrosine-based signals, proteolytically cleaved into an
+  N-terminal alpha-chain and C-terminal beta-chain, and assembled into active
+  homo-oligomers. Loss-of-function mutations cause mucopolysaccharidosis type IIIC
+  (Sanfilippo syndrome C), an autosomal recessive lysosomal storage disorder with severe
+  progressive neurodegeneration; certain HGSNAT variants also cause non-syndromic
+  retinitis pigmentosa (RP73).
+alternative_products:
+- name: &#39;1&#39;
+  id: Q68CP4-1
+- name: &#39;2&#39;
+  id: Q68CP4-2
+  sequence_note: VSP_040504
+existing_annotations:
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment that HGSNAT acts in the lysosomal membrane. This is
+      the correct core subcellular location: HGSNAT is a multi-pass lysosomal membrane
+      protein whose enzymatic action occurs at that membrane. Directly supported by
+      experimental evidence in this gene (colocalization with LAMP-2; lysosomal-membrane
+      proteomics) and consistent with the UniProt subcellular-location annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, supported experimentally in human HGSNAT and by the
+      phylogenetic model.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+    - reference_id: PMID:19823584
+      supporting_text: almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2
+- term:
+    id: GO:0015019
+    label: heparan-alpha-glucosaminide N-acetyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the exact-match molecular function:
+      acetyl-CoA:alpha-glucosaminide N-acetyltransferase activity (EC 2.3.1.78;
+      RHEA:15125). This is the core catalytic activity of HGSNAT and is confirmed
+      experimentally by direct N-acetyltransferase assays of the recombinant human enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Exact-match term for the demonstrated core catalytic activity; well supported by
+      experimental data and the phylogenetic model.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+    - reference_id: PMID:20650889
+      supporting_text: catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment placing HGSNAT in heparan sulfate proteoglycan
+      catabolism. This is the core biological process: HGSNAT&#39;s N-acetylation step is an
+      obligatory intermediate in stepwise lysosomal degradation of heparan sulfate, and
+      its deficiency blocks the pathway and causes lysosomal HS storage (MPS IIIC).
+    action: ACCEPT
+    reason: &gt;-
+      Correct core catabolic pathway; the enzyme&#39;s step is required for heparan sulfate
+      degradation and its loss causes HS accumulation.
+    supported_by:
+    - reference_id: PMID:19823584
+      supporting_text: acetylation of the terminal glucosamine residues of heparan sulfate prior to
+    - reference_id: PMID:20650889
+      supporting_text: for its further catabolism
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic (UniProt SubCell mapping SL-0157) annotation of lysosomal membrane
+      location, derived from the curated UniProt subcellular-location statement. Correct
+      and redundant with the experimentally supported location.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with curated UniProt location and experimental evidence for lysosomal
+      membrane localization.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+- term:
+    id: GO:0015019
+    label: heparan-alpha-glucosaminide N-acetyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the exact-match N-acetyltransferase activity based on
+      EC 2.3.1.78 / RHEA:15125 and ortholog evidence. Correct and redundant with the
+      experimentally and phylogenetically supported MF annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Exact-match MF term mapped from EC/RHEA; correct core catalytic activity.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+- term:
+    id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic transfer (Ensembl Compara) of the heparan sulfate proteoglycan catabolic
+      process annotation from the experimentally characterized mouse ortholog. Correct
+      core biological process.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core catabolic pathway, transferred from an experimentally characterized
+      ortholog; consistent with human experimental data.
+    supported_by:
+    - reference_id: PMID:20650889
+      supporting_text: for its further catabolism
+- term:
+    id: GO:0015019
+    label: heparan-alpha-glucosaminide N-acetyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263492
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of the exact-match N-acetyltransferase
+      activity, from a reaction representing HGSNAT acetylation of the heparan chain (the
+      &#34;defective&#34; reaction node modelling loss of this activity in MPS IIIC). Supports the
+      core catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      Exact-match core catalytic activity, curated by Reactome; consistent with all other
+      evidence.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+- term:
+    id: GO:0015019
+    label: heparan-alpha-glucosaminide N-acetyltransferase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036056
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of the exact-match N-acetyltransferase
+      activity (second Reactome reaction node). Redundant with the other MF annotations
+      and supports the core catalytic function.
+    action: ACCEPT
+    reason: &gt;-
+      Exact-match core catalytic activity, curated by Reactome.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2263492
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of lysosomal membrane location. Correct core
+      location, redundant with the experimentally supported CC annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, curated by Reactome; consistent with experimental data.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9036056
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of lysosomal membrane location (second reaction
+      node). Correct core location, redundant with other CC annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, curated by Reactome.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798747
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome annotation of plasma membrane location, from the &#34;Exocytosis of tertiary
+      granule membrane proteins&#34; reaction in the neutrophil degranulation pathway. This
+      reflects mobilization of granule-membrane HGSNAT to the cell surface during
+      degranulation rather than the enzyme&#39;s core lysosomal site of action. Not wrong in
+      that specific context, but peripheral to HGSNAT&#39;s core catalytic role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Neutrophil-degranulation exocytosis context; a secondary, cell-type-restricted
+      localization, not the core lysosomal membrane location where catalysis occurs.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798747
+      supporting_text: Exocytosis of tertiary granule membrane proteins
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799350
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome annotation of plasma membrane location from the &#34;Exocytosis of specific
+      granule membrane proteins&#34; neutrophil-degranulation reaction. As above, reflects
+      degranulation-associated surface exposure rather than the core lysosomal site of
+      action.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Neutrophil-degranulation exocytosis context; peripheral to the core lysosomal
+      function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6799350
+      supporting_text: Exocytosis of specific granule membrane proteins
+- term:
+    id: GO:0035579
+    label: specific granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6799350
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome annotation placing HGSNAT in the neutrophil specific granule membrane
+      (neutrophil degranulation pathway). A real cell-type-specific granule localization
+      but peripheral to the core lysosomal catabolic function of the enzyme.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cell-type-restricted neutrophil granule localization; not the core lysosomal site of
+      action.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6799350
+      supporting_text: Exocytosis of specific granule membrane proteins
+- term:
+    id: GO:0070821
+    label: tertiary granule membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-6798747
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome annotation placing HGSNAT in the neutrophil tertiary granule membrane
+      (neutrophil degranulation pathway). A real cell-type-specific granule localization
+      but peripheral to the core lysosomal catabolic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cell-type-restricted neutrophil granule localization; not the core lysosomal site of
+      action.
+    supported_by:
+    - reference_id: Reactome:R-HSA-6798747
+      supporting_text: Exocytosis of tertiary granule membrane proteins
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: HDA
+  original_reference_id: PMID:17897319
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput direct assay (lysosomal-membrane proteomics of purified placental
+      lysosomes) identifying HGSNAT among proteins residing in the lysosomal membrane.
+      Independent experimental support for the core lysosomal membrane location.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental proteomic support for the core lysosomal membrane location.
+    supported_by:
+    - reference_id: PMID:17897319
+      supporting_text: proteins, known to reside at least partially in the lysosomal membrane
+    - reference_id: PMID:17897319
+      supporting_text: In membranes purified from placental lysosomes
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-1678660
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of lysosomal membrane location (from the
+      &#34;HGSNAT oligomer acetylates Heparan sulfate chain&#34; reaction). Correct core location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, curated by Reactome.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-2090085
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome traceable-author annotation of lysosomal membrane location (from the
+      &#34;HGSNAT oligomer acetylates Heparan chain&#34; reaction). Correct core location.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core location, curated by Reactome.
+    supported_by:
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosome membrane
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: IDA
+  original_reference_id: PMID:19823584
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay: confocal immunofluorescence of recombinant HGSNAT in human fibroblasts
+      showed near-complete colocalization with the lysosomal markers LysoTracker Red and
+      LAMP-2. Strong experimental support for the core lysosomal membrane location.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental colocalization with lysosomal markers; core location.
+    supported_by:
+    - reference_id: PMID:19823584
+      supporting_text: almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2
+- term:
+    id: GO:0005765
+    label: lysosomal membrane
+  evidence_type: IDA
+  original_reference_id: PMID:20650889
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay from the biogenesis/trafficking study: HGSNAT is a lysosomal membrane
+      enzyme trafficked to and residing in lysosomes. Independent experimental support for
+      the core location.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the core lysosomal membrane location.
+    supported_by:
+    - reference_id: PMID:20650889
+      supporting_text: transported to the lysosomes via an adaptor protein-mediated pathway
+- term:
+    id: GO:0007041
+    label: lysosomal transport
+  evidence_type: IDA
+  original_reference_id: PMID:20650889
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      IDA annotation to &#34;lysosomal transport&#34; derived from the biogenesis study, which
+      characterized the adaptor-protein/tyrosine- and dileucine-signal-mediated trafficking
+      of the HGSNAT precursor to lysosomes. That work describes how HGSNAT itself is
+      delivered to the lysosome, not a role for HGSNAT in transporting cargo (the sense of
+      GO:0007041, transport of substances into/within the lysosome). HGSNAT is an
+      acetyltransferase, not a transporter, so this is an over-interpretation of the
+      trafficking/targeting observation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The supporting paper documents targeting/biogenesis of HGSNAT to the lysosome, not
+      HGSNAT-mediated lysosomal cargo transport; annotating the enzyme to &#34;lysosomal
+      transport&#34; over-extends the trafficking observation. Not removed (it is an
+      experimental annotation whose full text was read by the curator), but flagged as an
+      over-annotation relative to HGSNAT&#39;s actual transferase function.
+    supported_by:
+    - reference_id: PMID:20650889
+      supporting_text: transported to the lysosomes via an adaptor protein-mediated pathway
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:19823584
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of N-acetyltransferase activity of recombinant HGSNAT (activity of
+      wild-type vs. MPS IIIC mutants was measured). The annotation captures this as the
+      general parent term &#34;acyltransferase activity&#34;, but the specific, exact-match child
+      term GO:0015019 (heparan-alpha-glucosaminide N-acetyltransferase activity) is
+      warranted because the assay measured precisely this activity.
+    action: MODIFY
+    reason: &gt;-
+      Correct in essence but too general; the measured activity is specifically
+      heparan-alpha-glucosaminide N-acetyltransferase activity. Replace with the
+      exact-match MF term.
+    proposed_replacement_terms:
+    - id: GO:0015019
+      label: heparan-alpha-glucosaminide N-acetyltransferase activity
+    supported_by:
+    - reference_id: PMID:19823584
+      supporting_text: assayed for N-acetyltransferase activity
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+- term:
+    id: GO:0051259
+    label: protein complex oligomerization
+  evidence_type: IDA
+  original_reference_id: PMID:20650889
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental demonstration that HGSNAT assembles into ~440-kDa homo-oligomers
+      and that homo-oligomerization is required for enzymatic activity. This is a genuine,
+      experimentally supported property, but it describes a biogenesis/assembly step rather
+      than HGSNAT&#39;s core molecular function (acetyltransferase) or its core catabolic
+      pathway role.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real and experimentally supported (homo-oligomerization needed for activity), but an
+      assembly/biogenesis process peripheral to the core MF/BP; retain as non-core.
+    supported_by:
+    - reference_id: PMID:20650889
+      supporting_text: assembled into active ∼440-kDa oligomers
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Homooligomerization is necessary for enzyme
+- term:
+    id: GO:0016746
+    label: acyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:20650889
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay of N-acetyltransferase activity in the biogenesis study (N-acetyltransferase
+      activity was measured to track functional maturation of HGSNAT). As with the other
+      acyltransferase IDA, the general parent term should be refined to the exact-match
+      child GO:0015019, which precisely describes the activity assayed.
+    action: MODIFY
+    reason: &gt;-
+      Correct but too general; the assayed activity is specifically
+      heparan-alpha-glucosaminide N-acetyltransferase activity. Replace with the
+      exact-match MF term.
+    proposed_replacement_terms:
+    - id: GO:0015019
+      label: heparan-alpha-glucosaminide N-acetyltransferase activity
+    supported_by:
+    - reference_id: PMID:20650889
+      supporting_text: of the acetyl group to the terminal glucosamine on heparan sulfate
+    - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+      supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+core_functions:
+- description: &gt;-
+    Lysosomal-membrane acetyl-CoA:alpha-glucosaminide N-acetyltransferase: transfers an
+    acetyl group from cytosolic acetyl-CoA onto the free amino group of the terminal
+    non-reducing alpha-glucosamine residue of intralysosomal heparan sulfate, producing
+    N-acetyl-alpha-glucosamine. This transmembrane acetylation is an obligatory step in
+    the stepwise lysosomal catabolism of heparan sulfate: it converts the terminal
+    residue into a substrate for the exoglycosidase NAGLU so degradation can continue. The
+    enzyme is a polytopic (11-TM) lysosomal membrane protein and is the only membrane-bound,
+    transferase member of the heparan sulfate degradation pathway.
+  molecular_function:
+    id: GO:0015019
+    label: heparan-alpha-glucosaminide N-acetyltransferase activity
+  directly_involved_in:
+  - id: GO:0030200
+    label: heparan sulfate proteoglycan catabolic process
+  locations:
+  - id: GO:0005765
+    label: lysosomal membrane
+  supported_by:
+  - reference_id: file:human/HGSNAT/HGSNAT-uniprot.txt
+    supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+  - reference_id: PMID:20650889
+    supporting_text: catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required
+  - reference_id: PMID:19823584
+    supporting_text: acetylation of the terminal glucosamine residues of heparan sulfate prior to
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What is the precise mechanism by which the active-site nucleophile accesses cytosolic
+    acetyl-CoA and transfers the acetyl group across the lysosomal membrane to the luminal
+    glucosamine substrate (ping-pong vs. direct transfer), and how do the recent cryo-EM
+    structures explain this transmembrane catalysis?
+- question: &gt;-
+    How does the requirement for intralysosomal proteolytic cleavage and homo-oligomer
+    assembly relate to catalytic activation, and could these steps be therapeutic targets?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided mutagenesis of candidate acetyl-CoA-binding and catalytic residues in
+    the cytosolic loops, combined with transmembrane-acetylation assays, to define the
+    acetyl-transfer path across the membrane.
+- description: &gt;-
+    Pharmacological-chaperone (e.g. glucosamine-analog) screens on a panel of misfolding
+    MPS IIIC missense mutants to identify variants amenable to enzyme-enhancement therapy.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/IBA pipeline reference; the phylogenetic model correctly assigns the
+      exact-match MF (GO:0015019), the core BP (GO:0030200), and the lysosomal membrane
+      location, all corroborated by human experimental data.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: SubCell (SL-0157) mapping to lysosomal membrane; consistent with curated location.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Ensembl Compara transfer of the HS catabolic-process annotation from the mouse ortholog.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: EC/RHEA-based electronic mapping to the exact-match MF term.
+- id: PMID:17897319
+  title: Integral and associated lysosomal membrane proteins.
+  findings:
+  - statement: &gt;-
+      Lysosomal-membrane proteomics of purified placental lysosomes identified HGSNAT among
+      proteins residing at least partially in the lysosomal membrane.
+    reference_section_type: ABSTRACT
+    supporting_text: proteins, known to reside at least partially in the lysosomal membrane
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache; supports the HDA lysosomal-membrane annotation. HGSNAT is
+      among the enriched lysosomal membrane proteins in this placental-lysosome proteome.
+- id: PMID:19823584
+  title: Protein misfolding as an underlying molecular defect in mucopolysaccharidosis
+    III type C.
+  findings:
+  - statement: &gt;-
+      HGSNAT is a lysosomal membrane enzyme (EC 2.3.1.78) that catalyses transmembrane
+      acetylation of the terminal glucosamine residues of heparan sulfate prior to their
+      hydrolysis by alpha-N-acetylglucosaminidase; its deficiency causes MPS IIIC.
+    reference_section_type: ABSTRACT
+    supporting_text: acetylation of the terminal glucosamine residues of heparan sulfate prior to
+  - statement: &gt;-
+      Recombinant wild-type HGSNAT colocalizes with the lysosomal markers LysoTracker and
+      LAMP-2, whereas most MPS IIIC missense mutants misfold and are retained in the ER.
+    reference_section_type: RESULTS
+    supporting_text: almost completely co-localized with the lysosomal markers LysoTracker Red or LAMP-2
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text available; directly supports the N-acetyltransferase activity, the HS
+      catabolic role, and the lysosomal membrane localization of human HGSNAT.
+- id: PMID:20650889
+  title: Analysis of the biogenesis of heparan sulfate acetyl-CoA:alpha-glucosaminide
+    N-acetyltransferase provides insights into the mechanism underlying its complete
+    deficiency in mucopolysaccharidosis IIIC.
+  findings:
+  - statement: &gt;-
+      HGSNAT catalyzes the transmembrane acetylation of heparan sulfate in lysosomes,
+      required for its further catabolism.
+    reference_section_type: ABSTRACT
+    supporting_text: catalyzes the transmembrane acetylation of heparan sulfate in lysosomes required
+  - statement: &gt;-
+      The precursor is trafficked to lysosomes via an adaptor-protein-mediated pathway,
+      cleaved into alpha and beta chains, and assembled into active ~440-kDa homo-oligomers.
+    reference_section_type: ABSTRACT
+    supporting_text: assembled into active ∼440-kDa oligomers
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only in cache but the abstract supports the transmembrane N-acetyltransferase
+      activity, the HS catabolic role, oligomerization requirement, and AP-mediated lysosomal
+      targeting used in the reviews above.
+- id: Reactome:R-HSA-1678660
+  title: HGSNAT oligomer acetylates Heparan sulfate chain(3)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome reaction node modelling HGSNAT acetylation of heparan sulfate; supports MF/CC.
+- id: Reactome:R-HSA-2090085
+  title: HGSNAT oligomer acetylates Heparan chain(1)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome reaction node modelling HGSNAT acetylation of heparan chain; supports MF/CC.
+- id: Reactome:R-HSA-2263492
+  title: Defective HGSNAT does not acetylate Heparan chain(1)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome disease reaction node (loss of HGSNAT acetylation in MPS IIIC); supports MF/CC.
+- id: Reactome:R-HSA-6798747
+  title: Exocytosis of tertiary granule membrane proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Neutrophil-degranulation reaction; source of the plasma-membrane and tertiary-granule
+      membrane annotations, which are non-core cell-type-specific localizations.
+- id: Reactome:R-HSA-6799350
+  title: Exocytosis of specific granule membrane proteins
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Neutrophil-degranulation reaction; source of the plasma-membrane and specific-granule
+      membrane annotations, which are non-core cell-type-specific localizations.
+- id: Reactome:R-HSA-9036056
+  title: Defective HGSNAT does not acetylate Heparan sulfate chain(3)
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Reactome disease reaction node (loss of HGSNAT acetylation in MPS IIIC); supports MF/CC.
+- id: file:human/HGSNAT/HGSNAT-uniprot.txt
+  title: UniProtKB Q68CP4 (HGNAT_HUMAN) curated entry
+  findings:
+  - statement: &gt;-
+      UniProt describes HGSNAT as a lysosomal acetyltransferase that acetylates the terminal
+      alpha-glucosamine of intralysosomal heparin/heparan sulfate, converting it into a
+      substrate for luminal alpha-N-acetylglucosaminidase; it is a multi-pass lysosome
+      membrane protein and a homo-oligomer whose oligomerization is required for activity.
+    supporting_text: Lysosomal acetyltransferase that acetylates the non-reducing
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary curated UniProt record for HGSNAT; source of function, catalytic activity, location, and subunit statements.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

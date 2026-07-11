@@ -1,0 +1,4146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPE - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RPE</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q96AT9" target="_blank" class="term-link">
+                        Q96AT9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RPE";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q96AT9" data-a="DESCRIPTION: RPE is human ribulose-5-phosphate 3-epimerase (EC ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RPE is human ribulose-5-phosphate 3-epimerase (EC 5.1.3.1), an enzyme of the non-oxidative branch of the pentose phosphate pathway. It catalyses the reversible epimerisation of D-ribulose 5-phosphate to D-xylulose 5-phosphate. Acting alongside ribose-5-phosphate isomerase (RPIA), it converts the ribulose-5-phosphate generated by the oxidative branch into the xylulose-5-phosphate and ribose-5-phosphate substrates used by transketolase and transaldolase, thereby linking the pentose phosphate pathway back to glycolysis and supplying pentoses for nucleotide biosynthesis. The enzyme is a cytosolic, metal-dependent (divalent cation, physiologically Fe2+) TIM-barrel epimerase that functions as a homodimer, with two aspartate residues carrying out the acid-base proton transfers of the epimerisation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004750" target="_blank" class="term-link">
+                                    GO:0004750
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribulose-phosphate 3-epimerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0004750" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Core molecular function of RPE: reversible epimerisation of D-ribulose 5-phosphate to D-xylulose 5-phosphate (EC 5.1.3.1). The phylogenetic (IBA) call is fully consistent with direct human biochemical/structural data.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining activity of RPE, directly demonstrated for the human enzyme and conserved across the family. The same term is independently supported by IDA (PMID:20923965) and IEA (EC/RHEA mapping).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the reversible epimerization of D-ribulose 5-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009052" target="_blank" class="term-link">
+                                    GO:0009052
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt, non-oxidative branch</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0009052" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPE acts in the non-oxidative branch of the pentose phosphate pathway, the most specific and accurate biological-process term for this enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RPE converts ribulose-5-phosphate (from the oxidative branch) to xylulose-5-phosphate, one of the substrates for transketolase in the non-oxidative branch. This IBA term is the precise, correct process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005975" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad grouping term for carbohydrate metabolism. Correct but far less specific than the pentose-phosphate-shunt terms also annotated to RPE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A high-level ancestor of the pentose phosphate pathway terms. Not wrong, but non-informative relative to GO:0009052; retained as non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPE is a soluble cytosolic enzyme; the pentose phosphate pathway operates in the cytosol. Correct subcellular localisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent across IBA and TAS (Reactome) evidence and with the enzyme&#39;s role in cytosolic carbohydrate metabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71303
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ribulose-5-phosphate-3-epimerase (RPE)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0046872" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPE binds one divalent metal cation per subunit (physiologically Fe2+), required for catalysis. Metal-ion binding is an intrinsic part of the active site.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by human structural/biochemical data showing an octahedrally coordinated Fe2+ in the active site and by the UniProt cofactor annotation (Fe2+, Mn2+, Zn2+, Co2+). Independently annotated by IDA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">octahedrally coordinated Fe(2+) ion</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 divalent metal cation per subunit. Active with Fe(2+), and</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004750" target="_blank" class="term-link">
+                                    GO:0004750
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribulose-phosphate 3-epimerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0004750" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment of the core epimerase activity via EC 5.1.3.1 / RHEA:13677 / InterPro. Agrees with experimental and phylogenetic evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC 5.1.3.1 and RHEA:13677 mappings correctly capture the demonstrated human enzymatic activity. Duplicate of the IDA/IBA GO:0004750 annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO electronic assignment of the broad carbohydrate-metabolism term. Correct but non-specific.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A high-level ancestor of the pentose-phosphate-shunt terms; retained as non-core context, superseded in specificity by GO:0009052 / GO:0006098.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the ribulose-phosphate 3-epimerase family.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0006098" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment placing RPE in the pentose phosphate pathway. Correct; slightly less specific than the non-oxidative-branch term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RPE is a bona fide PPP enzyme. This parent-level pathway term is accurate and independently supported by IDA (PMID:20923965).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016857" target="_blank" class="term-link">
+                                    GO:0016857
+                                </a>
+                            </span>
+                            <span class="term-label">racemase and epimerase activity, acting on carbohydrates and derivatives</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0016857" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grouping term for carbohydrate-acting racemases/epimerases. RPE is a carbohydrate epimerase, but the specific child term GO:0004750 is available and experimentally supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0016857 is a direct ancestor of the specific, demonstrated activity GO:0004750 (D-ribulose-phosphate 3-epimerase activity). The more specific term should be used for this well-characterised enzyme.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004750" target="_blank" class="term-link">
+                                    D-ribulose-phosphate 3-epimerase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a high-throughput binary interactome screen (HuRI), reporting a heterotypic interaction with PLEKHF2 (Q9H8W4). The interaction is corroborated by UniProt (NbExp=3) but the term is uninformative about molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare GO:0005515 conveys no functional information. The underlying PPI (RPE-PLEKHF2) is real but its biological significance for RPE is unknown; the annotation should not be treated as a molecular function of RPE.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q96AT9; Q9H8W4: PLEKHF2;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16189514
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Towards a proteome-scale map of the human protein-protein in...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0042802" data-r="PMID:16189514" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-self interaction (Q96AT9-Q96AT9) detected in a large-scale yeast-two-hybrid interactome screen, reflecting the RPE homodimer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Captures the biologically real homodimer, but the informative term for the quaternary structure is GO:0042803 (protein homodimerization activity), which is separately annotated. This identical-protein-binding IPI is a lower-value duplicate; retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0042802" data-r="PMID:20923965" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction supported by the human structural study, which crystallised RPE as a dimer. Reflects the physiological homodimer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Real homodimer self-interaction, better represented by GO:0042803 (protein homodimerization activity, also annotated from this same paper). Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0042802" data-r="PMID:25416956" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-self interaction detected in a proteome-scale binary interactome map, consistent with the RPE homodimer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate homodimer self-interaction; the informative term is GO:0042803. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a systematic map of ?14,000 high-quality human</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0042802" data-r="PMID:32296183" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-self interaction detected in the HuRI binary interactome, consistent with the RPE homodimer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate homodimer self-interaction; the informative term for the quaternary structure is GO:0042803. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">reference interactome map of human binary protein interactions</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPE was detected in a shotgun proteomic survey of exosomes from expressed prostatic secretions (~900 proteins identified). This is a bulk proteomic detection, not evidence of a functional extracellular localisation for this cytosolic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytosolic metabolic enzymes are frequently reported in exosome/proteomic datasets as passengers. RPE&#39;s established localisation and function are cytosolic; the exosome detection does not indicate a biological role for RPE in the extracellular space.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome samples, ~900 proteins were detected</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-199803
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005829" data-r="Reactome:R-HSA-199803" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (author statement) localises RPE to the cytosol, where it catalyses the RU5P&lt;-&gt;XY5P interconversion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the IBA cytosol annotation and with the enzyme&#39;s role in the cytosolic pentose phosphate pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-199803
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ribulose-5-phosphate-3-epimerase (RPE)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71303
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005829" data-r="Reactome:R-HSA-71303" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (author statement) localises RPE to the cytosol for the RU5P-&gt;XY5P reaction, using Fe2+ as cofactor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with all other cytosol annotations and with the cytosolic pentose phosphate pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71303
+
+                                </span>
+
+                                <div class="support-text">Cytosolic ribulose-5-phosphate-3-epimerase (RPE)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004750" target="_blank" class="term-link">
+                                    GO:0004750
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribulose-phosphate 3-epimerase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0004750" data-r="PMID:20923965" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration of the epimerase activity on the human enzyme, including structures with substrate/product and mutagenesis of catalytic residues. This is the strongest evidence for the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Liang et al. determined RPE structures bound to D-ribulose 5-phosphate and D-xylulose 5-phosphate and showed by mutagenesis (e.g. S10A) that specific residues are required for activity, directly establishing EC 5.1.3.1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Ser-10 to alanine almost abolished the enzymatic activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0005975" data-r="PMID:20923965" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad carbohydrate-metabolism term supported by the direct enzymatic study. Correct but non-specific relative to the pentose-phosphate terms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-level ancestor of the pentose phosphate pathway process terms; retained as non-core context.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPE functions in the PPP, catalyzing</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006098" target="_blank" class="term-link">
+                                    GO:0006098
+                                </a>
+                            </span>
+                            <span class="term-label">pentose-phosphate shunt</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0006098" data-r="PMID:20923965" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence places RPE in the pentose phosphate pathway, catalysing a key non-oxidative-branch step and contributing to the antioxidant response.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported; RPE is an integral PPP enzyme. Complements the more specific non-oxidative-branch IBA term (GO:0009052).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">an important enzyme for cellular response against oxidative stress</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0042803" data-r="PMID:20923965" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RPE functions as a homodimer; the human structural study crystallised the enzyme as a dimer and UniProt records the subunit structure as a homodimer. This is the informative molecular-function term for RPE self-association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The homodimer is the biologically active form of RPE (also stated by Reactome). This is the correct, specific representation of the self-interactions captured more vaguely by the GO:0042802 IPIs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RPE/RPE-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBUNIT: Homodimer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                                    GO:0046872
+                                </a>
+                            </span>
+                            <span class="term-label">metal ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20923965
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Conversion of D-ribulose 5-phosphate to D-xylulose 5-phospha...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q96AT9" data-a="GO:0046872" data-r="PMID:20923965" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct structural demonstration of a catalytic divalent metal ion (Fe2+) in the active site of human RPE.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Liang et al. resolved an octahedrally coordinated Fe2+ buried in the active site and showed the enzyme uses Fe2+ for catalysis; UniProt records binding of one divalent cation per subunit.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">(hRPE) uses Fe(2+) for catalysis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                        PMID:20923965
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">octahedrally coordinated Fe(2+) ion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyses the reversible epimerisation of D-ribulose 5-phosphate to D-xylulose 5-phosphate in the non-oxidative branch of the pentose phosphate pathway, using an active-site divalent metal cation (physiologically Fe2+).</h3>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="FUNCTION: Catalyses the reversible epimerisation of D-ribulo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004750" target="_blank" class="term-link">
+                            D-ribulose-phosphate 3-epimerase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009052" target="_blank" class="term-link">
+                                pentose-phosphate shunt, non-oxidative branch
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                PMID:20923965
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RPE functions in the PPP, catalyzing</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RPE/RPE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds one catalytic divalent metal cation (Fe2+, and probably Mn2+, Zn2+, Co2+) per subunit, required for the epimerase reaction.</h3>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="FUNCTION: Binds one catalytic divalent metal cation (Fe2+, a..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046872" target="_blank" class="term-link">
+                            metal ion binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                                PMID:20923965
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">(hRPE) uses Fe(2+) for catalysis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RPE/RPE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Binds 1 divalent metal cation per subunit. Active with Fe(2+), and</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Self-associates into the catalytically active homodimer.</h3>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="FUNCTION: Self-associates into the catalytically active homo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                            protein homodimerization activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/RPE/RPE-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">SUBUNIT: Homodimer.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16189514" target="_blank" class="term-link">
+                            PMID:16189514
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Towards a proteome-scale map of the human protein-protein interaction network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20923965" target="_blank" class="term-link">
+                            PMID:20923965
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Conversion of D-ribulose 5-phosphate to D-xylulose 5-phosphate: new insights from structural and biochemical studies on human RPE.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-199803
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RPE dimers isomerize XY5P to RU5P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71303
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RPE dimers isomerise RU5P to XY5P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/RPE/RPE-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry Q96AT9 (RPE_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the RPE-PLEKHF2 (Q9H8W4) interaction reported in the binary interactome screens have any physiological relevance, or is it a screening artefact?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="Q: Does the RPE-PLEKHF2 (Q9H8W4) interaction reported..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Are any of the alternatively spliced isoforms (e.g. those missing the N-terminal region or catalytic residues) catalytically active or regulatory?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="Q: Are any of the alternatively spliced isoforms (e.g..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolic flux analysis (e.g. 13C tracing through the non-oxidative PPP) in RPE-knockdown cells to quantify RPE&#39;s contribution to xylulose-5-phosphate and ribose-5-phosphate pools and to NADPH-dependent oxidative-stress resistance.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="EXPERIMENT: Metabolic flux analysis (e.g. 13C tracing through ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Co-immunoprecipitation and orthogonal validation of the RPE-PLEKHF2 interaction in relevant cell types to test its physiological significance.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q96AT9" data-a="EXPERIMENT: Co-immunoprecipitation and orthogonal validation o..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RPE-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q96AT9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rpe-ribulose-phosphate-3-epimerase-q96at9-review-notes">RPE (Ribulose-phosphate 3-epimerase, Q96AT9) — review notes</h1>
+<h2 id="identity-and-function">Identity and function</h2>
+<ul>
+<li>Human RPE, UniProt Q96AT9, HGNC:10293, gene ID 6120, chromosome 2.</li>
+<li>EC 5.1.3.1; catalyses the reversible epimerisation of D-ribulose 5-phosphate (RU5P)<br />
+  to D-xylulose 5-phosphate (XY5P).</li>
+<li>UniProt FUNCTION: "Catalyzes the reversible epimerization of D-ribulose 5-phosphate to D-xylulose 5-phosphate." [file:human/RPE/RPE-uniprot.txt]</li>
+<li>CATALYTIC ACTIVITY: Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate; Rhea:RHEA:13677; EC=5.1.3.1 [file:human/RPE/RPE-uniprot.txt]</li>
+<li>Enzyme of the <strong>non-oxidative branch of the pentose phosphate pathway</strong>. Together with<br />
+  ribose-5-phosphate isomerase (RPIA), it processes the ribulose-5-phosphate produced by<br />
+  the oxidative branch, generating the xylulose-5-phosphate and ribose-5-phosphate<br />
+  substrates used by transketolase and transaldolase.</li>
+<li>PMID:20923965 abstract: "RPE functions in the PPP, catalyzing" the reversible conversion of RU5P to XY5P; "an important enzyme for cellular response against oxidative stress."</li>
+</ul>
+<h2 id="structure-mechanism-cofactor">Structure / mechanism / cofactor</h2>
+<ul>
+<li>(β/α)8 TIM-barrel fold. PMID:20923965: human RPE "folds into a typical (β/α)(8)"<br />
+  "triosephosphate isomerase (TIM) barrel with a loop regulating access to the" active site.</li>
+<li>Metal-dependent: binds one divalent metal cation per subunit; active with Fe(2+),<br />
+  and probably Mn(2+), Zn(2+), Co(2+) (UniProt COFACTOR).<br />
+  PMID:20923965: human RPE "uses Fe(2+) for catalysis" and the structure reveals "an<br />
+  octahedrally coordinated Fe(2+) ion" buried in the active site.</li>
+<li>Active site residues Asp-37 (proton acceptor) and Asp-175 (proton donor) (UniProt ACT_SITE);<br />
+  metal coordinated by His-35, Asp-37, His-70, Asp-175 (UniProt BINDING "a divalent metal cation").</li>
+<li>Mutagenesis (PMID:20923965): S10A nearly abolishes activity; H35A/D37A/D175A nearly<br />
+  abolish / alter structure; L12A, M72A reduce activity ~50%.</li>
+<li>PDB: 3OVP, 3OVQ, 3OVR (in complex with Fe/RU5P/XY5P), 3QC3.</li>
+</ul>
+<h2 id="quaternary-structure">Quaternary structure</h2>
+<ul>
+<li>Homodimer. UniProt SUBUNIT: "Homodimer." (Ref.9 = JCSG structure).</li>
+<li>Reactome R-HSA-71303 / R-HSA-199803: active form is a homodimer (Spencer &amp; Hopkinson 1980).</li>
+<li>GOA has GO:0042803 protein homodimerization activity (IPI, PMID:20923965, with self Q96AT9)<br />
+  and multiple GO:0042802 identical protein binding IPIs (self-interaction).</li>
+</ul>
+<h2 id="localisation">Localisation</h2>
+<ul>
+<li>Cytosolic. Reactome describes "Cytosolic ribulose-5-phosphate-3-epimerase (RPE)".<br />
+  GOA: GO:0005829 cytosol (IBA GO_Central; TAS Reactome x2). Consistent with a soluble<br />
+  cytosolic PPP enzyme.</li>
+<li>GO:0070062 extracellular exosome (HDA, PMID:23533145): from a shotgun proteomic survey<br />
+  of prostatic-secretion exosomes (~900 proteins). This is a bulk proteomic detection,<br />
+  not evidence of a functional extracellular localisation; over-annotation.</li>
+</ul>
+<h2 id="protein-interactions-ipi-annotations">Protein interactions (IPI annotations)</h2>
+<ul>
+<li>GO:0005515 protein binding (IPI, PMID:32296183, partner UniProtKB:Q9H8W4 = PLEKHF2):<br />
+  a HuRI binary-interactome heterotypic PPI. UniProt INTERACTION confirms Q96AT9;Q9H8W4<br />
+  PLEKHF2 (NbExp=3). Bare "protein binding" is uninformative → MARK_AS_OVER_ANNOTATED<br />
+  (per policy, not REMOVE; it is a real detected interaction but tells us nothing about<br />
+  molecular function).</li>
+<li>GO:0042802 identical protein binding (IPI x4: PMID:16189514, PMID:20923965,<br />
+  PMID:25416956, PMID:32296183; with self Q96AT9): all self-self interactions capturing<br />
+  the homodimer. Biologically real (RPE is a homodimer) but the informative MF term for<br />
+  the homodimer is GO:0042803 protein homodimerization activity. Keep the homodimerization<br />
+  one as core-relevant; the identical-protein-binding IPIs are lower-value duplicates<br />
+  (KEEP_AS_NON_CORE).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>No well-established common Mendelian disease. MIM 180480 (gene). Included here for<br />
+  completeness of the non-oxidative PPP.</li>
+</ul>
+<h2 id="annotation-source-cross-check-goa">Annotation-source cross-check (GOA)</h2>
+<ul>
+<li>MF core: GO:0004750 D-ribulose-phosphate 3-epimerase activity — IDA (PMID:20923965),<br />
+  IBA (GO_REF:0000033), IEA (GO_REF:0000120 via EC 5.1.3.1 / RHEA:13677). Strongly supported → ACCEPT.</li>
+<li>GO:0016857 racemase and epimerase activity, acting on carbohydrates and derivatives<br />
+  (IEA, InterPro): parent/grouping term of GO:0004750; correct but less specific → MODIFY to GO:0004750.</li>
+<li>GO:0046872 metal ion binding (IBA + IDA PMID:20923965): correct (divalent cation per subunit) → ACCEPT.</li>
+<li>BP: GO:0009052 non-oxidative branch (IBA), GO:0006098 pentose-phosphate shunt (IDA + IEA),<br />
+  GO:0005975 carbohydrate metabolic process (IBA + IEA). All correct; 0009052 is the most<br />
+  specific and precise for RPE. 0005975 is a broad grandparent → KEEP_AS_NON_CORE.<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q96AT9
+gene_symbol: RPE
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  RPE is human ribulose-5-phosphate 3-epimerase (EC 5.1.3.1), an enzyme of the
+  non-oxidative branch of the pentose phosphate pathway. It catalyses the
+  reversible epimerisation of D-ribulose 5-phosphate to D-xylulose 5-phosphate.
+  Acting alongside ribose-5-phosphate isomerase (RPIA), it converts the
+  ribulose-5-phosphate generated by the oxidative branch into the
+  xylulose-5-phosphate and ribose-5-phosphate substrates used by transketolase
+  and transaldolase, thereby linking the pentose phosphate pathway back to
+  glycolysis and supplying pentoses for nucleotide biosynthesis. The enzyme is a
+  cytosolic, metal-dependent (divalent cation, physiologically Fe2+) TIM-barrel
+  epimerase that functions as a homodimer, with two aspartate residues carrying
+  out the acid-base proton transfers of the epimerisation.
+alternative_products:
+- name: &#39;1&#39;
+  id: Q96AT9-1
+- name: &#39;2&#39;
+  id: Q96AT9-2
+  sequence_note: VSP_008317, VSP_008318
+- name: &#39;3&#39;
+  id: Q96AT9-3
+  sequence_note: VSP_047117, VSP_008318
+- name: &#39;4&#39;
+  id: Q96AT9-4
+  sequence_note: VSP_055265
+- name: &#39;5&#39;
+  id: Q96AT9-5
+  sequence_note: VSP_047117
+existing_annotations:
+- term:
+    id: GO:0004750
+    label: D-ribulose-phosphate 3-epimerase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Core molecular function of RPE: reversible epimerisation of D-ribulose
+      5-phosphate to D-xylulose 5-phosphate (EC 5.1.3.1). The phylogenetic (IBA)
+      call is fully consistent with direct human biochemical/structural data.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining activity of RPE, directly demonstrated for the human
+      enzyme and conserved across the family. The same term is independently
+      supported by IDA (PMID:20923965) and IEA (EC/RHEA mapping).
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;Catalyzes the reversible epimerization of D-ribulose 5-&#34;
+- term:
+    id: GO:0009052
+    label: pentose-phosphate shunt, non-oxidative branch
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      RPE acts in the non-oxidative branch of the pentose phosphate pathway,
+      the most specific and accurate biological-process term for this enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      RPE converts ribulose-5-phosphate (from the oxidative branch) to
+      xylulose-5-phosphate, one of the substrates for transketolase in the
+      non-oxidative branch. This IBA term is the precise, correct process term.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad grouping term for carbohydrate metabolism. Correct but far less
+      specific than the pentose-phosphate-shunt terms also annotated to RPE.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A high-level ancestor of the pentose phosphate pathway terms. Not wrong,
+      but non-informative relative to GO:0009052; retained as non-core context.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      RPE is a soluble cytosolic enzyme; the pentose phosphate pathway operates
+      in the cytosol. Correct subcellular localisation.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent across IBA and TAS (Reactome) evidence and with the enzyme&#39;s
+      role in cytosolic carbohydrate metabolism.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71303
+      supporting_text: Cytosolic ribulose-5-phosphate-3-epimerase (RPE)
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RPE binds one divalent metal cation per subunit (physiologically Fe2+),
+      required for catalysis. Metal-ion binding is an intrinsic part of the
+      active site.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by human structural/biochemical data showing an octahedrally
+      coordinated Fe2+ in the active site and by the UniProt cofactor
+      annotation (Fe2+, Mn2+, Zn2+, Co2+). Independently annotated by IDA.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: octahedrally coordinated Fe(2+) ion
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: Binds 1 divalent metal cation per subunit. Active with Fe(2+),
+        and
+- term:
+    id: GO:0004750
+    label: D-ribulose-phosphate 3-epimerase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic assignment of the core epimerase activity via EC 5.1.3.1 /
+      RHEA:13677 / InterPro. Agrees with experimental and phylogenetic evidence.
+    action: ACCEPT
+    reason: &gt;-
+      The EC 5.1.3.1 and RHEA:13677 mappings correctly capture the demonstrated
+      human enzymatic activity. Duplicate of the IDA/IBA GO:0004750 annotations.
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;&#34;
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO electronic assignment of the broad carbohydrate-metabolism
+      term. Correct but non-specific.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A high-level ancestor of the pentose-phosphate-shunt terms; retained as
+      non-core context, superseded in specificity by GO:0009052 / GO:0006098.
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: Belongs to the ribulose-phosphate 3-epimerase family.
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment placing RPE in the pentose phosphate pathway.
+      Correct; slightly less specific than the non-oxidative-branch term.
+    action: ACCEPT
+    reason: &gt;-
+      RPE is a bona fide PPP enzyme. This parent-level pathway term is accurate
+      and independently supported by IDA (PMID:20923965).
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+- term:
+    id: GO:0016857
+    label: racemase and epimerase activity, acting on carbohydrates and derivatives
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Grouping term for carbohydrate-acting racemases/epimerases. RPE is a
+      carbohydrate epimerase, but the specific child term GO:0004750 is
+      available and experimentally supported.
+    action: MODIFY
+    reason: &gt;-
+      GO:0016857 is a direct ancestor of the specific, demonstrated activity
+      GO:0004750 (D-ribulose-phosphate 3-epimerase activity). The more specific
+      term should be used for this well-characterised enzyme.
+    proposed_replacement_terms:
+    - id: GO:0004750
+      label: D-ribulose-phosphate 3-epimerase activity
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a high-throughput binary interactome screen
+      (HuRI), reporting a heterotypic interaction with PLEKHF2 (Q9H8W4). The
+      interaction is corroborated by UniProt (NbExp=3) but the term is
+      uninformative about molecular function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, bare GO:0005515 conveys no functional
+      information. The underlying PPI (RPE-PLEKHF2) is real but its biological
+      significance for RPE is unknown; the annotation should not be treated as a
+      molecular function of RPE.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;Q96AT9; Q9H8W4: PLEKHF2;&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:16189514
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-self interaction (Q96AT9-Q96AT9) detected in a large-scale
+      yeast-two-hybrid interactome screen, reflecting the RPE homodimer.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Captures the biologically real homodimer, but the informative term for
+      the quaternary structure is GO:0042803 (protein homodimerization
+      activity), which is separately annotated. This identical-protein-binding
+      IPI is a lower-value duplicate; retained as non-core.
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:20923965
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-interaction supported by the human structural study, which
+      crystallised RPE as a dimer. Reflects the physiological homodimer.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Real homodimer self-interaction, better represented by GO:0042803
+      (protein homodimerization activity, also annotated from this same paper).
+      Retained as non-core.
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-self interaction detected in a proteome-scale binary interactome
+      map, consistent with the RPE homodimer.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Duplicate homodimer self-interaction; the informative term is GO:0042803.
+      Retained as non-core.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: a systematic map of ?14,000 high-quality human
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-self interaction detected in the HuRI binary interactome, consistent
+      with the RPE homodimer.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Duplicate homodimer self-interaction; the informative term for the
+      quaternary structure is GO:0042803. Retained as non-core.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: reference interactome map of human binary protein interactions
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      RPE was detected in a shotgun proteomic survey of exosomes from expressed
+      prostatic secretions (~900 proteins identified). This is a bulk proteomic
+      detection, not evidence of a functional extracellular localisation for
+      this cytosolic enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Cytosolic metabolic enzymes are frequently reported in exosome/proteomic
+      datasets as passengers. RPE&#39;s established localisation and function are
+      cytosolic; the exosome detection does not indicate a biological role for
+      RPE in the extracellular space.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosome samples, ~900 proteins were detected
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-199803
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (author statement) localises RPE to the cytosol, where it
+      catalyses the RU5P&lt;-&gt;XY5P interconversion.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the IBA cytosol annotation and with the enzyme&#39;s role in
+      the cytosolic pentose phosphate pathway.
+    supported_by:
+    - reference_id: Reactome:R-HSA-199803
+      supporting_text: Cytosolic ribulose-5-phosphate-3-epimerase (RPE)
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71303
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (author statement) localises RPE to the cytosol for the
+      RU5P-&gt;XY5P reaction, using Fe2+ as cofactor.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with all other cytosol annotations and with the cytosolic
+      pentose phosphate pathway.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71303
+      supporting_text: Cytosolic ribulose-5-phosphate-3-epimerase (RPE)
+- term:
+    id: GO:0004750
+    label: D-ribulose-phosphate 3-epimerase activity
+  evidence_type: IDA
+  original_reference_id: PMID:20923965
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct experimental demonstration of the epimerase activity on the human
+      enzyme, including structures with substrate/product and mutagenesis of
+      catalytic residues. This is the strongest evidence for the core function.
+    action: ACCEPT
+    reason: &gt;-
+      Liang et al. determined RPE structures bound to D-ribulose 5-phosphate and
+      D-xylulose 5-phosphate and showed by mutagenesis (e.g. S10A) that specific
+      residues are required for activity, directly establishing EC 5.1.3.1.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: Ser-10 to alanine almost abolished the enzymatic activity
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:20923965
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Broad carbohydrate-metabolism term supported by the direct enzymatic
+      study. Correct but non-specific relative to the pentose-phosphate terms.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      High-level ancestor of the pentose phosphate pathway process terms;
+      retained as non-core context.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: RPE functions in the PPP, catalyzing
+- term:
+    id: GO:0006098
+    label: pentose-phosphate shunt
+  evidence_type: IDA
+  original_reference_id: PMID:20923965
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct evidence places RPE in the pentose phosphate pathway, catalysing a
+      key non-oxidative-branch step and contributing to the antioxidant response.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported; RPE is an integral PPP enzyme. Complements the
+      more specific non-oxidative-branch IBA term (GO:0009052).
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: an important enzyme for cellular response against oxidative stress
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IPI
+  original_reference_id: PMID:20923965
+  qualifier: enables
+  review:
+    summary: &gt;-
+      RPE functions as a homodimer; the human structural study crystallised the
+      enzyme as a dimer and UniProt records the subunit structure as a homodimer.
+      This is the informative molecular-function term for RPE self-association.
+    action: ACCEPT
+    reason: &gt;-
+      The homodimer is the biologically active form of RPE (also stated by
+      Reactome). This is the correct, specific representation of the
+      self-interactions captured more vaguely by the GO:0042802 IPIs.
+    supported_by:
+    - reference_id: file:human/RPE/RPE-uniprot.txt
+      supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+- term:
+    id: GO:0046872
+    label: metal ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:20923965
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct structural demonstration of a catalytic divalent metal ion (Fe2+)
+      in the active site of human RPE.
+    action: ACCEPT
+    reason: &gt;-
+      Liang et al. resolved an octahedrally coordinated Fe2+ buried in the
+      active site and showed the enzyme uses Fe2+ for catalysis; UniProt records
+      binding of one divalent cation per subunit.
+    supported_by:
+    - reference_id: PMID:20923965
+      supporting_text: &#34;(hRPE) uses Fe(2+) for catalysis&#34;
+    - reference_id: PMID:20923965
+      supporting_text: octahedrally coordinated Fe(2+) ion
+core_functions:
+- description: &gt;-
+    Catalyses the reversible epimerisation of D-ribulose 5-phosphate to
+    D-xylulose 5-phosphate in the non-oxidative branch of the pentose phosphate
+    pathway, using an active-site divalent metal cation (physiologically Fe2+).
+  molecular_function:
+    id: GO:0004750
+    label: D-ribulose-phosphate 3-epimerase activity
+  directly_involved_in:
+  - id: GO:0009052
+    label: pentose-phosphate shunt, non-oxidative branch
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:20923965
+    supporting_text: RPE functions in the PPP, catalyzing
+  - reference_id: file:human/RPE/RPE-uniprot.txt
+    supporting_text: &#34;Reaction=D-ribulose 5-phosphate = D-xylulose 5-phosphate;&#34;
+- description: &gt;-
+    Binds one catalytic divalent metal cation (Fe2+, and probably Mn2+, Zn2+,
+    Co2+) per subunit, required for the epimerase reaction.
+  molecular_function:
+    id: GO:0046872
+    label: metal ion binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:20923965
+    supporting_text: &#34;(hRPE) uses Fe(2+) for catalysis&#34;
+  - reference_id: file:human/RPE/RPE-uniprot.txt
+    supporting_text: Binds 1 divalent metal cation per subunit. Active with Fe(2+),
+      and
+- description: &gt;-
+    Self-associates into the catalytically active homodimer.
+  molecular_function:
+    id: GO:0042803
+    label: protein homodimerization activity
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/RPE/RPE-uniprot.txt
+    supporting_text: &#34;SUBUNIT: Homodimer.&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does the RPE-PLEKHF2 (Q9H8W4) interaction reported in the binary interactome
+    screens have any physiological relevance, or is it a screening artefact?
+- question: &gt;-
+    Are any of the alternatively spliced isoforms (e.g. those missing the
+    N-terminal region or catalytic residues) catalytically active or regulatory?
+suggested_experiments:
+- description: &gt;-
+    Metabolic flux analysis (e.g. 13C tracing through the non-oxidative PPP) in
+    RPE-knockdown cells to quantify RPE&#39;s contribution to xylulose-5-phosphate
+    and ribose-5-phosphate pools and to NADPH-dependent oxidative-stress
+    resistance.
+- description: &gt;-
+    Co-immunoprecipitation and orthogonal validation of the RPE-PLEKHF2
+    interaction in relevant cell types to test its physiological significance.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:16189514
+  title: Towards a proteome-scale map of the human protein-protein interaction network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale Y2H interactome screen (CCSB-HI1). Source of a self-self
+      (identical protein binding) IPI reflecting the RPE homodimer; not
+      functionally informative beyond the known homodimer.
+- id: PMID:20923965
+  title: &#39;Conversion of D-ribulose 5-phosphate to D-xylulose 5-phosphate: new insights
+    from structural and biochemical studies on human RPE.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Definitive structural and biochemical characterisation of human RPE:
+      EC 5.1.3.1 activity, Fe2+ cofactor, TIM-barrel fold, catalytic aspartates,
+      and mutagenesis. Supports the core MF, metal-binding, and PPP annotations.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Shotgun proteomics of prostatic-secretion exosomes (~900 proteins). Basis
+      of the extracellular-exosome HDA annotation; a bulk detection, not
+      evidence of functional extracellular localisation.
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary interactome map. Source of a self-self IPI
+      reflecting the RPE homodimer.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary interactome. Source of both a self-self IPI (homodimer) and a
+      heterotypic RPE-PLEKHF2 (Q9H8W4) interaction; the latter underlies the
+      bare protein-binding annotation and is corroborated by UniProt.
+- id: Reactome:R-HSA-199803
+  title: RPE dimers isomerize XY5P to RU5P
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction describing cytosolic RPE homodimer interconverting XY5P
+      and RU5P; supports cytosol localisation and homodimer.
+- id: Reactome:R-HSA-71303
+  title: RPE dimers isomerise RU5P to XY5P
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction describing cytosolic RPE (Fe2+ cofactor) homodimer
+      interconverting RU5P and XY5P; supports cytosol localisation, cofactor,
+      and homodimer.
+- id: file:human/RPE/RPE-uniprot.txt
+  title: UniProt entry Q96AT9 (RPE_HUMAN)
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt/Swiss-Prot record: FUNCTION, CATALYTIC ACTIVITY (EC 5.1.3.1,
+      RHEA:13677), COFACTOR (divalent metal cations), SUBUNIT (homodimer), and
+      the RPE-PLEKHF2 interaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

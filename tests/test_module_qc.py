@@ -194,6 +194,26 @@ def test_ras_mapk_flags_abstract_family_leaves():
     ), flagged
 
 
+def test_abstract_scope_skips_leaf_representative_grounding():
+    data = {
+        "scope": "ABSTRACT",
+        "module": {
+            "id": "abstract_template",
+            "annotons": [
+                {
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {"id": "GO:0004672", "label": "protein kinase activity"}
+                        },
+                    }
+                }
+            ],
+        },
+    }
+    assert leaf_nodes_missing_representatives(data) == []
+
+
 # ---------------------------------------------------------------------------
 # UniProt grounding collection
 # ---------------------------------------------------------------------------

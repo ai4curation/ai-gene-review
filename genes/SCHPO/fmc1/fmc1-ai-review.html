@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fmc1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fmc1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G2TRM0" target="_blank" class="term-link">
+                        G2TRM0
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fmc1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G2TRM0" data-a="DESCRIPTION: fmc1 (Formation of Mitochondrial Complexes protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>fmc1 (Formation of Mitochondrial Complexes protein 1; systematic name SPAC1486.11) is a small (104-residue) mitochondrial protein of fission yeast belonging to the FMC1 family (InterPro IPR039196; PANTHER PTHR28015), a group within the LYR-motif protein (LYRM / Complex1_LYR_2, Pfam PF13233) superfamily of mitochondrial accessory and assembly factors. It carries a predicted N-terminal mitochondrial targeting sequence and is imported into the mitochondrion. By orthology to the well-characterized Saccharomyces cerevisiae Fmc1p, it is inferred to be a soluble matrix protein that acts as an accessory assembly factor for the F1 sector (the catalytic alpha3beta3 head) of the mitochondrial F1Fo-ATP synthase (Complex V), most plausibly by assisting the folding, stability or function of the dedicated F1 assembly chaperone Atp12 (human ATPAF2). In budding yeast this requirement is conditional, becoming critical at elevated temperature, where loss of Fmc1p causes the newly imported alpha-F1 and beta-F1 subunits to aggregate in the matrix instead of assembling into functional F1. The fission-yeast protein itself has not been functionally characterized; its specific molecular activity, partners and loss-of-function phenotype remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0005759" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Matrix localization is well supported at the family level: the characterized S. cerevisiae ortholog is a soluble matrix protein, and the matrix is the compartment where the F1 alpha3beta3 head is assembled. fmc1 carries a predicted mitochondrial transit peptide. Kept as a correct, informative localization, but treated as non-core because it has not been shown experimentally for the pombe protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IBA propagated from SGD:S000001360; consistent with the founding paper showing Fmc1p is a soluble matrix protein, and with the predicted N-terminal transit peptide. Correct and specific, but the localization of the pombe protein is inferred, not experimentally demonstrated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                                        PMID:11096112
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Fmc1p is a soluble protein located in the mitochondrial matrix.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0033615" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the best-supported functional statement for fmc1 and represents its core biological role: participation in assembly of the mitochondrial proton-transporting ATP synthase (Complex V). The term is directly supported by the family-defining function established for the S. cerevisiae ortholog and by the InterPro/PANTHER family assignment. Retained as core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Family-defining biological process, propagated by phylogeny (IBA from SGD:S000001360) and independently supported by the InterPro Fmc1 signature. Matches the founding paper, in which Fmc1p is required for assembly/stability of the F1 sector of ATP synthase.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                                        PMID:11096112
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have identified a yeast nuclear gene (FMC1) that is required at elevated temperatures (37 degrees C) for the formation/stability of the F(1) sector of the mitochondrial ATP synthase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but general parent term derived from the UniProt Subcellular Location mapping (SL-0173, Mitochondrion). It is subsumed by the more specific mitochondrial matrix annotation, so it is kept as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate compartment assignment consistent with the predicted transit peptide, but less informative than GO:0005759 (mitochondrial matrix); redundant parent.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                    GO:0033615
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial proton-transporting ATP synthase complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0033615" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO annotation from the Fmc1 signature (IPR039196), giving the same ATP-synthase-assembly process as the IBA annotation. It corroborates the core biological process from an independent (domain-based) line of evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based support (InterPro IPR039196 -&gt; GO:0033615) that is concordant with the phylogenetic (IBA) annotation and with the family function; a well-founded electronic annotation to the core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root molecular_function annotation with the ND (No biological Data) evidence code, correctly flagging that no specific molecular activity has been determined for fmc1. This honestly reflects the state of knowledge: the molecular function is genuinely dark. See knowledge_gaps and core_functions for the orthology-based inference of a chaperone-like assembly-factor activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Legitimate ND placeholder; the specific molecular function of fmc1 is undetermined. It should not be removed, as it accurately records that the MF aspect is uncurated/unknown rather than annotated to a specific activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                                    GO:0044183
+                                </a>
+                            </span>
+                            <span class="term-label">protein folding chaperone</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11096112
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of a nuclear gene (FMC1) required for the ass...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="G2TRM0" data-a="GO:0044183" data-r="PMID:11096112" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed molecular function inferred by orthology (not present in the current GOA). The characterized S. cerevisiae ortholog assists the folding/stability or function of the F1 assembly chaperone Atp12p, a non-catalytic chaperone-like activity that fits the FMC1/LYR-motif family (no catalytic domain). Offered as the most defensible specific MF to replace the ND placeholder, pending experimental confirmation in fission yeast.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> fmc1 has no annotated specific molecular function (MF is ND). A protein-folding chaperone activity is the best-supported inference from the family-defining function of the S. cerevisiae ortholog and from the domain architecture; not ATP-dependent (no ATPase), so GO:0044183 rather than GO:0140662. Marked ISS and non-verified for the pombe protein. Note this is a second-order inference: the founding data show Fmc1p acts on the F1 assembly chaperone Atp12p, so a competing hypothesis is that fmc1 is not itself the folding chaperone but an adaptor/stabilizer of a partner chaperone (e.g. GO:0051087 protein-folding chaperone binding); the two cannot be distinguished without direct assays (see knowledge_gaps).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                                        PMID:11096112
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We propose that Fmc1p is required for the proper folding/stability or functioning of Atp12p in heat stress conditions.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Mitochondrial accessory assembly factor for the F1Fo-ATP synthase (Complex V). By orthology to S. cerevisiae Fmc1p and consistent with its LYR-motif/FMC1-family domain architecture, fmc1 is inferred to act as a chaperone-like factor in the mitochondrial matrix that assists assembly of the catalytic F1 (alpha3beta3) head of ATP synthase, most plausibly by supporting the folding, stability or function of the dedicated F1 assembly chaperone Atp12 (human ATPAF2). It has no catalytic domain, consistent with a non-enzymatic, non-ATP-dependent chaperone role. This core function is inferred, not yet demonstrated in fission yeast.</h3>
+                <span class="vote-buttons" data-g="G2TRM0" data-a="FUNCTION: Mitochondrial accessory assembly factor for the F1..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044183" target="_blank" class="term-link">
+                            protein folding chaperone
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033615" target="_blank" class="term-link">
+                                mitochondrial proton-transporting ATP synthase complex assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                mitochondrial matrix
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                                PMID:11096112
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We propose that Fmc1p is required for the proper folding/stability or functioning of Atp12p in heat stress conditions.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                                PMID:11096112
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We have identified a yeast nuclear gene (FMC1) that is required at elevated temperatures (37 degrees C) for the formation/stability of the F(1) sector of the mitochondrial ATP synthase.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11096112" target="_blank" class="term-link">
+                            PMID:11096112
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of a nuclear gene (FMC1) required for the assembly/stability of yeast mitochondrial F(1)-ATPase in heat stress conditions.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The founding, and only directly characterized, family member — S. cerevisiae Fmc1p — is a soluble mitochondrial matrix protein required at elevated temperature for formation/stability of the F1 sector of ATP synthase; in its absence the alpha-F1 and beta-F1 subunits aggregate in the matrix rather than assembling into F1.</div>
+
+                        <div class="finding-text">"We have identified a yeast nuclear gene (FMC1) that is required at elevated temperatures (37 degrees C) for the formation/stability of the F(1) sector of the mitochondrial ATP synthase."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fmc1p acts genetically upstream of, or together with, the F1 assembly chaperone Atp12p: overexpression of Atp12p rescues loss of Fmc1p, leading to the model that Fmc1p is needed for proper folding/stability or function of Atp12p.</div>
+
+                        <div class="finding-text">"We propose that Fmc1p is required for the proper folding/stability or functioning of Atp12p in heat stress conditions."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does S. pombe fmc1 physically interact with a fission-yeast Atp12/ATPAF2 ortholog and with the F1 alpha/beta subunits, and is its requirement for ATP synthase assembly conditional (e.g. heat-stress specific) as in budding yeast?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G2TRM0" data-a="Q: Does S. pombe fmc1 physically interact with a fiss..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Construct an fmc1-null strain and assess respiratory competence and growth on a non-fermentable carbon source at normal and elevated temperature; quantify assembled F1Fo-ATP synthase (blue-native PAGE / activity assays) and test for accumulation/aggregation of unassembled alpha-F1 and beta-F1 subunits in the matrix. Complement with tagged-protein pulldowns to identify the pombe Atp12 ortholog and F1 subunits as interaction partners.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: fmc1 is required for assembly of the F1 sector of mitochondrial ATP synthase in S. pombe, acting through the Atp12/ATPAF2 assembly chaperone.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics and biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G2TRM0" data-a="EXPERIMENT: Construct an fmc1-null strain and assess respirato..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The specific molecular activity of the fission-yeast fmc1 protein is undetermined. Whether it acts as a protein-folding chaperone in its own right, as an adaptor that stabilizes a partner chaperone (an Atp12/ATPAF2 ortholog), or in some other capacity has not been shown; the GO molecular_function is ND.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The protein is confidently placed in the FMC1 family (InterPro IPR039196, PANTHER PTHR28015) and carries a single LYR-motif (Complex1_LYR_2) module and a predicted mitochondrial transit peptide, implying a non-catalytic accessory role in ATP synthase assembly. The founding S. cerevisiae study established that the ortholog assists folding/stability or function of the F1 assembly chaperone Atp12p.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Pinning down the molecular activity would convert an orthology-based inference into an experimentally grounded function and clarify how the LYR-motif fold of FMC1-family proteins contributes to Complex V biogenesis.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical characterization of the pombe protein (e.g. interaction/complex assays with the pombe Atp12/ATPAF2 ortholog and F1 subunits; in-organello F1 assembly assays in an fmc1-null background).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"We propose that Fmc1p is required for the proper folding/stability or functioning of Atp12p in heat stress conditions."</em> — PMID:11096112</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is not known whether the F1-ATP-synthase-assembly role attributed to fmc1 is demonstrated in S. pombe or is purely inferred by orthology. All fission-yeast GO annotations are electronic or phylogenetic (IBA/IEA); none are experimental.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In S. cerevisiae the assembly role is experimentally established, including the aggregation of alpha/beta-F1 subunits on loss of Fmc1p and rescue by Atp12p overexpression. UniProt records the pombe protein only at transcript level (Evidence at transcript level, PE 2).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Distinguishing demonstrated from inferred function prevents over-reading the IBA/IEA annotations as direct evidence and identifies the pombe protein as a target for experimental validation.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Identification of a nuclear gene (FMC1) required for the assembly/stability of"</em> — PMID:11096112</li>
+
+                <li><em>"No direct experimental studies on *fmc1* in *S. pombe* were identified during this review"</em> — file:SCHPO/fmc1/fmc1-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No loss-of-function phenotype has been reported for S. pombe fmc1, and it is unknown whether (as in budding yeast) its requirement is conditional (heat-stress specific) or broader, and whether a functional Atp12/ATPAF2 partner exists and is engaged in fission yeast.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> In S. cerevisiae, Fmc1p is dispensable at normal growth temperature (28-30 C) but required at 37 C, and its loss is compensated by Atp12p overexpression; no equivalent conditional-phenotype or partner data exist for the pombe gene.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A conditional (stress-dependent) versus constitutive requirement changes how the gene should be annotated for biological process and regulation, and whether an ATP-synthase-assembly defect is the primary phenotype.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"unlike Atp12p and Atp11p, Fmc1p is not required in normal growth conditions (28--30 degrees C)."</em> — PMID:11096112</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fmc1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G2TRM0" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">31 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T17:24:13.128211</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="fmc1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="comprehensive-research-report-fmc1-spac148611-in-schizosaccharomyces-pombe">Comprehensive Research Report: fmc1 (SPAC1486.11) in <em>Schizosaccharomyces pombe</em></h2>
+<h3 id="gene-and-protein-identity">Gene and Protein Identity</h3>
+<p>The <em>fmc1</em> gene (synonym: <em>new3</em>; ORF: SPAC1486.11; UniProt: G2TRM0) encodes the ATP synthase assembly factor Fmc1, mitochondrial (also known as Formation of Mitochondrial Complexes protein 1), in <em>Schizosaccharomyces pombe</em> (fission yeast, strain 972 / ATCC 24843). The protein belongs to the FMC1 family and contains a Complex1_LYR_2 domain (PF13233/IPR039196), classifying it within the mitochondrial LYRM (LYR motif-containing) protein superfamily.</p>
+<p><strong>Note on literature availability:</strong> No direct experimental studies on <em>fmc1</em> in <em>S. pombe</em> were identified during this review. The functional annotation of the <em>S. pombe</em> protein is therefore inferred from the well-characterized <em>Saccharomyces cerevisiae</em> ortholog (FMC1/Fmc1p), supported by cross-genome bioinformatic analyses that confirm FMC1 homologs are present in both Ascomycota (including <em>S. pombe</em>) and Basidiomycota (pickova2005assemblyfactorsof pages 1-2, pickova2005assemblyfactorsof pages 5-7, pickova2005assemblyfactorsof pages 7-9).</p>
+<p>The following summary table provides an overview of key properties:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>fmc1</strong>; UniProt-provided synonym <strong>new3</strong>; ORF <strong>SPAC1486.11</strong> for the target protein in <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843) (user-provided UniProt context).</td>
+</tr>
+<tr>
+<td>Organism (<em>S. pombe</em>)</td>
+<td><em>Schizosaccharomyces pombe</em> (fission yeast), strain 972 / ATCC 24843; this is the correct target organism and should be distinguished from the much better studied <em>Saccharomyces cerevisiae</em> ortholog literature. Cross-genome analysis lists <em>S. pombe</em> among Ascomycota species carrying <strong>FMC1</strong> homologs (pickova2005assemblyfactorsof pages 5-7).</td>
+</tr>
+<tr>
+<td>UniProt ID</td>
+<td><strong>G2TRM0</strong> (user-provided UniProt accession for the target <em>S. pombe</em> protein).</td>
+</tr>
+<tr>
+<td><em>S. cerevisiae</em> ortholog</td>
+<td><strong>FMC1 / Fmc1p</strong>, the founding and experimentally characterized fungal ortholog required for mitochondrial ATP synthase F1-sector assembly/stability under heat stress (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 6-7).</td>
+</tr>
+<tr>
+<td>Protein name</td>
+<td>ATP synthase assembly factor Fmc1, mitochondrial; also called Formation of mitochondrial complexes protein 1. In <em>S. cerevisiae</em>, Fmc1p is a small, nuclear-encoded mitochondrial protein involved in ATP synthase biogenesis (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 4-5).</td>
+</tr>
+<tr>
+<td>Molecular function</td>
+<td>Best-supported function is as an <strong>assembly/stability factor for the F1 sector of mitochondrial ATP synthase (Complex V)</strong>, especially under elevated temperature. It is not a catalytic enzyme; rather, it acts as an accessory/chaperone-like factor helping productive F1 assembly and preventing aggregation of F1 α/β subunits, likely through supporting Atp12p folding/stability/function (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 6-7, rak2009assemblyoff0 pages 2-3, lefebvrelegendre2001identificationofa pages 5-6).</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>In <em>S. cerevisiae</em>, Fmc1p is a <strong>soluble mitochondrial matrix protein</strong>, imported as a precursor with an N-terminal targeting presequence; it is either free in the matrix or loosely associated with the inner face of the inner membrane (lefebvrelegendre2001identificationofa pages 4-5, lefebvrelegendre2001identificationofa pages 1-1). The <em>S. pombe</em> protein is annotated by UniProt as mitochondrial precursor, consistent with orthology.</td>
+</tr>
+<tr>
+<td>Domain family</td>
+<td>Belongs to the <strong>FMC1/LYRM (Complex1_LYR_2)</strong> family of mitochondrial LYR-motif proteins. LYRM proteins typically act as accessory factors for OXPHOS complexes and mitochondrial biogenesis pathways; FMC1 is classified as a lineage-specific LYRM family member (angerer2013thesuperfamilyof pages 1-2, angerer2013thesuperfamilyof pages 4-5, pickova2005assemblyfactorsof pages 7-9).</td>
+</tr>
+<tr>
+<td>Key interactions (Atp12p, ACPM)</td>
+<td><strong>Atp12p:</strong> genetic and functional interaction is strong—ATP12 overexpression suppresses the <em>fmc1Δ</em> defect, and Fmc1p is proposed to support Atp12p folding/stability/function during F1 assembly (lefebvrelegendre2001identificationofa pages 6-7, rak2009assemblyoff0 pages 2-3, lefebvrelegendre2001identificationofa pages 5-6). <strong>ACPM:</strong> LYRM-family review reports direct association of FMC1-containing complexes with mitochondrial acyl-carrier protein (<strong>ACPM</strong>) by tandem affinity purification, linking FMC1 to broader mitochondrial biogenesis networks (angerer2013thesuperfamilyof pages 5-6, angerer2013thesuperfamilyof pages 4-5).</td>
+</tr>
+<tr>
+<td>Phenotype of deletion (at elevated temperature)</td>
+<td>In <em>S. cerevisiae</em>, <strong>fmc1Δ</strong> causes severe oxidative growth defects at <strong>37°C</strong> on non-fermentable carbon sources; ATP synthase biogenesis is strongly impaired, and F1 α/β subunits aggregate in the matrix instead of assembling into functional oligomers (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 6-7, lefebvrelegendre2001identificationofa pages 4-4, lefebvrelegendre2001identificationofa pages 2-3).</td>
+</tr>
+<tr>
+<td>Phenotype at normal temperature</td>
+<td>Unlike <strong>ATP11</strong> or <strong>ATP12</strong>, <strong>FMC1 is not essential under normal growth temperature (28–30°C)</strong> in budding yeast; F1 assembly can proceed sufficiently in these conditions, indicating a conditional/heat-stress requirement (lefebvrelegendre2001identificationofa pages 1-1, rak2009assemblyoff0 pages 2-3).</td>
+</tr>
+<tr>
+<td>Conservation (fungi - Ascomycota and Basidiomycota)</td>
+<td>Comparative genomics indicates <strong>Fmc1p homologs are fungal-lineage restricted</strong>, found in <strong>Ascomycota and Basidiomycota</strong> rather than broadly across eukaryotes. The same analysis explicitly lists <em>Schizosaccharomyces pombe</em> among Ascomycota taxa carrying FMC1 homologs, supporting annotation of the target gene as the fungal ATP synthase assembly factor ortholog (pickova2005assemblyfactorsof pages 1-2, pickova2005assemblyfactorsof pages 5-7, pickova2005assemblyfactorsof pages 7-9).</td>
+</tr>
+<tr>
+<td>Relevance to human disease (ATP synthase disorders)</td>
+<td>Although human cells do not use FMC1 itself as a standard disease gene analog, <strong><em>fmc1Δ</em> yeast is a well-established model of ATP synthase deficiency</strong> because its primary defect is impaired F1 assembly and ATP synthesis. It has been used in drug-repurposing and pathway-modulation studies, including identification of <strong>TIM23-dependent mitochondrial protein sorting</strong> as a therapeutic intervention point and drug-drop screening campaigns of ~12,000 compounds for ATP synthase-related mitochondrial disease phenotypes (schwimmer2006yeastmodelsof pages 8-9, aiyar2014mitochondrialproteinsorting pages 1-2, aiyar2014mitochondrialproteinsorting pages 5-6, magistrati2023drugdroptest pages 5-6, magistrati2023drugdroptest pages 2-3).</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the key characteristics of the target FMC1/fmc1 protein, with emphasis on the evidence-supported function of the fungal ortholog and what can be inferred for the S. pombe protein. It is useful for quickly separating direct evidence from orthology-based inference.</em></p>
+<h3 id="1-primary-function-assembly-factor-for-the-f1-sector-of-mitochondrial-atp-synthase">1. Primary Function: Assembly Factor for the F1 Sector of Mitochondrial ATP Synthase</h3>
+<p>FMC1 was first identified and characterized in <em>S. cerevisiae</em> by Lefebvre-Legendre et al. (2001) as a nuclear gene encoding a protein required for the assembly and stability of the F1 sector of mitochondrial ATP synthase (F1FO-ATP synthase, Complex V) (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 1-2). The mitochondrial ATP synthase is a multisubunit complex in which the membrane-embedded FO domain conducts protons across the inner mitochondrial membrane, while the F1 domain (comprising an α₃β₃γδε hexamer) catalyzes ATP synthesis. FMC1 does not itself catalyze a chemical reaction; rather, it functions as an accessory assembly factor—a chaperone-like protein—that ensures the productive folding and oligomerization of the F1 α and β subunits within the mitochondrial matrix.</p>
+<p>A distinguishing feature of FMC1 is its <strong>conditional requirement</strong>: unlike the assembly factors Atp11p and Atp12p, which are essential for F1 assembly under all growth conditions, Fmc1p is specifically required at elevated temperatures (37°C) and is dispensable for F1 assembly at normal growth temperatures (28–30°C) (lefebvrelegendre2001identificationofa pages 1-1, rak2009assemblyoff0 pages 2-3). In cells lacking Fmc1p grown at 37°C, the F1 α and β subunits are properly synthesized, imported into mitochondria, and processed to their mature size, but instead of assembling into functional F1 oligomers, they aggregate into large, insoluble inclusions in the mitochondrial matrix (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 6-7, lefebvrelegendre2001identificationofa pages 4-4).</p>
+<h3 id="2-molecular-mechanism-functional-relationship-with-atp12p">2. Molecular Mechanism: Functional Relationship with Atp12p</h3>
+<p>The key mechanistic insight into FMC1 function comes from its functional relationship with Atp12p, a dedicated chaperone that binds to the F1 α subunit and prevents its non-productive aggregation (lefebvrelegendre2001identificationofa pages 6-7, rak2009assemblyoff0 pages 2-3, lefebvrelegendre2001identificationofa pages 7-8). Several lines of evidence demonstrate this relationship:</p>
+<ul>
+<li>Overexpression of <em>ATP12</em> (encoding Atp12p) efficiently compensates for the absence of Fmc1p, restoring both respiratory growth on non-fermentable carbon sources and F1-ATPase activity at elevated temperatures (lefebvrelegendre2001identificationofa pages 5-6, lefebvrelegendre2001identificationofa pages 2-3).</li>
+<li>In <em>fmc1Δ</em> cells at 37°C, Atp12p steady-state levels in mitochondria are substantially reduced, suggesting that Fmc1p is needed for the stability or proper folding of Atp12p under heat stress (lefebvrelegendre2001identificationofa pages 6-7, song2023themitochondrialhsp70 pages 6-7).</li>
+<li>The phenotype of <em>fmc1Δ</em> mutants (α/β subunit aggregation) is identical to that observed in <em>atp12Δ</em> or <em>atp11Δ</em> mutants (lefebvrelegendre2001identificationofa pages 4-4).</li>
+</ul>
+<p>Based on these findings, Fmc1p has been proposed to function as a factor that assists the folding, stability, or proper functioning of Atp12p, with this requirement becoming critical under heat stress conditions when protein folding is challenged (lefebvrelegendre2001identificationofa pages 1-1, lefebvrelegendre2001identificationofa pages 7-8).</p>
+<p>Additionally, Song et al. (2023) demonstrated a genetic interaction between <em>fmc1Δ</em> and the mitochondrial Hsp70 (<em>ssc1-62</em>) mutant. While individual <em>ssc1-62</em> and <em>fmc1Δ</em> mutants show only mild growth defects, the double mutant exhibits severe phenotypes: growth is blocked on non-fermentable carbon sources, and ATP synthase levels are dramatically diminished, with particularly severe reductions in F1 domain levels. This indicates that mitochondrial Hsp70 (mtHsp70) and Fmc1 cooperatively function in F1FO-ATP synthase assembly (song2023themitochondrialhsp70 pages 6-7).</p>
+<h3 id="3-subcellular-localization">3. Subcellular Localization</h3>
+<p>In <em>S. cerevisiae</em>, Fmc1p is a <strong>soluble protein localized in the mitochondrial matrix</strong> (lefebvrelegendre2001identificationofa pages 4-5, lefebvrelegendre2001identificationofa pages 1-1). The protein is synthesized as a precursor of approximately 18.4 kDa (155 amino acids in <em>S. cerevisiae</em>) containing an N-terminal mitochondrial targeting presequence of approximately 4 kDa, which is cleaved upon import into the matrix (lefebvrelegendre2001identificationofa pages 4-5). Biochemical fractionation experiments confirmed its soluble nature: Fmc1p is recovered in water-soluble form after osmotic disruption of mitochondrial membranes and is protected from proteinase K degradation, indicating localization within the matrix compartment, either free or loosely associated with the inner face of the inner mitochondrial membrane (lefebvrelegendre2001identificationofa pages 4-5). The <em>S. pombe</em> protein (G2TRM0) is annotated by UniProt as a mitochondrial precursor, consistent with this localization pattern.</p>
+<h3 id="4-domain-architecture-and-membership-in-the-lyrm-protein-superfamily">4. Domain Architecture and Membership in the LYRM Protein Superfamily</h3>
+<p>FMC1 is classified as a member of the Complex1_LYR_2 family within the broader LYRM (LYR motif-containing) protein superfamily (angerer2013thesuperfamilyof pages 1-2, angerer2013thesuperfamilyof pages 4-5). LYRM proteins are characterized by a conserved leucine/tyrosine/arginine (LYR) motif and function as accessory subunits or assembly factors for OXPHOS complexes (Complexes I, II, III, and V) (angerer2013thesuperfamilyof pages 1-2). LYRM proteins play diverse roles in mitochondrial homeostasis, including iron-sulfur (Fe-S) cluster biogenesis (e.g., LYRM4/Isd11) and connections to mitochondrial fatty acid synthesis type II pathways (angerer2013thesuperfamilyof pages 2-4).</p>
+<p>Notably, tandem affinity purification studies in <em>S. cerevisiae</em> demonstrated that FMC1-containing protein complexes directly associate with ACPM (the mitochondrial acyl-carrier protein of the FAS type II pathway) (angerer2013thesuperfamilyof pages 5-6, angerer2013thesuperfamilyof pages 4-5). This interaction places FMC1 within a broader network of LYRM proteins that connect OXPHOS complex assembly with mitochondrial lipid metabolism and Fe-S cluster biogenesis pathways (angerer2013thesuperfamilyof pages 1-2, angerer2013thesuperfamilyof pages 2-4). Although FMC1 itself is not known to bind or transfer Fe-S clusters, the LYR domain may facilitate interactions with the mitochondrial biosynthetic machinery that are important for its assembly function.</p>
+<h3 id="5-evolutionary-conservation">5. Evolutionary Conservation</h3>
+<p>Comparative genomic analysis by Pícková et al. (2005) established that FMC1 has a restricted phylogenetic distribution compared to other F1-assembly factors. While Atp11p and Atp12p are broadly conserved across eukaryotes possessing ATP synthase, <strong>Fmc1p homologs are found specifically in Fungi, in both Ascomycota and Basidiomycota</strong> (pickova2005assemblyfactorsof pages 1-2, pickova2005assemblyfactorsof pages 7-9). This analysis explicitly includes <em>S. pombe</em> among the Ascomycota species carrying FMC1 homologs (pickova2005assemblyfactorsof pages 5-7). Fmc1p was not identified in Metazoa, Viridiplantae, Alveolata, or other major eukaryotic lineages, leading the authors to classify it as a "lineage-specific" assembly factor, in contrast to the "general" assembly factors Atp11p and Atp12p (pickova2005assemblyfactorsof pages 7-9). The authors propose that such lineage-specific factors may have evolved to fulfill specialized roles in individual organisms or lineages but are nonetheless important for ATP production (pickova2005assemblyfactorsof pages 7-9).</p>
+<h3 id="6-biochemical-and-signaling-pathway-context">6. Biochemical and Signaling Pathway Context</h3>
+<p>FMC1 functions within the <strong>mitochondrial ATP synthase (Complex V) biogenesis pathway</strong>. The assembly of the F1 catalytic head requires several dedicated chaperones operating in the mitochondrial matrix:</p>
+<ul>
+<li><strong>Atp11p</strong> binds to the F1 β subunit, preventing its non-productive aggregation (lefebvrelegendre2001identificationofa pages 4-4).</li>
+<li><strong>Atp12p</strong> binds to the F1 α subunit with an analogous function (lefebvrelegendre2001identificationofa pages 6-7, lefebvrelegendre2001identificationofa pages 7-8).</li>
+<li><strong>Fmc1p</strong> supports Atp12p function, particularly under conditions of proteotoxic stress such as elevated temperature (lefebvrelegendre2001identificationofa pages 1-1, rak2009assemblyoff0 pages 2-3).</li>
+<li><strong>mtHsp70 (Ssc1)</strong> cooperates with Atp11p and Atp12p in F1 domain formation and also functions in linking the catalytic head with the peripheral stalk via Atp5 (song2023themitochondrialhsp70 pages 6-7).</li>
+</ul>
+<p>Loss of Fmc1p results in a cascade of downstream effects: impaired F1 assembly leads to reduced ATP synthase accumulation, a ~90% reduction in mitochondrial ATP synthesis, and secondary effects on respiratory chain biogenesis (aiyar2014mitochondrialproteinsorting pages 1-2). The <em>fmc1Δ</em> phenotype demonstrates that F1 assembly is a prerequisite for complete ATP synthase maturation and proper oxidative phosphorylation.</p>
+<h3 id="7-disease-relevance-and-translational-applications">7. Disease Relevance and Translational Applications</h3>
+<p>Although FMC1 itself has no direct human ortholog and is restricted to fungi, the <strong>fmc1Δ yeast strain has become a widely used model system for human ATP synthase disorders</strong>, including NARP syndrome (Neurogenic Ataxia and Retinitis Pigmentosa) and Leigh syndrome (schwimmer2006yeastmodelsof pages 8-9, schwimmer2006yeastmodelsof pages 6-8, aiyar2014mitochondrialproteinsorting pages 1-2, magistrati2023drugdroptest pages 5-6).</p>
+<p>Aiyar et al. (2014) used the <em>fmc1Δ</em> model to screen drug repurposing libraries and identified mitochondrial protein sorting through the TIM23 complex as a therapeutic intervention point for ATP synthase disorders. Overexpression of Tim21, a regulatory subunit of the TIM23 complex, substantially restored respiratory growth in <em>fmc1Δ</em> mutants and improved survival in human NARP patient-derived cybrids (aiyar2014mitochondrialproteinsorting pages 5-6, aiyar2014mitochondrialproteinsorting pages 4-5). Magistrati et al. (2023) further employed the <em>fmc1Δ</em> strain in "drug drop test" high-throughput screening campaigns, testing approximately 12,000 compounds to identify molecules that rescue oxidative growth defects, including chlorhexidine and sodium pyrithione (magistrati2023drugdroptest pages 5-6, magistrati2023drugdroptest pages 2-3). These findings underscore the utility of FMC1 deletion models in translational research for mitochondrial diseases (schwimmer2006yeastmodelsof pages 8-9, magistrati2023drugdroptest pages 20-21).</p>
+<h3 id="8-summary">8. Summary</h3>
+<p>The <em>S. pombe</em> fmc1 gene (SPAC1486.11, UniProt G2TRM0) encodes a small, soluble mitochondrial matrix protein that functions as an assembly factor for the F1 sector of mitochondrial ATP synthase. Based on extensive characterization of the <em>S. cerevisiae</em> ortholog, Fmc1 is not an enzyme but rather a chaperone-like accessory factor that supports the function of the F1 α-subunit assembly chaperone Atp12p, particularly under conditions of heat stress. It is a member of the LYRM protein superfamily (Complex1_LYR_2 family), associates with the mitochondrial acyl-carrier protein ACPM, and is conserved specifically within the fungal lineage. Loss of FMC1 results in aggregation of F1 α and β subunits in the matrix, severely impairing ATP synthase biogenesis and oxidative phosphorylation. While no direct experimental studies on the <em>S. pombe</em> protein exist, cross-genome analyses confirm that <em>S. pombe</em> carries an FMC1 homolog with a conserved domain architecture, and the protein's function is highly likely to be conserved as an ATP synthase assembly factor in fission yeast mitochondria.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pickova2005assemblyfactorsof pages 1-2): Andrea Pícková, Martin Potocký, and Josef Houštěk. Assembly factors of f1fo‐atp synthase across genomes. Proteins: Structure, 59:393-402, May 2005. URL: https://doi.org/10.1002/prot.20452, doi:10.1002/prot.20452. This article has 45 citations.</p>
+</li>
+<li>
+<p>(pickova2005assemblyfactorsof pages 5-7): Andrea Pícková, Martin Potocký, and Josef Houštěk. Assembly factors of f1fo‐atp synthase across genomes. Proteins: Structure, 59:393-402, May 2005. URL: https://doi.org/10.1002/prot.20452, doi:10.1002/prot.20452. This article has 45 citations.</p>
+</li>
+<li>
+<p>(pickova2005assemblyfactorsof pages 7-9): Andrea Pícková, Martin Potocký, and Josef Houštěk. Assembly factors of f1fo‐atp synthase across genomes. Proteins: Structure, 59:393-402, May 2005. URL: https://doi.org/10.1002/prot.20452, doi:10.1002/prot.20452. This article has 45 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 1-1): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 6-7): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 4-5): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(rak2009assemblyoff0 pages 2-3): Malgorzata Rak, Xiaomei Zeng, Jean-Jacques Brière, and Alexander Tzagoloff. Assembly of f0 in saccharomyces cerevisiae. Biochimica et biophysica acta, 1793 1:108-16, Jan 2009. URL: https://doi.org/10.1016/j.bbamcr.2008.07.001, doi:10.1016/j.bbamcr.2008.07.001. This article has 79 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 5-6): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(angerer2013thesuperfamilyof pages 1-2): Heike Angerer. The superfamily of mitochondrial complex1_lyr motif-containing (lyrm) proteins. Biochemical Society transactions, 41 5:1335-41, Oct 2013. URL: https://doi.org/10.1042/bst20130116, doi:10.1042/bst20130116. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(angerer2013thesuperfamilyof pages 4-5): Heike Angerer. The superfamily of mitochondrial complex1_lyr motif-containing (lyrm) proteins. Biochemical Society transactions, 41 5:1335-41, Oct 2013. URL: https://doi.org/10.1042/bst20130116, doi:10.1042/bst20130116. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(angerer2013thesuperfamilyof pages 5-6): Heike Angerer. The superfamily of mitochondrial complex1_lyr motif-containing (lyrm) proteins. Biochemical Society transactions, 41 5:1335-41, Oct 2013. URL: https://doi.org/10.1042/bst20130116, doi:10.1042/bst20130116. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 4-4): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 2-3): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(schwimmer2006yeastmodelsof pages 8-9): Christine Schwimmer, Malgorzata Rak, Linnka Lefebvre‐Legendre, Stéphane Duvezin‐Caubet, Guillaume Plane, and Jean‐Paul di Rago. Yeast models of human mitochondrial diseases: from molecular mechanisms to drug screening. Biotechnology Journal, 1:270-281, Mar 2006. URL: https://doi.org/10.1002/biot.200500053, doi:10.1002/biot.200500053. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aiyar2014mitochondrialproteinsorting pages 1-2): Raeka S. Aiyar, Maria Bohnert, Stéphane Duvezin-Caubet, Cécile Voisset, Julien Gagneur, Emilie S. Fritsch, Elodie Couplan, Karina von der Malsburg, Charlotta Funaya, Flavie Soubigou, Florence Courtin, Sundari Suresh, Roza Kucharczyk, Justine Evrard, Claude Antony, Robert P. St.Onge, Marc Blondel, Jean-Paul di Rago, Martin van der Laan, and Lars M. Steinmetz. Mitochondrial protein sorting as a therapeutic target for atp synthase disorders. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6585, doi:10.1038/ncomms6585. This article has 42 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aiyar2014mitochondrialproteinsorting pages 5-6): Raeka S. Aiyar, Maria Bohnert, Stéphane Duvezin-Caubet, Cécile Voisset, Julien Gagneur, Emilie S. Fritsch, Elodie Couplan, Karina von der Malsburg, Charlotta Funaya, Flavie Soubigou, Florence Courtin, Sundari Suresh, Roza Kucharczyk, Justine Evrard, Claude Antony, Robert P. St.Onge, Marc Blondel, Jean-Paul di Rago, Martin van der Laan, and Lars M. Steinmetz. Mitochondrial protein sorting as a therapeutic target for atp synthase disorders. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6585, doi:10.1038/ncomms6585. This article has 42 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(magistrati2023drugdroptest pages 5-6): Martina Magistrati, Alexandru Ionut Gilea, Maria Carla Gerra, Enrico Baruffini, and Cristina Dallabona. Drug drop test: how to quickly identify potential therapeutic compounds for mitochondrial diseases using yeast saccharomyces cerevisiae. International Journal of Molecular Sciences, 24:10696, Jun 2023. URL: https://doi.org/10.3390/ijms241310696, doi:10.3390/ijms241310696. This article has 8 citations.</p>
+</li>
+<li>
+<p>(magistrati2023drugdroptest pages 2-3): Martina Magistrati, Alexandru Ionut Gilea, Maria Carla Gerra, Enrico Baruffini, and Cristina Dallabona. Drug drop test: how to quickly identify potential therapeutic compounds for mitochondrial diseases using yeast saccharomyces cerevisiae. International Journal of Molecular Sciences, 24:10696, Jun 2023. URL: https://doi.org/10.3390/ijms241310696, doi:10.3390/ijms241310696. This article has 8 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 1-2): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(lefebvrelegendre2001identificationofa pages 7-8): Linnka Lefebvre-Legendre, Jacques Vaillier, Houssain Benabdelhak, Jean Velours, Piotr P. Slonimski, and Jean-Paul di Rago. Identification of a nuclear gene (fmc1) required for the assembly/stability of yeast mitochondrial f1-atpase in heat stress conditions*. The Journal of Biological Chemistry, 276:6789-6796, Mar 2001. URL: https://doi.org/10.1074/jbc.m009557200, doi:10.1074/jbc.m009557200. This article has 183 citations.</p>
+</li>
+<li>
+<p>(song2023themitochondrialhsp70 pages 6-7): Jiyao Song, Liesa Steidle, Isabelle Steymans, Jasjot Singh, Anne Sanner, Lena Böttinger, Dominic Winter, and Thomas Becker. The mitochondrial hsp70 controls the assembly of the f1fo-atp synthase. Nature Communications, Jan 2023. URL: https://doi.org/10.1038/s41467-022-35720-5, doi:10.1038/s41467-022-35720-5. This article has 25 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(angerer2013thesuperfamilyof pages 2-4): Heike Angerer. The superfamily of mitochondrial complex1_lyr motif-containing (lyrm) proteins. Biochemical Society transactions, 41 5:1335-41, Oct 2013. URL: https://doi.org/10.1042/bst20130116, doi:10.1042/bst20130116. This article has 70 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(schwimmer2006yeastmodelsof pages 6-8): Christine Schwimmer, Malgorzata Rak, Linnka Lefebvre‐Legendre, Stéphane Duvezin‐Caubet, Guillaume Plane, and Jean‐Paul di Rago. Yeast models of human mitochondrial diseases: from molecular mechanisms to drug screening. Biotechnology Journal, 1:270-281, Mar 2006. URL: https://doi.org/10.1002/biot.200500053, doi:10.1002/biot.200500053. This article has 55 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(aiyar2014mitochondrialproteinsorting pages 4-5): Raeka S. Aiyar, Maria Bohnert, Stéphane Duvezin-Caubet, Cécile Voisset, Julien Gagneur, Emilie S. Fritsch, Elodie Couplan, Karina von der Malsburg, Charlotta Funaya, Flavie Soubigou, Florence Courtin, Sundari Suresh, Roza Kucharczyk, Justine Evrard, Claude Antony, Robert P. St.Onge, Marc Blondel, Jean-Paul di Rago, Martin van der Laan, and Lars M. Steinmetz. Mitochondrial protein sorting as a therapeutic target for atp synthase disorders. Nature Communications, Dec 2014. URL: https://doi.org/10.1038/ncomms6585, doi:10.1038/ncomms6585. This article has 42 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(magistrati2023drugdroptest pages 20-21): Martina Magistrati, Alexandru Ionut Gilea, Maria Carla Gerra, Enrico Baruffini, and Cristina Dallabona. Drug drop test: how to quickly identify potential therapeutic compounds for mitochondrial diseases using yeast saccharomyces cerevisiae. International Journal of Molecular Sciences, 24:10696, Jun 2023. URL: https://doi.org/10.3390/ijms241310696, doi:10.3390/ijms241310696. This article has 8 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fmc1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pickova2005assemblyfactorsof pages 5-7</li>
+<li>lefebvrelegendre2001identificationofa pages 4-4</li>
+<li>lefebvrelegendre2001identificationofa pages 4-5</li>
+<li>angerer2013thesuperfamilyof pages 1-2</li>
+<li>angerer2013thesuperfamilyof pages 2-4</li>
+<li>pickova2005assemblyfactorsof pages 7-9</li>
+<li>aiyar2014mitochondrialproteinsorting pages 1-2</li>
+<li>pickova2005assemblyfactorsof pages 1-2</li>
+<li>lefebvrelegendre2001identificationofa pages 1-1</li>
+<li>lefebvrelegendre2001identificationofa pages 6-7</li>
+<li>lefebvrelegendre2001identificationofa pages 5-6</li>
+<li>angerer2013thesuperfamilyof pages 4-5</li>
+<li>angerer2013thesuperfamilyof pages 5-6</li>
+<li>lefebvrelegendre2001identificationofa pages 2-3</li>
+<li>schwimmer2006yeastmodelsof pages 8-9</li>
+<li>aiyar2014mitochondrialproteinsorting pages 5-6</li>
+<li>magistrati2023drugdroptest pages 5-6</li>
+<li>magistrati2023drugdroptest pages 2-3</li>
+<li>lefebvrelegendre2001identificationofa pages 1-2</li>
+<li>lefebvrelegendre2001identificationofa pages 7-8</li>
+<li>schwimmer2006yeastmodelsof pages 6-8</li>
+<li>aiyar2014mitochondrialproteinsorting pages 4-5</li>
+<li>magistrati2023drugdroptest pages 20-21</li>
+<li>https://doi.org/10.1002/prot.20452,</li>
+<li>https://doi.org/10.1074/jbc.m009557200,</li>
+<li>https://doi.org/10.1016/j.bbamcr.2008.07.001,</li>
+<li>https://doi.org/10.1042/bst20130116,</li>
+<li>https://doi.org/10.1002/biot.200500053,</li>
+<li>https://doi.org/10.1038/ncomms6585,</li>
+<li>https://doi.org/10.3390/ijms241310696,</li>
+<li>https://doi.org/10.1038/s41467-022-35720-5,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fmc1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G2TRM0" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="fmc1-spac148611-s-pombe-review-notes">fmc1 (SPAC1486.11) — S. pombe — review notes</h1>
+<p>Journal for the AI GO-annotation review of the <em>S. pombe</em> gene <strong>fmc1</strong><br />
+(systematic name SPAC1486.11; synonym <em>new3</em>; UniProt <strong>G2TRM0</strong>, FMC1_SCHPO).<br />
+"Formation of Mitochondrial Complexes protein 1" — a putative mitochondrial<br />
+F1-ATP-synthase assembly factor. This is an understudied ("dark") gene: UniProt<br />
+lists it as <em>Evidence at transcript level</em> (PE 2), and there is <strong>no direct<br />
+experimental characterization of the fission-yeast protein</strong>. All GO annotations<br />
+are electronic/phylogenetic (IBA, IEA) or ND.</p>
+<h2 id="identity-confirmation-from-fmc1-uniprottxt">Identity confirmation (from fmc1-uniprot.txt)</h2>
+<ul>
+<li><code>ID   FMC1_SCHPO ... 104 AA</code>; <code>AC   G2TRM0</code>.</li>
+<li><code>DE   RecName: Full=ATP synthase assembly factor fmc1, mitochondrial;</code><br />
+<code>AltName: Full=Formation of mitochondrial complexes protein 1;</code><br />
+<code>Flags: Precursor;</code></li>
+<li><code>GN   Name=fmc1; Synonyms=new3; ORFNames=SPAC1486.11;</code></li>
+<li><code>OX   NCBI_TaxID=284812</code> (S. pombe 972 / ATCC 24843).</li>
+<li>Function (by similarity, ECO:0000250): "Needed for the assembly of the<br />
+  mitochondrial F1-F0 complex at high temperature."</li>
+<li>Subcellular location (by similarity): Mitochondrion.</li>
+<li>SIMILARITY: "Belongs to the FMC1 family." (ECO:0000305)</li>
+<li>Features: <code>TRANSIT 1..?  /note="Mitochondrion" /evidence=ECO:0000255</code>;<br />
+<code>CHAIN ?..104</code>. So it carries a predicted N-terminal mitochondrial transit<br />
+  peptide (mito targeting is sequence-predicted, not experimentally mapped).</li>
+<li>Domain/family cross-refs: InterPro <strong>IPR039196 (Fmc1)</strong>; PANTHER <strong>PTHR28015</strong><br />
+  ("ATP SYNTHASE ASSEMBLY FACTOR FMC1, MITOCHONDRIAL"); Pfam <strong>PF13233<br />
+  (Complex1_LYR_2)</strong> — i.e. it belongs to the LYR-motif protein (LYRM)<br />
+  superfamily. PomBase SPAC1486.11 → fmc1.</li>
+<li><code>PE   2: Evidence at transcript level</code> — no protein-level experimental<br />
+  evidence recorded in UniProt for the pombe protein.</li>
+</ul>
+<p>Domain reasoning (inline): 104-aa, small, matrix-soluble-type protein with a<br />
+single Complex1_LYR_2 (LYR-motif) module and a predicted mito transit peptide.<br />
+The LYRM family members typically act as small accessory/assembly factors of<br />
+OXPHOS complexes rather than as enzymes; they have no catalytic domain. This is<br />
+fully consistent with an accessory assembly-factor / chaperone-like role and<br />
+argues <em>against</em> any catalytic (enzyme) molecular function.</p>
+<h2 id="existing-go-annotations-from-fmc1-goatsv">Existing GO annotations (from fmc1-goa.tsv)</h2>
+<ol>
+<li>GO:0005759 mitochondrial matrix — IBA (is_active_in) — GO_REF:0000033<br />
+   (PANTHER PTN001997425 | SGD:S000001360).</li>
+<li>GO:0033615 mitochondrial proton-transporting ATP synthase complex assembly —<br />
+   IBA (involved_in) — GO_REF:0000033 (same PANTHER/SGD source).</li>
+<li>GO:0005739 mitochondrion — IEA (located_in) — GO_REF:0000044<br />
+   (UniProtKB-SubCell SL-0173).</li>
+<li>GO:0033615 (again) — IEA (involved_in) — GO_REF:0000002 (InterPro:IPR039196).</li>
+<li>GO:0003674 molecular_function (root) — ND — GO_REF:0000015 (PomBase). This is<br />
+   the "no biological data available" root-term placeholder: MF is genuinely<br />
+   dark for this protein.</li>
+</ol>
+<p>The IBA source is SGD:S000001360 = <em>S. cerevisiae</em> FMC1 (the founding, and only<br />
+directly-characterized, family member). So the pombe annotations propagate<br />
+budding-yeast biology through the PANTHER tree (PTN001997425).</p>
+<h2 id="family-biology-established-in-s-cerevisiae-not-in-pombe">Family biology — established in S. cerevisiae (NOT in pombe)</h2>
+<p>Founding paper, <strong>PMID:11096112</strong> (Lefebvre-Legendre et al. 2001, J Biol Chem<br />
+276:6789-6796) — <em>S. cerevisiae</em> FMC1. Cached abstract (publications/PMID_11096112.md);<br />
+full_text_available: false (abstract-only). Verbatim quotes available:<br />
+- "We have identified a yeast nuclear gene (FMC1) that is required at elevated<br />
+  temperatures (37 degrees C) for the formation/stability of the F(1) sector of<br />
+  the mitochondrial ATP synthase."<br />
+- "Fmc1p is a soluble protein located in the mitochondrial matrix."<br />
+- "instead of being incorporated into a functional F(1) oligomer, they form<br />
+  large aggregates in the mitochondrial matrix." (of alpha/beta-F1 subunits)<br />
+- "the absence of Fmc1p can be efficiently compensated for by increasing the<br />
+  expression of Atp12p."<br />
+- "unlike Atp12p and Atp11p, Fmc1p is not required in normal growth conditions<br />
+  (28--30 degrees C)."<br />
+- "We propose that Fmc1p is required for the proper folding/stability or<br />
+  functioning of Atp12p in heat stress conditions."</p>
+<p>So the mechanistic model (in budding yeast): Fmc1p is a matrix accessory factor<br />
+that stabilizes/assists the dedicated F1 assembly chaperone <strong>Atp12p</strong> (human<br />
+ATPAF2), which in turn chaperones folding/assembly of the F1 α3β3 head of ATP<br />
+synthase (Complex V). Fmc1p is conditionally required (heat stress) and<br />
+dispensable at normal temperature.</p>
+<p>Human ortholog: <strong>FMC1 / C7orf55</strong> (OMIM 620766, "Formation Of Mitochondrial<br />
+Complex V Assembly Factor 1 Homolog"); member of the LYR-motif protein<br />
+superfamily; linked to Complex V (ATP synthase) assembly and interacting with<br />
+the ATP12/ATPAF2 axis (WebSearch, GeneCards/OMIM; PMC4381221 on LYR proteins<br />
+interacting with mitochondrial complexes). This corroborates conservation of the<br />
+assembly-factor role across fungi and humans.</p>
+<h2 id="known-vs-not-known-for-s-pombe-fmc1-specifically">KNOWN vs NOT-KNOWN for S. pombe fmc1 specifically</h2>
+<p>KNOWN (defensible by orthology + domain, not by pombe experiments):<br />
+- It is a member of the FMC1 family (UniProt SIMILARITY; InterPro IPR039196;<br />
+  PANTHER PTHR28015). High-confidence family assignment.<br />
+- By orthology it is expected to localize to the mitochondrion / matrix<br />
+  (predicted transit peptide + IBA to matrix from the S. cerevisiae ortholog).<br />
+- By orthology it is expected to participate in mitochondrial F1Fo ATP synthase<br />
+  (Complex V) assembly, most plausibly as a chaperone-like accessory factor<br />
+  acting via the Atp12/ATPAF2 F1-assembly chaperone.</p>
+<p>NOT KNOWN (genuine gaps for the pombe protein):<br />
+- No experimental data on the pombe protein at all (PE 2, transcript-level). No<br />
+  IDA/IMP/IPI/IGI annotations exist.<br />
+- Its specific molecular activity is undefined (MF is ND). Whether it acts as a<br />
+  protein-folding chaperone, as an adaptor that stabilizes a partner chaperone<br />
+  (Atp12/ATPAF2 ortholog), or in some other capacity has not been shown in pombe.<br />
+- Whether the fission-yeast protein is, like budding yeast, only <em>conditionally</em><br />
+  (heat-stress) required, or has a broader role, is unknown.<br />
+- No pombe interaction partner has been demonstrated (does an Atp12/ATPAF2<br />
+  ortholog exist in pombe and does fmc1 act on it?). BioGRID lists 1 interaction<br />
+  (unverified here).<br />
+- No loss-of-function phenotype (respiratory competence, growth on non-fermentable<br />
+  carbon source, temperature sensitivity of ATP synthase assembly) has been<br />
+  reported for pombe fmc1.</p>
+<h2 id="planned-review-actions">Planned review actions</h2>
+<ul>
+<li>GO:0005759 mitochondrial matrix (IBA): KEEP_AS_NON_CORE / accept-ish. Matrix<br />
+  localization is orthology-supported (S. cerevisiae Fmc1p is a soluble matrix<br />
+  protein) and is the actual site of F1 assembly. Reasonable IBA; keep.</li>
+<li>GO:0033615 ATP synthase complex assembly (IBA): ACCEPT as the core process.<br />
+  Best-supported functional statement, matches family and the founding paper.</li>
+<li>GO:0005739 mitochondrion (IEA, SubCell): KEEP_AS_NON_CORE — correct but less<br />
+  specific than the matrix (IBA) term; general parent.</li>
+<li>GO:0033615 (IEA, InterPro): ACCEPT — redundant with the IBA but independently<br />
+  domain-supported (IPR039196). Consistent.</li>
+<li>GO:0003674 molecular_function root (ND): KEEP_AS_NON_CORE — honest placeholder;<br />
+  MF genuinely dark. Do not remove (ND root reflects the real state).</li>
+</ul>
+<p>core_functions MF: use GO:0044183 "protein folding chaperone"<br />
+(def: "Binding to a protein or a protein-containing complex to assist the protein<br />
+folding process") — NON-ATP-dependent (Fmc1 has no ATPase; so NOT GO:0140662).<br />
+This is the most defensible MF given the founding-paper mechanism (assists<br />
+folding/stability of the F1 assembly machinery), framed as inferred by orthology.<br />
+BP: GO:0033615. Location: GO:0005759.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G2TRM0
+gene_symbol: fmc1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  fmc1 (Formation of Mitochondrial Complexes protein 1; systematic name
+  SPAC1486.11) is a small (104-residue) mitochondrial protein of fission yeast
+  belonging to the FMC1 family (InterPro IPR039196; PANTHER PTHR28015), a group
+  within the LYR-motif protein (LYRM / Complex1_LYR_2, Pfam PF13233) superfamily
+  of mitochondrial accessory and assembly factors. It carries a predicted
+  N-terminal mitochondrial targeting sequence and is imported into the
+  mitochondrion. By orthology to the well-characterized Saccharomyces cerevisiae
+  Fmc1p, it is inferred to be a soluble matrix protein that acts as an accessory
+  assembly factor for the F1 sector (the catalytic alpha3beta3 head) of the
+  mitochondrial F1Fo-ATP synthase (Complex V), most plausibly by assisting the
+  folding, stability or function of the dedicated F1 assembly chaperone Atp12
+  (human ATPAF2). In budding yeast this requirement is conditional, becoming
+  critical at elevated temperature, where loss of Fmc1p causes the newly imported
+  alpha-F1 and beta-F1 subunits to aggregate in the matrix instead of assembling
+  into functional F1. The fission-yeast protein itself has not been functionally
+  characterized; its specific molecular activity, partners and loss-of-function
+  phenotype remain undetermined.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: PMID:11096112
+  title: Identification of a nuclear gene (FMC1) required for the assembly/stability
+    of yeast mitochondrial F(1)-ATPase in heat stress conditions.
+  findings:
+  - statement: &gt;-
+      The founding, and only directly characterized, family member — S. cerevisiae
+      Fmc1p — is a soluble mitochondrial matrix protein required at elevated
+      temperature for formation/stability of the F1 sector of ATP synthase; in its
+      absence the alpha-F1 and beta-F1 subunits aggregate in the matrix rather than
+      assembling into F1.
+    supporting_text: &gt;-
+      We have identified a yeast nuclear gene (FMC1) that is required at elevated
+      temperatures (37 degrees C) for the formation/stability of the F(1) sector of
+      the mitochondrial ATP synthase.
+  - statement: &gt;-
+      Fmc1p acts genetically upstream of, or together with, the F1 assembly
+      chaperone Atp12p: overexpression of Atp12p rescues loss of Fmc1p, leading to
+      the model that Fmc1p is needed for proper folding/stability or function of
+      Atp12p.
+    supporting_text: &gt;-
+      We propose that Fmc1p is required for the proper folding/stability or
+      functioning of Atp12p in heat stress conditions.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified (PMID:11096112, J Biol Chem 2001; DOI 10.1074/jbc.M009557200).
+      Establishes the FMC1 family function in S. cerevisiae, from which the S. pombe
+      fmc1 annotations are propagated (the IBA source is SGD:S000001360). Abstract
+      only in cache; used strictly for family-level (orthology) support, not as
+      direct evidence about the pombe protein.
+existing_annotations:
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Matrix localization is well supported at the family level: the characterized
+      S. cerevisiae ortholog is a soluble matrix protein, and the matrix is the
+      compartment where the F1 alpha3beta3 head is assembled. fmc1 carries a
+      predicted mitochondrial transit peptide. Kept as a correct, informative
+      localization, but treated as non-core because it has not been shown
+      experimentally for the pombe protein.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      IBA propagated from SGD:S000001360; consistent with the founding paper showing
+      Fmc1p is a soluble matrix protein, and with the predicted N-terminal transit
+      peptide. Correct and specific, but the localization of the pombe protein is
+      inferred, not experimentally demonstrated.
+    supported_by:
+    - reference_id: PMID:11096112
+      supporting_text: &gt;-
+        Fmc1p is a soluble protein located in the mitochondrial matrix.
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      This is the best-supported functional statement for fmc1 and represents its
+      core biological role: participation in assembly of the mitochondrial
+      proton-transporting ATP synthase (Complex V). The term is directly supported
+      by the family-defining function established for the S. cerevisiae ortholog and
+      by the InterPro/PANTHER family assignment. Retained as core.
+    action: ACCEPT
+    reason: &gt;-
+      Family-defining biological process, propagated by phylogeny (IBA from
+      SGD:S000001360) and independently supported by the InterPro Fmc1 signature.
+      Matches the founding paper, in which Fmc1p is required for assembly/stability
+      of the F1 sector of ATP synthase.
+    supported_by:
+    - reference_id: PMID:11096112
+      supporting_text: &gt;-
+        We have identified a yeast nuclear gene (FMC1) that is required at elevated
+        temperatures (37 degrees C) for the formation/stability of the F(1) sector of
+        the mitochondrial ATP synthase.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Correct but general parent term derived from the UniProt Subcellular Location
+      mapping (SL-0173, Mitochondrion). It is subsumed by the more specific
+      mitochondrial matrix annotation, so it is kept as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate compartment assignment consistent with the predicted transit peptide,
+      but less informative than GO:0005759 (mitochondrial matrix); redundant parent.
+- term:
+    id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO annotation from the Fmc1 signature (IPR039196), giving the same
+      ATP-synthase-assembly process as the IBA annotation. It corroborates the core
+      biological process from an independent (domain-based) line of evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Domain-based support (InterPro IPR039196 -&gt; GO:0033615) that is concordant with
+      the phylogenetic (IBA) annotation and with the family function; a well-founded
+      electronic annotation to the core process.
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root molecular_function annotation with the ND (No biological Data) evidence
+      code, correctly flagging that no specific molecular activity has been
+      determined for fmc1. This honestly reflects the state of knowledge: the
+      molecular function is genuinely dark. See knowledge_gaps and core_functions
+      for the orthology-based inference of a chaperone-like assembly-factor activity.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Legitimate ND placeholder; the specific molecular function of fmc1 is
+      undetermined. It should not be removed, as it accurately records that the MF
+      aspect is uncurated/unknown rather than annotated to a specific activity.
+- term:
+    id: GO:0044183
+    label: protein folding chaperone
+  evidence_type: ISS
+  original_reference_id: PMID:11096112
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Proposed molecular function inferred by orthology (not present in the current
+      GOA). The characterized S. cerevisiae ortholog assists the folding/stability or
+      function of the F1 assembly chaperone Atp12p, a non-catalytic chaperone-like
+      activity that fits the FMC1/LYR-motif family (no catalytic domain). Offered as
+      the most defensible specific MF to replace the ND placeholder, pending
+      experimental confirmation in fission yeast.
+    action: NEW
+    reason: &gt;-
+      fmc1 has no annotated specific molecular function (MF is ND). A protein-folding
+      chaperone activity is the best-supported inference from the family-defining
+      function of the S. cerevisiae ortholog and from the domain architecture; not
+      ATP-dependent (no ATPase), so GO:0044183 rather than GO:0140662. Marked ISS and
+      non-verified for the pombe protein. Note this is a second-order inference: the
+      founding data show Fmc1p acts on the F1 assembly chaperone Atp12p, so a competing
+      hypothesis is that fmc1 is not itself the folding chaperone but an adaptor/stabilizer
+      of a partner chaperone (e.g. GO:0051087 protein-folding chaperone binding); the two
+      cannot be distinguished without direct assays (see knowledge_gaps).
+    supported_by:
+    - reference_id: PMID:11096112
+      supporting_text: &gt;-
+        We propose that Fmc1p is required for the proper folding/stability or
+        functioning of Atp12p in heat stress conditions.
+core_functions:
+- description: &gt;-
+    Mitochondrial accessory assembly factor for the F1Fo-ATP synthase (Complex V).
+    By orthology to S. cerevisiae Fmc1p and consistent with its LYR-motif/FMC1-family
+    domain architecture, fmc1 is inferred to act as a chaperone-like factor in the
+    mitochondrial matrix that assists assembly of the catalytic F1 (alpha3beta3) head
+    of ATP synthase, most plausibly by supporting the folding, stability or function
+    of the dedicated F1 assembly chaperone Atp12 (human ATPAF2). It has no catalytic
+    domain, consistent with a non-enzymatic, non-ATP-dependent chaperone role. This
+    core function is inferred, not yet demonstrated in fission yeast.
+  molecular_function:
+    id: GO:0044183
+    label: protein folding chaperone
+  directly_involved_in:
+  - id: GO:0033615
+    label: mitochondrial proton-transporting ATP synthase complex assembly
+  locations:
+  - id: GO:0005759
+    label: mitochondrial matrix
+  supported_by:
+  - reference_id: PMID:11096112
+    supporting_text: &gt;-
+      We propose that Fmc1p is required for the proper folding/stability or
+      functioning of Atp12p in heat stress conditions.
+  - reference_id: PMID:11096112
+    supporting_text: &gt;-
+      We have identified a yeast nuclear gene (FMC1) that is required at elevated
+      temperatures (37 degrees C) for the formation/stability of the F(1) sector of
+      the mitochondrial ATP synthase.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The specific molecular activity of the fission-yeast fmc1 protein is
+    undetermined. Whether it acts as a protein-folding chaperone in its own right,
+    as an adaptor that stabilizes a partner chaperone (an Atp12/ATPAF2 ortholog), or
+    in some other capacity has not been shown; the GO molecular_function is ND.
+  boundary: &gt;-
+    The protein is confidently placed in the FMC1 family (InterPro IPR039196,
+    PANTHER PTHR28015) and carries a single LYR-motif (Complex1_LYR_2) module and a
+    predicted mitochondrial transit peptide, implying a non-catalytic accessory role
+    in ATP synthase assembly. The founding S. cerevisiae study established that the
+    ortholog assists folding/stability or function of the F1 assembly chaperone
+    Atp12p.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Pinning down the molecular activity would convert an orthology-based inference
+    into an experimentally grounded function and clarify how the LYR-motif fold of
+    FMC1-family proteins contributes to Complex V biogenesis.
+  resolution: &gt;-
+    Biochemical characterization of the pombe protein (e.g. interaction/complex
+    assays with the pombe Atp12/ATPAF2 ortholog and F1 subunits; in-organello F1
+    assembly assays in an fmc1-null background).
+  provenance:
+  - reference_id: PMID:11096112
+    supporting_text: &gt;-
+      We propose that Fmc1p is required for the proper folding/stability or
+      functioning of Atp12p in heat stress conditions.
+- gap_statement: &gt;-
+    It is not known whether the F1-ATP-synthase-assembly role attributed to fmc1 is
+    demonstrated in S. pombe or is purely inferred by orthology. All fission-yeast
+    GO annotations are electronic or phylogenetic (IBA/IEA); none are experimental.
+  boundary: &gt;-
+    In S. cerevisiae the assembly role is experimentally established, including the
+    aggregation of alpha/beta-F1 subunits on loss of Fmc1p and rescue by Atp12p
+    overexpression. UniProt records the pombe protein only at transcript level
+    (Evidence at transcript level, PE 2).
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Distinguishing demonstrated from inferred function prevents over-reading the
+    IBA/IEA annotations as direct evidence and identifies the pombe protein as a
+    target for experimental validation.
+  provenance:
+  - reference_id: PMID:11096112
+    supporting_text: &gt;-
+      Identification of a nuclear gene (FMC1) required for the assembly/stability of
+  - reference_id: file:SCHPO/fmc1/fmc1-deep-research-falcon.md
+    supporting_text: &gt;-
+      No direct experimental studies on *fmc1* in *S. pombe* were identified during this review
+- gap_statement: &gt;-
+    No loss-of-function phenotype has been reported for S. pombe fmc1, and it is
+    unknown whether (as in budding yeast) its requirement is conditional
+    (heat-stress specific) or broader, and whether a functional Atp12/ATPAF2 partner
+    exists and is engaged in fission yeast.
+  boundary: &gt;-
+    In S. cerevisiae, Fmc1p is dispensable at normal growth temperature (28-30 C)
+    but required at 37 C, and its loss is compensated by Atp12p overexpression;
+    no equivalent conditional-phenotype or partner data exist for the pombe gene.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A conditional (stress-dependent) versus constitutive requirement changes how the
+    gene should be annotated for biological process and regulation, and whether an
+    ATP-synthase-assembly defect is the primary phenotype.
+  provenance:
+  - reference_id: PMID:11096112
+    supporting_text: &gt;-
+      unlike Atp12p and Atp11p, Fmc1p is not required in normal growth conditions
+      (28--30 degrees C).
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does S. pombe fmc1 physically interact with a fission-yeast Atp12/ATPAF2
+    ortholog and with the F1 alpha/beta subunits, and is its requirement for ATP
+    synthase assembly conditional (e.g. heat-stress specific) as in budding yeast?
+suggested_experiments:
+- hypothesis: &gt;-
+    fmc1 is required for assembly of the F1 sector of mitochondrial ATP synthase in
+    S. pombe, acting through the Atp12/ATPAF2 assembly chaperone.
+  description: &gt;-
+    Construct an fmc1-null strain and assess respiratory competence and growth on a
+    non-fermentable carbon source at normal and elevated temperature; quantify
+    assembled F1Fo-ATP synthase (blue-native PAGE / activity assays) and test for
+    accumulation/aggregation of unassembled alpha-F1 and beta-F1 subunits in the
+    matrix. Complement with tagged-protein pulldowns to identify the pombe Atp12
+    ortholog and F1 subunits as interaction partners.
+  experiment_type: genetics and biochemistry
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTT3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GTT3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P39996" target="_blank" class="term-link">
+                        P39996
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GTT3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P39996" data-a="DESCRIPTION: GTT3 (systematic name YEL017W) encodes an understu..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GTT3 (systematic name YEL017W) encodes an understudied Saccharomyces cerevisiae multi-pass membrane protein of 337 residues. It has a large N-terminal cytoplasmic region containing two disordered, phosphorylation-bearing low-complexity segments, followed by two transmembrane helices that anchor it in the membrane. Global GFP localization and an N-terminal-tag localization library independently place the protein at the nuclear envelope / nuclear periphery. Although named &#34;glutathione transferase 3&#34; by analogy to the yeast Gtt/Gto glutathione transferases, GTT3 carries a distinct, GTT3-specific domain architecture (the InterPro &#34;putative GTT3&#34; signature IPR038872 with Pfam GTT3_N) rather than the canonical soluble glutathione S-transferase fold, and no glutathione-conjugation activity, substrate, or catalytic mechanism has been demonstrated for it. Its molecular function and biological role remain unknown.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P39996" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) inference that Gtt3 is a membrane protein. This is consistent with the UniProt topology model, which annotates two transmembrane helices and classifies Gtt3 as a multi-pass membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The membrane localization is well supported: UniProt models transmembrane segments at residues 240-260 and 314-336 and describes Gtt3 as a multi-pass membrane protein, and two independent high-throughput localization datasets place it at the nuclear envelope. The term is broad but not incorrect. A more specific cellular-component term (nuclear membrane) is also present in GOA and better captures the location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P39996
+
+                                </span>
+
+                                <div class="support-text">TRANSMEM        240..260</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P39996
+
+                                </span>
+
+                                <div class="support-text">TRANSMEM        314..336</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                    GO:0031965
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P39996" data-a="GO:0031965" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation to nuclear membrane derived from the UniProt Subcellular Location vocabulary. UniProt records &#34;Nucleus membrane; Multi-pass membrane protein&#34;, based on the Huh et al. global GFP localization study.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most informative and best-supported cellular-component annotation for Gtt3. It is corroborated by an independent experimental screen (the SWAp-Tag N&#39;-GFP library) that assigns Gtt3 a nuclear-periphery localization (GO:0034399, HDA). The nuclear-envelope location, together with the multi-pass topology, is the core established fact about this protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:P39996
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                                        PMID:14562095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">into 22 distinct subcellular localization categories</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034399" target="_blank" class="term-link">
+                                    GO:0034399
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear periphery</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26928762" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:26928762
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    One library to make them all: streamlining the creation of y...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P39996" data-a="GO:0034399" data-r="PMID:26928762" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct-assay (HDA) localization to the nuclear periphery from the SWAp-Tag (SWAT) N&#39;-terminal GFP library, in which each strain was imaged and manually assigned up to three subcellular localization categories, one of which is &#34;Nuclear periphery&#34;.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This experimental localization is consistent with, and complementary to, the UniProt nuclear-membrane annotation and the Huh et al. GFP screen. Nuclear periphery (the nuclear-lumen region proximal to the inner nuclear membrane) is an appropriate descriptor for a nuclear-envelope multi-pass membrane protein. There is no reason to overrule this curator-assigned experimental call.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26928762" target="_blank" class="term-link">
+                                        PMID:26928762
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Nuclear periphery; Nucleolus; Nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P39996" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The molecular function of Gtt3 is annotated ND (no data). No enzymatic activity, substrate, catalytic mechanism, transporter activity, or specific binding has been demonstrated for the YEL017W protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ND annotation is the correct and honest representation of the current evidence. Although Gtt3 is named &#34;glutathione transferase 3&#34;, this is an annotation-by-name/family assignment (PANTHER PTHR41807; InterPro IPR038872 is literally named &#34;Put_GTT3&#34;, i.e. putative). Gtt3 carries a GTT3-specific domain architecture distinct from the canonical soluble glutathione S-transferases Gtt1/Gtt2 and the omega-class Gto1-3, it has a multi-pass membrane topology unlike those soluble enzymes, and no glutathione-conjugation assay has ever been reported for it. Inferring glutathione transferase activity (GO:0004364) would over-annotate the gene, so ND is retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GTT3/GTT3-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">no direct enzymatic assay, substrate specificity, or catalytic mechanism for the specific YEL017W protein was retrieved</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GTT3/GTT3-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">possesses unique domains (Put_GTT3, GTT3_N) that distinguish it from these paralogs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P39996" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The biological process is annotated ND (no data). No specific process has been experimentally assigned to Gtt3.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retaining ND is appropriate. Unlike its namesake paralogs Gtt1 and Gtt2, which are transcriptionally induced by H2O2 and cumene hydroperoxide and are implicated in oxidative-stress detoxification, GTT3 is not induced under oxidative stress (its transcription is unchanged in a frataxin-deficient oxidative-stress model), which argues against simply transferring an oxidative-stress / glutathione-metabolism process from the paralogs. The only reported deletion phenotype (altered prodeoxyviolacein output in a SCRaMbLE synthetic-chromosome experiment) is mechanistically unresolved and confounded by co-deletions, and cannot support a specific process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GTT3/GTT3-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">GTT3 transcription was not detectably altered</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:yeast/GTT3/GTT3-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">the exact mechanism by which YEL017W deletion increases PDV productivity was not elucidated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Gtt3 is a nuclear-envelope multi-pass membrane protein. Its subcellular location is the only well-established aspect of its function; its molecular activity and the biological process it participates in are unknown. The &#34;glutathione transferase&#34; name is an unverified family/name assignment and is not supported by any demonstrated glutathione-conjugation activity.</h3>
+                <span class="vote-buttons" data-g="P39996" data-a="FUNCTION: Gtt3 is a nuclear-envelope multi-pass membrane pro..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031965" target="_blank" class="term-link">
+                                nuclear membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034399" target="_blank" class="term-link">
+                                nuclear periphery
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:P39996
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26928762" target="_blank" class="term-link">
+                                PMID:26928762
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Nuclear periphery; Nucleolus; Nucleus</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:P39996
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for GTT3_YEAST (P39996)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Gtt3 is a multi-pass membrane protein with two transmembrane helices and is localized to the nuclear membrane; it is named glutathione transferase 3 but no molecular function is experimentally established.</div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Global GFP-fusion localization study that is the basis for the UniProt nuclear-membrane annotation of Gtt3.</div>
+
+                        <div class="finding-text">"into 22 distinct subcellular localization categories"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26928762" target="_blank" class="term-link">
+                            PMID:26928762
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">One library to make them all: streamlining the creation of yeast libraries via a SWAp-Tag strategy.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SWAp-Tag N&#39;-terminal GFP library methods paper; source of the SGD HDA nuclear-periphery localization for Gtt3. Localization categories assigned by manual imaging include &#34;Nuclear periphery&#34;.</div>
+
+                        <div class="finding-text">"Nuclear periphery; Nucleolus; Nucleus"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:yeast/GTT3/GTT3-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon deep research report for GTT3 (YEL017W)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Comprehensive literature synthesis finding no direct biochemical, enzymatic, or localization characterization specific to Gtt3, and noting its distinct domain architecture and lack of oxidative-stress co-regulation with Gtt1/Gtt2.</div>
+
+                        <div class="finding-text">"no direct enzymatic assay, substrate specificity, or catalytic mechanism for the specific YEL017W protein was retrieved"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is Gtt3 a bona fide glutathione transferase, or is the &#34;glutathione transferase 3&#34; name an unverified family assignment? Does purified Gtt3 catalyze glutathione conjugation of any electrophilic substrate?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="Q: Is Gtt3 a bona fide glutathione transferase, or is..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the functional significance of Gtt3&#39;s nuclear-envelope multi-pass membrane topology, and which nuclear-membrane proteins or complexes does it interact with?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="Q: What is the functional significance of Gtt3&#39;s nucl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do the N-terminal Cdk1/phosphorylation sites regulate Gtt3, and does Gtt3 have a cell-cycle- or nuclear-envelope-related role distinct from the oxidative-stress roles of its paralogs Gtt1/Gtt2?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="Q: Do the N-terminal Cdk1/phosphorylation sites regul..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify recombinant Gtt3 and assay glutathione S-transferase activity against canonical (CDNB) and alternative electrophilic substrates, alongside Gtt1/Gtt2 as positive controls, to test the GST hypothesis directly.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemistry</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="EXPERIMENT: Purify recombinant Gtt3 and assay glutathione S-tr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the Gtt3 protein fold (experimental structure or AlphaFold analysis of the GTT3_N domain) and compare it with the canonical cytosolic GST fold to assess whether a catalytic GSH-binding site is present.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: structural_biology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="EXPERIMENT: Determine the Gtt3 protein fold (experimental stru..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Identify Gtt3 physical interactors by affinity-purification mass spectrometry of endogenously tagged, functional Gtt3, focusing on nuclear-envelope and membrane-protein partners.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="EXPERIMENT: Identify Gtt3 physical interactors by affinity-pur..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Phenotype a gtt3-null strain (and gtt3 combined with gtt1/gtt2/gto deletions) across stress conditions and cell-cycle assays to assign a biological process and test for redundancy with the other glutathione transferases.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P39996" data-a="EXPERIMENT: Phenotype a gtt3-null strain (and gtt3 combined wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The molecular function of Gtt3 (YEL017W) is unknown. Despite the name &#34;glutathione transferase 3&#34;, no glutathione-conjugation (or any other) enzymatic activity, substrate, catalytic mechanism, transporter activity, or specific binding partner has ever been demonstrated for the protein; it is not even established that Gtt3 is a bona fide glutathione transferase.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> What is established is the protein&#39;s location and topology: Gtt3 is a multi-pass membrane protein (two transmembrane helices) with a large cytoplasmic N-terminal region, localized to the nuclear envelope / nuclear periphery by two independent high-throughput screens (Huh et al. global GFP; the SWAp-Tag N&#39;-GFP library), and it is expressed at the protein level and phosphorylated on several N-terminal serines. Its GTT3-specific domain architecture (InterPro &#34;putative GTT3&#34; IPR038872 / Pfam GTT3_N) differs from the soluble Gtt1/Gtt2 and omega-class Gto1-3 glutathione transferases, and unlike them it is not induced by oxidative stress.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Gtt3 belongs to a conserved family (PANTHER PTHR41807 spans more than 1200 proteins across more than 2500 taxa) that has no experimentally established molecular function at any level, so resolving Gtt3 would illuminate a widespread but wholly dark protein family. The mismatch between its &#34;glutathione transferase&#34; name and its atypical membrane topology and non-canonical domains makes it a candidate mis-annotation whose correct function is unknown.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Biochemical activity screens on purified Gtt3 (including glutathione-conjugation assays with CDNB and other electrophiles to test the GST hypothesis directly); structure determination / AlphaFold-based fold assignment to test whether the GTT3_N domain adopts a GST fold; affinity-purification mass spectrometry to identify nuclear-envelope partners; and phenotyping of a gtt3-null (and its combination with gtt1/gtt2/gto deletions) to assign a biological process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"no direct enzymatic assay, substrate specificity, or catalytic mechanism for the specific YEL017W protein was retrieved"</em> — file:yeast/GTT3/GTT3-deep-research-falcon.md</li>
+
+                <li><em>"no direct localization study for YEL017W/Gtt3 was found in the retrieved literature"</em> — file:yeast/GTT3/GTT3-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GTT3-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P39996" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">17 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:12:08.900175</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="GTT3-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h2 id="research-report-gtt3-yel017w-glutathione-transferase-3-in-saccharomyces-cerevisiae">Research Report: GTT3 (YEL017W) — Glutathione Transferase 3 in <em>Saccharomyces cerevisiae</em></h2>
+<h3 id="important-note-on-literature-availability">Important Note on Literature Availability</h3>
+<p>GTT3 (systematic name YEL017W; UniProt accession P39996) is a <strong>poorly characterized</strong> protein in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). Despite extensive searching across primary literature, reviews, and high-throughput datasets, very little direct biochemical or functional characterization of Gtt3p was identified. The vast majority of research on yeast glutathione transferases focuses on the better-characterized family members GTT1 and GTT2. The following report synthesizes all available evidence, clearly distinguishing between direct evidence for GTT3 and inferences drawn from family context.</p>
+<hr />
+<h3 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h3>
+<p>GTT3 (YEL017W) encodes a protein annotated as "Glutathione transferase 3" in <em>S. cerevisiae</em>. The protein is 285 amino acids in length and contains two distinctive domains: Put_GTT3 (IPR038872) and GTT3_N (PF27945). These domains are specific to GTT3 and its close homologs, and are not shared with the better-characterized yeast glutathione transferases Gtt1 and Gtt2, nor with the omega-class glutathione transferases (Gto1, Gto2, Gto3). This domain architecture suggests that Gtt3p may represent a structurally and functionally distinct class of glutathione transferase within the yeast proteome.</p>
+<h3 id="2-family-context-yeast-glutathione-transferases">2. Family Context: Yeast Glutathione Transferases</h3>
+<p><em>S. cerevisiae</em> possesses multiple glutathione-related transferases. The best characterized are:</p>
+<ul>
+<li>
+<p><strong>Gtt1 and Gtt2</strong>: These are the two canonical glutathione S-transferases (GSTs) that act on standard GST substrates such as 1-chloro-2,4-dinitrobenzene (CDNB). They catalyze the enzymatic conjugation of glutathione (GSH) with a multitude of exogenously and endogenously derived toxic compounds (mariani2008involvementofglutathione pages 2-4). Gtt1 has been described as a membrane-bound, ER-localized glutathione S-transferase, while Gtt2 has been characterized as a mitochondrial GST. Both are involved in oxidative stress defense, particularly during H₂O₂ exposure (mariani2008involvementofglutathione pages 4-6, mariani2008involvementofglutathione pages 1-2).</p>
+</li>
+<li>
+<p><strong>Gto1, Gto2, Gto3</strong>: These are omega-class glutathione transferases that display homology with human omega-class GSTs. Their enzyme activities differ from those of the Gtt isoforms, and they act as 1-Cys thiol transferases related to glutaredoxins Grx1 and Grx2 (mariani2008involvementofglutathione pages 8-9, mariani2008involvementofglutathione pages 1-2).</p>
+</li>
+<li>
+<p><strong>GTT3 (YEL017W)</strong>: Grouped by name with the Gtt family but possesses unique domains (Put_GTT3, GTT3_N) that distinguish it from both Gtt1/Gtt2 and the Gto proteins. No direct biochemical characterization of Gtt3p enzymatic activity was identified in the available literature.</p>
+</li>
+</ul>
+<p>The following table summarizes the comparative features of the three GTT-family members:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Systematic name</th>
+<th>Protein / annotation</th>
+<th>Known or reported localization</th>
+<th>Characterized function</th>
+<th>Evidence summary</th>
+<th>Level of characterization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GTT1</strong></td>
+<td>not established from gathered evidence</td>
+<td>Glutathione transferase 1</td>
+<td>Endoplasmic reticulum / membrane-bound, based on review citation to earlier primary work; also treated broadly as a yeast GST acting on standard GST substrates (mariani2008involvementofglutathione pages 1-2)</td>
+<td>Canonical GST activity: conjugates glutathione (GSH) to electrophilic substrates; implicated in oxidative-stress defense, especially during <strong>H2O2</strong> exposure; contributes to control of protein oxidation and cell survival/apoptosis-related stress outcomes (mariani2008involvementofglutathione pages 4-6, mariani2008involvementofglutathione pages 2-4, hayes2005glutathionetransferases. pages 6-7)</td>
+<td>Primary evidence in the gathered set focuses on oxidative-stress phenotypes and standard GST function, but not on a fully resolved substrate spectrum for yeast Gtt1 specifically (mariani2008involvementofglutathione pages 4-6, mariani2008involvementofglutathione pages 2-4, hayes2005glutathionetransferases. pages 6-7)</td>
+<td><strong>Moderately characterized</strong></td>
+</tr>
+<tr>
+<td><strong>GTT2</strong></td>
+<td>not established from gathered evidence</td>
+<td>Glutathione transferase 2</td>
+<td>Often described as mitochondrial in the literature context gathered; direct localization evidence was not independently retrieved here, so this should be treated cautiously (auchere2008glutathionedependentredoxstatus pages 3-4)</td>
+<td>Canonical GST activity with major role in oxidative-stress defense; especially important for detoxifying lipid peroxides / oxidized products and limiting lipid peroxidation and protein carbonylation during <strong>H2O2</strong> stress (mariani2008involvementofglutathione pages 6-8, mariani2008involvementofglutathione pages 1-2, mariani2008involvementofglutathione pages 2-4)</td>
+<td>Best-supported functional member in the gathered evidence set; repeatedly linked to peroxide stress and detoxification of oxidized cellular components (mariani2008involvementofglutathione pages 6-8, mariani2008involvementofglutathione pages 1-2, sha2013thegenomewideearly pages 9-11)</td>
+<td><strong>Moderately to well characterized</strong></td>
+</tr>
+<tr>
+<td><strong>GTT3</strong></td>
+<td><strong>YEL017W</strong></td>
+<td>Glutathione transferase 3; UniProt target P39996</td>
+<td><strong>Unknown from the gathered primary evidence</strong>; no direct localization study for YEL017W/Gtt3 was found in the retrieved literature</td>
+<td><strong>Specific biochemical activity remains unclear</strong>. By annotation and family context, Gtt3 is expected to be a GST-like protein, but no direct enzymatic assay, substrate specificity, or catalytic mechanism for the specific YEL017W protein was retrieved. Expression was measured in frataxin-deficient yeast and showed no major change (relative expression ~1.14 in YNB; ~0.86 in iron-supplemented YNB) (auchere2008glutathionedependentredoxstatus pages 5-6, auchere2008glutathionedependentredoxstatus pages 4-5)</td>
+<td>The strongest direct evidence retrieved is that <strong>GTT3 transcription was not detectably altered</strong> in the frataxin-deficient oxidative-stress model, unlike some other glutathione-related genes (auchere2008glutathionedependentredoxstatus pages 5-6, auchere2008glutathionedependentredoxstatus pages 4-5). A deletion including <strong>YEL017W</strong> was associated with increased prodeoxyviolacein production in SCRaMbLE experiments, but mechanism was not resolved (wang2018ringsyntheticchromosome pages 5-6)</td>
+<td><strong>Poorly characterized / largely uncharacterized</strong></td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table compares the three Saccharomyces cerevisiae glutathione transferase genes discussed in the evidence, highlighting that GTT1 and GTT2 are functionally better supported, whereas GTT3/YEL017W remains poorly characterized with little direct biochemical or localization evidence.</em></p>
+<h3 id="3-presumed-enzymatic-function">3. Presumed Enzymatic Function</h3>
+<p>Based on its annotation as a glutathione transferase, Gtt3p is predicted to catalyze the conjugation of the tripeptide glutathione (γ-L-glutamyl-L-cysteinyl-glycine) with electrophilic substrates. The general mechanism of GSTs involves nucleophilic attack by the thiol group of reduced glutathione (GSH) on nonpolar compounds containing electrophilic carbon, nitrogen, or sulfur atoms (hayes2005glutathionetransferases. pages 1-3). This reaction produces less reactive, more water-soluble conjugates that can be further processed and excreted. Substrates for GSTs broadly include α,β-unsaturated carbonyls (such as 4-hydroxynonenal from lipid peroxidation), epoxides, quinones, and various xenobiotics (hayes2005glutathionetransferases. pages 6-7, hayes2005glutathionetransferases. pages 4-6). In yeast specifically, Gtt1 and Gtt2 have been shown to protect cells from lipid peroxidation and protein carbonylation during oxidative stress (mariani2008involvementofglutathione pages 6-8, mariani2008involvementofglutathione pages 4-6).</p>
+<p><strong>However, no direct enzymatic assay data for Gtt3p was identified.</strong> Its substrate specificity, catalytic efficiency, and whether it acts on the canonical GST substrate CDNB or on alternative substrates remain unknown. The unique domain architecture (Put_GTT3, GTT3_N) suggests that Gtt3p may have a distinct substrate preference or catalytic activity compared to Gtt1 and Gtt2.</p>
+<h3 id="4-subcellular-localization">4. Subcellular Localization</h3>
+<p>No direct experimental localization of Gtt3p was found in the retrieved literature. The global yeast GFP localization study by Huh et al. (2003, <em>Nature</em> 425:686–691) is the standard reference for yeast protein localization, but the Huh et al. paper was unobtainable in this search, and no specific localization data for YEL017W/Gtt3p was retrieved from secondary sources. By contrast, Gtt1p has been described as an endoplasmic reticulum (ER)-localized, membrane-bound glutathione S-transferase, and Gtt2p has been associated with mitochondria (mariani2008involvementofglutathione pages 1-2). The localization of Gtt3p remains an open question.</p>
+<h3 id="5-gene-expression-and-regulation">5. Gene Expression and Regulation</h3>
+<p>Quantitative PCR analysis in a yeast model of Friedreich's ataxia (frataxin-deficient <em>S. cerevisiae</em>) measured GTT3 expression alongside other glutathione-related genes. The relative expression ratio of GTT3 in frataxin-deficient versus wild-type cells was 1.14 ± 0.45 on standard YNB medium and 0.86 ± 0.17 on iron-supplemented YNB medium, indicating that GTT3 transcription was not significantly altered under these oxidative stress conditions (auchere2008glutathionedependentredoxstatus pages 5-6, auchere2008glutathionedependentredoxstatus pages 4-5). The authors concluded that there was "no evidence of a change in transcription of... the glutathione transferase GTT1-3" in frataxin-deficient cells, even though these cells exhibited severe oxidative stress with elevated glutathione peroxidase activity, depleted NADPH, and increased G6PDH activity (auchere2008glutathionedependentredoxstatus pages 4-5).</p>
+<p>This is in contrast to GTT1 and GTT2, which are both transcriptionally upregulated in response to cumene hydroperoxide (CHP) and H₂O₂ stress (sha2013thegenomewideearly pages 9-11). The lack of GTT3 induction under oxidative stress conditions suggests either that GTT3 is constitutively expressed, that it responds to different stress signals, or that it has a distinct physiological role from GTT1/GTT2.</p>
+<h3 id="6-phenotypic-effects-of-deletion">6. Phenotypic Effects of Deletion</h3>
+<p>In SCRaMbLE (Synthetic Chromosome Recombination and Modification by LoxP-mediated Evolution) experiments using a ring synthetic chromosome V, deletion of YEL017W was identified among a set of gene deletions (along with YEL017C-A, YER151C, and YER182W) that contributed to increased production of prodeoxyviolacein (PDV), a chromogenic compound used as a phenotypic marker (wang2018ringsyntheticchromosome pages 5-6). The SCRaMbLEd strain showed approximately 3.48-fold increased PDV production compared to the control strain (zhou2021directedgenomeevolution pages 9-10). However, the exact mechanism by which YEL017W deletion increases PDV productivity was not elucidated, and the deletion was identified in combination with other genetic changes, making it difficult to attribute the phenotype solely to loss of GTT3 (wang2018ringsyntheticchromosome pages 5-6).</p>
+<h3 id="7-biological-pathways">7. Biological Pathways</h3>
+<p>Given its annotation as a glutathione transferase, Gtt3p is expected to participate in glutathione metabolism and potentially in cellular detoxification pathways. The yeast glutathione system is a major component of the antioxidant defense network, involved in:</p>
+<ul>
+<li><strong>Detoxification of reactive oxygen species (ROS)</strong> and their by-products, including lipid peroxides and oxidized proteins (mariani2008involvementofglutathione pages 6-8, mariani2008involvementofglutathione pages 4-6)</li>
+<li><strong>Conjugation of xenobiotics</strong> with glutathione to form less toxic, water-soluble products for vacuolar sequestration or export (mariani2008involvementofglutathione pages 2-4)</li>
+<li><strong>Maintenance of cellular redox homeostasis</strong> through glutathione cycling (mariani2008involvementofglutathione pages 8-9)</li>
+</ul>
+<p>However, the specific pathway in which Gtt3p operates cannot be definitively assigned from current evidence. The fact that GTT3 expression is not induced by oxidative stress in the frataxin-deficiency model, unlike GTT2, may suggest a role distinct from canonical oxidative stress defense.</p>
+<h3 id="8-structural-features-and-evolutionary-context">8. Structural Features and Evolutionary Context</h3>
+<p>Gtt3p contains two domains unique to this protein family: Put_GTT3 (IPR038872) and GTT3_N (PF27945). These domains are not found in the canonical cytosolic GST superfamily classes (alpha, mu, pi, sigma, theta, omega, zeta) that have been extensively characterized in mammals (hayes2005glutathionetransferases. pages 9-12). The distinctive domain architecture suggests that Gtt3p may represent a fungal-specific or <em>Saccharomyces</em>-specific variation of the glutathione transferase fold. Recent work using AI-based structure prediction (AlphaFold) has revealed "hidden" glutathione transferases in the human genome that share the cytosolic GST fold but have divergent sequences, suggesting that GST-fold proteins are more diverse than previously appreciated. Similar analysis could potentially illuminate the structural relationship of Gtt3p to other GST-fold proteins, but such analysis specific to Gtt3p was not identified in the literature.</p>
+<h3 id="9-summary-and-conclusions">9. Summary and Conclusions</h3>
+<p>GTT3 (YEL017W) encodes a putative glutathione transferase in <em>S. cerevisiae</em> that remains largely uncharacterized at the biochemical level. While it is named alongside the better-characterized Gtt1 and Gtt2 as part of the yeast glutathione transferase family, Gtt3p possesses unique domains (Put_GTT3, GTT3_N) that distinguish it from these paralogs and from other GST classes. No direct enzymatic activity, substrate specificity, or subcellular localization data for Gtt3p were identified in the available literature. Its transcription is not induced under oxidative stress conditions that activate other glutathione-related genes, and its deletion has been associated with altered secondary metabolite production in synthetic biology experiments but without a resolved mechanism. The function of Gtt3p can currently only be inferred by analogy to the broader glutathione transferase superfamily: it is predicted to catalyze the conjugation of glutathione with electrophilic substrates, but its specific biological role, substrates, and cellular compartment of action remain open questions requiring future experimental investigation.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(mariani2008involvementofglutathione pages 2-4): Diana Mariani, Cristiane J. Mathias, Carmelita G. da Silva, Ricardo da Silva Herdeiro, Ricardo Pereira, Anita D. Panek, Elis C.A. Eleutherio, and Marcos Dias Pereira. Involvement of glutathione transferases, gtt1and gtt2, with oxidative stress response generated by h2o2 during growth of saccharomyces cerevisiae. Redox Report, 13:246-254, Dec 2008. URL: https://doi.org/10.1179/135100008x309028, doi:10.1179/135100008x309028. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mariani2008involvementofglutathione pages 4-6): Diana Mariani, Cristiane J. Mathias, Carmelita G. da Silva, Ricardo da Silva Herdeiro, Ricardo Pereira, Anita D. Panek, Elis C.A. Eleutherio, and Marcos Dias Pereira. Involvement of glutathione transferases, gtt1and gtt2, with oxidative stress response generated by h2o2 during growth of saccharomyces cerevisiae. Redox Report, 13:246-254, Dec 2008. URL: https://doi.org/10.1179/135100008x309028, doi:10.1179/135100008x309028. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mariani2008involvementofglutathione pages 1-2): Diana Mariani, Cristiane J. Mathias, Carmelita G. da Silva, Ricardo da Silva Herdeiro, Ricardo Pereira, Anita D. Panek, Elis C.A. Eleutherio, and Marcos Dias Pereira. Involvement of glutathione transferases, gtt1and gtt2, with oxidative stress response generated by h2o2 during growth of saccharomyces cerevisiae. Redox Report, 13:246-254, Dec 2008. URL: https://doi.org/10.1179/135100008x309028, doi:10.1179/135100008x309028. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mariani2008involvementofglutathione pages 8-9): Diana Mariani, Cristiane J. Mathias, Carmelita G. da Silva, Ricardo da Silva Herdeiro, Ricardo Pereira, Anita D. Panek, Elis C.A. Eleutherio, and Marcos Dias Pereira. Involvement of glutathione transferases, gtt1and gtt2, with oxidative stress response generated by h2o2 during growth of saccharomyces cerevisiae. Redox Report, 13:246-254, Dec 2008. URL: https://doi.org/10.1179/135100008x309028, doi:10.1179/135100008x309028. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayes2005glutathionetransferases. pages 6-7): John D. Hayes, Jack U. Flanagan, and Ian R. Jowsey. Glutathione transferases. Annual review of pharmacology and toxicology, 45:51-88, Sep 2005. URL: https://doi.org/10.1146/annurev.pharmtox.45.120403.095857, doi:10.1146/annurev.pharmtox.45.120403.095857. This article has 5256 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(auchere2008glutathionedependentredoxstatus pages 3-4): F. Auchère, Renata Santos, S. Planamente, E. Lesuisse, and J. Camadro. Glutathione-dependent redox status of frataxin-deficient cells in a yeast model of friedreich's ataxia. Human molecular genetics, 17 18:2790-802, Sep 2008. URL: https://doi.org/10.1093/hmg/ddn178, doi:10.1093/hmg/ddn178. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mariani2008involvementofglutathione pages 6-8): Diana Mariani, Cristiane J. Mathias, Carmelita G. da Silva, Ricardo da Silva Herdeiro, Ricardo Pereira, Anita D. Panek, Elis C.A. Eleutherio, and Marcos Dias Pereira. Involvement of glutathione transferases, gtt1and gtt2, with oxidative stress response generated by h2o2 during growth of saccharomyces cerevisiae. Redox Report, 13:246-254, Dec 2008. URL: https://doi.org/10.1179/135100008x309028, doi:10.1179/135100008x309028. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sha2013thegenomewideearly pages 9-11): Wei Sha, Ana M. Martins, Reinhard Laubenbacher, Pedro Mendes, and Vladimir Shulaev. The genome-wide early temporal response of saccharomyces cerevisiae to oxidative stress induced by cumene hydroperoxide. PLoS ONE, 8:e74939, Sep 2013. URL: https://doi.org/10.1371/journal.pone.0074939, doi:10.1371/journal.pone.0074939. This article has 42 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(auchere2008glutathionedependentredoxstatus pages 5-6): F. Auchère, Renata Santos, S. Planamente, E. Lesuisse, and J. Camadro. Glutathione-dependent redox status of frataxin-deficient cells in a yeast model of friedreich's ataxia. Human molecular genetics, 17 18:2790-802, Sep 2008. URL: https://doi.org/10.1093/hmg/ddn178, doi:10.1093/hmg/ddn178. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(auchere2008glutathionedependentredoxstatus pages 4-5): F. Auchère, Renata Santos, S. Planamente, E. Lesuisse, and J. Camadro. Glutathione-dependent redox status of frataxin-deficient cells in a yeast model of friedreich's ataxia. Human molecular genetics, 17 18:2790-802, Sep 2008. URL: https://doi.org/10.1093/hmg/ddn178, doi:10.1093/hmg/ddn178. This article has 101 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2018ringsyntheticchromosome pages 5-6): Juan Wang, Ze-Xiong Xie, Yuan Ma, Xiang-Rong Chen, Yao-Qing Huang, Bo He, Bin Jia, Bing-Zhi Li, and Ying-Jin Yuan. Ring synthetic chromosome v scramble. Nature Communications, Sep 2018. URL: https://doi.org/10.1038/s41467-018-06216-y, doi:10.1038/s41467-018-06216-y. This article has 90 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayes2005glutathionetransferases. pages 1-3): John D. Hayes, Jack U. Flanagan, and Ian R. Jowsey. Glutathione transferases. Annual review of pharmacology and toxicology, 45:51-88, Sep 2005. URL: https://doi.org/10.1146/annurev.pharmtox.45.120403.095857, doi:10.1146/annurev.pharmtox.45.120403.095857. This article has 5256 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayes2005glutathionetransferases. pages 4-6): John D. Hayes, Jack U. Flanagan, and Ian R. Jowsey. Glutathione transferases. Annual review of pharmacology and toxicology, 45:51-88, Sep 2005. URL: https://doi.org/10.1146/annurev.pharmtox.45.120403.095857, doi:10.1146/annurev.pharmtox.45.120403.095857. This article has 5256 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhou2021directedgenomeevolution pages 9-10): Sijie Zhou, Yi Wu, Ze-Xiong Xie, Bin Jia, and Ying-Jin Yuan. Directed genome evolution driven by structural rearrangement techniques. Chemical Society reviews, 50:12788-12807, Oct 2021. URL: https://doi.org/10.1039/d1cs00722j, doi:10.1039/d1cs00722j. This article has 26 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayes2005glutathionetransferases. pages 9-12): John D. Hayes, Jack U. Flanagan, and Ian R. Jowsey. Glutathione transferases. Annual review of pharmacology and toxicology, 45:51-88, Sep 2005. URL: https://doi.org/10.1146/annurev.pharmtox.45.120403.095857, doi:10.1146/annurev.pharmtox.45.120403.095857. This article has 5256 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="GTT3-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mariani2008involvementofglutathione pages 2-4</li>
+<li>mariani2008involvementofglutathione pages 1-2</li>
+<li>auchere2008glutathionedependentredoxstatus pages 3-4</li>
+<li>wang2018ringsyntheticchromosome pages 5-6</li>
+<li>auchere2008glutathionedependentredoxstatus pages 4-5</li>
+<li>sha2013thegenomewideearly pages 9-11</li>
+<li>zhou2021directedgenomeevolution pages 9-10</li>
+<li>mariani2008involvementofglutathione pages 8-9</li>
+<li>mariani2008involvementofglutathione pages 4-6</li>
+<li>mariani2008involvementofglutathione pages 6-8</li>
+<li>auchere2008glutathionedependentredoxstatus pages 5-6</li>
+<li>https://doi.org/10.1179/135100008x309028,</li>
+<li>https://doi.org/10.1146/annurev.pharmtox.45.120403.095857,</li>
+<li>https://doi.org/10.1093/hmg/ddn178,</li>
+<li>https://doi.org/10.1371/journal.pone.0074939,</li>
+<li>https://doi.org/10.1038/s41467-018-06216-y,</li>
+<li>https://doi.org/10.1039/d1cs00722j,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GTT3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P39996" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="gtt3-yel017w-p39996-curation-notes">GTT3 (YEL017W / P39996) — curation notes</h1>
+<p>Journal for the AI GO-annotation review of <em>Saccharomyces cerevisiae</em> GTT3, an<br />
+understudied ("dark") gene. Provenance is recorded inline as<br />
+<code>[PMID:xxxx "verbatim quote"]</code> or <code>[file:... "quote"]</code>.</p>
+<h2 id="identity-from-uniprot-p39996-gtt3-uniprottxt">Identity (from UniProt P39996, <code>GTT3-uniprot.txt</code>)</h2>
+<ul>
+<li><strong>Standard name</strong> GTT3; <strong>systematic</strong> YEL017W; UniProtKB <strong>P39996</strong> (<code>GTT3_YEAST</code>),<br />
+  337 aa, 38.2 kDa. RecName "Glutathione transferase 3".</li>
+<li><strong>PE 1 (evidence at protein level)</strong> — detected in proteomics (phospho-MS,<br />
+  PaxDb/PeptideAtlas), so the protein is genuinely expressed<br />
+  [<code>GTT3-uniprot.txt</code> "PE   1: Evidence at protein level"; "Present with 1300 molecules/cell in log phase SD medium."].</li>
+</ul>
+<h2 id="domain-topology-reasoning-inline-from-gtt3-uniprottxt">Domain / topology reasoning (inline, from <code>GTT3-uniprot.txt</code>)</h2>
+<ul>
+<li>Family/domain signatures are <strong>GTT3-specific and named "putative"</strong>: Pfam<br />
+<strong>PF27945 (GTT3_N)</strong>, PANTHER <strong>PTHR41807</strong> ("GLUTATHIONE TRANSFERASE 3"),<br />
+  InterPro <strong>IPR038872</strong> — whose InterPro name is <strong>"Put_GTT3"</strong> = <em>putative</em> GTT3<br />
+  [<code>GTT3-uniprot.txt</code> "InterPro; IPR038872; Put_GTT3." / "Pfam; PF27945; GTT3_N; 1."].<br />
+  These are <strong>not</strong> the canonical soluble-GST signatures (no thioredoxin/GST N-<br />
+  and C-terminal domain PROSITE/Pfam hits, no PF00043/PF02798). So the "glutathione<br />
+  transferase" name is an <strong>annotation-by-name</strong>, not a domain-supported catalytic call.</li>
+<li><strong>Membrane topology is the strongest structural fact.</strong> UniProt models a large<br />
+  N-terminal cytoplasmic region (1-239) then <strong>two transmembrane helices</strong><br />
+  (TRANSMEM 240-260 and 314-336) flanking a short perinuclear-space loop (261-313)<br />
+  [<code>GTT3-uniprot.txt</code> "TRANSMEM        240..260"; "TRANSMEM        314..336";<br />
+  "TOPO_DOM        261..313 /note=Perinuclear space"]. Multi-pass membrane protein.<br />
+  Canonical cytosolic GSTs (Gtt1/Gtt2, Gto1-3) are <strong>soluble</strong>, so a tail-anchored /<br />
+  multi-pass topology is unusual for a GST and argues against classic soluble-GST<br />
+  catalysis.</li>
+<li>The cytoplasmic N-terminus contains two disordered/low-complexity regions<br />
+  (66-95, 107-132; polar-residue biased) carrying multiple <strong>Cdk1/phospho sites</strong><br />
+  (Ser-66/72/99/116) [<code>GTT3-uniprot.txt</code> "MobiDB-lite" REGIONs; MOD_RES phosphoserines<br />
+  from PMID:17330950, PMID:19779198]. Phospho-regulation is consistent with a<br />
+  regulated membrane protein but does not by itself assign a molecular function.</li>
+</ul>
+<h2 id="localization-known-high-throughput-experimental">Localization (KNOWN, high-throughput / experimental)</h2>
+<ul>
+<li><strong>Nuclear membrane / multi-pass membrane protein</strong> — UniProt SUBCELLULAR LOCATION,<br />
+  from the Huh et al. global GFP screen<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/14562095" title="provide localization information for 70% of previously unlocalized proteins">PMID:14562095</a>.</li>
+<li><strong>Nuclear periphery (HDA)</strong> — SGD annotation GO:0034399 from the SWAp-Tag N'-GFP<br />
+  library screen [PMID:26928762; localization category "Nuclear periphery" is one of the<br />
+  assigned classes: <code>GTT3-goa.tsv</code> row GO:0034399 HDA PMID:26928762].</li>
+<li><strong>Membrane (IBA)</strong> — GO:0016020, phylogenetic (GO_Central) inference.</li>
+<li>Two orthogonal high-throughput localizations agree on nuclear-envelope / perinuclear<br />
+  membrane. <code>nuclear periphery</code> (a nuclear-lumen-proximal region) and <code>nuclear membrane</code><br />
+  are consistent with a nuclear-envelope multi-pass protein.</li>
+</ul>
+<h2 id="molecular-function-not-known">Molecular function (NOT known)</h2>
+<ul>
+<li>GOA carries <strong>GO:0003674 molecular_function, ND (no data)</strong> — SGD explicitly records<br />
+  no molecular-function data [<code>GTT3-goa.tsv</code> GO:0003674 ND GO_REF:0000015].</li>
+<li>Deep research: <em>no direct enzymatic assay, substrate specificity, catalytic mechanism,<br />
+  or localization study</em> for Gtt3p was found<br />
+  [file:yeast/GTT3/GTT3-deep-research-falcon.md "no direct enzymatic assay, substrate<br />
+  specificity, or catalytic mechanism for the specific YEL017W protein was retrieved"].</li>
+<li>The GST-family literature (Gtt1/Gtt2/Gto1-3) is about the <strong>paralogs</strong>, not GTT3;<br />
+  Gtt1/Gtt2 are soluble ER/mitochondrial CDNB-active GSTs induced by oxidative stress<br />
+  [file:...falcon.md "Gtt1 and Gtt2 ... catalyze the enzymatic conjugation of glutathione<br />
+  (GSH) with a multitude of ... toxic compounds"]. GTT3 has the distinct Put_GTT3/GTT3_N<br />
+  domains and does <strong>not</strong> share these signatures.</li>
+</ul>
+<h2 id="biological-process-not-known">Biological process (NOT known)</h2>
+<ul>
+<li>GOA carries <strong>GO:0008150 biological_process, ND</strong> [<code>GTT3-goa.tsv</code>].</li>
+<li>GTT3 is <strong>not</strong> co-regulated with the oxidative-stress GSTs: in a frataxin-deficient<br />
+  Friedreich's-ataxia yeast model its transcription is essentially unchanged<br />
+  [file:...falcon.md "GTT3 transcription was not detectably altered in the<br />
+  frataxin-deficient oxidative-stress model, unlike some other glutathione-related genes"],<br />
+  whereas Gtt1/Gtt2 are induced by H2O2 / cumene hydroperoxide. This weakens the<br />
+  assumption that GTT3 belongs to the same oxidative-stress detox pathway.</li>
+<li>The only deletion phenotype found is indirect: a SCRaMbLE synthetic-chromosome-V study<br />
+  where a YEL017W-containing deletion set increased prodeoxyviolacein output, mechanism<br />
+  unresolved and confounded by co-deletions [file:...falcon.md "the exact mechanism by<br />
+  which YEL017W deletion increases PDV productivity was not elucidated ... difficult to<br />
+  attribute the phenotype solely to loss of GTT3"]. Not curatable as a specific GTT3 role.</li>
+</ul>
+<h2 id="caveats-about-the-falcon-report">Caveats about the falcon report</h2>
+<ul>
+<li>The falcon report states "285 amino acids" — this is <strong>wrong</strong> (UniProt P39996 is<br />
+<strong>337 aa</strong>). I do not propagate the length claim.</li>
+<li>Falcon could not retrieve the Huh et al. full text; I rely on the cached UniProt<br />
+  SUBCELLULAR LOCATION + GOA HDA rows for localization, which are independent of falcon.</li>
+</ul>
+<h2 id="curation-decisions-summary">Curation decisions (summary)</h2>
+<ul>
+<li><strong>GO:0016020 membrane (IBA)</strong> — ACCEPT (broad but correct; multi-pass TM helices).</li>
+<li><strong>GO:0031965 nuclear membrane (IEA, SubCell)</strong> — ACCEPT (Huh GFP + SubCell mapping;<br />
+  agrees with nuclear-periphery HDA). Core location.</li>
+<li><strong>GO:0034399 nuclear periphery (HDA, PMID:26928762)</strong> — ACCEPT (experimental HT<br />
+  localization; do not overrule a curator's HDA call).</li>
+<li><strong>GO:0003674 molecular_function ND</strong> — ACCEPT. No demonstrated activity; explicitly<br />
+  do NOT infer "glutathione transferase activity" (GO:0004364) — the name is<br />
+  annotation-by-analogy, domains are Put_GTT3-specific, no substrate demonstrated.</li>
+<li><strong>GO:0008150 biological_process ND</strong> — ACCEPT. No specific process demonstrated;<br />
+  do NOT infer oxidative-stress/glutathione-metabolism from the paralogs.</li>
+</ul>
+<h2 id="knowledge-gap-primary-deliverable">Knowledge gap (primary deliverable)</h2>
+<p>Gtt3 is <strong>MF-dark and BP-dark with a solid CC</strong>: its subcellular home (nuclear-envelope /<br />
+perinuclear multi-pass membrane) is established by two orthogonal screens, but its<br />
+<strong>molecular activity, substrate, and biological role are entirely unknown</strong>. The<br />
+"glutathione transferase" name rests on a family/name assignment (PTHR41807 / Put_GTT3),<br />
+not on any demonstrated GSH-conjugation activity; the GTT3-specific domains and the<br />
+multi-pass membrane topology distinguish it from the soluble Gtt1/Gtt2/Gto GSTs, and it<br />
+is not co-regulated with them under oxidative stress. Whether Gtt3 is even a bona fide<br />
+glutathione transferase is unresolved.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P39996
+gene_symbol: GTT3
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  GTT3 (systematic name YEL017W) encodes an understudied Saccharomyces cerevisiae
+  multi-pass membrane protein of 337 residues. It has a large N-terminal cytoplasmic
+  region containing two disordered, phosphorylation-bearing low-complexity segments,
+  followed by two transmembrane helices that anchor it in the membrane. Global GFP
+  localization and an N-terminal-tag localization library independently place the
+  protein at the nuclear envelope / nuclear periphery. Although named &#34;glutathione
+  transferase 3&#34; by analogy to the yeast Gtt/Gto glutathione transferases, GTT3
+  carries a distinct, GTT3-specific domain architecture (the InterPro &#34;putative GTT3&#34;
+  signature IPR038872 with Pfam GTT3_N) rather than the canonical soluble glutathione
+  S-transferase fold, and no glutathione-conjugation activity, substrate, or catalytic
+  mechanism has been demonstrated for it. Its molecular function and biological role
+  remain unknown.
+existing_annotations:
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) inference that Gtt3 is a membrane protein. This is
+      consistent with the UniProt topology model, which annotates two
+      transmembrane helices and classifies Gtt3 as a multi-pass membrane protein.
+    action: ACCEPT
+    reason: &gt;-
+      The membrane localization is well supported: UniProt models transmembrane
+      segments at residues 240-260 and 314-336 and describes Gtt3 as a multi-pass
+      membrane protein, and two independent high-throughput localization datasets
+      place it at the nuclear envelope. The term is broad but not incorrect. A more
+      specific cellular-component term (nuclear membrane) is also present in GOA and
+      better captures the location.
+    supported_by:
+    - reference_id: UniProt:P39996
+      supporting_text: &gt;-
+        TRANSMEM        240..260
+    - reference_id: UniProt:P39996
+      supporting_text: &gt;-
+        TRANSMEM        314..336
+- term:
+    id: GO:0031965
+    label: nuclear membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation to nuclear membrane derived from the UniProt
+      Subcellular Location vocabulary. UniProt records &#34;Nucleus membrane;
+      Multi-pass membrane protein&#34;, based on the Huh et al. global GFP
+      localization study.
+    action: ACCEPT
+    reason: &gt;-
+      This is the most informative and best-supported cellular-component
+      annotation for Gtt3. It is corroborated by an independent experimental
+      screen (the SWAp-Tag N&#39;-GFP library) that assigns Gtt3 a nuclear-periphery
+      localization (GO:0034399, HDA). The nuclear-envelope location, together with
+      the multi-pass topology, is the core established fact about this protein.
+    supported_by:
+    - reference_id: UniProt:P39996
+      supporting_text: &gt;-
+        SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};
+    - reference_id: PMID:14562095
+      supporting_text: &gt;-
+        into 22 distinct subcellular localization categories
+- term:
+    id: GO:0034399
+    label: nuclear periphery
+  evidence_type: HDA
+  original_reference_id: PMID:26928762
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput direct-assay (HDA) localization to the nuclear periphery
+      from the SWAp-Tag (SWAT) N&#39;-terminal GFP library, in which each strain was
+      imaged and manually assigned up to three subcellular localization
+      categories, one of which is &#34;Nuclear periphery&#34;.
+    action: ACCEPT
+    reason: &gt;-
+      This experimental localization is consistent with, and complementary to, the
+      UniProt nuclear-membrane annotation and the Huh et al. GFP screen. Nuclear
+      periphery (the nuclear-lumen region proximal to the inner nuclear membrane)
+      is an appropriate descriptor for a nuclear-envelope multi-pass membrane
+      protein. There is no reason to overrule this curator-assigned experimental
+      call.
+    supported_by:
+    - reference_id: PMID:26928762
+      supporting_text: &gt;-
+        Nuclear periphery; Nucleolus; Nucleus
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The molecular function of Gtt3 is annotated ND (no data). No enzymatic
+      activity, substrate, catalytic mechanism, transporter activity, or specific
+      binding has been demonstrated for the YEL017W protein.
+    action: ACCEPT
+    reason: &gt;-
+      The ND annotation is the correct and honest representation of the current
+      evidence. Although Gtt3 is named &#34;glutathione transferase 3&#34;, this is an
+      annotation-by-name/family assignment (PANTHER PTHR41807; InterPro IPR038872
+      is literally named &#34;Put_GTT3&#34;, i.e. putative). Gtt3 carries a GTT3-specific
+      domain architecture distinct from the canonical soluble glutathione
+      S-transferases Gtt1/Gtt2 and the omega-class Gto1-3, it has a multi-pass
+      membrane topology unlike those soluble enzymes, and no glutathione-conjugation
+      assay has ever been reported for it. Inferring glutathione transferase
+      activity (GO:0004364) would over-annotate the gene, so ND is retained.
+    supported_by:
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        no direct enzymatic assay, substrate specificity, or catalytic mechanism
+        for the specific YEL017W protein was retrieved
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        possesses unique domains (Put_GTT3, GTT3_N) that distinguish it from these
+        paralogs
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The biological process is annotated ND (no data). No specific process has
+      been experimentally assigned to Gtt3.
+    action: ACCEPT
+    reason: &gt;-
+      Retaining ND is appropriate. Unlike its namesake paralogs Gtt1 and Gtt2,
+      which are transcriptionally induced by H2O2 and cumene hydroperoxide and are
+      implicated in oxidative-stress detoxification, GTT3 is not induced under
+      oxidative stress (its transcription is unchanged in a frataxin-deficient
+      oxidative-stress model), which argues against simply transferring an
+      oxidative-stress / glutathione-metabolism process from the paralogs. The only
+      reported deletion phenotype (altered prodeoxyviolacein output in a SCRaMbLE
+      synthetic-chromosome experiment) is mechanistically unresolved and confounded
+      by co-deletions, and cannot support a specific process annotation.
+    supported_by:
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        GTT3 transcription was not detectably altered
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        the exact mechanism by which YEL017W deletion increases PDV productivity
+        was not elucidated
+core_functions:
+- description: &gt;-
+    Gtt3 is a nuclear-envelope multi-pass membrane protein. Its subcellular location
+    is the only well-established aspect of its function; its molecular activity and
+    the biological process it participates in are unknown. The &#34;glutathione
+    transferase&#34; name is an unverified family/name assignment and is not supported by
+    any demonstrated glutathione-conjugation activity.
+  locations:
+  - id: GO:0031965
+    label: nuclear membrane
+  - id: GO:0034399
+    label: nuclear periphery
+  supported_by:
+  - reference_id: UniProt:P39996
+    supporting_text: &gt;-
+      SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};
+  - reference_id: PMID:26928762
+    supporting_text: &gt;-
+      Nuclear periphery; Nucleolus; Nucleus
+knowledge_gaps:
+- gap_statement: &gt;-
+    The molecular function of Gtt3 (YEL017W) is unknown. Despite the name
+    &#34;glutathione transferase 3&#34;, no glutathione-conjugation (or any other) enzymatic
+    activity, substrate, catalytic mechanism, transporter activity, or specific
+    binding partner has ever been demonstrated for the protein; it is not even
+    established that Gtt3 is a bona fide glutathione transferase.
+  boundary: &gt;-
+    What is established is the protein&#39;s location and topology: Gtt3 is a multi-pass
+    membrane protein (two transmembrane helices) with a large cytoplasmic N-terminal
+    region, localized to the nuclear envelope / nuclear periphery by two independent
+    high-throughput screens (Huh et al. global GFP; the SWAp-Tag N&#39;-GFP library), and
+    it is expressed at the protein level and phosphorylated on several N-terminal
+    serines. Its GTT3-specific domain architecture (InterPro &#34;putative GTT3&#34;
+    IPR038872 / Pfam GTT3_N) differs from the soluble Gtt1/Gtt2 and omega-class
+    Gto1-3 glutathione transferases, and unlike them it is not induced by oxidative
+    stress.
+  gap_kind:
+    - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Gtt3 belongs to a conserved family (PANTHER PTHR41807 spans more than 1200
+    proteins across more than 2500 taxa) that has no experimentally established
+    molecular function at any level, so resolving Gtt3 would illuminate a widespread
+    but wholly dark protein family. The mismatch between its &#34;glutathione transferase&#34;
+    name and its atypical membrane topology and non-canonical domains makes it a
+    candidate mis-annotation whose correct function is unknown.
+  resolution: &gt;-
+    Biochemical activity screens on purified Gtt3 (including glutathione-conjugation
+    assays with CDNB and other electrophiles to test the GST hypothesis directly);
+    structure determination / AlphaFold-based fold assignment to test whether the
+    GTT3_N domain adopts a GST fold; affinity-purification mass spectrometry to
+    identify nuclear-envelope partners; and phenotyping of a gtt3-null (and its
+    combination with gtt1/gtt2/gto deletions) to assign a biological process.
+  provenance:
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        no direct enzymatic assay, substrate specificity, or catalytic mechanism
+        for the specific YEL017W protein was retrieved
+    - reference_id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+      supporting_text: &gt;-
+        no direct localization study for YEL017W/Gtt3 was found in the retrieved
+        literature
+  proposed_terms: []
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Is Gtt3 a bona fide glutathione transferase, or is the &#34;glutathione transferase 3&#34;
+    name an unverified family assignment? Does purified Gtt3 catalyze glutathione
+    conjugation of any electrophilic substrate?
+- question: &gt;-
+    What is the functional significance of Gtt3&#39;s nuclear-envelope multi-pass membrane
+    topology, and which nuclear-membrane proteins or complexes does it interact with?
+- question: &gt;-
+    Do the N-terminal Cdk1/phosphorylation sites regulate Gtt3, and does Gtt3 have a
+    cell-cycle- or nuclear-envelope-related role distinct from the oxidative-stress
+    roles of its paralogs Gtt1/Gtt2?
+suggested_experiments:
+- description: &gt;-
+    Purify recombinant Gtt3 and assay glutathione S-transferase activity against
+    canonical (CDNB) and alternative electrophilic substrates, alongside Gtt1/Gtt2 as
+    positive controls, to test the GST hypothesis directly.
+  experiment_type: biochemistry
+- description: &gt;-
+    Determine the Gtt3 protein fold (experimental structure or AlphaFold analysis of
+    the GTT3_N domain) and compare it with the canonical cytosolic GST fold to assess
+    whether a catalytic GSH-binding site is present.
+  experiment_type: structural_biology
+- description: &gt;-
+    Identify Gtt3 physical interactors by affinity-purification mass spectrometry of
+    endogenously tagged, functional Gtt3, focusing on nuclear-envelope and
+    membrane-protein partners.
+  experiment_type: proteomics
+- description: &gt;-
+    Phenotype a gtt3-null strain (and gtt3 combined with gtt1/gtt2/gto deletions)
+    across stress conditions and cell-cycle assays to assign a biological process and
+    test for redundancy with the other glutathione transferases.
+  experiment_type: genetics
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: &gt;-
+    Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: UniProt:P39996
+  title: UniProtKB entry for GTT3_YEAST (P39996)
+  findings:
+  - statement: &gt;-
+      Gtt3 is a multi-pass membrane protein with two transmembrane helices and is
+      localized to the nuclear membrane; it is named glutathione transferase 3 but
+      no molecular function is experimentally established.
+    supporting_text: &gt;-
+      SUBCELLULAR LOCATION: Nucleus membrane {ECO:0000269|PubMed:14562095};
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt record for the target protein; supports the membrane topology and
+      nuclear-membrane localization used in this review. The RecName &#34;Glutathione
+      transferase 3&#34; is a name/family assignment, not experimentally demonstrated
+      activity.
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings:
+  - statement: &gt;-
+      Global GFP-fusion localization study that is the basis for the UniProt
+      nuclear-membrane annotation of Gtt3.
+    supporting_text: &gt;-
+      into 22 distinct subcellular localization categories
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified genome-wide GFP localization study (Huh et al., Nature 2003);
+      it is the ECO:0000269 source cited by UniProt for Gtt3&#39;s nuclear-membrane
+      location. The cached entry is abstract-only, but the per-protein localization
+      is captured in the UniProt SUBCELLULAR LOCATION annotation.
+- id: PMID:26928762
+  title: &gt;-
+    One library to make them all: streamlining the creation of yeast libraries via a
+    SWAp-Tag strategy.
+  findings:
+  - statement: &gt;-
+      SWAp-Tag N&#39;-terminal GFP library methods paper; source of the SGD HDA
+      nuclear-periphery localization for Gtt3. Localization categories assigned by
+      manual imaging include &#34;Nuclear periphery&#34;.
+    supporting_text: &gt;-
+      Nuclear periphery; Nucleolus; Nucleus
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. This is the high-throughput N&#39;-GFP localization resource from
+      which SGD derived Gtt3&#39;s nuclear-periphery (GO:0034399, HDA) annotation; the
+      paper describes the localization category set but does not name GTT3 in the
+      cached text (per-gene calls are in the library data).
+- id: file:yeast/GTT3/GTT3-deep-research-falcon.md
+  title: Falcon deep research report for GTT3 (YEL017W)
+  findings:
+  - statement: &gt;-
+      Comprehensive literature synthesis finding no direct biochemical, enzymatic, or
+      localization characterization specific to Gtt3, and noting its distinct
+      domain architecture and lack of oxidative-stress co-regulation with Gtt1/Gtt2.
+    supporting_text: &gt;-
+      no direct enzymatic assay, substrate specificity, or catalytic mechanism for
+      the specific YEL017W protein was retrieved
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      Genuine Edison/falcon deep-research report (17 citations). Used for its
+      well-supported &#34;no direct evidence&#34; statements about GTT3 and the paralog
+      contrast. Note one factual error: it states GTT3 is &#34;285 amino acids&#34;, whereas
+      UniProt P39996 is 337 aa; that length claim was not propagated into this review.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

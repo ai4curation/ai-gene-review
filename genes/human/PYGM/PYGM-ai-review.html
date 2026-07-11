@@ -1,0 +1,4238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYGM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PYGM</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P11217" target="_blank" class="term-link">
+                        P11217
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PYGM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P11217" data-a="DESCRIPTION: Muscle isoform of glycogen phosphorylase (myophosp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Muscle isoform of glycogen phosphorylase (myophosphorylase; EC 2.4.1.1), the rate-limiting enzyme of muscle glycogenolysis. As a pyridoxal-5&#39;-phosphate-dependent homodimer it catalyzes the phosphorolytic cleavage of alpha-1,4-glycosidic bonds at the non-reducing ends of glycogen, releasing alpha-D-glucose-1-phosphate, and stops approximately four residues short of alpha-1,6 branch points. This provides the glucose-1-phosphate (feeding glycolysis via glucose-6-phosphate) that supports rapid ATP generation in skeletal muscle during exercise. Activity is allosterically activated by AMP and inhibited by ATP, ADP and glucose-6-phosphate, and is controlled covalently through reversible phosphorylation of Ser-15 by phosphorylase kinase, interconverting the less-active phosphorylase b and the active phosphorylase a. The enzyme is cytosolic and highly enriched in skeletal muscle. Loss-of-function variants cause glycogen storage disease type V (McArdle disease), a myopathy of exercise intolerance, cramps, muscle weakness and recurrent myoglobinuria, characteristically with a &#34;second-wind&#34; phenomenon.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred cytosolic localization. Muscle glycogen phosphorylase is a soluble cytosolic enzyme that acts on cytoplasmic glycogen particles, consistent with the TAS/Reactome cytosol annotations below.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct subcellular localization for a cytosolic glycogenolytic enzyme; the IBA call is concordant with independent Reactome TAS annotations to the same term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005980" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred role in glycogen catabolism. This is the central biological process of muscle glycogen phosphorylase, which performs the rate-limiting phosphorolytic step of glycogen breakdown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process, well supported by experimental IDA/IMP annotations on this gene and by the enzyme&#39;s defined catalytic activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    GO:0008184
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0008184" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred glycogen phosphorylase activity, the defining molecular function of PYGM (EC 2.4.1.1).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; concordant with experimental IDA/IMP annotations and UniProt&#39;s experimentally supported catalytic activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004645" target="_blank" class="term-link">
+                                    GO:0004645
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-oligoglucan phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0004645" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronically inferred alpha-1,4-glucan phosphorylase activity (the parent EC 2.4.1.1 activity encompassing glycogen phosphorylase). Correct in essence; the more specific and experimentally supported term for this enzyme is GO:0008184 glycogen phosphorylase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The activity is real but GO:0008184 glycogen phosphorylase activity is the more precise term for the muscle isoform acting physiologically on glycogen; both terms map to the same EC 2.4.1.1 reaction. Retain the specific term as the core molecular function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    glycogen phosphorylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad InterPro-derived carbohydrate metabolism term. Not incorrect, but far less informative than the specific glycogen catabolic process annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Over-general parent term; the specific process for this enzyme is GO:0005980 glycogen catabolic process, which is already annotated experimentally.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    glycogen catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    GO:0008184
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0008184" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronically inferred glycogen phosphorylase activity, matching the experimentally established core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; consistent with IBA, IDA, IMP and TAS annotations to the same term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Pyridoxal-5&#39;-phosphate (PLP) is the essential cofactor of glycogen phosphorylase, covalently attached via a Schiff base to Lys-681, where it participates in the phosphorolysis catalytic mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by UniProt (COFACTOR pyridoxal 5&#39;-phosphate; MOD_RES 681 N6-(pyridoxal phosphate)lysine) and by the conserved PLP-binding site of the glycogen phosphorylase family. Retained as a core cofactor-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PYGM/PYGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24722188" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24722188
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Protein interaction network of alternatively spliced isoform...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:24722188" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction detected in a high-throughput isoform interactome screen (interactor PRKAB2, an AMPK regulatory subunit). &#34;Protein binding&#34; is an uninformative molecular function that does not describe the catalytic role of PYGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare GO:0005515 protein binding conveys no specific functional information and derives from a large-scale interactome dataset. The AMPK-subunit interaction may be biologically relevant to metabolic regulation but is better captured by a specific term than by &#34;protein binding&#34;. Retained but flagged as over-annotated per curation guidelines discouraging bare protein binding.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24722188" target="_blank" class="term-link">
+                                        PMID:24722188
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Protein interaction network of alternatively spliced isoforms from brain links genetic risk factors for autism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interactions (PRKAB2, NTAQ1) detected in a proteome-scale human interactome map. Bare &#34;protein binding&#34; is uninformative for this enzyme&#39;s function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Derived from a systematic proteome-scale interactome screen; GO:0005515 does not describe a specific molecular function. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the human interactome network.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:31515488
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive disruption of protein interactions by genetic vari...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:31515488" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction (NTAQ1) reported in a systematic study of interaction disruption by genetic variants. Bare &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput binary interaction data; GO:0005515 conveys no specific function. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                                        PMID:31515488
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interactions (PRKAB2, and the phosphorylase paralogs PYGL and PYGB) detected in the HuRI binary interactome map. Bare &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Systematic binary interactome dataset; several partners are paralogous phosphorylases (isoenzyme cross-detection). GO:0005515 conveys no specific molecular function. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction (PYGB, brain phosphorylase paralog) detected in a proteome-scale cell-specific interactome study. Bare &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> High-throughput affinity-purification interactome data; GO:0005515 conveys no specific function. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36217029
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the SARS-CoV-2-human contactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005515" data-r="PMID:36217029" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Interaction with a SARS-CoV-2 viral protein (rep/nsp12) reported in a virus-host contactome screen. Bare &#34;protein binding&#34;, involving a xeno (viral) partner, is uninformative for PYGM&#39;s physiological function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Viral-host high-throughput interaction dataset; not indicative of a native molecular function of PYGM and captured only as bare protein binding. Retained but flagged as over-annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link">
+                                        PMID:36217029
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the SARS-CoV-2-human contactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004645" target="_blank" class="term-link">
+                                    GO:0004645
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-oligoglucan phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1150650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glycogen phosphorylase. Role of the peptide re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0004645" data-r="PMID:1150650" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental characterization of skeletal muscle glycogen phosphorylase catalytic and regulatory properties (AMP activation, glucose-6-P inhibition, phosphorylase b to a interconversion). This is the EC 2.4.1.1 alpha-1,4-glucan phosphorylase activity of the enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported activity, but GO:0008184 glycogen phosphorylase activity is the more precise term for the physiological substrate (glycogen) of the muscle isoform. Both correspond to EC 2.4.1.1. Do not remove an experimental annotation; refine to the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    glycogen phosphorylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link">
+                                        PMID:1150650
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">derived from the NH2-terminal region of skeletal muscle glycogen phosphorylase</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004645" target="_blank" class="term-link">
+                                    GO:0004645
+                                </a>
+                            </span>
+                            <span class="term-label">1,4-alpha-oligoglucan phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8316268
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular genetic heterogeneity of myophosphorylase deficien...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0004645" data-r="PMID:8316268" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional/catalytic-activity evidence associated with molecular-genetic characterization of myophosphorylase (McArdle disease). Represents the EC 2.4.1.1 alpha-1,4-glucan phosphorylase activity of PYGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct activity but better represented by the specific term GO:0008184 glycogen phosphorylase activity for this muscle isoform. Experimental annotation refined, not removed.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    glycogen phosphorylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link">
+                                        PMID:8316268
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The myophosphorylase gene has been sequenced and assigned to chromosome 11</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1150650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glycogen phosphorylase. Role of the peptide re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005980" data-r="PMID:1150650" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for the role of skeletal muscle glycogen phosphorylase in glycogen breakdown, via characterization of its catalytic and allosteric properties.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process supported by direct assay of the muscle enzyme&#39;s phosphorolytic activity and its regulation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link">
+                                        PMID:1150650
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">induce the enzymic properties of phosphorylase a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    GO:0005980
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8316268
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular genetic heterogeneity of myophosphorylase deficien...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005980" data-r="PMID:8316268" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Mutational (McArdle disease) evidence linking loss of myophosphorylase function to impaired muscle glycogen catabolism. Loss-of-function PYGM variants cause a block in glycogenolysis (GSD5).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; disease-causing loss-of-function variants demonstrate the enzyme&#39;s requirement for muscle glycogen breakdown.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link">
+                                        PMID:8316268
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exercise intolerance, muscle cramps, and recurrent</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    GO:0008184
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:1150650
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Regulation of glycogen phosphorylase. Role of the peptide re...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0008184" data-r="PMID:1150650" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay of skeletal muscle glycogen phosphorylase activity, including its allosteric regulation (AMP activation, cooperative binding, glucose-6-P inhibition) and phosphorylase b to a interconversion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function with direct experimental support in the muscle enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link">
+                                        PMID:1150650
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the enzyme, normally present as a dimer, associates to a</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    GO:0008184
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8316268
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular genetic heterogeneity of myophosphorylase deficien...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0008184" data-r="PMID:8316268" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Loss of glycogen phosphorylase activity resulting from disease-causing PYGM mutations (McArdle disease) demonstrates that this gene enables glycogen phosphorylase activity in muscle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; genotype-phenotype evidence supports the enzymatic role of PYGM.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link">
+                                        PMID:8316268
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The myophosphorylase gene has been sequenced and assigned to chromosome 11</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PYGM was detected by shotgun mass spectrometry among ~900 proteins in exosomes purified from expressed prostatic secretions in urine. This is a high-throughput proteomic co-detection, not evidence of a functional extracellular/exosomal role for this cytosolic muscle enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Common high-throughput exosome-proteomics detection of an abundant cytosolic protein; it does not reflect the site where PYGM performs its function (cytosolic glycogenolysis). Flagged as over-annotated rather than removed, per policy for experimental (HDA) detection.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exosome preparations were characterized by a shotgun proteomics procedure</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-453338
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005829" data-r="Reactome:R-HSA-453338" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization of the PYGM b dimer (AMP-complex reaction). Correct localization for this soluble glycogenolytic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; concordant with the IBA cytosol annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-453342
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005829" data-r="Reactome:R-HSA-453342" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization of the PYGM b dimer (AMP-binding reaction). Correct localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; concordant with the IBA and other TAS cytosol annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71541
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005829" data-r="Reactome:R-HSA-71541" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome-curated cytosolic localization of PYGM associated with its phosphorylation (b to a conversion) by the cytosolic phosphorylase kinase complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core localization; the enzyme and its activating kinase act in the cytosol.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005977" target="_blank" class="term-link">
+                                    GO:0005977
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9633816" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9633816
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular diagnosis of McArdle disease: revised genomic stru...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0005977" data-r="PMID:9633816" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement placing myophosphorylase in glycogen metabolism. Correct but general; the specific role of PYGM is in the catabolic branch (glycogen breakdown).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad glycogen metabolic process is a parent of the more precise GO:0005980 glycogen catabolic process, which is already experimentally annotated and better reflects PYGM&#39;s directional (glycogenolytic) role.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                    glycogen catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9633816" target="_blank" class="term-link">
+                                        PMID:9633816
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">caused by mutations in the muscle glycogen phosphorylase gene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                                    GO:0008184
+                                </a>
+                            </span>
+                            <span class="term-label">glycogen phosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9633816" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9633816
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular diagnosis of McArdle disease: revised genomic stru...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P11217" data-a="GO:0008184" data-r="PMID:9633816" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Traceable author statement supporting the glycogen phosphorylase activity of myophosphorylase, in the context of McArdle disease molecular diagnosis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function; concordant with the experimental IDA/IMP and IBA/IEA annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9633816" target="_blank" class="term-link">
+                                        PMID:9633816
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">caused by mutations in the muscle glycogen phosphorylase gene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Muscle glycogen phosphorylase catalyzes the rate-limiting phosphorolytic cleavage of alpha-1,4-glycosidic bonds at glycogen non-reducing ends, releasing glucose-1-phosphate, using a covalently bound pyridoxal-5&#39;-phosphate cofactor.</h3>
+                <span class="vote-buttons" data-g="P11217" data-a="FUNCTION: Muscle glycogen phosphorylase catalyzes the rate-l..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                            glycogen phosphorylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link">
+                                PMID:1150650
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">induce the enzymic properties of phosphorylase a</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PYGM/PYGM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">EC=2.4.1.1 {ECO:0000269|PubMed:1150650, ECO:0000269|PubMed:8316268}</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>The enzyme performs the committed, rate-limiting step of muscle glycogenolysis, mobilizing stored glycogen to supply glucose-1-phosphate for glycolytic ATP production during exercise; its loss causes McArdle disease.</h3>
+                <span class="vote-buttons" data-g="P11217" data-a="FUNCTION: The enzyme performs the committed, rate-limiting s..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008184" target="_blank" class="term-link">
+                            glycogen phosphorylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005980" target="_blank" class="term-link">
+                                glycogen catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link">
+                                PMID:8316268
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">exercise intolerance, muscle cramps, and recurrent</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PYGM/PYGM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the rate-limiting step in</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Glycogen phosphorylase requires pyridoxal-5&#39;-phosphate as an essential cofactor, covalently bound via a Schiff base to an active-site lysine (Lys-681), for catalysis.</h3>
+                <span class="vote-buttons" data-g="P11217" data-a="FUNCTION: Glycogen phosphorylase requires pyridoxal-5&#39;-phosp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PYGM/PYGM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/1150650" target="_blank" class="term-link">
+                            PMID:1150650
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of glycogen phosphorylase. Role of the peptide region surrounding the phosphoserine residue in determining enzyme properties.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Skeletal muscle glycogen phosphorylase is regulated through phosphorylation of its N-terminal region (phosphorylase b to a), AMP allosteric activation, glucose-6-P inhibition, and dimer-to-tetramer association.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PYGM was among ~900 proteins detected by shotgun proteomics in urinary prostatic-secretion exosomes; a high-throughput co-detection, not a functional localization.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24722188" target="_blank" class="term-link">
+                            PMID:24722188
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Protein interaction network of alternatively spliced isoforms from brain links genetic risk factors for autism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31515488" target="_blank" class="term-link">
+                            PMID:31515488
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive disruption of protein interactions by genetic variants across the allele frequency spectrum in human populations.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36217029" target="_blank" class="term-link">
+                            PMID:36217029
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the SARS-CoV-2-human contactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8316268" target="_blank" class="term-link">
+                            PMID:8316268
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular genetic heterogeneity of myophosphorylase deficiency (McArdle&#39;s disease).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss-of-function mutations in the muscle glycogen phosphorylase gene cause McArdle disease, a common cause of exercise intolerance, muscle cramps, and recurrent myoglobinuria.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9633816" target="_blank" class="term-link">
+                            PMID:9633816
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular diagnosis of McArdle disease: revised genomic structure of the myophosphorylase gene and identification of a novel mutation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">McArdle disease is an autosomal recessive disorder of muscle glycogen metabolism caused by mutations in the muscle glycogen phosphorylase gene.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-453338
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PYGM b dimer:AMP complex =&gt; PYGM dimer, b form + 2 AMP</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-453342
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PYGM dimer, b form + 2 AMP =&gt; PYGM b dimer:AMP complex</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71541
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glycogen phosphorylase (PYGM) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGM) dimer a + 2 ADP</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PYGM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P11217" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pygm-muscle-glycogen-phosphorylase-review-notes">PYGM (muscle glycogen phosphorylase) — review notes</h1>
+<p>UniProtKB:P11217, HGNC:9726, EC 2.4.1.1, 842 aa.</p>
+<h2 id="core-biology-from-uniprot-p11217-task-brief">Core biology (from UniProt P11217 + task brief)</h2>
+<ul>
+<li>Muscle isoform of glycogen phosphorylase; rate-limiting enzyme of muscle glycogenolysis.</li>
+<li>Catalyzes phosphorolytic cleavage of alpha-1,4 glycosidic bonds at glycogen non-reducing<br />
+  ends, releasing alpha-D-glucose-1-phosphate (Rhea:RHEA:41732, EC 2.4.1.1). Stops ~4 residues<br />
+  from alpha-1,6 branch points.<br />
+  [file:UniProt CATALYTIC ACTIVITY, "Reaction=<a href="n">(1-&gt;4)-alpha-D-glucosyl</a> + phosphate = <a href="n-1">(1-&gt;4)-alpha-D-glucosyl</a> + alpha-D-glucose 1-phosphate"]</li>
+<li>Cofactor: pyridoxal 5'-phosphate (PLP) covalently attached at Lys-681<br />
+  [file:UniProt COFACTOR "Name=pyridoxal 5'-phosphate"; MOD_RES 681 "N6-(pyridoxal phosphate)lysine"].</li>
+<li>Homodimer (phosphorylase b); homotetramer for active phosphorylase A<br />
+  [file:UniProt SUBUNIT "Homodimer ... Homotetramer; to form the enzymatically active phosphorylase A"].</li>
+<li>Allosteric enzyme: activated by AMP; inhibited by ATP, ADP, glucose-6-phosphate<br />
+  [file:UniProt ACTIVITY REGULATION "activated by AMP and inhibited by ATP, ADP, and glucose-6-phosphate"].</li>
+<li>Covalent regulation: phosphorylation of Ser-15 by phosphorylase kinase (PHK) converts<br />
+  phosphorylase b (inactive) → phosphorylase a (active)<br />
+  [file:UniProt PTM "Phosphorylation of Ser-15 converts phosphorylase B (unphosphorylated) to phosphorylase A"].</li>
+<li>Cytosolic. Expressed skeletal-muscle-enriched (HPA: skeletal muscle, tongue).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>GSD5 / McArdle disease [MIM:232600]: exercise intolerance, cramps, muscle weakness,<br />
+  recurrent myoglobinuria (rhabdomyolysis), "second wind" phenomenon.<br />
+  [file:UniProt DISEASE "myopathy characterized by exercise intolerance, cramps, muscle weakness and recurrent myoglobinuria"]</li>
+</ul>
+<h2 id="key-experimental-refs-cached">Key experimental refs (cached)</h2>
+<ul>
+<li>PMID:1150650 (Carty, Tu, Graves 1975): CATALYTIC ACTIVITY, ACTIVITY REGULATION, SUBUNIT,<br />
+  phosphorylation at Ser-15. Abstract confirms phosphorylase b/a interconversion, AMP<br />
+  regulation, dimer→tetramer association, glucose-6-P inhibition. Abstract-only. Basis of<br />
+  UniProt EC=2.4.1.1 experimental evidence and the IDA glycogen phosphorylase activity /<br />
+  glycogen catabolic process annotations.</li>
+<li>PMID:8316268 (Tsujino, Shanske, DiMauro 1993 NEJM): McArdle disease molecular genetics;<br />
+  UniProt tags this as FUNCTION + CATALYTIC ACTIVITY + GSD5 variants (R50X truncation, G205S,<br />
+  K543T). IMP for glycogen phosphorylase activity / glycogen catabolic process. Abstract-only.</li>
+<li>PMID:9633816 (Kubisch 1998): revised genomic structure of myophosphorylase gene, McArdle<br />
+  diagnosis. TAS source (ProtInc/PINC) for glycogen phosphorylase activity + glycogen<br />
+  metabolic process. Abstract is about genomic structure/mutation but paper concerns the<br />
+  muscle glycogen phosphorylase gene — TAS annotation to the enzyme's activity/process is<br />
+  appropriate.</li>
+</ul>
+<h2 id="localization-annotations">Localization annotations</h2>
+<ul>
+<li>GO:0005829 cytosol — IBA + 3x TAS(Reactome). Correct; cytosolic enzyme.</li>
+<li>GO:0070062 extracellular exosome — HDA, PMID:23533145 (prostatic-secretion exosome<br />
+  proteomics). High-throughput MS detection in secreted vesicles; not the site of catalytic<br />
+  function. MARK_AS_OVER_ANNOTATED (per policy, not REMOVE for HDA MS detection).</li>
+</ul>
+<h2 id="protein-binding-ipis-all-go0005515-ipi-intact">Protein binding IPIs (all GO:0005515, IPI, IntAct)</h2>
+<p>Large-scale interactome / IntAct screens. Bare "protein binding" is uninformative per<br />
+curation guidelines → MARK_AS_OVER_ANNOTATED (not REMOVE, per policy).<br />
+- PMID:24722188 O43741 (PRKAB2, AMPK beta2 subunit)<br />
+- PMID:25416956 O43741 (PRKAB2), Q96HA8 (NTAQ1)<br />
+- PMID:31515488 Q96HA8 (NTAQ1)<br />
+- PMID:32296183 O43741 (PRKAB2), P06737 (PYGL, liver phosphorylase), P11216 (PYGB, brain phosphorylase)<br />
+- PMID:33961781 P11216 (PYGB)<br />
+- PMID:36217029 P0DTD1-PRO_0000449633 (SARS-CoV-2 nsp12/rep; xeno)<br />
+UniProt INTERACTION lists PRKAB2, NTAQ1, PYGB, PYGL, and SARS-CoV-2 rep as interactors.<br />
+PRKAB2 (AMPK) interaction is biologically plausible (glycogen metabolism regulation); PYGB/PYGL<br />
+are paralogs (isoenzyme heterodimer detection in HT screens). None are informative MF terms.</p>
+<h2 id="core-functions-author-supplied-strictly-validated">Core functions (author-supplied, strictly validated)</h2>
+<ul>
+<li>MF: GO:0008184 glycogen phosphorylase activity</li>
+<li>BP (directly_involved_in): GO:0005980 glycogen catabolic process</li>
+<li>CC (locations): GO:0005829 cytosol</li>
+<li>cofactor / MF: GO:0030170 pyridoxal phosphate binding</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P11217
+gene_symbol: PYGM
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: Muscle isoform of glycogen phosphorylase (myophosphorylase; EC 2.4.1.1),
+  the rate-limiting enzyme of muscle glycogenolysis. As a pyridoxal-5&#39;-phosphate-dependent
+  homodimer it catalyzes the phosphorolytic cleavage of alpha-1,4-glycosidic bonds at
+  the non-reducing ends of glycogen, releasing alpha-D-glucose-1-phosphate, and stops
+  approximately four residues short of alpha-1,6 branch points. This provides the
+  glucose-1-phosphate (feeding glycolysis via glucose-6-phosphate) that supports rapid
+  ATP generation in skeletal muscle during exercise. Activity is allosterically activated
+  by AMP and inhibited by ATP, ADP and glucose-6-phosphate, and is controlled covalently
+  through reversible phosphorylation of Ser-15 by phosphorylase kinase, interconverting
+  the less-active phosphorylase b and the active phosphorylase a. The enzyme is cytosolic
+  and highly enriched in skeletal muscle. Loss-of-function variants cause glycogen storage
+  disease type V (McArdle disease), a myopathy of exercise intolerance, cramps, muscle
+  weakness and recurrent myoglobinuria, characteristically with a &#34;second-wind&#34; phenomenon.
+alternative_products:
+- name: &#39;1&#39;
+  id: P11217-1
+- name: &#39;2&#39;
+  id: P11217-2
+  sequence_note: VSP_043047
+existing_annotations:
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: Phylogenetically inferred cytosolic localization. Muscle glycogen phosphorylase
+      is a soluble cytosolic enzyme that acts on cytoplasmic glycogen particles, consistent
+      with the TAS/Reactome cytosol annotations below.
+    action: ACCEPT
+    reason: Correct subcellular localization for a cytosolic glycogenolytic enzyme; the
+      IBA call is concordant with independent Reactome TAS annotations to the same term.
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: Phylogenetically inferred role in glycogen catabolism. This is the central
+      biological process of muscle glycogen phosphorylase, which performs the rate-limiting
+      phosphorolytic step of glycogen breakdown.
+    action: ACCEPT
+    reason: Core biological process, well supported by experimental IDA/IMP annotations
+      on this gene and by the enzyme&#39;s defined catalytic activity.
+- term:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: Phylogenetically inferred glycogen phosphorylase activity, the defining
+      molecular function of PYGM (EC 2.4.1.1).
+    action: ACCEPT
+    reason: Core molecular function; concordant with experimental IDA/IMP annotations
+      and UniProt&#39;s experimentally supported catalytic activity.
+- term:
+    id: GO:0004645
+    label: 1,4-alpha-oligoglucan phosphorylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronically inferred alpha-1,4-glucan phosphorylase activity (the parent
+      EC 2.4.1.1 activity encompassing glycogen phosphorylase). Correct in essence; the
+      more specific and experimentally supported term for this enzyme is GO:0008184
+      glycogen phosphorylase activity.
+    action: MODIFY
+    reason: The activity is real but GO:0008184 glycogen phosphorylase activity is the
+      more precise term for the muscle isoform acting physiologically on glycogen; both
+      terms map to the same EC 2.4.1.1 reaction. Retain the specific term as the core
+      molecular function.
+    proposed_replacement_terms:
+    - id: GO:0008184
+      label: glycogen phosphorylase activity
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Broad InterPro-derived carbohydrate metabolism term. Not incorrect, but
+      far less informative than the specific glycogen catabolic process annotation.
+    action: MODIFY
+    reason: Over-general parent term; the specific process for this enzyme is
+      GO:0005980 glycogen catabolic process, which is already annotated experimentally.
+    proposed_replacement_terms:
+    - id: GO:0005980
+      label: glycogen catabolic process
+- term:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Electronically inferred glycogen phosphorylase activity, matching the
+      experimentally established core molecular function.
+    action: ACCEPT
+    reason: Correct core molecular function; consistent with IBA, IDA, IMP and TAS
+      annotations to the same term.
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Pyridoxal-5&#39;-phosphate (PLP) is the essential cofactor of glycogen
+      phosphorylase, covalently attached via a Schiff base to Lys-681, where it
+      participates in the phosphorolysis catalytic mechanism.
+    action: ACCEPT
+    reason: Well supported by UniProt (COFACTOR pyridoxal 5&#39;-phosphate; MOD_RES 681
+      N6-(pyridoxal phosphate)lysine) and by the conserved PLP-binding site of the
+      glycogen phosphorylase family. Retained as a core cofactor-binding function.
+    supported_by:
+    - reference_id: file:human/PYGM/PYGM-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24722188
+  qualifier: enables
+  review:
+    summary: Interaction detected in a high-throughput isoform interactome screen
+      (interactor PRKAB2, an AMPK regulatory subunit). &#34;Protein binding&#34; is an
+      uninformative molecular function that does not describe the catalytic role of PYGM.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare GO:0005515 protein binding conveys no specific functional information
+      and derives from a large-scale interactome dataset. The AMPK-subunit interaction may
+      be biologically relevant to metabolic regulation but is better captured by a specific
+      term than by &#34;protein binding&#34;. Retained but flagged as over-annotated per curation
+      guidelines discouraging bare protein binding.
+    supported_by:
+    - reference_id: PMID:24722188
+      supporting_text: Protein interaction network of alternatively spliced isoforms from
+        brain links genetic risk factors for autism.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: Interactions (PRKAB2, NTAQ1) detected in a proteome-scale human interactome
+      map. Bare &#34;protein binding&#34; is uninformative for this enzyme&#39;s function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Derived from a systematic proteome-scale interactome screen; GO:0005515 does
+      not describe a specific molecular function. Retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: A proteome-scale map of the human interactome network.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:31515488
+  qualifier: enables
+  review:
+    summary: Interaction (NTAQ1) reported in a systematic study of interaction disruption
+      by genetic variants. Bare &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: High-throughput binary interaction data; GO:0005515 conveys no specific
+      function. Retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:31515488
+      supporting_text: Extensive disruption of protein interactions by genetic variants
+        across the allele frequency spectrum in human populations.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: Interactions (PRKAB2, and the phosphorylase paralogs PYGL and PYGB) detected
+      in the HuRI binary interactome map. Bare &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Systematic binary interactome dataset; several partners are paralogous
+      phosphorylases (isoenzyme cross-detection). GO:0005515 conveys no specific molecular
+      function. Retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: Interaction (PYGB, brain phosphorylase paralog) detected in a proteome-scale
+      cell-specific interactome study. Bare &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: High-throughput affinity-purification interactome data; GO:0005515 conveys no
+      specific function. Retained but flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: Dual proteome-scale networks reveal cell-specific remodeling of the
+        human interactome.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:36217029
+  qualifier: enables
+  review:
+    summary: Interaction with a SARS-CoV-2 viral protein (rep/nsp12) reported in a
+      virus-host contactome screen. Bare &#34;protein binding&#34;, involving a xeno (viral)
+      partner, is uninformative for PYGM&#39;s physiological function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Viral-host high-throughput interaction dataset; not indicative of a native
+      molecular function of PYGM and captured only as bare protein binding. Retained but
+      flagged as over-annotated.
+    supported_by:
+    - reference_id: PMID:36217029
+      supporting_text: A proteome-scale map of the SARS-CoV-2-human contactome.
+- term:
+    id: GO:0004645
+    label: 1,4-alpha-oligoglucan phosphorylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:1150650
+  qualifier: enables
+  review:
+    summary: Experimental characterization of skeletal muscle glycogen phosphorylase
+      catalytic and regulatory properties (AMP activation, glucose-6-P inhibition,
+      phosphorylase b to a interconversion). This is the EC 2.4.1.1 alpha-1,4-glucan
+      phosphorylase activity of the enzyme.
+    action: MODIFY
+    reason: Experimentally supported activity, but GO:0008184 glycogen phosphorylase
+      activity is the more precise term for the physiological substrate (glycogen) of the
+      muscle isoform. Both correspond to EC 2.4.1.1. Do not remove an experimental
+      annotation; refine to the specific term.
+    proposed_replacement_terms:
+    - id: GO:0008184
+      label: glycogen phosphorylase activity
+    supported_by:
+    - reference_id: PMID:1150650
+      supporting_text: derived from the NH2-terminal region of skeletal muscle glycogen
+        phosphorylase
+- term:
+    id: GO:0004645
+    label: 1,4-alpha-oligoglucan phosphorylase activity
+  evidence_type: EXP
+  original_reference_id: PMID:8316268
+  qualifier: enables
+  review:
+    summary: Functional/catalytic-activity evidence associated with molecular-genetic
+      characterization of myophosphorylase (McArdle disease). Represents the EC 2.4.1.1
+      alpha-1,4-glucan phosphorylase activity of PYGM.
+    action: MODIFY
+    reason: Correct activity but better represented by the specific term GO:0008184
+      glycogen phosphorylase activity for this muscle isoform. Experimental annotation
+      refined, not removed.
+    proposed_replacement_terms:
+    - id: GO:0008184
+      label: glycogen phosphorylase activity
+    supported_by:
+    - reference_id: PMID:8316268
+      supporting_text: The myophosphorylase gene has been sequenced and assigned to
+        chromosome 11
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:1150650
+  qualifier: involved_in
+  review:
+    summary: Direct experimental evidence for the role of skeletal muscle glycogen
+      phosphorylase in glycogen breakdown, via characterization of its catalytic and
+      allosteric properties.
+    action: ACCEPT
+    reason: Core biological process supported by direct assay of the muscle enzyme&#39;s
+      phosphorolytic activity and its regulation.
+    supported_by:
+    - reference_id: PMID:1150650
+      supporting_text: induce the enzymic properties of phosphorylase a
+- term:
+    id: GO:0005980
+    label: glycogen catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:8316268
+  qualifier: involved_in
+  review:
+    summary: Mutational (McArdle disease) evidence linking loss of myophosphorylase
+      function to impaired muscle glycogen catabolism. Loss-of-function PYGM variants
+      cause a block in glycogenolysis (GSD5).
+    action: ACCEPT
+    reason: Core biological process; disease-causing loss-of-function variants demonstrate
+      the enzyme&#39;s requirement for muscle glycogen breakdown.
+    supported_by:
+    - reference_id: PMID:8316268
+      supporting_text: exercise intolerance, muscle cramps, and recurrent
+- term:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:1150650
+  qualifier: enables
+  review:
+    summary: Direct assay of skeletal muscle glycogen phosphorylase activity, including
+      its allosteric regulation (AMP activation, cooperative binding, glucose-6-P
+      inhibition) and phosphorylase b to a interconversion.
+    action: ACCEPT
+    reason: Core molecular function with direct experimental support in the muscle enzyme.
+    supported_by:
+    - reference_id: PMID:1150650
+      supporting_text: the enzyme, normally present as a dimer, associates to a
+- term:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  evidence_type: IMP
+  original_reference_id: PMID:8316268
+  qualifier: enables
+  review:
+    summary: Loss of glycogen phosphorylase activity resulting from disease-causing PYGM
+      mutations (McArdle disease) demonstrates that this gene enables glycogen
+      phosphorylase activity in muscle.
+    action: ACCEPT
+    reason: Core molecular function; genotype-phenotype evidence supports the enzymatic
+      role of PYGM.
+    supported_by:
+    - reference_id: PMID:8316268
+      supporting_text: The myophosphorylase gene has been sequenced and assigned to
+        chromosome 11
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: PYGM was detected by shotgun mass spectrometry among ~900 proteins in
+      exosomes purified from expressed prostatic secretions in urine. This is a
+      high-throughput proteomic co-detection, not evidence of a functional
+      extracellular/exosomal role for this cytosolic muscle enzyme.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Common high-throughput exosome-proteomics detection of an abundant cytosolic
+      protein; it does not reflect the site where PYGM performs its function (cytosolic
+      glycogenolysis). Flagged as over-annotated rather than removed, per policy for
+      experimental (HDA) detection.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: exosome preparations were characterized by a shotgun proteomics
+        procedure
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-453338
+  qualifier: located_in
+  review:
+    summary: Reactome-curated cytosolic localization of the PYGM b dimer (AMP-complex
+      reaction). Correct localization for this soluble glycogenolytic enzyme.
+    action: ACCEPT
+    reason: Correct core localization; concordant with the IBA cytosol annotation.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-453342
+  qualifier: located_in
+  review:
+    summary: Reactome-curated cytosolic localization of the PYGM b dimer (AMP-binding
+      reaction). Correct localization.
+    action: ACCEPT
+    reason: Correct core localization; concordant with the IBA and other TAS cytosol
+      annotations.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71541
+  qualifier: located_in
+  review:
+    summary: Reactome-curated cytosolic localization of PYGM associated with its
+      phosphorylation (b to a conversion) by the cytosolic phosphorylase kinase complex.
+    action: ACCEPT
+    reason: Correct core localization; the enzyme and its activating kinase act in the
+      cytosol.
+- term:
+    id: GO:0005977
+    label: glycogen metabolic process
+  evidence_type: TAS
+  original_reference_id: PMID:9633816
+  qualifier: involved_in
+  review:
+    summary: Traceable author statement placing myophosphorylase in glycogen metabolism.
+      Correct but general; the specific role of PYGM is in the catabolic branch (glycogen
+      breakdown).
+    action: MODIFY
+    reason: The broad glycogen metabolic process is a parent of the more precise
+      GO:0005980 glycogen catabolic process, which is already experimentally annotated and
+      better reflects PYGM&#39;s directional (glycogenolytic) role.
+    proposed_replacement_terms:
+    - id: GO:0005980
+      label: glycogen catabolic process
+    supported_by:
+    - reference_id: PMID:9633816
+      supporting_text: caused by mutations in the muscle glycogen phosphorylase gene
+- term:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  evidence_type: TAS
+  original_reference_id: PMID:9633816
+  qualifier: enables
+  review:
+    summary: Traceable author statement supporting the glycogen phosphorylase activity of
+      myophosphorylase, in the context of McArdle disease molecular diagnosis.
+    action: ACCEPT
+    reason: Core molecular function; concordant with the experimental IDA/IMP and IBA/IEA
+      annotations to the same term.
+    supported_by:
+    - reference_id: PMID:9633816
+      supporting_text: caused by mutations in the muscle glycogen phosphorylase gene
+core_functions:
+- description: Muscle glycogen phosphorylase catalyzes the rate-limiting phosphorolytic
+    cleavage of alpha-1,4-glycosidic bonds at glycogen non-reducing ends, releasing
+    glucose-1-phosphate, using a covalently bound pyridoxal-5&#39;-phosphate cofactor.
+  molecular_function:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  supported_by:
+  - reference_id: PMID:1150650
+    supporting_text: induce the enzymic properties of phosphorylase a
+  - reference_id: file:human/PYGM/PYGM-uniprot.txt
+    supporting_text: &#34;EC=2.4.1.1 {ECO:0000269|PubMed:1150650, ECO:0000269|PubMed:8316268}&#34;
+- description: The enzyme performs the committed, rate-limiting step of muscle
+    glycogenolysis, mobilizing stored glycogen to supply glucose-1-phosphate for
+    glycolytic ATP production during exercise; its loss causes McArdle disease.
+  molecular_function:
+    id: GO:0008184
+    label: glycogen phosphorylase activity
+  directly_involved_in:
+  - id: GO:0005980
+    label: glycogen catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:8316268
+    supporting_text: exercise intolerance, muscle cramps, and recurrent
+  - reference_id: file:human/PYGM/PYGM-uniprot.txt
+    supporting_text: catalyzes the rate-limiting step in
+- description: Glycogen phosphorylase requires pyridoxal-5&#39;-phosphate as an essential
+    cofactor, covalently bound via a Schiff base to an active-site lysine (Lys-681),
+    for catalysis.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/PYGM/PYGM-uniprot.txt
+    supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate; Xref=ChEBI:CHEBI:597326;&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:1150650
+  title: Regulation of glycogen phosphorylase. Role of the peptide region surrounding
+    the phosphoserine residue in determining enzyme properties.
+  findings:
+  - statement: Skeletal muscle glycogen phosphorylase is regulated through phosphorylation
+      of its N-terminal region (phosphorylase b to a), AMP allosteric activation,
+      glucose-6-P inhibition, and dimer-to-tetramer association.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; abstract-only. Supports catalytic activity, allosteric
+      regulation, and the homodimer subunit structure of the muscle enzyme (UniProt cites
+      it for CATALYTIC ACTIVITY, ACTIVITY REGULATION, SUBUNIT, and Ser-15 phosphorylation).
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings:
+  - statement: PYGM was among ~900 proteins detected by shotgun proteomics in urinary
+      prostatic-secretion exosomes; a high-throughput co-detection, not a functional
+      localization.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. High-throughput exosome proteomics; supports only
+      the (over-annotated) extracellular exosome detection, not a functional role.
+- id: PMID:24722188
+  title: Protein interaction network of alternatively spliced isoforms from brain
+    links genetic risk factors for autism.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Large-scale isoform interactome; source of an
+      uninformative bare protein binding IPI (PRKAB2).
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Proteome-scale interactome screen; source of bare
+      protein binding IPIs (PRKAB2, NTAQ1).
+- id: PMID:31515488
+  title: Extensive disruption of protein interactions by genetic variants across the
+    allele frequency spectrum in human populations.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Systematic interaction-perturbation study; source of
+      a bare protein binding IPI (NTAQ1).
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified (HuRI). Binary interactome map; source of bare protein
+      binding IPIs, several with paralogous phosphorylases (PYGL, PYGB).
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Proteome-scale interactome study; source of a bare
+      protein binding IPI (PYGB paralog).
+- id: PMID:36217029
+  title: A proteome-scale map of the SARS-CoV-2-human contactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: PubMed-verified. Virus-host contactome; source of a bare (xeno) protein
+      binding IPI with SARS-CoV-2 rep, not a native function.
+- id: PMID:8316268
+  title: Molecular genetic heterogeneity of myophosphorylase deficiency (McArdle&#39;s
+    disease).
+  findings:
+  - statement: Loss-of-function mutations in the muscle glycogen phosphorylase gene cause
+      McArdle disease, a common cause of exercise intolerance, muscle cramps, and recurrent
+      myoglobinuria.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; abstract-only. Establishes PYGM loss-of-function as the
+      cause of McArdle disease (GSD5) and underpins the FUNCTION/CATALYTIC ACTIVITY and
+      IMP glycogen-catabolism annotations.
+- id: PMID:9633816
+  title: &#39;Molecular diagnosis of McArdle disease: revised genomic structure of the
+    myophosphorylase gene and identification of a novel mutation.&#39;
+  findings:
+  - statement: McArdle disease is an autosomal recessive disorder of muscle glycogen
+      metabolism caused by mutations in the muscle glycogen phosphorylase gene.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: PubMed-verified; abstract-only. Focused on genomic structure and mutation
+      detection; TAS source for glycogen phosphorylase activity and glycogen metabolic
+      process.
+- id: Reactome:R-HSA-453338
+  title: PYGM b dimer:AMP complex =&gt; PYGM dimer, b form + 2 AMP
+  findings: []
+- id: Reactome:R-HSA-453342
+  title: PYGM dimer, b form + 2 AMP =&gt; PYGM b dimer:AMP complex
+  findings: []
+- id: Reactome:R-HSA-71541
+  title: glycogen phosphorylase (PYGM) dimer b + 2 ATP =&gt; glycogen phosphorylase (PYGM)
+    dimer a + 2 ADP
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

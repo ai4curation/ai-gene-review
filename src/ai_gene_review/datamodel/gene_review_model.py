@@ -100,6 +100,20 @@ linkml_meta = LinkMLMeta({'default_prefix': 'gene_review',
                           'prefix_reference': 'http://www.w3.org/2001/XMLSchema#'}},
      'source_file': 'src/ai_gene_review/schema/gene_review.yaml'} )
 
+class ModuleScopeEnum(str, Enum):
+    """
+    How concrete the module document is expected to be.
+    """
+    CONCRETE = "CONCRETE"
+    """
+    A module representing a specific pathway, complex, process, or taxon-scoped realization where terminal steps should generally ground to representative members.
+    """
+    ABSTRACT = "ABSTRACT"
+    """
+    A reusable motif or template that intentionally uses abstract participant selectors and is not expected to ground each terminal node to concrete representative proteins.
+    """
+
+
 class ModuleTypeEnum(str, Enum):
     """
     Broad type of biological module node.
@@ -2294,6 +2308,7 @@ class FamilyDescriptor(Descriptor):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
+    family_terms: Optional[list[Term]] = Field(default=None, description="""Multiple family-level ontology/database groundings when this descriptor intentionally abstracts over more than one family, such as a conserved role split across multiple PANTHER PTHR families. Use the inherited term slot for the ordinary single-family case.""", json_schema_extra = { "linkml_meta": {'alias': 'family_terms', 'domain_of': ['FamilyDescriptor']} })
     representative_members: Optional[list[GeneProductDescriptor]] = Field(default=None, description="""Representative concrete members used to orient the family. These are examples, not an exhaustive member list and not a claim that the module is limited to these proteins.""", json_schema_extra = { "linkml_meta": {'alias': 'representative_members', 'domain_of': ['FamilyDescriptor']} })
     ancestral_nodes: Optional[list[AncestralNodeDescriptor]] = Field(default=None, description="""PANTHER/PAINT ancestral node(s) at which the associated function is inferred to have arisen (or to have been present in the last common ancestor). Unlike representative_members, which only give orienting examples, an ancestral node makes a clade-level evolutionary claim: extant descendants are inferred to retain the function unless there is evidence of divergence, neofunctionalization, or loss of key residues.""", json_schema_extra = { "linkml_meta": {'alias': 'ancestral_nodes', 'domain_of': ['FamilyDescriptor']} })
     preferred_term: str = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'preferred_term', 'domain_of': ['Descriptor']} })
@@ -3181,6 +3196,7 @@ class ModuleReview(ConfiguredBaseModel):
                        'KnowledgeGap',
                        'RuleReview',
                        'PredictionReview']} })
+    scope: Optional[ModuleScopeEnum] = Field(default=None, description="""Whether this module is a concrete biological realization or an abstract reusable motif/template. ABSTRACT modules are intentionally gene-free and are not expected to declare representative protein members for every leaf node.""", json_schema_extra = { "linkml_meta": {'alias': 'scope', 'domain_of': ['ModuleReview']} })
     module: ModuleNode = Field(default=..., json_schema_extra = { "linkml_meta": {'alias': 'module', 'domain_of': ['ModuleReview']} })
     evidence: Optional[list[EvidenceItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'alias': 'evidence',
          'domain_of': ['Descriptor',

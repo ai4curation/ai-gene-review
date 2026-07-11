@@ -1,0 +1,3558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIGM - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PIGM</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9H3S5" target="_blank" class="term-link">
+                        Q9H3S5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PIGM";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9H3S5" data-a="DESCRIPTION: PIGM is the catalytic subunit of GPI mannosyltrans..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PIGM is the catalytic subunit of GPI mannosyltransferase I (GPI-MT-I), the enzyme that transfers the first mannose, in an alpha-1,4 linkage, from dolichyl-phosphate-mannose (Dol-P-Man) onto the glucosaminyl-(acyl)phosphatidylinositol (GlcN-(acyl)PI) intermediate during glycosylphosphatidylinositol (GPI) anchor biosynthesis. It is a multi-pass endoplasmic reticulum membrane protein whose catalytic DXD motif faces the ER lumen, so this mannosylation step occurs on the lumenal side of the ER membrane. PIGM acts together with the stabilizing subunit PIGX to form the GPI-MT-I complex. Loss of PIGM function causes an inherited GPI deficiency (GPI biosynthesis defect); a hypomorphic PIGM promoter mutation is associated with portal and cerebral vein thrombosis and atypical absence seizures.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000030" target="_blank" class="term-link">
+                                    GO:0000030
+                                </a>
+                            </span>
+                            <span class="term-label">mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0000030" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General mannosyltransferase activity, assigned by phylogenetic inference. This is correct but far less specific than PIGM&#39;s characterized activity (transfer of the first GPI mannose via an alpha-1,4 bond from Dol-P-Man), which is captured by GO:0180041.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is in the right molecular-function branch but is too general. PIGM is a specific GPI alpha-1,4-mannosyltransferase (GPI-MT-I); the specific term GO:0180041 (also present in GOA with IDA support) should be preferred.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                                    dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGM and PIGV are GPI-mannosyltransferase (MT) I and II, respectively</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990529" target="_blank" class="term-link">
+                                    GO:1990529
+                                </a>
+                            </span>
+                            <span class="term-label">glycosylphosphatidylinositol-mannosyltransferase I complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:1990529" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGM is part of the GPI-mannosyltransferase I complex, which in mammals comprises the catalytic subunit PIGM and the stabilizing subunit PIGX. This is the correct complex assignment for PIGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The GPI-MT-I complex membership is well established; PIGM is its catalytic subunit and PIGX stabilizes it.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGM functions in association with PIGX, which stabilizes PIGM</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">complex that is composed of PIGM and PIGX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0006506" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PIGM catalyzes step 6 of GPI-anchor biosynthesis (addition of the first mannose), so involvement in the GPI anchor biosynthetic process is the core biological process for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported core biological process; consistent with the experimental IDA annotation to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004376" target="_blank" class="term-link">
+                                    GO:0004376
+                                </a>
+                            </span>
+                            <span class="term-label">GPI mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0004376" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based (IPR007704, PIG-M) electronic annotation to GPI mannosyltransferase activity. This is accurate for PIGM but less specific than the characterized dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity (GO:0180041).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct branch and biologically accurate, but the specific characterized activity term (GO:0180041) is preferable as the representative molecular function.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                                    dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation from UniProt Subcellular Location mapping to ER membrane, consistent with the experimental IDA localization (PMID:11226175) and the multi-pass ER membrane topology.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization, corroborated by experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0006506" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation (InterPro/UniPathway) to GPI anchor biosynthetic process, redundant with and consistent with the IBA and IDA annotations to the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core biological process; supported by experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic membrane localization from InterPro. PIGM is a multi-pass ER membrane protein, so this is correct but uninformatively broad relative to the ER membrane annotation (GO:0005789).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but subsumed by the more specific and experimentally supported GO:0005789 (endoplasmic reticulum membrane); the bare &#39;membrane&#39; term adds little.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051751" target="_blank" class="term-link">
+                                    GO:0051751
+                                </a>
+                            </span>
+                            <span class="term-label">alpha-1,4-mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0051751" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based annotation to alpha-1,4-mannosyltransferase activity. PIGM does form an alpha-1,4 mannosidic bond, so this is accurate, but it is more general than the specific GPI substrate reaction (GO:0180041).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct linkage-level activity but less specific than the characterized dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity; GO:0180041 is preferred.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                                    dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">transfer of the first mannose, via an alpha-1,4 bond from a dolichol-phosphate-mannose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                                    GO:0180041
+                                </a>
+                            </span>
+                            <span class="term-label">dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000116
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0180041" data-r="GO_REF:0000116" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rhea-based electronic annotation (RHEA:60500) to the specific catalytic activity of PIGM. This exactly matches the UniProt catalytic activity and the experimental IDA annotation to the same term, and is the representative molecular function of PIGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the precise, correct molecular function of PIGM and is independently supported by experimental evidence (PMID:11226175) and the UniProt Rhea reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">transfer of the first mannose, via an alpha-1,4 bond from a dolichol-phosphate-mannose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS interaction (BioPlex 2.0) recording binding to STARD7 (UniProtKB:Q9NQZ5). &#39;Protein binding&#39; is uninformative and the partner captured here is not the functional GPI-MT-I subunit (PIGX); STARD7 is a phosphatidylcholine transfer protein, so this is most likely an incidental proteome-scale co-purification.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Bare &#39;protein binding&#39; from a genome-scale interactome screen does not convey a specific molecular function and the STARD7 interaction is not the biologically characterized GPI-MT-I partnership; retained but flagged rather than removed, per policy on experimental IPIs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9NQZ5: STARD7; NbExp=2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS interaction (BioPlex 3.0) again recording binding to STARD7 (UniProtKB:Q9NQZ5). As with the BioPlex 2.0 annotation, &#39;protein binding&#39; is uninformative and STARD7 is not the functional GPI-MT-I partner.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Duplicate uninformative bare &#39;protein binding&#39; from a proteome-scale interactome; does not represent a specific molecular function. Retained but flagged rather than removed, per policy on experimental IPIs.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Q9NQZ5: STARD7; NbExp=2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32156170
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biosynthesis and biology of mammalian GPI-anchored proteins.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005789" data-r="PMID:32156170" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (CPX-2697) assertion that PIGM localizes to the ER membrane, where GPI biosynthesis takes place. Consistent with experimental and electronic ER-membrane annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization; GPI is assembled on the ER membrane and PIGM is a multi-pass ER membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGM and PIGV are GPI-mannosyltransferase (MT) I and II, respectively</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990529" target="_blank" class="term-link">
+                                    GO:1990529
+                                </a>
+                            </span>
+                            <span class="term-label">glycosylphosphatidylinositol-mannosyltransferase I complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32156170
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biosynthesis and biology of mammalian GPI-anchored proteins.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:1990529" data-r="PMID:32156170" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (CPX-2697) assertion of PIGM membership in the GPI-mannosyltransferase I complex (PIGM + PIGX). Correct and consistent with the IBA and ISS annotations to the same complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well-supported complex membership; PIGM is the catalytic subunit of GPI-MT-I.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                                        PMID:32156170
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIGM functions in association with PIGX, which stabilizes PIGM</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11226175
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PIG-M transfers the first mannose to glycosylphosphatidylino...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005789" data-r="PMID:11226175" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental localization of PIG-M to the ER membrane; the catalytic DXD motif faces the ER lumen, showing that PIGM is an ER membrane protein acting on the lumenal side.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) ER membrane localization, corroborated by the multi-pass ER membrane topology; this is the core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M has a functionally important DXD motif, a characteristic of many</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                    GO:0006506
+                                </a>
+                            </span>
+                            <span class="term-label">GPI anchor biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11226175
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PIG-M transfers the first mannose to glycosylphosphatidylino...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0006506" data-r="PMID:11226175" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental demonstration that PIG-M is required for and catalyzes the addition of the first mannose in GPI biosynthesis (identified via a GPI-MT-I-defective human cell line rescued by PIG-M). This is the core biological process of PIGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Strong experimental (IDA) support for the core GPI-anchor biosynthetic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                                    GO:0180041
+                                </a>
+                            </span>
+                            <span class="term-label">dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11226175
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    PIG-M transfers the first mannose to glycosylphosphatidylino...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0180041" data-r="PMID:11226175" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence for the specific catalytic activity of PIG-M, transfer of the first mannose via an alpha-1,4 bond from Dol-P-Man to GlcN-(acyl)PI, on the lumenal side of the ER; mutation of the DXD motif (D49/D51) abolishes activity. This is the representative molecular function of PIGM.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Precise, experimentally established (IDA) molecular function; the DXD-motif mutagenesis confirms catalytic requirement.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                        PMID:11226175
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">PIG-M has a functionally important DXD motif, a characteristic of many</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">transfer of the first mannose, via an alpha-1,4 bond from a dolichol-phosphate-mannose</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990529" target="_blank" class="term-link">
+                                    GO:1990529
+                                </a>
+                            </span>
+                            <span class="term-label">glycosylphosphatidylinositol-mannosyltransferase I complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:1990529" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer (from mouse Pigm, UniProtKB:Q9EQY6) of membership in the GPI-MT-I complex. Consistent with the IBA and NAS annotations to the same complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct complex membership, corroborated by orthology and by ComplexPortal.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PIGM/PIGM-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">complex that is composed of PIGM and PIGX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-162830
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9H3S5" data-a="GO:0005789" data-r="Reactome:R-HSA-162830" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome traceable assertion placing the PIG-M/PIG-X-catalyzed first-mannose addition (step 6 of GPI synthesis) at the lumenal surface of the ER membrane. Consistent with the experimental ER-membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization from an authoritative pathway resource; matches experimental evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-162830
+
+                                </span>
+
+                                <div class="support-text">In the fifth step of GPI synthesis, a mannose residue is added to glucosaminyl-acyl-PI</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PIGM is the catalytic subunit of GPI mannosyltransferase I; it transfers the first mannose in an alpha-1,4 linkage from dolichyl-phosphate-mannose (Dol-P-Man) onto the GlcN-(acyl)PI intermediate during GPI-anchor biosynthesis, acting on the lumenal side of the ER membrane.</h3>
+                <span class="vote-buttons" data-g="Q9H3S5" data-a="FUNCTION: PIGM is the catalytic subunit of GPI mannosyltrans..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0180041" target="_blank" class="term-link">
+                            dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006506" target="_blank" class="term-link">
+                                GPI anchor biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                endoplasmic reticulum membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990529" target="_blank" class="term-link">
+                            glycosylphosphatidylinositol-mannosyltransferase I complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                                PMID:11226175
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PIGM/PIGM-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">transfer of the first mannose, via an alpha-1,4 bond from a dolichol-phosphate-mannose</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000116.md" target="_blank" class="term-link">
+                            GO_REF:0000116
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic Gene Ontology annotation based on Rhea mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11226175" target="_blank" class="term-link">
+                            PMID:11226175
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal side of the ER.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PIG-M is the catalytic mannosyltransferase that adds the first mannose to GPI via an alpha-1,4 bond on the lumenal side of the ER, using a lumen-facing DXD motif essential for activity.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32156170" target="_blank" class="term-link">
+                            PMID:32156170
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biosynthesis and biology of mammalian GPI-anchored proteins.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PIGM and PIGV are GPI-mannosyltransferases I and II; PIGM adds Man1 and functions in association with PIGX, which stabilizes PIGM.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-162830
+
+                    </span>
+                </div>
+
+                <div class="reference-title">glucosaminyl-acyl-PI + dolichol phosphate D-mannose -&gt; mannose(al1-4)glucosaminyl-acyl-PI + dolichol phosphate</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reactome reaction for the PIG-M/PIG-X-catalyzed addition of the first mannose to glucosaminyl-acyl-PI at the lumenal surface of the ER membrane.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PIGM/PIGM-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q9H3S5 PIGM record</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt describes PIGM as the catalytic subunit of the GPI-mannosyltransferase I complex (with PIGX), a multi-pass ER membrane protein that transfers the first mannose via an alpha-1,4 bond from Dol-P-Man to GlcN-(acyl)PI.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the STARD7 interaction captured in BioPlex have any physiological relevance to GPI-MT-I function or ER lipid supply, or is it an incidental proteome-scale co-purification?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H3S5" data-a="Q: Does the STARD7 interaction captured in BioPlex ha..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structural determination of the human PIGM-PIGX GPI-MT-I complex to define the Dol-P-Man and GlcN-(acyl)PI binding sites and the role of the lumenal DXD motif.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9H3S5" data-a="EXPERIMENT: Structural determination of the human PIGM-PIGX GP..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PIGM-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9H3S5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pigm-q9h3s5-review-notes">PIGM (Q9H3S5) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Human PIGM = GPI alpha-1,4-mannosyltransferase I, catalytic subunit; a.k.a. GPI mannosyltransferase I (GPI-MT-I), PIG-M. HGNC:18858. 423 aa, multipass ER membrane protein, GT50 (CAZy), Pfam PF05007 Mannosyl_trans, InterPro IPR007704.</li>
+</ul>
+<h2 id="core-biology-grounded">Core biology (grounded)</h2>
+<ul>
+<li>Catalytic subunit of the GPI-mannosyltransferase I (GPI-MT-I) complex (PIGM + PIGX). PIGX stabilizes PIGM.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32156170" title="PIGM functions in association with PIGX, which stabilizes PIGM">PMID:32156170</a></li>
+<li>Transfers the FIRST mannose (Man1), via an alpha-1,4 bond, from dolichol-phosphate-mannose (Dol-P-Man) to GlcN-(acyl)PI, i.e. step 6 of GPI biosynthesis (Rhea:60500).<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11226175" title="PIG-M transfers the first mannose to glycosylphosphatidylinositol on the lumenal side of the ER">PMID:11226175</a><br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/32156170" title="PIGM and PIGV are GPI-mannosyltransferase (MT) I and II, respectively">PMID:32156170</a></li>
+<li>Reaction occurs on the LUMENAL side of the ER membrane; catalytic DXD motif (D49, D51) in a lumen-facing domain. D49A almost abolishes and D51A abolishes activity.<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11226175" title="PIG-M has a functionally important DXD motif, a characteristic of many glycosyltransferases, within a domain facing the lumen of the endoplasmic reticulum (ER)">PMID:11226175</a><br />
+  UniProt MUTAGEN D49 (almost abolishes), D51 (abolishes) — file:human/PIGM/PIGM-uniprot.txt</li>
+<li>Reactome R-HSA-162830: "It is catalyzed by a complex of at least two components, PIG-M and PIG-X (Maeda et al. 2001; Ashida et al. 2005)."</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>ER membrane, multi-pass (10 TM helices; UniProt topology). IDA in PMID:11226175; SubCell mapping; Reactome TAS; ComplexPortal NAS (CPX-2697).</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>GPIBD1 (glycosylphosphatidylinositol biosynthesis defect 1, MIM:610293): autosomal recessive; hypomorphic PIGM PROMOTER mutation. Portal/hepatic vein thrombosis, portal hypertension, absence/atypical-absence seizures, macrocephaly, splenomegaly, cytopenias, early cerebral infarctions.<br />
+  UniProt DISEASE cites PMID:16767100 (Almeida 2006, Nat Med, promoter mutation) and PMID:31445883 (Pode-Shakked 2019, cerebral+portal vein thrombosis, macrocephaly, atypical absence seizures). Neither is cached in publications/ and neither is a GOA reference; used only as background (via UniProt), not as supporting_text.</li>
+</ul>
+<h2 id="goa-mf-term-to-use-per-instruction-read-goa-for-exact-current-mf-idlabel">GOA MF term to use (per instruction: read GOA for exact current MF id/label)</h2>
+<ul>
+<li>GOA carries GO:0180041 "dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity" (IDA PMID:11226175; also IEA RHEA). This is the specific catalytic activity term = use for core_functions molecular_function. (Confirmed current label in go.db.)</li>
+<li>Broader MF terms present: GO:0004376 GPI mannosyltransferase activity (IEA InterPro), GO:0000030 mannosyltransferase activity (IBA), GO:0051751 alpha-1,4-mannosyltransferase activity (IEA InterPro) — all correct ancestors; the specific term (0180041) is the accurate one.</li>
+</ul>
+<h2 id="interaction-ipi-annotations">Interaction (IPI) annotations</h2>
+<ul>
+<li>Two IPI GO:0005515 "protein binding" from BioPlex (PMID:28514442 BioPlex 2.0; PMID:33961781 BioPlex 3.0), with:from UniProtKB:Q9NQZ5 = STARD7. UniProt records this same IntAct interaction (Q9H3S5–Q9NQZ5 STARD7, NbExp=2). High-throughput AP-MS; STARD7 is a lipid (PC) transfer protein, not the functional GPI-MT-I partner (PIGX). Uninformative "protein binding"; MARK_AS_OVER_ANNOTATED per policy (do not REMOVE bare protein-binding IPIs).</li>
+</ul>
+<h2 id="core_functions-term-branch-checks-godb">core_functions term branch checks (go.db)</h2>
+<ul>
+<li>GO:0180041 -&gt; molecular_function (subClassOf) OK</li>
+<li>GO:0006506 -&gt; biological_process (subClassOf) OK; GO:0005789 -&gt; cellular_component (subClassOf) OK<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9H3S5
+gene_symbol: PIGM
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: PIGM is the catalytic subunit of GPI mannosyltransferase I (GPI-MT-I),
+  the enzyme that transfers the first mannose, in an alpha-1,4 linkage, from dolichyl-phosphate-mannose
+  (Dol-P-Man) onto the glucosaminyl-(acyl)phosphatidylinositol (GlcN-(acyl)PI) intermediate
+  during glycosylphosphatidylinositol (GPI) anchor biosynthesis. It is a multi-pass
+  endoplasmic reticulum membrane protein whose catalytic DXD motif faces the ER lumen,
+  so this mannosylation step occurs on the lumenal side of the ER membrane. PIGM acts
+  together with the stabilizing subunit PIGX to form the GPI-MT-I complex. Loss of
+  PIGM function causes an inherited GPI deficiency (GPI biosynthesis defect); a hypomorphic
+  PIGM promoter mutation is associated with portal and cerebral vein thrombosis and
+  atypical absence seizures.
+existing_annotations:
+- term:
+    id: GO:0000030
+    label: mannosyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: General mannosyltransferase activity, assigned by phylogenetic inference.
+      This is correct but far less specific than PIGM&#39;s characterized activity (transfer
+      of the first GPI mannose via an alpha-1,4 bond from Dol-P-Man), which is captured
+      by GO:0180041.
+    action: MODIFY
+    reason: The annotation is in the right molecular-function branch but is too general.
+      PIGM is a specific GPI alpha-1,4-mannosyltransferase (GPI-MT-I); the specific
+      term GO:0180041 (also present in GOA with IDA support) should be preferred.
+    proposed_replacement_terms:
+    - id: GO:0180041
+      label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGM and PIGV are GPI-mannosyltransferase (MT) I and II, respectively
+- term:
+    id: GO:1990529
+    label: glycosylphosphatidylinositol-mannosyltransferase I complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: PIGM is part of the GPI-mannosyltransferase I complex, which in mammals
+      comprises the catalytic subunit PIGM and the stabilizing subunit PIGX. This
+      is the correct complex assignment for PIGM.
+    action: ACCEPT
+    reason: The GPI-MT-I complex membership is well established; PIGM is its catalytic
+      subunit and PIGX stabilizes it.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGM functions in association with PIGX, which stabilizes PIGM
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: complex that is composed of PIGM and PIGX
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: PIGM catalyzes step 6 of GPI-anchor biosynthesis (addition of the first
+      mannose), so involvement in the GPI anchor biosynthetic process is the core
+      biological process for this gene.
+    action: ACCEPT
+    reason: Well-supported core biological process; consistent with the experimental
+      IDA annotation to the same term.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+        on the lumenal
+- term:
+    id: GO:0004376
+    label: GPI mannosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based (IPR007704, PIG-M) electronic annotation to GPI mannosyltransferase
+      activity. This is accurate for PIGM but less specific than the characterized
+      dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity (GO:0180041).
+    action: MODIFY
+    reason: Correct branch and biologically accurate, but the specific characterized
+      activity term (GO:0180041) is preferable as the representative molecular function.
+    proposed_replacement_terms:
+    - id: GO:0180041
+      label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+        on the lumenal
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: Electronic annotation from UniProt Subcellular Location mapping to ER
+      membrane, consistent with the experimental IDA localization (PMID:11226175)
+      and the multi-pass ER membrane topology.
+    action: ACCEPT
+    reason: Correct localization, corroborated by experimental evidence.
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Electronic annotation (InterPro/UniPathway) to GPI anchor biosynthetic
+      process, redundant with and consistent with the IBA and IDA annotations to the
+      same term.
+    action: ACCEPT
+    reason: Correct core biological process; supported by experimental evidence.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+        on the lumenal
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Generic membrane localization from InterPro. PIGM is a multi-pass ER
+      membrane protein, so this is correct but uninformatively broad relative to the
+      ER membrane annotation (GO:0005789).
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Not wrong, but subsumed by the more specific and experimentally supported
+      GO:0005789 (endoplasmic reticulum membrane); the bare &#39;membrane&#39; term adds little.
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: Multi-pass membrane protein
+- term:
+    id: GO:0051751
+    label: alpha-1,4-mannosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: InterPro-based annotation to alpha-1,4-mannosyltransferase activity.
+      PIGM does form an alpha-1,4 mannosidic bond, so this is accurate, but it is
+      more general than the specific GPI substrate reaction (GO:0180041).
+    action: MODIFY
+    reason: Correct linkage-level activity but less specific than the characterized
+      dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity; GO:0180041 is
+      preferred.
+    proposed_replacement_terms:
+    - id: GO:0180041
+      label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: transfer of the first mannose, via an alpha-1,4 bond from a
+        dolichol-phosphate-mannose
+- term:
+    id: GO:0180041
+    label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000116
+  qualifier: enables
+  review:
+    summary: Rhea-based electronic annotation (RHEA:60500) to the specific catalytic
+      activity of PIGM. This exactly matches the UniProt catalytic activity and the
+      experimental IDA annotation to the same term, and is the representative molecular
+      function of PIGM.
+    action: ACCEPT
+    reason: This is the precise, correct molecular function of PIGM and is independently
+      supported by experimental evidence (PMID:11226175) and the UniProt Rhea reaction.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+        on the lumenal
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: transfer of the first mannose, via an alpha-1,4 bond from a
+        dolichol-phosphate-mannose
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: High-throughput AP-MS interaction (BioPlex 2.0) recording binding to
+      STARD7 (UniProtKB:Q9NQZ5). &#39;Protein binding&#39; is uninformative and the partner
+      captured here is not the functional GPI-MT-I subunit (PIGX); STARD7 is a phosphatidylcholine
+      transfer protein, so this is most likely an incidental proteome-scale co-purification.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Bare &#39;protein binding&#39; from a genome-scale interactome screen does not
+      convey a specific molecular function and the STARD7 interaction is not the biologically
+      characterized GPI-MT-I partnership; retained but flagged rather than removed,
+      per policy on experimental IPIs.
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: &#39;Q9NQZ5: STARD7; NbExp=2&#39;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: High-throughput AP-MS interaction (BioPlex 3.0) again recording binding
+      to STARD7 (UniProtKB:Q9NQZ5). As with the BioPlex 2.0 annotation, &#39;protein binding&#39;
+      is uninformative and STARD7 is not the functional GPI-MT-I partner.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Duplicate uninformative bare &#39;protein binding&#39; from a proteome-scale interactome;
+      does not represent a specific molecular function. Retained but flagged rather
+      than removed, per policy on experimental IPIs.
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: &#39;Q9NQZ5: STARD7; NbExp=2&#39;
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: NAS
+  original_reference_id: PMID:32156170
+  qualifier: located_in
+  review:
+    summary: ComplexPortal (CPX-2697) assertion that PIGM localizes to the ER membrane,
+      where GPI biosynthesis takes place. Consistent with experimental and electronic
+      ER-membrane annotations.
+    action: ACCEPT
+    reason: Correct localization; GPI is assembled on the ER membrane and PIGM is
+      a multi-pass ER membrane protein.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGM and PIGV are GPI-mannosyltransferase (MT) I and II, respectively
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:1990529
+    label: glycosylphosphatidylinositol-mannosyltransferase I complex
+  evidence_type: NAS
+  original_reference_id: PMID:32156170
+  qualifier: part_of
+  review:
+    summary: ComplexPortal (CPX-2697) assertion of PIGM membership in the GPI-mannosyltransferase
+      I complex (PIGM + PIGX). Correct and consistent with the IBA and ISS annotations
+      to the same complex.
+    action: ACCEPT
+    reason: Well-supported complex membership; PIGM is the catalytic subunit of GPI-MT-I.
+    supported_by:
+    - reference_id: PMID:32156170
+      supporting_text: PIGM functions in association with PIGX, which stabilizes PIGM
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IDA
+  original_reference_id: PMID:11226175
+  qualifier: located_in
+  review:
+    summary: Direct experimental localization of PIG-M to the ER membrane; the catalytic
+      DXD motif faces the ER lumen, showing that PIGM is an ER membrane protein acting
+      on the lumenal side.
+    action: ACCEPT
+    reason: Experimental (IDA) ER membrane localization, corroborated by the multi-pass
+      ER membrane topology; this is the core localization.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M has a functionally important DXD motif, a characteristic
+        of many
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Endoplasmic reticulum membrane&#39;
+- term:
+    id: GO:0006506
+    label: GPI anchor biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:11226175
+  qualifier: involved_in
+  review:
+    summary: Direct experimental demonstration that PIG-M is required for and catalyzes
+      the addition of the first mannose in GPI biosynthesis (identified via a GPI-MT-I-defective
+      human cell line rescued by PIG-M). This is the core biological process of PIGM.
+    action: ACCEPT
+    reason: Strong experimental (IDA) support for the core GPI-anchor biosynthetic
+      role.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+        on the lumenal
+- term:
+    id: GO:0180041
+    label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+  evidence_type: IDA
+  original_reference_id: PMID:11226175
+  qualifier: enables
+  review:
+    summary: Direct experimental evidence for the specific catalytic activity of PIG-M,
+      transfer of the first mannose via an alpha-1,4 bond from Dol-P-Man to GlcN-(acyl)PI,
+      on the lumenal side of the ER; mutation of the DXD motif (D49/D51) abolishes
+      activity. This is the representative molecular function of PIGM.
+    action: ACCEPT
+    reason: Precise, experimentally established (IDA) molecular function; the DXD-motif
+      mutagenesis confirms catalytic requirement.
+    supported_by:
+    - reference_id: PMID:11226175
+      supporting_text: PIG-M has a functionally important DXD motif, a characteristic
+        of many
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: transfer of the first mannose, via an alpha-1,4 bond from a
+        dolichol-phosphate-mannose
+- term:
+    id: GO:1990529
+    label: glycosylphosphatidylinositol-mannosyltransferase I complex
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  review:
+    summary: Sequence-similarity transfer (from mouse Pigm, UniProtKB:Q9EQY6) of membership
+      in the GPI-MT-I complex. Consistent with the IBA and NAS annotations to the
+      same complex.
+    action: ACCEPT
+    reason: Correct complex membership, corroborated by orthology and by ComplexPortal.
+    supported_by:
+    - reference_id: file:human/PIGM/PIGM-uniprot.txt
+      supporting_text: complex that is composed of PIGM and PIGX
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-162830
+  qualifier: located_in
+  review:
+    summary: Reactome traceable assertion placing the PIG-M/PIG-X-catalyzed first-mannose
+      addition (step 6 of GPI synthesis) at the lumenal surface of the ER membrane.
+      Consistent with the experimental ER-membrane localization.
+    action: ACCEPT
+    reason: Correct localization from an authoritative pathway resource; matches experimental
+      evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-162830
+      supporting_text: In the fifth step of GPI synthesis, a mannose residue is added
+        to glucosaminyl-acyl-PI
+core_functions:
+- description: PIGM is the catalytic subunit of GPI mannosyltransferase I; it transfers
+    the first mannose in an alpha-1,4 linkage from dolichyl-phosphate-mannose (Dol-P-Man)
+    onto the GlcN-(acyl)PI intermediate during GPI-anchor biosynthesis, acting on
+    the lumenal side of the ER membrane.
+  molecular_function:
+    id: GO:0180041
+    label: dol-P-Man:GlcN-acyl-PI alpha-1,4-mannosyltransferase activity
+  directly_involved_in:
+  - id: GO:0006506
+    label: GPI anchor biosynthetic process
+  locations:
+  - id: GO:0005789
+    label: endoplasmic reticulum membrane
+  in_complex:
+    id: GO:1990529
+    label: glycosylphosphatidylinositol-mannosyltransferase I complex
+  supported_by:
+  - reference_id: PMID:11226175
+    supporting_text: PIG-M transfers the first mannose to glycosylphosphatidylinositol
+      on the lumenal
+  - reference_id: file:human/PIGM/PIGM-uniprot.txt
+    supporting_text: transfer of the first mannose, via an alpha-1,4 bond from a dolichol-phosphate-mannose
+proposed_new_terms: []
+suggested_questions:
+- question: Does the STARD7 interaction captured in BioPlex have any physiological
+    relevance to GPI-MT-I function or ER lipid supply, or is it an incidental proteome-scale
+    co-purification?
+suggested_experiments:
+- description: Structural determination of the human PIGM-PIGX GPI-MT-I complex to
+    define the Dol-P-Man and GlcN-(acyl)PI binding sites and the role of the lumenal
+    DXD motif.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000116
+  title: Automatic Gene Ontology annotation based on Rhea mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:11226175
+  title: PIG-M transfers the first mannose to glycosylphosphatidylinositol on the
+    lumenal side of the ER.
+  findings:
+  - statement: PIG-M is the catalytic mannosyltransferase that adds the first mannose
+      to GPI via an alpha-1,4 bond on the lumenal side of the ER, using a lumen-facing
+      DXD motif essential for activity.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed-verified; the defining functional and localization paper
+      for PIGM/GPI-MT-I. Cached entry is abstract-only, but the abstract plus UniProt
+      (which cites this PMID for FUNCTION, catalytic activity and mutagenesis) support
+      the annotations.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: BioPlex 2.0 proteome-scale AP-MS; source of an uninformative &#39;protein
+      binding&#39; (STARD7) IPI. Correctly cited but low relevance to PIGM&#39;s characterized
+      function.
+- id: PMID:32156170
+  title: Biosynthesis and biology of mammalian GPI-anchored proteins.
+  findings:
+  - statement: PIGM and PIGV are GPI-mannosyltransferases I and II; PIGM adds Man1
+      and functions in association with PIGX, which stabilizes PIGM.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Authoritative Kinoshita review; full text available and directly
+      supports PIGM&#39;s role as GPI-MTI and its PIGX partnership.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: BioPlex 3.0 proteome-scale AP-MS; source of a duplicate uninformative
+      &#39;protein binding&#39; (STARD7) IPI. Correctly cited but low relevance.
+- id: Reactome:R-HSA-162830
+  title: glucosaminyl-acyl-PI + dolichol phosphate D-mannose -&gt; mannose(al1-4)glucosaminyl-acyl-PI
+    + dolichol phosphate
+  findings:
+  - statement: Reactome reaction for the PIG-M/PIG-X-catalyzed addition of the first
+      mannose to glucosaminyl-acyl-PI at the lumenal surface of the ER membrane.
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Reactome reaction cited by GOA for ER-membrane localization; describes
+      the exact PIGM-catalyzed step.
+- id: file:human/PIGM/PIGM-uniprot.txt
+  title: UniProtKB Q9H3S5 PIGM record
+  findings:
+  - statement: UniProt describes PIGM as the catalytic subunit of the GPI-mannosyltransferase
+      I complex (with PIGX), a multi-pass ER membrane protein that transfers the first
+      mannose via an alpha-1,4 bond from Dol-P-Man to GlcN-(acyl)PI.
+    reference_section_type: OTHER
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: UniProt record for Q9H3S5; used for catalytic activity, subunit
+      composition, and subcellular location statements.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

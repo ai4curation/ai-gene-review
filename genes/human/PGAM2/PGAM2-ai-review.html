@@ -1,0 +1,4802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGAM2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PGAM2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P15259" target="_blank" class="term-link">
+                        P15259
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PGAM2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P15259" data-a="DESCRIPTION: PGAM2 is the muscle (M) isoform of phosphoglycerat..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PGAM2 is the muscle (M) isoform of phosphoglycerate mutase, a cytosolic enzyme of the cofactor-dependent phosphoglycerate mutase (histidine-phosphatase) superfamily. It catalyzes the reversible interconversion of 3-phosphoglycerate and 2-phosphoglycerate, the eighth step of the glycolytic payoff phase (and the corresponding reverse step in gluconeogenesis). Catalysis proceeds through a phospho-histidine enzyme intermediate and requires 2,3-bisphosphoglycerate as a cofactor/primer; the enzyme also displays a minor bisphosphoglycerate mutase/phosphatase side activity. Active human phosphoglycerate mutase is a dimer assembled from muscle (PGAM2/M) and brain (PGAM1/B) subunits; skeletal muscle expresses essentially the PGAM2 homodimer, whereas erythrocytes express PGAM1. PGAM2 is expressed predominantly in heart and skeletal muscle. Loss-of-function variants cause glycogen storage disease type X (muscle phosphoglycerate mutase deficiency), manifesting as exercise intolerance, muscle cramps, and myoglobinuria/rhabdomyolysis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004619" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assignment of the core catalytic activity of PGAM2: reversible interconversion of 3- and 2-phosphoglycerate. This is the defining molecular function of the muscle phosphoglycerate mutase subunit and is strongly corroborated by experimental and UniProt evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core molecular function, correct at the right level of specificity, and consistent across independent evidence lines (IBA, EXP, IMP, ISS, IEA) and the UniProt catalytic-activity record (EC 5.4.2.11).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of the cytosol as the site of action. Phosphoglycerate mutase is a soluble cytosolic glycolytic enzyme, consistent with Reactome and UniProt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct subcellular location for a soluble glycolytic enzyme; agrees with Reactome TAS cytosol annotations and with the entire glycolytic pathway being cytosolic.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71445
+
+                                </span>
+
+                                <div class="support-text">Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0061621" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic assignment of PGAM2 to canonical glycolysis (the ATP-generating glucose-to-pyruvate route). PGAM catalyzes step 8 (3-PG to 2-PG) of the glycolytic payoff phase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process for the muscle glycolytic isoform, at an appropriate level of specificity; corroborated by the Reactome Glycolysis pathway and by the IMP glycolytic-process annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70171
+
+                                </span>
+
+                                <div class="support-text">The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level InterPro2GO mapping asserting generic catalytic activity. Not incorrect but entirely uninformative given the specific mutase activity is already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;catalytic activity&#34; is a top-level MF placeholder subsumed by the specific phosphoglycerate mutase activity annotation; it adds no functional information.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004082" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping (EC 5.4.2.4 / RHEA:17765) of the minor bisphosphoglycerate mutase side activity. UniProt records that the enzyme &#34;can also catalyze the interconversion of (2R)-2,3-bisphosphoglycerate and (2R)-3-phospho-glyceroyl phosphate, but with a reduced activity.&#34;
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine, documented secondary catalytic activity of the BPG-dependent PGAM subfamily; correctly captured, though it is the reduced-activity side reaction rather than the primary physiological function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       3-phospho-glyceroyl phosphate, but with a reduced activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004619" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic mapping (EC 5.4.2.11 / RHEA:15901 / ARBA) of the core phosphoglycerate mutase activity. Duplicate of the core MF from an automated pipeline.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; the automated EC/RHEA mapping agrees with the experimental and phylogenetic annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0006096" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic assignment to the glycolytic process. Correct core pathway for PGAM2, also supported experimentally by the deficiency phenotype (IMP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process; consistent with the IMP annotation from the muscle PGAM deficiency case and with the canonical-glycolysis annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                        PMID:6262916
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016868" target="_blank" class="term-link">
+                                    GO:0016868
+                                </a>
+                            </span>
+                            <span class="term-label">intramolecular phosphotransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0016868" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping to intramolecular phosphotransferase activity, the isomerase parent class (EC 5.4.2.-) that includes phosphoglycerate mutase. Correct but more general than the specific mutase term already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate parent-level molecular function; an IEA term is permitted to be broader than the specific mutase activity, and it correctly reflects the isomerase reaction chemistry (intramolecular phospho group transfer).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28514442
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of the human interactome defines protein commun...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005515" data-r="PMID:28514442" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS interactome (BioPlex 2.0) reporting a PGAM2-BPGM (P07738) co-complex. Bare &#34;protein binding&#34; is uninformative about molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidance, bare &#34;protein binding&#34; is not an informative molecular function and this is an interactome-screen IPI. The recurrent BPGM partner is biologically plausible (both enzymes act on 2,3-bisphosphoglycerate) but does not itself define a specific molecular function; retained (not removed) as an experimental IPI.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                                        PMID:28514442
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to date</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Binary interactome map (HuRI, yeast two-hybrid) reporting PGAM2 interactions (e.g. BPGM, CLVS2, DYNC1LI1, KATNAL1). Bare &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Uninformative generic &#34;protein binding&#34; from a systematic binary-interactome screen; retained as an experimental IPI but not treated as a defining function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:33961781
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Dual proteome-scale networks reveal cell-specific remodeling...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005515" data-r="PMID:33961781" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput AP-MS interactome (BioPlex 3.0) again reporting a PGAM2-BPGM (P07738) association. Bare &#34;protein binding&#34; is uninformative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Generic &#34;protein binding&#34; from an interactome screen; consistent with the other BioPlex/HuRI evidence but non-specific; retained as an experimental IPI.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                                        PMID:33961781
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Dual proteome-scale networks reveal cell-specific remodeling of the human</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link">
+                                    GO:0042802
+                                </a>
+                            </span>
+                            <span class="term-label">identical protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0042802" data-r="PMID:32296183" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Self-interaction of PGAM2 (P15259-P15259) detected in the binary interactome map, consistent with the established homodimeric quaternary structure of phosphoglycerate mutase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Informative self-association annotation that matches the documented homodimer; UniProt SUBUNIT states &#34;Homodimer&#34; and Reactome describes the active enzyme as a dimer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005634" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from rat P16290) transfer of a nuclear localization. PGAM2 is a soluble cytosolic glycolytic enzyme; a nuclear location is not associated with any established nuclear function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is not part of the core biology of this cytosolic enzyme; it derives from orthology transfer plus proteomic detection in sperm nuclei and likely reflects contamination/moonlighting rather than a functional nuclear role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005829" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from mouse O70250) assignment of the cytosol as site of action. Correct core location for a glycolytic enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Agrees with the IBA and Reactome TAS cytosol annotations; correct compartment for phosphoglycerate mutase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71445
+
+                                </span>
+
+                                <div class="support-text">Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0006094" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara) assignment to gluconeogenesis. The phosphoglycerate mutase reaction is reversible and is shared with the gluconeogenic direction, but physiological gluconeogenesis is confined to liver and kidney, which express PGAM1 rather than the muscle PGAM2 isoform.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reaction chemistry participates in gluconeogenesis, but the muscle isoform&#39;s core in-vivo role is glycolytic; muscle does not perform gluconeogenesis, so this is retained as a non-core, reaction-shared process rather than PGAM2&#39;s primary physiological function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70263
+
+                                </span>
+
+                                <div class="support-text">Gluconeogenesis is confined to cells of the liver and kidney</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007283" target="_blank" class="term-link">
+                                    GO:0007283
+                                </a>
+                            </span>
+                            <span class="term-label">spermatogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0007283" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from rat P16290) transfer of a spermatogenesis role. Sperm rely heavily on glycolysis, but a direct role of the muscle PGAM2 isoform in spermatogenesis is not established in human.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Speculative context transferred by orthology; not a core molecular/biological function of the human muscle isoform. Retained as non-core rather than removed, since it is a plausible tissue context for a glycolytic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- TISSUE SPECIFICITY: Expressed in the heart and muscle. Not found in the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046689" target="_blank" class="term-link">
+                                    GO:0046689
+                                </a>
+                            </span>
+                            <span class="term-label">response to mercury ion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0046689" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from rat P16290) transfer of a &#34;response to mercury ion&#34; process. The M subunit is mercury-inhibitable in vitro (historically used to distinguish M from BB isozymes), but this is an enzyme-property observation, not a biological response process of human PGAM2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;response to mercury ion&#34; as a biological process is an orthology artifact and does not represent a core biological role of PGAM2; in-vitro Hg sensitivity of the catalytic His does not constitute a cellular mercury-response pathway.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                        PMID:6262916
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Electrophoretic, </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0061621" data-r="GO_REF:0000107" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from mouse O70250) assignment to canonical glycolysis. Correct core process; duplicate of the IBA/TAS glycolysis annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core glycolytic process for the muscle isoform, consistent with all other glycolysis evidence lines.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70171
+
+                                </span>
+
+                                <div class="support-text">The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990917" target="_blank" class="term-link">
+                                    GO:1990917
+                                </a>
+                            </span>
+                            <span class="term-label">ooplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:1990917" data-r="GO_REF:0000107" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orthology-based (Ensembl Compara, from rat P16290) transfer of an ooplasm (oocyte cytoplasm) location. This is a tissue-context transfer; the compartment (cytoplasm) is consistent with a cytosolic enzyme, but the specific ooplasmic localization is not established for the human muscle isoform.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasmic location is consistent with PGAM2 biology, but &#34;ooplasm&#34; is an orthology-derived tissue-specific location not relevant to the muscle isoform&#39;s core role; retained as non-core rather than removed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71445
+
+                                </span>
+
+                                <div class="support-text">Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006094" target="_blank" class="term-link">
+                                    GO:0006094
+                                </a>
+                            </span>
+                            <span class="term-label">gluconeogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70263
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0006094" data-r="Reactome:R-HSA-70263" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway annotation placing the reversible phosphoglycerate mutase reaction within gluconeogenesis. The reaction is genuinely part of the gluconeogenic sequence (a reverse-of-glycolysis step).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PGAM reaction participates in the gluconeogenesis pathway as modeled by Reactome, so the annotation is not wrong; however gluconeogenesis is a liver/kidney process (PGAM1), so it is not the core physiological role of the muscle PGAM2 isoform. Retained as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70263
+
+                                </span>
+
+                                <div class="support-text">Gluconeogenesis is confined to cells of the liver and kidney</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061621" target="_blank" class="term-link">
+                                    GO:0061621
+                                </a>
+                            </span>
+                            <span class="term-label">canonical glycolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70171
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0061621" data-r="Reactome:R-HSA-70171" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome pathway annotation placing PGAM within canonical glycolysis (the cytosolic glucose-to-pyruvate route). Core process for PGAM2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway (TAS) annotation for the core glycolytic role; consistent with all other glycolysis evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-70171
+
+                                </span>
+
+                                <div class="support-text">The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/4827367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:4827367
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoglycerate mutase isozyme marker for tissue differenti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004619" data-r="PMID:4827367" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental annotation of phosphoglycerate mutase activity based on characterization of the human PGAM isozymes as tissue-differentiation markers (Omenn &amp; Cheung 1974), which established the muscle (M) versus brain (B) subunit isozyme system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental support for the core catalytic activity of the muscle phosphoglycerate mutase isozyme; foundational isozyme-characterization work.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/4827367" target="_blank" class="term-link">
+                                        PMID:4827367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Phosphoglycerate mutase isozyme marker for tissue differentiation in man.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000052
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005654" data-r="GO_REF:0000052" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human Protein Atlas immunofluorescence (IDA) reporting nucleoplasmic signal. PGAM2 is an abundant soluble cytosolic enzyme; nucleoplasmic staining is not linked to any established nuclear function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A single-technique IF localization for an abundant cytosolic glycolytic enzyme, without a corresponding nuclear function; likely reflects the diffuse distribution/permeabilization artifacts common for soluble enzymes rather than a core nucleoplasmic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004082" target="_blank" class="term-link">
+                                    GO:0004082
+                                </a>
+                            </span>
+                            <span class="term-label">bisphosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004082" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer (from PGAM1, P18669) of the minor bisphosphoglycerate mutase activity. Consistent with the UniProt-documented reduced-activity side reaction of the BPG-dependent PGAM subfamily.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Genuine secondary catalytic activity supported by family membership and the UniProt catalytic-activity record (EC 5.4.2.4); appropriately marked as a similarity-based inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC       3-phospho-glyceroyl phosphate, but with a reduced activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004619" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer (from PGAM1, P18669) of the core phosphoglycerate mutase activity. Duplicate of the well-supported core MF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core molecular function; the ISS inference agrees with experimental, phylogenetic, and automated evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/PGAM2/PGAM2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23533145
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In-depth proteomic analyses of exosomes isolated from expres...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0070062" data-r="PMID:23533145" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection in exosomes from expressed prostatic secretions in urine. PGAM2 is a ubiquitous soluble cytosolic enzyme that commonly co-purifies in exosome/secretome proteomes.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A single high-throughput exosome-proteome detection does not establish extracellular exosome as a functional location for this cytosolic glycolytic enzyme; frequent contaminant in such datasets.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                                        PMID:23533145
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In-depth proteomic analyses of exosomes isolated from expressed prostatic</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21630459
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Proteomic characterization of the human sperm nucleus.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005634" data-r="PMID:21630459" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput proteomic detection of PGAM in isolated human sperm nuclei. Nuclear detection of an abundant soluble glycolytic enzyme in a whole-organelle proteome does not establish a functional nuclear role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Proteomic co-detection in a sperm-nucleus preparation is prone to soluble-enzyme carryover; there is no established nuclear function for PGAM2, so this is an over-annotation of its core cytosolic biology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                                        PMID:21630459
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sperm nuclei were obtained </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71445
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005829" data-r="Reactome:R-HSA-71445" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation of the cytosol as the location where PGAM dimers isomerise 2PG to 3PG. Core, correct location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway annotation of the correct compartment for a cytosolic glycolytic enzyme.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71445
+
+                                </span>
+
+                                <div class="support-text">Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-71654
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0005829" data-r="Reactome:R-HSA-71654" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome TAS annotation of the cytosol as the location where PGAM dimers isomerise 3PG to 2PG. Core, correct location (duplicate direction of the same reversible reaction).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Authoritative pathway annotation of the correct cytosolic compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-71654
+
+                                </span>
+
+                                <div class="support-text">Cytosolic phosphoglycerate mutase catalyzes the reversible isomerisation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                                    GO:0004619
+                                </a>
+                            </span>
+                            <span class="term-label">phosphoglycerate mutase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6262916
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human muscle phosphoglycerate mutase deficiency: newly disco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0004619" data-r="PMID:6262916" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support from the first described human muscle phosphoglycerate mutase deficiency: muscle PGAM activity was reduced to 5.7% of the lowest control value, with the residual activity being the brain (BB) isoenzyme, implicating loss of the M subunit encoded by PGAM2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct genetic/biochemical evidence in humans that PGAM2 provides phosphoglycerate mutase activity in muscle; the disease phenotype tracks the loss of M-subunit activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                        PMID:6262916
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                    GO:0006096
+                                </a>
+                            </span>
+                            <span class="term-label">glycolytic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6262916
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human muscle phosphoglycerate mutase deficiency: newly disco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0006096" data-r="PMID:6262916" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (IMP) support that PGAM2 functions in glycolysis: the muscle PGAM deficiency produces a block at the phosphoglycerate mutase step of glycolysis while all other glycolytic enzymes had normal activities.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Human loss-of-function evidence directly linking PGAM2 to the glycolytic process; the specific enzymatic block defines its glycolytic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                        PMID:6262916
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All of the other enzymes of glycolysis </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006941" target="_blank" class="term-link">
+                                    GO:0006941
+                                </a>
+                            </span>
+                            <span class="term-label">striated muscle contraction</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:6262916
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Human muscle phosphoglycerate mutase deficiency: newly disco...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P15259" data-a="GO:0006941" data-r="PMID:6262916" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation to striated muscle contraction derived from the muscle PGAM deficiency phenotype (exercise intolerance, cramps, pigmenturia). PGAM2 is a glycolytic enzyme, not a component of the contractile apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Exercise intolerance and cramps in PGAM deficiency are downstream consequences of impaired muscle glycolytic ATP supply, not evidence that PGAM2 participates directly in the muscle-contraction process; the causal role is glycolysis. This is an over-annotation of a phenotype (retained rather than removed as it derives from an experimental report).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                        PMID:6262916
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">intolerance for strenuous exercise and </div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Catalyzes the reversible, 2,3-bisphosphoglycerate-dependent interconversion of 3-phosphoglycerate and 2-phosphoglycerate via a phospho-histidine intermediate, the eighth step of glycolysis, in the cytosol of skeletal and cardiac muscle.</h3>
+                <span class="vote-buttons" data-g="P15259" data-a="FUNCTION: Catalyzes the reversible, 2,3-bisphosphoglycerate-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004619" target="_blank" class="term-link">
+                            phosphoglycerate mutase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006096" target="_blank" class="term-link">
+                                glycolytic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/PGAM2/PGAM2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                                PMID:6262916
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000052.md" target="_blank" class="term-link">
+                            GO_REF:0000052
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on curation of immunofluorescence data</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21630459" target="_blank" class="term-link">
+                            PMID:21630459
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Proteomic characterization of the human sperm nucleus.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23533145" target="_blank" class="term-link">
+                            PMID:23533145
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In-depth proteomic analyses of exosomes isolated from expressed prostatic secretions in urine.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28514442" target="_blank" class="term-link">
+                            PMID:28514442
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of the human interactome defines protein communities and disease networks.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33961781" target="_blank" class="term-link">
+                            PMID:33961781
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dual proteome-scale networks reveal cell-specific remodeling of the human interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/4827367" target="_blank" class="term-link">
+                            PMID:4827367
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoglycerate mutase isozyme marker for tissue differentiation in man.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/6262916" target="_blank" class="term-link">
+                            PMID:6262916
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Human muscle phosphoglycerate mutase deficiency: newly discovered metabolic myopathy.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70171
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Glycolysis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70263
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gluconeogenesis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71445
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PGAM dimers isomerise 2PG to 3PG</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-71654
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PGAM dimers isomerise 3PG to 2PG</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/PGAM2/PGAM2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt entry P15259 (PGAM2_HUMAN)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PGAM2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P15259" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pgam2-human-gene-review-notes">PGAM2 (human) — gene review notes</h1>
+<p>UniProtKB: P15259 (PGAM2_HUMAN). HGNC:8889. Gene on chromosome 7.<br />
+Synonyms: PGAMM; "muscle-specific phosphoglycerate mutase"; "phosphoglycerate mutase isozyme M" (PGAM-M).</p>
+<h2 id="core-biology-from-pgam2-uniprottxt-and-reactome">Core biology (from PGAM2-uniprot.txt and Reactome)</h2>
+<ul>
+<li>PGAM2 is the <strong>muscle (M) subunit</strong> of phosphoglycerate mutase, a member of the<br />
+<strong>cofactor-dependent phosphoglycerate mutase / histidine-phosphatase superfamily</strong><br />
+  (BPG-dependent PGAM subfamily). UniProt SIMILARITY: "Belongs to the phosphoglycerate<br />
+  mutase family. BPG-dependent PGAM subfamily."</li>
+<li>FUNCTION (UniProt): "Catalyzes the interconversion of 3- and 2-phosphoglycerate with<br />
+  2,3-bisphosphoglycerate as the primer of the reaction. Can also catalyze the<br />
+  interconversion of (2R)-2,3-bisphosphoglycerate and (2R)-3-phospho-glyceroyl phosphate,<br />
+  but with a reduced activity." → primary EC 5.4.2.11 (PGAM, GO:0004619); minor<br />
+  EC 5.4.2.4 (bisphosphoglycerate mutase, GO:0004082).</li>
+<li>Mechanism: phospho-histidine intermediate. ACT_SITE 11 = "Tele-phosphohistidine<br />
+  intermediate"; ACT_SITE 89 = "Proton donor/acceptor". Catalytic His at position 11 is<br />
+  the classic His-phosphatase-fold catalytic residue; 2,3-BPG is the required cofactor/primer.</li>
+<li>Reaction (Rhea:RHEA:15901): (2R)-2-phosphoglycerate = (2R)-3-phosphoglycerate. Reversible;<br />
+  step 8 of the glycolytic payoff phase (3-PG → 2-PG going toward pyruvate) and the reverse<br />
+  step in gluconeogenesis.</li>
+<li>Cytosolic. Human PGAM is a <strong>dimer</strong> of M (PGAM2) and B (PGAM1) subunits; muscle is<br />
+  essentially the PGAM2 homodimer (SUBUNIT: "Homodimer"). Reactome R-HSA-71445/71654:<br />
+  "erythrocytes express only PGAM1, while skeletal muscle expresses only PGAM2."</li>
+<li>TISSUE SPECIFICITY (UniProt, PubMed:2822696): "Expressed in the heart and muscle. Not<br />
+  found in the liver and brain." HPA: group-enriched heart muscle, skeletal muscle, tongue.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li><strong>Glycogen storage disease X (GSD10 / GSD X); muscle phosphoglycerate mutase deficiency</strong><br />
+  (MIM:261670). UniProt DISEASE: "characterized by myoglobinuria, increased serum creatine<br />
+  kinase levels, decreased phosphoglycerate mutase activity, myalgia, muscle pain, muscle<br />
+  cramps, exercise intolerance." Variants: Glu89Ala, Arg90Trp (PubMed:8447317), Gly97Asp<br />
+  (PubMed:10545043).</li>
+<li>Original clinical description: DiMauro et al. 1981 (PMID:6262916) — first human muscle<br />
+  PGAM deficiency: muscle PGAM activity 5.7% of lowest control in a patient with exercise<br />
+  intolerance and recurrent pigmenturia (myoglobinuria); residual activity was the brain<br />
+  (BB) isoenzyme, "suggesting a genetic defect of the M subunit which predominates in<br />
+  normal muscle." This grounds the IMP GO:0004619 / GO:0006096 annotations. The<br />
+  striated-muscle-contraction annotation (GO:0006941) from the same paper is a phenotype<br />
+  (exercise intolerance/cramps) rather than a direct role of PGAM2 in the contractile<br />
+  mechanism → MARK_AS_OVER_ANNOTATED.</li>
+</ul>
+<h2 id="go-annotation-assessment-summary">GO annotation assessment summary</h2>
+<p>Molecular function — CORE:<br />
+- GO:0004619 phosphoglycerate mutase activity: multiply supported (IBA, IEA×2, EXP, ISS, IMP).<br />
+  ACCEPT the well-grounded ones (IBA anchor; EXP PMID:4827367 isozyme/enzyme-marker; IMP<br />
+  PMID:6262916 deficiency). This is the core MF.<br />
+- GO:0004082 bisphosphoglycerate mutase activity (IEA GO_REF:0000120 EC 5.4.2.4; ISS<br />
+  GO_REF:0000024 from PGAM1 P18669): real minor/secondary activity per UniProt FUNCTION.<br />
+  ACCEPT but note it is the reduced-activity side reaction, not the core physiological role.<br />
+- GO:0016868 intramolecular phosphotransferase activity (IEA InterPro): correct parent<br />
+  (isomerase EC 5.4.2.-); a bit general → ACCEPT (IEA allowed to be broader).<br />
+- GO:0003824 catalytic activity (IEA InterPro): root-level, uninformative but not wrong.<br />
+  MARK_AS_OVER_ANNOTATED (root filler).<br />
+- GO:0005515 protein binding (IPI ×3: PMID:28514442 BioPlex2, PMID:33961781 BioPlex3,<br />
+  PMID:32296183 HuRI). Bare "protein binding" is uninformative. Per policy: do NOT REMOVE<br />
+  IPI protein-binding; MARK_AS_OVER_ANNOTATED. Note the recurrent BPGM (P07738) partner is<br />
+  biologically sensible (both act on 2,3-BPG / glycerate phosphates).<br />
+- GO:0042802 identical protein binding (IPI PMID:32296183, self P15259): consistent with<br />
+  the documented homodimer → ACCEPT (informative self-association / dimerisation).</p>
+<p>Biological process:<br />
+- GO:0006096 glycolytic process (IEA GO_REF:0000120; IMP PMID:6262916): core. ACCEPT.<br />
+- GO:0061621 canonical glycolysis (IBA; IEA GO_REF:0000107; TAS Reactome): more specific<br />
+  glycolysis child, core. ACCEPT (IBA).<br />
+- GO:0006094 gluconeogenesis (IEA Ensembl; TAS Reactome R-HSA-70263): PGAM catalyses the<br />
+  reversible step also used in gluconeogenesis. Physiologically gluconeogenesis is<br />
+  liver/kidney (which express PGAM1, not PGAM2 — muscle does not do gluconeogenesis).<br />
+  Reaction chemistry is shared but the muscle isoform's physiological role is glycolysis.<br />
+  Keep the Reactome TAS as ACCEPT (reaction participates in the pathway) and KEEP_AS_NON_CORE<br />
+  for the Ensembl-orthology IEA (not the muscle isoform's core in-vivo role).<br />
+- GO:0007283 spermatogenesis (IEA Ensembl, from rat P16290): orthology-transfer, not a<br />
+  direct PGAM2 function; sperm express glycolytic enzymes but this is a phenotypic/context<br />
+  transfer. KEEP_AS_NON_CORE.<br />
+- GO:0046689 response to mercury ion (IEA Ensembl, rat P16290): PGAM M subunit is<br />
+  Hg-inhibitable (DiMauro 1981 used mercury inhibition to distinguish M vs BB isozymes),<br />
+  but "response to mercury ion" as a BP is an orthology artifact, not a core biological role<br />
+  → MARK_AS_OVER_ANNOTATED.<br />
+- GO:0006941 striated muscle contraction (IMP PMID:6262916): the deficiency causes<br />
+  exercise intolerance/cramps, but PGAM2 is not part of the contractile machinery; this is<br />
+  a downstream phenotype → MARK_AS_OVER_ANNOTATED.</p>
+<p>Cellular component:<br />
+- GO:0005829 cytosol (IBA; IEA GO_REF:0000107; TAS Reactome ×2): core location. ACCEPT (IBA).<br />
+- GO:0005634 nucleus (IEA Ensembl; HDA PMID:21630459 sperm-nucleus proteome): proteomic<br />
+  detection in isolated sperm nuclei; likely soluble-enzyme contamination / not the site of<br />
+  its enzymatic action → MARK_AS_OVER_ANNOTATED.<br />
+- GO:0005654 nucleoplasm (IDA HPA immunofluorescence, GO_REF:0000052): HPA IF; abundant<br />
+  glycolytic enzyme, nuclear signal not linked to a nuclear function → MARK_AS_OVER_ANNOTATED.<br />
+- GO:1990917 ooplasm (IEA Ensembl, rat P16290): orthology transfer to oocyte cytoplasm;<br />
+  not established for human muscle isoform → KEEP_AS_NON_CORE (it is still cytoplasm).<br />
+- GO:0070062 extracellular exosome (HDA PMID:23533145 prostatic-secretion exosomes):<br />
+  high-throughput exosome proteome; ubiquitous cytosolic enzyme frequently co-purifies →<br />
+  MARK_AS_OVER_ANNOTATED.</p>
+<h2 id="interactome-partners-from-uniprot-interaction-ipi-refs">Interactome partners (from UniProt INTERACTION + IPI refs)</h2>
+<ul>
+<li>BPGM P07738 (bisphosphoglycerate mutase) — recurrent, NbExp=6; biologically related enzyme.</li>
+<li>CLVS2 Q5SYC1, DYNC1LI1 Q9Y6G9, KATNAL1 Q9BW62 — Y2H/AP-MS partners, unclear functional link.</li>
+<li>PGAM2 P15259 self — homodimer.<br />
+These support only generic protein binding + identical protein binding; no informative<br />
+complex/adapter MF is warranted.</li>
+</ul>
+<h2 id="deep-research">Deep research</h2>
+<p>falcon deep-research provider is OUT OF CREDITS (HTTP 402) at review time; no<br />
+-deep-research-falcon.md was generated. Review grounded in UniProt (P15259), the seeded GOA,<br />
+cached PMIDs, and cached Reactome entries.<br />
+</content></p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P15259
+gene_symbol: PGAM2
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  PGAM2 is the muscle (M) isoform of phosphoglycerate mutase, a cytosolic enzyme
+  of the cofactor-dependent phosphoglycerate mutase (histidine-phosphatase)
+  superfamily. It catalyzes the reversible interconversion of 3-phosphoglycerate
+  and 2-phosphoglycerate, the eighth step of the glycolytic payoff phase (and the
+  corresponding reverse step in gluconeogenesis). Catalysis proceeds through a
+  phospho-histidine enzyme intermediate and requires 2,3-bisphosphoglycerate as a
+  cofactor/primer; the enzyme also displays a minor bisphosphoglycerate
+  mutase/phosphatase side activity. Active human phosphoglycerate mutase is a
+  dimer assembled from muscle (PGAM2/M) and brain (PGAM1/B) subunits; skeletal
+  muscle expresses essentially the PGAM2 homodimer, whereas erythrocytes express
+  PGAM1. PGAM2 is expressed predominantly in heart and skeletal muscle.
+  Loss-of-function variants cause glycogen storage disease type X (muscle
+  phosphoglycerate mutase deficiency), manifesting as exercise intolerance,
+  muscle cramps, and myoglobinuria/rhabdomyolysis.
+existing_annotations:
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assignment of the core catalytic activity of PGAM2:
+      reversible interconversion of 3- and 2-phosphoglycerate. This is the
+      defining molecular function of the muscle phosphoglycerate mutase subunit
+      and is strongly corroborated by experimental and UniProt evidence.
+    action: ACCEPT
+    reason: &gt;-
+      Core molecular function, correct at the right level of specificity, and
+      consistent across independent evidence lines (IBA, EXP, IMP, ISS, IEA) and
+      the UniProt catalytic-activity record (EC 5.4.2.11).
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment of the cytosol as the site of action. Phosphoglycerate
+      mutase is a soluble cytosolic glycolytic enzyme, consistent with Reactome and
+      UniProt.
+    action: ACCEPT
+    reason: &gt;-
+      Correct subcellular location for a soluble glycolytic enzyme; agrees with
+      Reactome TAS cytosol annotations and with the entire glycolytic pathway being
+      cytosolic.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71445
+      supporting_text: &#34;Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate&#34;
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic assignment of PGAM2 to canonical glycolysis (the ATP-generating
+      glucose-to-pyruvate route). PGAM catalyzes step 8 (3-PG to 2-PG) of the
+      glycolytic payoff phase.
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process for the muscle glycolytic isoform, at an appropriate
+      level of specificity; corroborated by the Reactome Glycolysis pathway and by
+      the IMP glycolytic-process annotation.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70171
+      supporting_text: &#34;The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert&#34;
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Root-level InterPro2GO mapping asserting generic catalytic activity. Not
+      incorrect but entirely uninformative given the specific mutase activity is
+      already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;catalytic activity&#34; is a top-level MF placeholder subsumed by the specific
+      phosphoglycerate mutase activity annotation; it adds no functional information.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic mapping (EC 5.4.2.4 / RHEA:17765) of the minor bisphosphoglycerate
+      mutase side activity. UniProt records that the enzyme &#34;can also catalyze the
+      interconversion of (2R)-2,3-bisphosphoglycerate and (2R)-3-phospho-glyceroyl
+      phosphate, but with a reduced activity.&#34;
+    action: ACCEPT
+    reason: &gt;-
+      Genuine, documented secondary catalytic activity of the BPG-dependent PGAM
+      subfamily; correctly captured, though it is the reduced-activity side reaction
+      rather than the primary physiological function.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC       3-phospho-glyceroyl phosphate, but with a reduced activity.&#34;
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic mapping (EC 5.4.2.11 / RHEA:15901 / ARBA) of the core
+      phosphoglycerate mutase activity. Duplicate of the core MF from an automated
+      pipeline.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; the automated EC/RHEA mapping agrees with the
+      experimental and phylogenetic annotations.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Electronic assignment to the glycolytic process. Correct core pathway for
+      PGAM2, also supported experimentally by the deficiency phenotype (IMP).
+    action: ACCEPT
+    reason: &gt;-
+      Core biological process; consistent with the IMP annotation from the muscle
+      PGAM deficiency case and with the canonical-glycolysis annotations.
+    supported_by:
+    - reference_id: PMID:6262916
+      supporting_text: &#34;Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest&#34;
+- term:
+    id: GO:0016868
+    label: intramolecular phosphotransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO mapping to intramolecular phosphotransferase activity, the
+      isomerase parent class (EC 5.4.2.-) that includes phosphoglycerate mutase.
+      Correct but more general than the specific mutase term already annotated.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate parent-level molecular function; an IEA term is permitted to be
+      broader than the specific mutase activity, and it correctly reflects the
+      isomerase reaction chemistry (intramolecular phospho group transfer).
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:28514442
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput AP-MS interactome (BioPlex 2.0) reporting a PGAM2-BPGM
+      (P07738) co-complex. Bare &#34;protein binding&#34; is uninformative about molecular
+      function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidance, bare &#34;protein binding&#34; is not an informative molecular
+      function and this is an interactome-screen IPI. The recurrent BPGM partner is
+      biologically plausible (both enzymes act on 2,3-bisphosphoglycerate) but does
+      not itself define a specific molecular function; retained (not removed) as an
+      experimental IPI.
+    supported_by:
+    - reference_id: PMID:28514442
+      supporting_text: &#34;BioPlex 2.0 is the largest collection of human co-complex data assembled from a single pipeline to date&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Binary interactome map (HuRI, yeast two-hybrid) reporting PGAM2 interactions
+      (e.g. BPGM, CLVS2, DYNC1LI1, KATNAL1). Bare &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Uninformative generic &#34;protein binding&#34; from a systematic binary-interactome
+      screen; retained as an experimental IPI but not treated as a defining function.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &#34;A reference map of the human binary protein interactome.&#34;
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:33961781
+  qualifier: enables
+  review:
+    summary: &gt;-
+      High-throughput AP-MS interactome (BioPlex 3.0) again reporting a PGAM2-BPGM
+      (P07738) association. Bare &#34;protein binding&#34; is uninformative.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Generic &#34;protein binding&#34; from an interactome screen; consistent with the
+      other BioPlex/HuRI evidence but non-specific; retained as an experimental IPI.
+    supported_by:
+    - reference_id: PMID:33961781
+      supporting_text: &#34;Dual proteome-scale networks reveal cell-specific remodeling of the human&#34;
+- term:
+    id: GO:0042802
+    label: identical protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Self-interaction of PGAM2 (P15259-P15259) detected in the binary interactome
+      map, consistent with the established homodimeric quaternary structure of
+      phosphoglycerate mutase.
+    action: ACCEPT
+    reason: &gt;-
+      Informative self-association annotation that matches the documented homodimer;
+      UniProt SUBUNIT states &#34;Homodimer&#34; and Reactome describes the active enzyme as
+      a dimer.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from rat P16290) transfer of a nuclear
+      localization. PGAM2 is a soluble cytosolic glycolytic enzyme; a nuclear
+      location is not associated with any established nuclear function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Nuclear localization is not part of the core biology of this cytosolic enzyme;
+      it derives from orthology transfer plus proteomic detection in sperm nuclei and
+      likely reflects contamination/moonlighting rather than a functional nuclear role.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from mouse O70250) assignment of the cytosol
+      as site of action. Correct core location for a glycolytic enzyme.
+    action: ACCEPT
+    reason: &gt;-
+      Agrees with the IBA and Reactome TAS cytosol annotations; correct compartment
+      for phosphoglycerate mutase activity.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71445
+      supporting_text: &#34;Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate&#34;
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara) assignment to gluconeogenesis. The
+      phosphoglycerate mutase reaction is reversible and is shared with the
+      gluconeogenic direction, but physiological gluconeogenesis is confined to
+      liver and kidney, which express PGAM1 rather than the muscle PGAM2 isoform.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The reaction chemistry participates in gluconeogenesis, but the muscle isoform&#39;s
+      core in-vivo role is glycolytic; muscle does not perform gluconeogenesis, so this
+      is retained as a non-core, reaction-shared process rather than PGAM2&#39;s primary
+      physiological function.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70263
+      supporting_text: &#34;Gluconeogenesis is confined to cells of the liver and kidney&#34;
+- term:
+    id: GO:0007283
+    label: spermatogenesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from rat P16290) transfer of a spermatogenesis
+      role. Sperm rely heavily on glycolysis, but a direct role of the muscle PGAM2
+      isoform in spermatogenesis is not established in human.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Speculative context transferred by orthology; not a core molecular/biological
+      function of the human muscle isoform. Retained as non-core rather than removed,
+      since it is a plausible tissue context for a glycolytic enzyme.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- TISSUE SPECIFICITY: Expressed in the heart and muscle. Not found in the&#34;
+- term:
+    id: GO:0046689
+    label: response to mercury ion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from rat P16290) transfer of a
+      &#34;response to mercury ion&#34; process. The M subunit is mercury-inhibitable in vitro
+      (historically used to distinguish M from BB isozymes), but this is an
+      enzyme-property observation, not a biological response process of human PGAM2.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;response to mercury ion&#34; as a biological process is an orthology artifact and
+      does not represent a core biological role of PGAM2; in-vitro Hg sensitivity of the
+      catalytic His does not constitute a cellular mercury-response pathway.
+    supported_by:
+    - reference_id: PMID:6262916
+      supporting_text: &#34;Electrophoretic, &#34;
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from mouse O70250) assignment to canonical
+      glycolysis. Correct core process; duplicate of the IBA/TAS glycolysis
+      annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Core glycolytic process for the muscle isoform, consistent with all other
+      glycolysis evidence lines.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70171
+      supporting_text: &#34;The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert&#34;
+- term:
+    id: GO:1990917
+    label: ooplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Orthology-based (Ensembl Compara, from rat P16290) transfer of an ooplasm
+      (oocyte cytoplasm) location. This is a tissue-context transfer; the compartment
+      (cytoplasm) is consistent with a cytosolic enzyme, but the specific ooplasmic
+      localization is not established for the human muscle isoform.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cytoplasmic location is consistent with PGAM2 biology, but &#34;ooplasm&#34; is an
+      orthology-derived tissue-specific location not relevant to the muscle isoform&#39;s
+      core role; retained as non-core rather than removed.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71445
+      supporting_text: &#34;Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate&#34;
+- term:
+    id: GO:0006094
+    label: gluconeogenesis
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70263
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome pathway annotation placing the reversible phosphoglycerate mutase
+      reaction within gluconeogenesis. The reaction is genuinely part of the
+      gluconeogenic sequence (a reverse-of-glycolysis step).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The PGAM reaction participates in the gluconeogenesis pathway as modeled by
+      Reactome, so the annotation is not wrong; however gluconeogenesis is a
+      liver/kidney process (PGAM1), so it is not the core physiological role of the
+      muscle PGAM2 isoform. Retained as non-core.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70263
+      supporting_text: &#34;Gluconeogenesis is confined to cells of the liver and kidney&#34;
+- term:
+    id: GO:0061621
+    label: canonical glycolysis
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70171
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome pathway annotation placing PGAM within canonical glycolysis (the
+      cytosolic glucose-to-pyruvate route). Core process for PGAM2.
+    action: ACCEPT
+    reason: &gt;-
+      Authoritative pathway (TAS) annotation for the core glycolytic role; consistent
+      with all other glycolysis evidence.
+    supported_by:
+    - reference_id: Reactome:R-HSA-70171
+      supporting_text: &#34;The reactions of glycolysis (e.g., van Wijk and van Solinge 2005) convert&#34;
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: EXP
+  original_reference_id: PMID:4827367
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental annotation of phosphoglycerate mutase activity based on
+      characterization of the human PGAM isozymes as tissue-differentiation markers
+      (Omenn &amp; Cheung 1974), which established the muscle (M) versus brain (B) subunit
+      isozyme system.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental support for the core catalytic activity of the muscle
+      phosphoglycerate mutase isozyme; foundational isozyme-characterization work.
+    supported_by:
+    - reference_id: PMID:4827367
+      supporting_text: &#34;Phosphoglycerate mutase isozyme marker for tissue differentiation in man.&#34;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: IDA
+  original_reference_id: GO_REF:0000052
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Human Protein Atlas immunofluorescence (IDA) reporting nucleoplasmic signal.
+      PGAM2 is an abundant soluble cytosolic enzyme; nucleoplasmic staining is not
+      linked to any established nuclear function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A single-technique IF localization for an abundant cytosolic glycolytic enzyme,
+      without a corresponding nuclear function; likely reflects the diffuse
+      distribution/permeabilization artifacts common for soluble enzymes rather than a
+      core nucleoplasmic role.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- SUBUNIT: Homodimer. Interacts with ENO1. {ECO:0000250|UniProtKB:O70250,&#34;
+- term:
+    id: GO:0004082
+    label: bisphosphoglycerate mutase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer (from PGAM1, P18669) of the minor
+      bisphosphoglycerate mutase activity. Consistent with the UniProt-documented
+      reduced-activity side reaction of the BPG-dependent PGAM subfamily.
+    action: ACCEPT
+    reason: &gt;-
+      Genuine secondary catalytic activity supported by family membership and the
+      UniProt catalytic-activity record (EC 5.4.2.4); appropriately marked as a
+      similarity-based inference.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC       3-phospho-glyceroyl phosphate, but with a reduced activity.&#34;
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer (from PGAM1, P18669) of the core phosphoglycerate
+      mutase activity. Duplicate of the well-supported core MF.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core molecular function; the ISS inference agrees with experimental,
+      phylogenetic, and automated evidence.
+    supported_by:
+    - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+      supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:23533145
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection in exosomes from expressed prostatic
+      secretions in urine. PGAM2 is a ubiquitous soluble cytosolic enzyme that
+      commonly co-purifies in exosome/secretome proteomes.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      A single high-throughput exosome-proteome detection does not establish
+      extracellular exosome as a functional location for this cytosolic glycolytic
+      enzyme; frequent contaminant in such datasets.
+    supported_by:
+    - reference_id: PMID:23533145
+      supporting_text: &#34;In-depth proteomic analyses of exosomes isolated from expressed prostatic&#34;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:21630459
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput proteomic detection of PGAM in isolated human sperm nuclei.
+      Nuclear detection of an abundant soluble glycolytic enzyme in a whole-organelle
+      proteome does not establish a functional nuclear role.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Proteomic co-detection in a sperm-nucleus preparation is prone to soluble-enzyme
+      carryover; there is no established nuclear function for PGAM2, so this is an
+      over-annotation of its core cytosolic biology.
+    supported_by:
+    - reference_id: PMID:21630459
+      supporting_text: &#34;sperm nuclei were obtained &#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71445
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS annotation of the cytosol as the location where PGAM dimers
+      isomerise 2PG to 3PG. Core, correct location.
+    action: ACCEPT
+    reason: &gt;-
+      Authoritative pathway annotation of the correct compartment for a cytosolic
+      glycolytic enzyme.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71445
+      supporting_text: &#34;Cytosolic phosphoglycerate mutase dimers (PGAM1,2) catalyze the reversible isomerisation of 2- and 3-phosphoglycerate&#34;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-71654
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome TAS annotation of the cytosol as the location where PGAM dimers
+      isomerise 3PG to 2PG. Core, correct location (duplicate direction of the same
+      reversible reaction).
+    action: ACCEPT
+    reason: &gt;-
+      Authoritative pathway annotation of the correct cytosolic compartment.
+    supported_by:
+    - reference_id: Reactome:R-HSA-71654
+      supporting_text: &#34;Cytosolic phosphoglycerate mutase catalyzes the reversible isomerisation&#34;
+- term:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  evidence_type: IMP
+  original_reference_id: PMID:6262916
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (IMP) support from the first described human muscle
+      phosphoglycerate mutase deficiency: muscle PGAM activity was reduced to 5.7% of
+      the lowest control value, with the residual activity being the brain (BB)
+      isoenzyme, implicating loss of the M subunit encoded by PGAM2.
+    action: ACCEPT
+    reason: &gt;-
+      Direct genetic/biochemical evidence in humans that PGAM2 provides
+      phosphoglycerate mutase activity in muscle; the disease phenotype tracks the
+      loss of M-subunit activity.
+    supported_by:
+    - reference_id: PMID:6262916
+      supporting_text: &#34;Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest&#34;
+- term:
+    id: GO:0006096
+    label: glycolytic process
+  evidence_type: IMP
+  original_reference_id: PMID:6262916
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Experimental (IMP) support that PGAM2 functions in glycolysis: the muscle PGAM
+      deficiency produces a block at the phosphoglycerate mutase step of glycolysis
+      while all other glycolytic enzymes had normal activities.
+    action: ACCEPT
+    reason: &gt;-
+      Human loss-of-function evidence directly linking PGAM2 to the glycolytic
+      process; the specific enzymatic block defines its glycolytic role.
+    supported_by:
+    - reference_id: PMID:6262916
+      supporting_text: &#34;All of the other enzymes of glycolysis &#34;
+- term:
+    id: GO:0006941
+    label: striated muscle contraction
+  evidence_type: IMP
+  original_reference_id: PMID:6262916
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Annotation to striated muscle contraction derived from the muscle PGAM
+      deficiency phenotype (exercise intolerance, cramps, pigmenturia). PGAM2 is a
+      glycolytic enzyme, not a component of the contractile apparatus.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Exercise intolerance and cramps in PGAM deficiency are downstream consequences
+      of impaired muscle glycolytic ATP supply, not evidence that PGAM2 participates
+      directly in the muscle-contraction process; the causal role is glycolysis. This
+      is an over-annotation of a phenotype (retained rather than removed as it derives
+      from an experimental report).
+    supported_by:
+    - reference_id: PMID:6262916
+      supporting_text: &#34;intolerance for strenuous exercise and &#34;
+core_functions:
+- description: &gt;-
+    Catalyzes the reversible, 2,3-bisphosphoglycerate-dependent interconversion of
+    3-phosphoglycerate and 2-phosphoglycerate via a phospho-histidine intermediate,
+    the eighth step of glycolysis, in the cytosol of skeletal and cardiac muscle.
+  molecular_function:
+    id: GO:0004619
+    label: phosphoglycerate mutase activity
+  directly_involved_in:
+  - id: GO:0006096
+    label: glycolytic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: file:human/PGAM2/PGAM2-uniprot.txt
+    supporting_text: &#34;CC   -!- FUNCTION: Catalyzes the interconversion of 3- and 2-phosphoglycerate&#34;
+  - reference_id: PMID:6262916
+    supporting_text: &#34;Muscle phosphoglycerate mutase activity was decreased (5.7 percent of the lowest&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000052
+  title: Gene Ontology annotation based on curation of immunofluorescence data
+  findings: []
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:21630459
+  title: Proteomic characterization of the human sperm nucleus.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Sperm-nucleus proteome; PGAM detected as one of 403 proteins. Supports the
+      nucleus HDA localization but is a high-throughput co-detection with no
+      functional nuclear role; over-annotation for a cytosolic enzyme.
+- id: PMID:23533145
+  title: In-depth proteomic analyses of exosomes isolated from expressed prostatic
+    secretions in urine.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exosome proteome from prostatic secretions; PGAM detected as a high-throughput
+      co-purifying protein. Supports the exosome HDA localization only; over-annotation.
+- id: PMID:28514442
+  title: Architecture of the human interactome defines protein communities and disease
+    networks.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 2.0 AP-MS interactome; source of a PGAM2-BPGM protein-binding IPI.
+      Supports only generic protein binding, not a specific molecular function.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI binary (Y2H) interactome; source of protein-binding IPIs and the PGAM2
+      self-interaction (identical protein binding), consistent with the homodimer.
+- id: PMID:33961781
+  title: Dual proteome-scale networks reveal cell-specific remodeling of the human
+    interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      BioPlex 3.0 AP-MS interactome; source of a PGAM2-BPGM protein-binding IPI.
+      Generic protein binding only.
+- id: PMID:4827367
+  title: Phosphoglycerate mutase isozyme marker for tissue differentiation in man.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Foundational characterization of human PGAM isozymes (M vs B subunits) as
+      tissue-differentiation markers; underpins the EXP phosphoglycerate mutase
+      activity annotation.
+- id: PMID:6262916
+  title: &#39;Human muscle phosphoglycerate mutase deficiency: newly discovered metabolic
+    myopathy.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      First description of human muscle PGAM deficiency (GSD X): muscle PGAM activity
+      5.7% of control, residual activity is BB isozyme, implicating the M subunit.
+      Directly supports the core catalytic and glycolytic roles of PGAM2; the
+      muscle-contraction annotation from this paper is a downstream phenotype.
+- id: Reactome:R-HSA-70171
+  title: Glycolysis
+  findings: []
+- id: Reactome:R-HSA-70263
+  title: Gluconeogenesis
+  findings: []
+- id: Reactome:R-HSA-71445
+  title: PGAM dimers isomerise 2PG to 3PG
+  findings: []
+- id: Reactome:R-HSA-71654
+  title: PGAM dimers isomerise 3PG to 2PG
+  findings: []
+- id: file:human/PGAM2/PGAM2-uniprot.txt
+  title: UniProt entry P15259 (PGAM2_HUMAN)
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

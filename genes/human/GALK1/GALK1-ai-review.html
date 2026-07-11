@@ -1,0 +1,4268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GALK1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GALK1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P51570" target="_blank" class="term-link">
+                        P51570
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "GALK1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P51570" data-a="DESCRIPTION: GALK1 is the human galactokinase, a cytosolic ATP-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>GALK1 is the human galactokinase, a cytosolic ATP-dependent enzyme (EC 2.7.1.6) that catalyzes the phosphorylation of alpha-D-galactose to alpha-D-galactose 1-phosphate, consuming ATP and producing ADP. This is the first committed, phosphorylation step of galactose catabolism in the Leloir pathway, which ultimately converts dietary galactose into glucose 1-phosphate for entry into glycolysis. The enzyme uses an ordered ternary-complex kinetic mechanism in which ATP binds first, followed by galactose, and it displays strict specificity for the galactose configuration at carbons 4 and 6 of the sugar ring (D-galactose and 2-deoxy-D-galactose are substrates, whereas D-glucose, D-fucose, L-arabinose and N-acetyl-D-galactosamine are not). GALK1 is a member of the GHMP kinase superfamily (GalK subfamily) and functions as a homodimer. Loss-of-function variants cause autosomal recessive galactokinase deficiency (galactosemia type II, GALAC2), whose principal manifestation is early-onset cataracts resulting from accumulation of the galactose-derived polyol galactitol in the lens.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006012" target="_blank" class="term-link">
+                                    GO:0006012
+                                </a>
+                            </span>
+                            <span class="term-label">galactose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0006012" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation placing GALK1 in galactose metabolism. Correct but general; the enzyme specifically performs the phosphorylation step of galactose catabolism (Leloir pathway).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 catalyzes the ATP-dependent phosphorylation of galactose, the first committed step of galactose catabolism, so it is validly involved in galactose metabolic process. Retained; the more specific catabolic term (GO:0019388) is captured in core_functions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                        PMID:12694189
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the catabolism of galactose.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion of galactokinase activity, the core, defining molecular function of GALK1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Galactokinase activity is the experimentally established, defining function of GALK1 (EC 2.7.1.6) and is well supported across the phylogeny. This is a core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link">
+                                        PMID:7542884
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">only the GALK1 cDNA produced high levels of galactokinase activity. This result would suggest that GALK1 is the major enzyme for galactose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005829" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) assertion that GALK1 is active in the cytosol, consistent with experimental evidence that the human protein is cytosolic.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 is a soluble cytosolic enzyme; in vitro translation showed the protein is cytosolic and not membrane-associated, and Reactome places its activity in the cytosol. This is the correct site of action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro translation experiments of the GALK1 cDNA indicate that the protein is cytosolic and not associated with the endoplasmic reticulum membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/RHEA/EC) inference of galactokinase activity, redundant with and corroborating the experimental and phylogenetic annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correctly transfers the EC 2.7.1.6 / RHEA:13553 galactokinase activity based on the galactokinase InterPro signature and orthology; matches the experimentally demonstrated function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based inference of ATP binding, consistent with the GHMP-kinase ATP binding motif and directly demonstrated ATP binding/kinetics.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 is an ATP-dependent kinase; ATP is a bona fide substrate that binds first in the ordered ternary mechanism, and ATP-binding residues are mapped in the structure. Corroborated by the IDA annotation from PMID:12694189.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                        PMID:12694189
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the most likely kinetic mechanism of the enzyme was an ordered ternary complex one in which ATP is the first substrate to bind</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005737" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro-based cytoplasm localization, consistent with the experimentally determined cytosolic localization of GALK1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 is a cytosolic protein; the cytoplasm assignment is correct though less specific than cytosol. Consistent with the IDA cytoplasm annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is cytosolic and not associated with the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006012" target="_blank" class="term-link">
+                                    GO:0006012
+                                </a>
+                            </span>
+                            <span class="term-label">galactose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0006012" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference of involvement in galactose metabolic process, redundant with the IBA and IMP annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct: GALK1 performs the phosphorylation step of galactose catabolism. General but valid.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0016301" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic parent molecular-function term (kinase activity) inferred from InterPro. Too general given the specific galactokinase activity is known.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Kinase activity is a broad parent of the specific, experimentally established galactokinase activity (GO:0004335, EC 2.7.1.6). Replace with the specific term to avoid uninformative over-generalization.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    galactokinase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016773" target="_blank" class="term-link">
+                                    GO:0016773
+                                </a>
+                            </span>
+                            <span class="term-label">phosphotransferase activity, alcohol group as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0016773" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic phosphotransferase parent term inferred from InterPro. The acceptor in the GALK1 reaction is the C1 hydroxyl of galactose, but the specific galactokinase term is more informative.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although mechanistically accurate (galactose C1-OH is the acceptor), this is a broad parent of galactokinase activity. Replace with the specific term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    galactokinase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046835" target="_blank" class="term-link">
+                                    GO:0046835
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0046835" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic biological-process term (carbohydrate phosphorylation) inferred from InterPro. Accurate but subsumed by the more specific galactose catabolic process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 does phosphorylate a carbohydrate (galactose), so this term is not wrong, but it is a generic process that is captured more specifically by galactose catabolic/metabolic process. Retained as non-core rather than removed.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a single high-throughput yeast two-hybrid interaction (HuRI) with PNRC2 (Q9NPJ4). Uninformative regarding molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per curation guidelines, bare &#34;protein binding&#34; is uninformative and should be avoided. The evidence is a single high-throughput binary Y2H interactome hit with no established functional consequence for this soluble cytosolic metabolic enzyme, and no adapter/scaffold role is known. It is retained but flagged as an over-annotation (not removed, as it is an experimental IPI).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we present a human &#39;all-by-all&#39; reference interactome map of human binary protein interactions, or &#39;HuRI&#39;.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033499" target="_blank" class="term-link">
+                                    GO:0033499
+                                </a>
+                            </span>
+                            <span class="term-label">beta-D-galactose catabolic process via UDP-galactose, Leloir pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0033499" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated inference placing GALK1 in the Leloir-pathway galactose catabolic process. This is the correct, specific biological process for the enzyme. (Ontology current primary label is &#34;galactose catabolic process via UDP-galactose, Leloir pathway&#34;.)
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 phosphorylates galactose to galactose 1-phosphate, a Leloir-pathway step that feeds galactose into UDP-galactose/glucose-1-phosphate metabolism. This is the most specific and accurate BP annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link">
+                                        PMID:14596685
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Galactokinase catalyses the first committed step of galactose catabolism in which the sugar is phosphorylated at the expense of MgATP.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033499" target="_blank" class="term-link">
+                                    GO:0033499
+                                </a>
+                            </span>
+                            <span class="term-label">beta-D-galactose catabolic process via UDP-galactose, Leloir pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70370
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0033499" data-r="Reactome:R-HSA-70370" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) assertion of Leloir-pathway galactose catabolism, corroborating the IEA annotation of the same term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates GALK1 as the galactokinase step of galactose catabolism; this is the correct specific process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link">
+                                        PMID:14596685
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Galactose is metabolised via the Leloir pathway [1] in order to produce glucose-6-phosphate that can enter glycolysis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7542884
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of the enzymatic activities of human galactokinas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="PMID:7542884" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (EXP) galactokinase activity from expression of GALK1 cDNA in COS cells producing high galactokinase activity. Directly supports the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental demonstration that GALK1 confers galactokinase activity and is the major galactose-metabolizing enzyme. Core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link">
+                                        PMID:7542884
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">only the GALK1 cDNA produced high levels of galactokinase activity. This result would suggest that GALK1 is the major enzyme for galactose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5610026
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="Reactome:R-HSA-5610026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) assertion of galactokinase activity, corroborating the experimental annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Reactome curates GALK1 galactokinase activity (with defective-GALK1 disease variants); consistent with the defining function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-5610026
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005829" data-r="Reactome:R-HSA-5610026" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol localization, matching the experimentally determined cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 is a soluble cytosolic enzyme; cytosol is the correct compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is cytosolic and not associated with the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19946888
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Defining the membrane proteome of NK cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0016020" data-r="PMID:19946888" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput NK-cell membrane proteome (HDA) placing GALK1 at the membrane. Contradicted by the curated NOT|located_in membrane IDA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This &#34;membrane&#34; localization comes from a large-scale membrane-proteome dataset and represents co-purification rather than genuine membrane association; GALK1 is a soluble cytosolic enzyme. It is directly contradicted by the experimental NOT|located_in membrane annotation (PMID:8908517), so it is an over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the protein is cytosolic and not associated with the endoplasmic reticulum membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput urinary exosome proteomics (HDA) detecting GALK1. Incidental co-purification, not a functional localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GALK1 was detected among many proteins in a large-scale urinary exosome proteomic survey. Many abundant cytosolic proteins are recovered in exosome preparations; this does not reflect the site of catalytic function. Retained as non-core rather than removed, as it is a valid detection record.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-70355
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005829" data-r="Reactome:R-HSA-70355" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) cytosol localization from the &#34;GALK1 phosphorylates Gal to Gal1P&#34; reaction, matching experimental cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct compartment for the soluble cytosolic galactokinase; corroborates the IBA and other TAS cytosol annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8908517
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fine structure of the human galactokinase GALK1 gene.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0016020" data-r="PMID:8908517" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Curated NOT|located_in membrane (IDA), based on in vitro translation showing the GALK1 protein is cytosolic and not associated with the ER membrane. An informative negation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported negative annotation that correctly excludes membrane localization and reinforces the cytosolic assignment. It also flags the high-throughput membrane HDA as spurious. Keep the negation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro translation experiments of the GALK1 cDNA indicate that the protein is cytosolic and not associated with the endoplasmic reticulum membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006012" target="_blank" class="term-link">
+                                    GO:0006012
+                                </a>
+                            </span>
+                            <span class="term-label">galactose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15024738" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15024738
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Biochemical characterization of two GALK1 mutations in patie...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0006012" data-r="PMID:15024738" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Involvement in galactose metabolism inferred from patient GALK1 mutations (V32M, R239Q) that drastically reduce galactokinase activity (IMP).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss-of-function GALK1 variants in patients cause deficient galactose metabolism (galactokinase deficiency), directly implicating the gene in galactose metabolic process. Core biological process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15024738" target="_blank" class="term-link">
+                                        PMID:15024738
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">these mutations led to a drastic modification in GALK activity when individual mutant cDNAs were expressed in an E. coli system</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12694189
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of disease-causing mutations in human ga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="PMID:12694189" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of galactokinase activity using purified recombinant human GALK1, with full kinetic characterization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purified, active recombinant human GALK1 was kinetically characterized as a galactokinase (EC 2.7.1.6); this is the strongest direct evidence for the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                        PMID:12694189
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human galactokinase (GALK1) was expressed in and purified from Escherichia coli. The recombinant enzyme was both soluble and active.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12694189
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Functional analysis of disease-causing mutations in human ga...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005524" data-r="PMID:12694189" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (IDA) for ATP binding: kinetic analysis shows an ordered ternary-complex mechanism in which ATP binds first, with a measured KM for ATP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> ATP is a bona fide substrate/cofactor of GALK1; product-inhibition and kinetic studies establish ATP binding, and the ATP KM (~34 uM) is reported. Core to the kinase mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                        PMID:12694189
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the most likely kinetic mechanism of the enzyme was an ordered ternary complex one in which ATP is the first substrate to bind</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005534" target="_blank" class="term-link">
+                                    GO:0005534
+                                </a>
+                            </span>
+                            <span class="term-label">galactose binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14596685
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sugar recognition by human galactokinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005534" data-r="PMID:14596685" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (IDA) for galactose binding from a sugar-recognition study of the human enzyme, including mutagenesis of sugar-binding-site residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Galactose is the physiological substrate and its binding to the human enzyme is directly demonstrated; the enzyme is highly specific for the galactose configuration at carbons 4 and 6. This is an informative, substrate-specific MF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link">
+                                        PMID:14596685
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">D-galactose and 2-deoxy-D-galactose are substrates for the enzyme, but N-acetyl-D-galactosamine, L-arabinose, D-fucose and D-glucose are all not phosphorylated.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8908517
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Fine structure of the human galactokinase GALK1 gene.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0005737" data-r="PMID:8908517" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct evidence (IDA) that GALK1 is cytoplasmic, from in vitro translation showing the protein is cytosolic and not ER-membrane-associated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported cytoplasmic localization; consistent with the cytosol annotations, though cytosol (GO:0005829) is the more precise compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                        PMID:8908517
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro translation experiments of the GALK1 cDNA indicate that the protein is cytosolic and not associated with the endoplasmic reticulum membrane.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                                    GO:0004335
+                                </a>
+                            </span>
+                            <span class="term-label">galactokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7542884
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Comparison of the enzymatic activities of human galactokinas...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0004335" data-r="PMID:7542884" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (IDA) of galactokinase activity from expression of the GALK1 cDNA, demonstrating high galactokinase activity attributable to GALK1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct experimental confirmation of the core galactokinase function; redundant with but corroborating the other galactokinase-activity annotations.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link">
+                                        PMID:7542884
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">only the GALK1 cDNA produced high levels of galactokinase activity. This result would suggest that GALK1 is the major enzyme for galactose metabolism</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019388" target="_blank" class="term-link">
+                                    GO:0019388
+                                </a>
+                            </span>
+                            <span class="term-label">galactose catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14596685
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Sugar recognition by human galactokinase.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="P51570" data-a="GO:0019388" data-r="PMID:14596685" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed more specific biological process: GALK1 catalyzes the first committed step of galactose catabolism (galactose -&gt; galactose 1-phosphate). Existing annotations use the broader galactose metabolic process (GO:0006012); this catabolic child term is more precise and directly supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The catalytic reaction commits galactose to catabolism (Leloir pathway), so galactose catabolic process (GO:0019388), a child of GO:0006012, is the most accurate process term. Added as NEW because only the broader metabolic-process term is present in existing GOA annotations. Also consistent with the specific Leloir-pathway term (GO:0033499) already annotated.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link">
+                                        PMID:14596685
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Galactokinase catalyses the first committed step of galactose catabolism in which the sugar is phosphorylated at the expense of MgATP.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                        PMID:12694189
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the catabolism of galactose.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>GALK1 is the cytosolic galactokinase that catalyzes the ATP-dependent phosphorylation of alpha-D-galactose to alpha-D-galactose 1-phosphate (EC 2.7.1.6), the first committed step of galactose catabolism in the Leloir pathway.</h3>
+                <span class="vote-buttons" data-g="P51570" data-a="FUNCTION: GALK1 is the cytosolic galactokinase that catalyze..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004335" target="_blank" class="term-link">
+                            galactokinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019388" target="_blank" class="term-link">
+                                galactose catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                                PMID:12694189
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the catabolism of galactose. The sugar is phosphorylated at position 1 at the expense of ATP.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link">
+                                PMID:7542884
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">only the GALK1 cDNA produced high levels of galactokinase activity. This result would suggest that GALK1 is the major enzyme for galactose metabolism</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                                PMID:8908517
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">In vitro translation experiments of the GALK1 cDNA indicate that the protein is cytosolic and not associated with the endoplasmic reticulum membrane.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7542884" target="_blank" class="term-link">
+                            PMID:7542884
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Comparison of the enzymatic activities of human galactokinase GALK1 and a related human galactokinase protein GK2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12694189" target="_blank" class="term-link">
+                            PMID:12694189
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Functional analysis of disease-causing mutations in human galactokinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14596685" target="_blank" class="term-link">
+                            PMID:14596685
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Sugar recognition by human galactokinase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15024738" target="_blank" class="term-link">
+                            PMID:15024738
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Biochemical characterization of two GALK1 mutations in patients with galactokinase deficiency.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8908517" target="_blank" class="term-link">
+                            PMID:8908517
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Fine structure of the human galactokinase GALK1 gene.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19946888" target="_blank" class="term-link">
+                            PMID:19946888
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defining the membrane proteome of NK cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-5610026
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Defective GALK1 does not phosphorylate Gal</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70355
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GALK1 phosphorylates Gal to Gal1P</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-70370
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Galactose catabolism</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(GALK1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P51570" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="galk1-human-review-notes">GALK1 (human) review notes</h1>
+<p>UniProtKB: P51570 · HGNC:4118 · Gene ID 2584 · Chromosome 17q25.1</p>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<p>GALK1 is the cytosolic ATP-dependent galactokinase that catalyses the <strong>second step</strong><br />
+of the Leloir pathway (first <em>committed</em> / phosphorylation step of galactose catabolism):</p>
+<ul>
+<li>Reaction: alpha-D-galactose + ATP -&gt; alpha-D-galactose 1-phosphate + ADP + H+ (RHEA:13553, EC 2.7.1.6)</li>
+<li>UniProt FUNCTION: "Catalyzes the transfer of a phosphate from ATP to alpha-D-galactose and<br />
+  participates in the first committed step in the catabolism of galactose."<br />
+  [ECO:0000269|PubMed:12694189, ECO:0000269|PubMed:7542884]</li>
+<li>Kinetic mechanism: ordered ternary complex, ATP binds first [PMID:12694189, PMID:14596685].</li>
+<li>KM ~970 uM galactose, ~34 uM ATP <a href="https://pubmed.ncbi.nlm.nih.gov/12694189">PMID:12694189</a>.</li>
+<li>Member of the GHMP kinase family, GalK subfamily [UniProt SIMILARITY].</li>
+<li>Homodimer [ECO:0000305|PubMed:15590630].</li>
+<li>Substrate specificity: strict at C4/C6 of the sugar ring; D-galactose and 2-deoxy-D-galactose<br />
+  are substrates, but D-glucose, D-fucose, L-arabinose, N-acetyl-D-galactosamine are NOT<br />
+  phosphorylated <a href="https://pubmed.ncbi.nlm.nih.gov/14596685">PMID:14596685</a>.</li>
+</ul>
+<h2 id="localization">Localization</h2>
+<ul>
+<li>Cytosolic. In vitro translation shows the protein is cytosolic and NOT associated with the<br />
+  ER membrane <a href="https://pubmed.ncbi.nlm.nih.gov/8908517">PMID:8908517</a> -&gt; this is the basis of both the cytoplasm IDA and the NOT|membrane IDA.</li>
+<li>Reactome &amp; IBA also place activity in cytosol (GO:0005829).</li>
+<li>HDA "membrane" (PMID:19946888, NK-cell membrane proteome) and "extracellular exosome"<br />
+  (PMID:19056867, urinary exosome proteomics) are high-throughput proteomic co-purifications;<br />
+  not the site of catalytic function. Note NOT|located_in membrane (IDA, PMID:8908517)<br />
+  directly contradicts the membrane HDA.</li>
+</ul>
+<h2 id="disease">Disease</h2>
+<ul>
+<li>Deficiency -&gt; Galactosemia type II (GALAC2, MIM:230200; MONDO:0009255 galactokinase deficiency),<br />
+  autosomal recessive. Hallmark = early-onset <strong>cataracts</strong> from galactitol accumulation in the<br />
+  lens via aldose reductase. Milder than classic (GALT) galactosemia; lacks the systemic<br />
+  hepatic/neuro toxicity. [dismech Galactosemia.yaml; PMID:3043741; PMID:12694189; PMID:14596685]</li>
+<li>Many disease variants characterized biochemically: P28T (Romani founder), V32M, G36R, H44Y,<br />
+  R68C, A198V (Osaka, mild), R239Q, G346S, G349S, T288M, A384P [PMID:12694189, PMID:15024738].</li>
+</ul>
+<h2 id="annotation-review-decisions-summary">Annotation review decisions (summary)</h2>
+<ul>
+<li>Core MF: GO:0004335 galactokinase activity (EXP/IDA PMID:7542884, PMID:12694189; IBA; IEA) -&gt; ACCEPT.</li>
+<li>ATP binding GO:0005524 (IDA PMID:12694189; IEA) -&gt; ACCEPT (real cofactor/substrate, ordered mechanism ATP first).</li>
+<li>galactose binding GO:0005534 (IDA PMID:14596685) -&gt; ACCEPT (substrate binding directly demonstrated).</li>
+<li>BP galactose metabolic process GO:0006012 (IBA, IEA, IMP) -&gt; ACCEPT; GO:0033499 Leloir pathway (IEA, TAS) -&gt; ACCEPT (more specific, correct).</li>
+<li>cytosol GO:0005829 (IBA, TAS x2) -&gt; ACCEPT. cytoplasm GO:0005737 (IDA PMID:8908517, IEA) -&gt; ACCEPT.</li>
+<li>NOT|membrane GO:0016020 (IDA PMID:8908517) -&gt; ACCEPT (informative negation).</li>
+<li>membrane GO:0016020 (HDA PMID:19946888) -&gt; MARK_AS_OVER_ANNOTATED (HT proteomics; contradicted by NOT IDA).</li>
+<li>extracellular exosome GO:0070062 (HDA PMID:19056867) -&gt; KEEP_AS_NON_CORE (HT proteomics; not functional site).</li>
+<li>kinase activity GO:0016301, phosphotransferase alcohol acceptor GO:0016773 (IEA InterPro) -&gt; MODIFY -&gt; GO:0004335 (too generic parents).</li>
+<li>carbohydrate phosphorylation GO:0046835 (IEA) -&gt; KEEP_AS_NON_CORE (correct but generic BP subsumed by galactose catabolism).</li>
+<li>protein binding GO:0005515 (IPI PMID:32296183, HuRI Y2H, PNRC2/Q9NPJ4) -&gt; REMOVE (uninformative bare term; single HT Y2H interactor, no functional meaning for a soluble metabolic enzyme).<br />
+</content></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P51570
+gene_symbol: GALK1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  GALK1 is the human galactokinase, a cytosolic ATP-dependent enzyme (EC 2.7.1.6)
+  that catalyzes the phosphorylation of alpha-D-galactose to alpha-D-galactose
+  1-phosphate, consuming ATP and producing ADP. This is the first committed,
+  phosphorylation step of galactose catabolism in the Leloir pathway, which
+  ultimately converts dietary galactose into glucose 1-phosphate for entry into
+  glycolysis. The enzyme uses an ordered ternary-complex kinetic mechanism in
+  which ATP binds first, followed by galactose, and it displays strict specificity
+  for the galactose configuration at carbons 4 and 6 of the sugar ring (D-galactose
+  and 2-deoxy-D-galactose are substrates, whereas D-glucose, D-fucose, L-arabinose
+  and N-acetyl-D-galactosamine are not). GALK1 is a member of the GHMP kinase
+  superfamily (GalK subfamily) and functions as a homodimer. Loss-of-function
+  variants cause autosomal recessive galactokinase deficiency (galactosemia type II,
+  GALAC2), whose principal manifestation is early-onset cataracts resulting from
+  accumulation of the galactose-derived polyol galactitol in the lens.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      InterPro2GO pipeline. Correctly transfers galactokinase and ATP-binding terms
+      from GHMP-kinase/galactokinase InterPro signatures, but also assigns generic
+      parent MF terms (kinase activity, phosphotransferase) that are less informative
+      than the specific galactokinase activity term.
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/GO_Central phylogenetic (IBA) annotations. The three IBA calls
+      (galactokinase activity, galactose metabolic process, cytosol) match the
+      experimentally established function and localization of the human enzyme.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Combined automated (ARBA/ensembl/RHEA/EC) pipeline. Correctly infers
+      galactokinase activity and Leloir-pathway galactose catabolism.
+- id: PMID:7542884
+  title: Comparison of the enzymatic activities of human galactokinase GALK1 and a
+    related human galactokinase protein GK2.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Demonstrates that GALK1 (expressed in COS cells) produces high galactokinase
+      activity and is the major galactose-metabolizing enzyme, distinguishing it from
+      the related GK2 protein. Basis for the EXP and IDA galactokinase-activity
+      annotations.
+- id: PMID:12694189
+  title: Functional analysis of disease-causing mutations in human galactokinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Purified recombinant human GALK1 characterized kinetically (ordered ternary
+      mechanism, ATP first; KM ~970 uM galactose, ~34 uM ATP) and multiple
+      disease-causing variants assayed. Basis for galactokinase-activity and
+      ATP-binding IDA annotations and the EC 2.7.1.6 catalytic-activity assertion.
+- id: PMID:14596685
+  title: Sugar recognition by human galactokinase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available. Establishes substrate/sugar recognition of the human
+      enzyme: D-galactose and 2-deoxy-D-galactose are substrates; D-glucose,
+      D-fucose, L-arabinose and N-acetyl-D-galactosamine are not phosphorylated.
+      Basis for the galactose-binding IDA annotation.
+- id: PMID:15024738
+  title: Biochemical characterization of two GALK1 mutations in patients with galactokinase
+    deficiency.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Biochemical characterization of the V32M and R239Q GALK1 variants in patients,
+      showing drastic reduction of GALK activity, establishing pathogenicity and the
+      enzyme&#39;s role in galactose metabolism (IMP).
+- id: PMID:8908517
+  title: Fine structure of the human galactokinase GALK1 gene.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      In vitro translation shows the GALK1 protein is cytosolic and not associated
+      with the ER membrane. Basis for the cytoplasm IDA and the NOT|membrane IDA
+      (informative negation).
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput urinary exosome proteomics; GALK1 detected as one of many
+      co-purifying proteins. Localization is incidental, not a functional site for
+      this soluble metabolic enzyme.
+- id: PMID:19946888
+  title: Defining the membrane proteome of NK cells.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      High-throughput NK-cell membrane proteome. The resulting &#34;membrane&#34;
+      localization is a proteomic co-purification and is directly contradicted by the
+      curated NOT|located_in membrane IDA (PMID:8908517).
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI high-throughput yeast two-hybrid interactome. Reports a single binary
+      interactor (PNRC2, Q9NPJ4). Supports only a bare, uninformative &#34;protein
+      binding&#34; annotation with no established functional consequence.
+- id: Reactome:R-HSA-5610026
+  title: Defective GALK1 does not phosphorylate Gal
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction annotation capturing GALK1 galactokinase activity in the
+      cytosol.
+- id: Reactome:R-HSA-70355
+  title: GALK1 phosphorylates Gal to Gal1P
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction: GALK1 phosphorylates galactose to galactose 1-phosphate in
+      the cytosol. Directly captures the core Leloir-pathway step.
+- id: Reactome:R-HSA-70370
+  title: Galactose catabolism
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome &#34;Galactose catabolism&#34; pathway; basis for the Leloir-pathway galactose
+      catabolic process TAS annotation.
+existing_annotations:
+- term:
+    id: GO:0006012
+    label: galactose metabolic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation placing GALK1 in galactose metabolism. Correct
+      but general; the enzyme specifically performs the phosphorylation step of
+      galactose catabolism (Leloir pathway).
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 catalyzes the ATP-dependent phosphorylation of galactose, the first
+      committed step of galactose catabolism, so it is validly involved in galactose
+      metabolic process. Retained; the more specific catabolic term (GO:0019388) is
+      captured in core_functions.
+    supported_by:
+    - reference_id: PMID:12694189
+      supporting_text: &gt;-
+        Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the
+        catabolism of galactose.
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assertion of galactokinase activity, the core, defining
+      molecular function of GALK1.
+    action: ACCEPT
+    reason: &gt;-
+      Galactokinase activity is the experimentally established, defining function of
+      GALK1 (EC 2.7.1.6) and is well supported across the phylogeny. This is a core
+      function.
+    supported_by:
+    - reference_id: PMID:7542884
+      supporting_text: &gt;-
+        only the GALK1 cDNA produced high levels of galactokinase activity. This
+        result would suggest that GALK1 is the major enzyme for galactose metabolism
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) assertion that GALK1 is active in the cytosol, consistent
+      with experimental evidence that the human protein is cytosolic.
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 is a soluble cytosolic enzyme; in vitro translation showed the protein is
+      cytosolic and not membrane-associated, and Reactome places its activity in the
+      cytosol. This is the correct site of action.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        In vitro translation experiments of the GALK1 cDNA indicate that the protein
+        is cytosolic and not associated with the endoplasmic reticulum membrane.
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (ARBA/RHEA/EC) inference of galactokinase activity, redundant with and
+      corroborating the experimental and phylogenetic annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correctly transfers the EC 2.7.1.6 / RHEA:13553 galactokinase activity based on
+      the galactokinase InterPro signature and orthology; matches the experimentally
+      demonstrated function.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro-based inference of ATP binding, consistent with the GHMP-kinase ATP
+      binding motif and directly demonstrated ATP binding/kinetics.
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 is an ATP-dependent kinase; ATP is a bona fide substrate that binds first
+      in the ordered ternary mechanism, and ATP-binding residues are mapped in the
+      structure. Corroborated by the IDA annotation from PMID:12694189.
+    supported_by:
+    - reference_id: PMID:12694189
+      supporting_text: &gt;-
+        the most likely kinetic mechanism of the enzyme was an ordered ternary complex
+        one in which ATP is the first substrate to bind
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      InterPro-based cytoplasm localization, consistent with the experimentally
+      determined cytosolic localization of GALK1.
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 is a cytosolic protein; the cytoplasm assignment is correct though less
+      specific than cytosol. Consistent with the IDA cytoplasm annotation.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        the protein is cytosolic and not associated with the endoplasmic reticulum
+        membrane
+- term:
+    id: GO:0006012
+    label: galactose metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated inference of involvement in galactose metabolic process, redundant
+      with the IBA and IMP annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct: GALK1 performs the phosphorylation step of galactose catabolism.
+      General but valid.
+- term:
+    id: GO:0016301
+    label: kinase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic parent molecular-function term (kinase activity) inferred from InterPro.
+      Too general given the specific galactokinase activity is known.
+    action: MODIFY
+    reason: &gt;-
+      Kinase activity is a broad parent of the specific, experimentally established
+      galactokinase activity (GO:0004335, EC 2.7.1.6). Replace with the specific term
+      to avoid uninformative over-generalization.
+    proposed_replacement_terms:
+    - id: GO:0004335
+      label: galactokinase activity
+- term:
+    id: GO:0016773
+    label: phosphotransferase activity, alcohol group as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Generic phosphotransferase parent term inferred from InterPro. The acceptor in
+      the GALK1 reaction is the C1 hydroxyl of galactose, but the specific
+      galactokinase term is more informative.
+    action: MODIFY
+    reason: &gt;-
+      Although mechanistically accurate (galactose C1-OH is the acceptor), this is a
+      broad parent of galactokinase activity. Replace with the specific term.
+    proposed_replacement_terms:
+    - id: GO:0004335
+      label: galactokinase activity
+- term:
+    id: GO:0046835
+    label: carbohydrate phosphorylation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Generic biological-process term (carbohydrate phosphorylation) inferred from
+      InterPro. Accurate but subsumed by the more specific galactose catabolic
+      process.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GALK1 does phosphorylate a carbohydrate (galactose), so this term is not wrong,
+      but it is a generic process that is captured more specifically by galactose
+      catabolic/metabolic process. Retained as non-core rather than removed.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a single high-throughput yeast two-hybrid
+      interaction (HuRI) with PNRC2 (Q9NPJ4). Uninformative regarding molecular
+      function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Per curation guidelines, bare &#34;protein binding&#34; is uninformative and should be
+      avoided. The evidence is a single high-throughput binary Y2H interactome hit
+      with no established functional consequence for this soluble cytosolic metabolic
+      enzyme, and no adapter/scaffold role is known. It is retained but flagged as an
+      over-annotation (not removed, as it is an experimental IPI).
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: &gt;-
+        we present a human &#39;all-by-all&#39; reference interactome map of human binary
+        protein interactions, or &#39;HuRI&#39;.
+- term:
+    id: GO:0033499
+    label: beta-D-galactose catabolic process via UDP-galactose, Leloir pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated inference placing GALK1 in the Leloir-pathway galactose catabolic
+      process. This is the correct, specific biological process for the enzyme.
+      (Ontology current primary label is &#34;galactose catabolic process via
+      UDP-galactose, Leloir pathway&#34;.)
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 phosphorylates galactose to galactose 1-phosphate, a Leloir-pathway step
+      that feeds galactose into UDP-galactose/glucose-1-phosphate metabolism. This is
+      the most specific and accurate BP annotation.
+    supported_by:
+    - reference_id: PMID:14596685
+      supporting_text: &gt;-
+        Galactokinase catalyses the first committed step of galactose catabolism in
+        which the sugar is phosphorylated at the expense of MgATP.
+- term:
+    id: GO:0033499
+    label: beta-D-galactose catabolic process via UDP-galactose, Leloir pathway
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70370
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) assertion of Leloir-pathway galactose catabolism, corroborating
+      the IEA annotation of the same term.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome curates GALK1 as the galactokinase step of galactose catabolism; this
+      is the correct specific process.
+    supported_by:
+    - reference_id: PMID:14596685
+      supporting_text: &gt;-
+        Galactose is metabolised via the Leloir pathway [1] in order to produce
+        glucose-6-phosphate that can enter glycolysis.
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: EXP
+  original_reference_id: PMID:7542884
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental (EXP) galactokinase activity from expression of GALK1 cDNA in COS
+      cells producing high galactokinase activity. Directly supports the core
+      function.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental demonstration that GALK1 confers galactokinase activity and
+      is the major galactose-metabolizing enzyme. Core function.
+    supported_by:
+    - reference_id: PMID:7542884
+      supporting_text: &gt;-
+        only the GALK1 cDNA produced high levels of galactokinase activity. This
+        result would suggest that GALK1 is the major enzyme for galactose metabolism
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5610026
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Reactome (TAS) assertion of galactokinase activity, corroborating the
+      experimental annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Reactome curates GALK1 galactokinase activity (with defective-GALK1 disease
+      variants); consistent with the defining function.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-5610026
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol localization, matching the experimentally determined
+      cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      GALK1 is a soluble cytosolic enzyme; cytosol is the correct compartment.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        the protein is cytosolic and not associated with the endoplasmic reticulum
+        membrane
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: HDA
+  original_reference_id: PMID:19946888
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput NK-cell membrane proteome (HDA) placing GALK1 at the membrane.
+      Contradicted by the curated NOT|located_in membrane IDA.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This &#34;membrane&#34; localization comes from a large-scale membrane-proteome
+      dataset and represents co-purification rather than genuine membrane
+      association; GALK1 is a soluble cytosolic enzyme. It is directly contradicted by
+      the experimental NOT|located_in membrane annotation (PMID:8908517), so it is an
+      over-annotation.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        the protein is cytosolic and not associated with the endoplasmic reticulum
+        membrane
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput urinary exosome proteomics (HDA) detecting GALK1. Incidental
+      co-purification, not a functional localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      GALK1 was detected among many proteins in a large-scale urinary exosome
+      proteomic survey. Many abundant cytosolic proteins are recovered in exosome
+      preparations; this does not reflect the site of catalytic function. Retained as
+      non-core rather than removed, as it is a valid detection record.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-70355
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) cytosol localization from the &#34;GALK1 phosphorylates Gal to Gal1P&#34;
+      reaction, matching experimental cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct compartment for the soluble cytosolic galactokinase; corroborates the
+      IBA and other TAS cytosol annotations.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IDA
+  original_reference_id: PMID:8908517
+  qualifier: located_in
+  negated: true
+  review:
+    summary: &gt;-
+      Curated NOT|located_in membrane (IDA), based on in vitro translation showing the
+      GALK1 protein is cytosolic and not associated with the ER membrane. An
+      informative negation.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported negative annotation that correctly excludes membrane
+      localization and reinforces the cytosolic assignment. It also flags the
+      high-throughput membrane HDA as spurious. Keep the negation.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        In vitro translation experiments of the GALK1 cDNA indicate that the protein
+        is cytosolic and not associated with the endoplasmic reticulum membrane.
+- term:
+    id: GO:0006012
+    label: galactose metabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:15024738
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Involvement in galactose metabolism inferred from patient GALK1 mutations (V32M,
+      R239Q) that drastically reduce galactokinase activity (IMP).
+    action: ACCEPT
+    reason: &gt;-
+      Loss-of-function GALK1 variants in patients cause deficient galactose metabolism
+      (galactokinase deficiency), directly implicating the gene in galactose metabolic
+      process. Core biological process.
+    supported_by:
+    - reference_id: PMID:15024738
+      supporting_text: &gt;-
+        these mutations led to a drastic modification in GALK activity when individual
+        mutant cDNAs were expressed in an E. coli system
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:12694189
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of galactokinase activity using purified recombinant human
+      GALK1, with full kinetic characterization.
+    action: ACCEPT
+    reason: &gt;-
+      Purified, active recombinant human GALK1 was kinetically characterized as a
+      galactokinase (EC 2.7.1.6); this is the strongest direct evidence for the core
+      molecular function.
+    supported_by:
+    - reference_id: PMID:12694189
+      supporting_text: &gt;-
+        Human galactokinase (GALK1) was expressed in and purified from Escherichia
+        coli. The recombinant enzyme was both soluble and active.
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IDA
+  original_reference_id: PMID:12694189
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence (IDA) for ATP binding: kinetic analysis shows an ordered
+      ternary-complex mechanism in which ATP binds first, with a measured KM for ATP.
+    action: ACCEPT
+    reason: &gt;-
+      ATP is a bona fide substrate/cofactor of GALK1; product-inhibition and kinetic
+      studies establish ATP binding, and the ATP KM (~34 uM) is reported. Core to the
+      kinase mechanism.
+    supported_by:
+    - reference_id: PMID:12694189
+      supporting_text: &gt;-
+        the most likely kinetic mechanism of the enzyme was an ordered ternary complex
+        one in which ATP is the first substrate to bind
+- term:
+    id: GO:0005534
+    label: galactose binding
+  evidence_type: IDA
+  original_reference_id: PMID:14596685
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct evidence (IDA) for galactose binding from a sugar-recognition study of
+      the human enzyme, including mutagenesis of sugar-binding-site residues.
+    action: ACCEPT
+    reason: &gt;-
+      Galactose is the physiological substrate and its binding to the human enzyme is
+      directly demonstrated; the enzyme is highly specific for the galactose
+      configuration at carbons 4 and 6. This is an informative, substrate-specific MF.
+    supported_by:
+    - reference_id: PMID:14596685
+      supporting_text: &gt;-
+        D-galactose and 2-deoxy-D-galactose are substrates for the enzyme, but
+        N-acetyl-D-galactosamine, L-arabinose, D-fucose and D-glucose are all not
+        phosphorylated.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:8908517
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct evidence (IDA) that GALK1 is cytoplasmic, from in vitro translation
+      showing the protein is cytosolic and not ER-membrane-associated.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported cytoplasmic localization; consistent with the cytosol
+      annotations, though cytosol (GO:0005829) is the more precise compartment.
+    supported_by:
+    - reference_id: PMID:8908517
+      supporting_text: &gt;-
+        In vitro translation experiments of the GALK1 cDNA indicate that the protein
+        is cytosolic and not associated with the endoplasmic reticulum membrane.
+- term:
+    id: GO:0004335
+    label: galactokinase activity
+  evidence_type: IDA
+  original_reference_id: PMID:7542884
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay (IDA) of galactokinase activity from expression of the GALK1 cDNA,
+      demonstrating high galactokinase activity attributable to GALK1.
+    action: ACCEPT
+    reason: &gt;-
+      Direct experimental confirmation of the core galactokinase function; redundant
+      with but corroborating the other galactokinase-activity annotations.
+    supported_by:
+    - reference_id: PMID:7542884
+      supporting_text: &gt;-
+        only the GALK1 cDNA produced high levels of galactokinase activity. This
+        result would suggest that GALK1 is the major enzyme for galactose metabolism
+- term:
+    id: GO:0019388
+    label: galactose catabolic process
+  evidence_type: IDA
+  original_reference_id: PMID:14596685
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Proposed more specific biological process: GALK1 catalyzes the first committed
+      step of galactose catabolism (galactose -&gt; galactose 1-phosphate). Existing
+      annotations use the broader galactose metabolic process (GO:0006012); this
+      catabolic child term is more precise and directly supported.
+    action: NEW
+    reason: &gt;-
+      The catalytic reaction commits galactose to catabolism (Leloir pathway), so
+      galactose catabolic process (GO:0019388), a child of GO:0006012, is the most
+      accurate process term. Added as NEW because only the broader metabolic-process
+      term is present in existing GOA annotations. Also consistent with the specific
+      Leloir-pathway term (GO:0033499) already annotated.
+    supported_by:
+    - reference_id: PMID:14596685
+      supporting_text: &gt;-
+        Galactokinase catalyses the first committed step of galactose catabolism in
+        which the sugar is phosphorylated at the expense of MgATP.
+    - reference_id: PMID:12694189
+      supporting_text: &gt;-
+        Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the catabolism
+        of galactose.
+core_functions:
+- description: &gt;-
+    GALK1 is the cytosolic galactokinase that catalyzes the ATP-dependent
+    phosphorylation of alpha-D-galactose to alpha-D-galactose 1-phosphate (EC 2.7.1.6),
+    the first committed step of galactose catabolism in the Leloir pathway.
+  molecular_function:
+    id: GO:0004335
+    label: galactokinase activity
+  directly_involved_in:
+  - id: GO:0019388
+    label: galactose catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:12694189
+    supporting_text: &gt;-
+      Galactokinase (EC 2.7.1.6) catalyzes the first committed step in the catabolism
+      of galactose. The sugar is phosphorylated at position 1 at the expense of ATP.
+  - reference_id: PMID:7542884
+    supporting_text: &gt;-
+      only the GALK1 cDNA produced high levels of galactokinase activity. This result
+      would suggest that GALK1 is the major enzyme for galactose metabolism
+  - reference_id: PMID:8908517
+    supporting_text: &gt;-
+      In vitro translation experiments of the GALK1 cDNA indicate that the protein is
+      cytosolic and not associated with the endoplasmic reticulum membrane.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

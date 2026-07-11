@@ -1,0 +1,4251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPB1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UPB1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9UBR1" target="_blank" class="term-link">
+                        Q9UBR1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UPB1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9UBR1" data-a="DESCRIPTION: UPB1 encodes beta-ureidopropionase (N-carbamoyl-be..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UPB1 encodes beta-ureidopropionase (N-carbamoyl-beta-alanine amidohydrolase; beta-alanine synthase; EC 3.5.1.6), the third and final enzyme of the reductive pyrimidine catabolic pathway. It hydrolyses N-carbamoyl-beta-alanine (3-ureidopropanoate) to beta-alanine, ammonia and carbon dioxide, and likewise converts N-carbamoyl-beta-aminoisobutyrate (from thymine degradation) to beta-aminoisobutyrate, ammonia and CO2. It acts downstream of dihydropyrimidine dehydrogenase (DPYD) and dihydropyrimidinase (DPYS), and its product beta-alanine is a precursor for carnosine and other metabolites. The enzyme is a member of the nitrilase (carbon-nitrogen hydrolase) superfamily, using an active-site cysteine nucleophile (Cys233), and is cytosolic, highly expressed in liver. It assembles into homodimers, homotetramers, homooctamers and larger homooligomers, with substrate- and pH-dependent allosteric regulation of activity through oligomer state. Loss-of-function variants in UPB1 cause beta-ureidopropionase deficiency (UPB1D), an inborn error of pyrimidine degradation characterised by N-carbamyl-beta-amino aciduria and a highly variable phenotype ranging from neurological involvement (intellectual disability, seizures, hypotonia, microcephaly) to asymptomatic; the enzyme is also relevant to catabolism of fluoropyrimidine anticancer drugs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic (IBA) annotation of the core beta-ureidopropionase catalytic activity, concordant with direct experimental evidence in human.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the defining molecular function of UPB1 and is supported by multiple experimental studies of the human enzyme; the IBA is at the correct level of specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" target="_blank" class="term-link">
+                                        PMID:24526388
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid into β-alanine and β-aminoisobutyric acid, respectively, with concomitant production of ammonia and carbon dioxide.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019483" target="_blank" class="term-link">
+                                    GO:0019483
+                                </a>
+                            </span>
+                            <span class="term-label">beta-alanine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0019483" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic annotation to beta-alanine biosynthesis, the biological process in which UPB1 produces beta-alanine as the terminal step of pyrimidine catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UPB1 generates beta-alanine directly from N-carbamoyl-beta-alanine; this is a correct and well-supported process annotation. Note that the UniProt DR line lists the more specific term GO:0033396 (beta-alanine biosynthetic process via 3-ureidopropionate), but that term is now obsolete, so GO:0019483 is the appropriate level.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                                        PMID:22525402
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway and catalyzes the conversion of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid, ammonia and CO(2).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (ARBA/RHEA/EC 3.5.1.6) inference of the core enzyme activity, identical to the experimentally supported molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with the EXP/IDA/IBA annotations to GO:0003837 and correctly mapped from EC 3.5.1.6 / RHEA:11184.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine catabolic pathway responsible for breakdown of uracil-, thymine- and pyrimidine-based antimetabolites such as 5-fluorouracil.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated subcellular-location mapping placing UPB1 in the cytoplasm, consistent with its cytosolic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but general; the more precise cytosol term (GO:0005829) is supported by Reactome. Keeping the cytoplasm parent is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPB1/UPB1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001701" target="_blank" class="term-link">
+                                    GO:0001701
+                                </a>
+                            </span>
+                            <span class="term-label">in utero embryonic development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0001701" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Developmental-process annotation transferred by Ensembl Compara orthology from rat; not supported by any direct evidence that UPB1 has a role in embryonic development beyond its metabolic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is an electronic orthology transfer (GO_REF:0000107) from rat Q03248, not evidence about human UPB1. UPB1 is a pyrimidine-catabolic enzyme; there is no literature support for a specific role in in utero embryonic development. The phenotype associated with loss of function is a metabolic/neurological inborn error, not an embryonic-development defect. Flagging as over-annotated rather than removing, as it is an automated inference rather than a clearly wrong mapping.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPB1/UPB1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes a late step in pyrimidine degradation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001889" target="_blank" class="term-link">
+                                    GO:0001889
+                                </a>
+                            </span>
+                            <span class="term-label">liver development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000107
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0001889" data-r="GO_REF:0000107" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Liver-development annotation transferred by Ensembl Compara orthology from rat; UPB1 is highly expressed in liver but there is no evidence it participates in liver morphogenesis/development.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Electronic orthology transfer from rat (GO_REF:0000107). High hepatic expression reflects where pyrimidine catabolism occurs, not a role in the developmental process of the liver. No experimental evidence links UPB1 to liver development. Marked as over-annotated rather than removed since it is an automated inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPB1/UPB1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">TISSUE SPECIFICITY: Detected in liver (at protein level).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019483" target="_blank" class="term-link">
+                                    GO:0019483
+                                </a>
+                            </span>
+                            <span class="term-label">beta-alanine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0019483" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Automated (UniPathway UPA00131 / orthology) annotation to beta-alanine biosynthesis, redundant with the experimental and IBA annotations.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process annotation supported by UniPathway (beta-alanine biosynthesis) and by the experimental IDA annotations to the same term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPB1/UPB1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amino-acid biosynthesis; beta-alanine biosynthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019483" target="_blank" class="term-link">
+                                    GO:0019483
+                                </a>
+                            </span>
+                            <span class="term-label">beta-alanine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22525402
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ß-ureidopropionase deficiency: phenotype, genotype and prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0019483" data-r="PMID:22525402" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence that UPB1 produces beta-alanine as the terminal step of the pyrimidine degradation pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental study of the human enzyme and disease mutants establishes its role in converting N-carbamyl-beta-alanine to beta-alanine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                                        PMID:22525402
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway and catalyzes the conversion of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid, ammonia and CO(2).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019483" target="_blank" class="term-link">
+                                    GO:0019483
+                                </a>
+                            </span>
+                            <span class="term-label">beta-alanine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29976570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and pH-dependent allosteric regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0019483" data-r="PMID:29976570" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct experimental evidence (biochemical/structural characterisation of the human enzyme) for beta-alanine production from N-carbamoyl-beta-alanine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The crystal-structure paper biochemically characterises the human enzyme&#39;s conversion of N-carbamoyl-beta-alanine, the reaction that generates beta-alanine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine catabolic pathway responsible for breakdown of uracil-, thymine- and pyrimidine-based antimetabolites such as 5-fluorouracil.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10415095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10415095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A radiochemical assay for beta-ureidopropionase using radiol...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:10415095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental radiochemical assay measuring human beta-ureidopropionase activity on N-carbamyl-beta-alanine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct enzymatic assay of the human protein with kinetic characterisation (Km 15.5 uM), establishing the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10415095" target="_blank" class="term-link">
+                                        PMID:10415095
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human beta-ureidopropionase obeyed Michaelis-Menten kinetics with an apparent Km for N-carbamyl-beta-alanine of 15.5 +/- 1.9 microM.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10542323" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10542323
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning, genomic structure and chromosomal localization...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:10542323" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental confirmation that the cloned human UPB1 cDNA encodes an active beta-ureidopropionase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Heterologous expression of the human cDNA yielded high beta-ureidopropionase activity, confirming the enzyme&#39;s molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10542323" target="_blank" class="term-link">
+                                        PMID:10542323
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Expression of the human cDNA in an Escherichia coli and eukaryotic COS-7 expression system revealed a very high beta-ureidopropionase enzymatic activity, thus confirming the identity of the cDNA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11508704" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11508704
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Expression and properties of human liver beta-ureidopropiona...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:11508704" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental characterisation of purified recombinant human liver beta-ureidopropionase, including cooperativity toward its substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purification and biochemical assay of the human enzyme directly establish the beta-ureidopropionase activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11508704" target="_blank" class="term-link">
+                                        PMID:11508704
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">exhibited positive cooperativity with N-carbamoyl-beta-alanine as the substrate with a Hill coefficient 2.0</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24526388
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Clinical, biochemical and molecular analysis of 13 Japanese ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:24526388" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental activity measurements of wild-type and mutant human UPB1, confirming beta-ureidopropionase catalytic activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Functional assays of human UPB1 (EC 3.5.1.6) catalysing the third catabolic step directly support this molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" target="_blank" class="term-link">
+                                        PMID:24526388
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid into β-alanine and β-aminoisobutyric acid, respectively, with concomitant production of ammonia and carbon dioxide.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22525402
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ß-ureidopropionase deficiency: phenotype, genotype and prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:22525402" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay evidence that human UPB1 has beta-ureidopropionase activity, with disease mutants showing reduced activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental measurement of enzyme activity in wild-type and mutant human UPB1 directly supports this molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                                        PMID:22525402
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Heterologous expression of the 6 mutant enzymes in Escherichia coli showed that all mutations yielded mutant ß-ureidopropionase proteins with significantly decreased activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                                    GO:0003837
+                                </a>
+                            </span>
+                            <span class="term-label">beta-ureidopropionase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29976570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and pH-dependent allosteric regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0003837" data-r="PMID:29976570" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct biochemical/structural evidence for human beta-ureidopropionase activity, including catalytic residue and kinetic characterisation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The crystal-structure study biochemically characterises the catalytic activity of recombinant human UPB1.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine catabolic pathway responsible for breakdown of uracil-, thymine- and pyrimidine-based antimetabolites such as 5-fluorouracil.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+                        <span class="not-badge" title="This is a NOT annotation - gene does NOT have this function">NOT</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29976570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and pH-dependent allosteric regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0008270" data-r="PMID:29976570" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NOT annotation correctly asserting that human UPB1 does not bind zinc, refuting an earlier sequence-based prediction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Although early work reported ~0.5 zinc atoms/subunit and predicted a zinc site, the crystal structure shows no bound zinc and that the predicted residues are too far apart to form a site. The negated annotation is correct and should be retained to prevent erroneous propagation of a zinc-binding function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UPB1/UPB1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">The crystal structure indicates a lack of bound zinc ions, and shows that the residues that were predicted to bind zinc are too far apart in space to form a zinc binding site</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29976570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and pH-dependent allosteric regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0042803" data-r="PMID:29976570" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UPB1 forms homodimers, the basic building block of its higher-order oligomeric assemblies.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homodimerization is experimentally established and structurally important, but it is a means of assembling the active oligomer rather than the core catalytic function of the enzyme. Retained as non-core supporting activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Existing as a homodimer at pH 9, the enzyme increasingly associates to form octamers and larger oligomers with decreasing pH.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046135" target="_blank" class="term-link">
+                                    GO:0046135
+                                </a>
+                            </span>
+                            <span class="term-label">pyrimidine nucleoside catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22525402
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ß-ureidopropionase deficiency: phenotype, genotype and prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0046135" data-r="PMID:22525402" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Annotation to pyrimidine catabolism based on disease-mutation analysis, but the chosen term (nucleoside catabolism) is inaccurate: UPB1 acts on N-carbamoyl-beta-alanine, a nucleobase-degradation intermediate, not a nucleoside.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The gene is genuinely involved in pyrimidine catabolism (loss of function causes accumulation of N-carbamyl-beta-amino acids), so the essence is correct, but nucleoside catabolism is the wrong branch. UPB1 acts downstream of base ring-opening on the ureido acid, so the appropriate terms are uracil catabolic process (GO:0006212) and, more generally, pyrimidine nucleobase catabolic process (GO:0006208).
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006212" target="_blank" class="term-link">
+                                    uracil catabolic process
+                                </a>
+                            </span>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006208" target="_blank" class="term-link">
+                                    pyrimidine nucleobase catabolic process
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                                        PMID:22525402
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">markedly elevated levels of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid in urine and plasma.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051260" target="_blank" class="term-link">
+                                    GO:0051260
+                                </a>
+                            </span>
+                            <span class="term-label">protein homooligomerization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22525402
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ß-ureidopropionase deficiency: phenotype, genotype and prote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0051260" data-r="PMID:22525402" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UPB1 assembles into higher-order homooligomers, which underlies its substrate/pH-dependent allosteric regulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homooligomerization is experimentally supported and mechanistically relevant to activity regulation, but it is a supporting structural property rather than the core biological function (pyrimidine catabolism / beta-alanine biosynthesis).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Existing as a homodimer at pH 9, the enzyme increasingly associates to form octamers and larger oligomers with decreasing pH.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051289" target="_blank" class="term-link">
+                                    GO:0051289
+                                </a>
+                            </span>
+                            <span class="term-label">protein homotetramerization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:29976570
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal structure and pH-dependent allosteric regulation of ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0051289" data-r="PMID:29976570" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UPB1 forms homotetramers as part of its progression from dimers to larger oligomeric states.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Homotetramerization is part of the experimentally observed oligomerization series; retained as a non-core supporting property rather than the core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                                        PMID:29976570
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Existing as a homodimer at pH 9, the enzyme increasingly associates to form octamers and larger oligomers with decreasing pH.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070062" target="_blank" class="term-link">
+                                    GO:0070062
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular exosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19056867
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Large-scale proteomics and phosphoproteomics of urinary exos...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0070062" data-r="PMID:19056867" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput detection of UPB1 in urinary exosomes; a real proteomic observation but not the site of catalytic function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a large-scale mass-spectrometry detection in urinary exosomes, not evidence for the functional localization of the enzyme, which is cytosolic. Retained as non-core to reflect the proteomic observation without implying an extracellular functional role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                                        PMID:19056867
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Normal human urine contains large numbers of exosomes</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73591
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0005829" data-r="Reactome:R-HSA-73591" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization inferred from the Reactome reaction for conversion of 3-ureidopropionate to beta-alanine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with UniProt (Cytoplasm) and the known cytosolic site of pyrimidine catabolism; this is the functionally relevant location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73591
+
+                                </span>
+
+                                <div class="support-text">Cytosolic 3-ureidopropionase catalyzes the reaction of 3-ureidopropionate and water to form beta-alanine, CO2, and NH3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-73620
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9UBR1" data-a="GO:0005829" data-r="Reactome:R-HSA-73620" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytosolic localization inferred from the Reactome reaction for conversion of 3-ureidoisobutyrate to 3-aminoisobutyrate (thymine branch).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the cytosolic function of UPB1 in both the uracil- and thymine-derived branches of pyrimidine catabolism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-73620
+
+                                </span>
+
+                                <div class="support-text">Cytosolic UPB1 (beta-ureidopropionase) catalyzes the reaction of 3-ureidoisobutyrate and H2O to form (R)-3-aminoisobutyrate, CO2, and NH3</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Beta-ureidopropionase catalytic activity: hydrolyses N-carbamoyl-beta-alanine to beta-alanine, ammonia and CO2 (and N-carbamoyl-beta-aminoisobutyrate to beta-aminoisobutyrate), the third and final step of reductive pyrimidine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="FUNCTION: Beta-ureidopropionase catalytic activity: hydrolys..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                            beta-ureidopropionase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006212" target="_blank" class="term-link">
+                                uracil catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" target="_blank" class="term-link">
+                                PMID:24526388
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid into β-alanine and β-aminoisobutyric acid, respectively, with concomitant production of ammonia and carbon dioxide.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Production of beta-alanine (and beta-aminoisobutyrate) as the terminal metabolic output of the pyrimidine degradation pathway, in the cytosol.</h3>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="FUNCTION: Production of beta-alanine (and beta-aminoisobutyr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003837" target="_blank" class="term-link">
+                            beta-ureidopropionase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019483" target="_blank" class="term-link">
+                                beta-alanine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                                PMID:22525402
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway and catalyzes the conversion of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid, ammonia and CO(2).</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000107.md" target="_blank" class="term-link">
+                            GO_REF:0000107
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10415095" target="_blank" class="term-link">
+                            PMID:10415095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A radiochemical assay for beta-ureidopropionase using radiolabeled N-carbamyl-beta-alanine obtained via hydrolysis of [2-(14)C]5, 6-dihydrouracil.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10542323" target="_blank" class="term-link">
+                            PMID:10542323
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">cDNA cloning, genomic structure and chromosomal localization of the human BUP-1 gene encoding beta-ureidopropionase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11508704" target="_blank" class="term-link">
+                            PMID:11508704
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Expression and properties of human liver beta-ureidopropionase.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19056867" target="_blank" class="term-link">
+                            PMID:19056867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Large-scale proteomics and phosphoproteomics of urinary exosomes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22525402" target="_blank" class="term-link">
+                            PMID:22525402
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ß-ureidopropionase deficiency: phenotype, genotype and protein structural consequences in 16 patients.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" target="_blank" class="term-link">
+                            PMID:24526388
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Clinical, biochemical and molecular analysis of 13 Japanese patients with β-ureidopropionase deficiency demonstrates high prevalence of the c.977G &gt; A (p.R326Q) mutation [corrected].</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" target="_blank" class="term-link">
+                            PMID:29976570
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structure and pH-dependent allosteric regulation of human β-ureidopropionase, an enzyme involved in anticancer drug metabolism.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73591
+
+                    </span>
+                </div>
+
+                <div class="reference-title">conversion of 3-ureidopropionate to beta-alanine</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-73620
+
+                    </span>
+                </div>
+
+                <div class="reference-title">conversion of 3-Ureidoiosbutyrate to 3-Aminoisobutyrate</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/UPB1/UPB1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q9UBR1 (BUP1_HUMAN) entry</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the substrate/pH-dependent oligomerization of human UPB1 regulate flux through pyrimidine catabolism in vivo, or is it primarily an in vitro phenomenon?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="Q: Does the substrate/pH-dependent oligomerization of..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> To what extent does reduced UPB1 activity modulate systemic fluoropyrimidine (e.g. 5-fluorouracil) catabolism and toxicity, given that its substrates derive from these antimetabolites?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="Q: To what extent does reduced UPB1 activity modulate..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine a substrate- or product-bound crystal/cryo-EM structure of human UPB1 to define the catalytic mechanism and the basis of allosteric activation by oligomer assembly.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="EXPERIMENT: Determine a substrate- or product-bound crystal/cr..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Metabolomic profiling of UPB1-deficient patient cells or knockout models to quantify accumulation of N-carbamyl-beta-alanine / N-carbamyl-beta-aminoisobutyrate and depletion of beta-alanine and downstream carnosine.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q9UBR1" data-a="EXPERIMENT: Metabolomic profiling of UPB1-deficient patient ce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UPB1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9UBR1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="upb1-beta-ureidopropionase-review-notes">UPB1 (beta-ureidopropionase) — review notes</h1>
+<p>UniProtKB:Q9UBR1 (BUP1_HUMAN), gene UPB1 (syn. BUP1), 384 aa, chromosome 22q11.2.</p>
+<h2 id="function-well-established">Function (well established)</h2>
+<p>UPB1 is <strong>beta-ureidopropionase</strong> (N-carbamoyl-beta-alanine amidohydrolase; beta-alanine synthase),<br />
+EC 3.5.1.6. It catalyzes the <strong>third and final step of the reductive pyrimidine catabolic pathway</strong>,<br />
+downstream of dihydropyrimidine dehydrogenase (DPYD) and dihydropyrimidinase (DPYS).</p>
+<p>Reaction (Rhea:RHEA:11184): 3-(carbamoylamino)propanoate + H2O + 2 H+ = beta-alanine + NH4+ + CO2.<br />
+Also acts on N-carbamoyl-beta-aminoisobutyrate (3-ureidoisobutyrate) -&gt; beta-aminoisobutyrate + NH3 + CO2<br />
+(the thymine-derived branch).</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22525402" title="ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway and catalyzes the conversion of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid, ammonia and CO(2).">PMID:22525402</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24526388" title="The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid into β-alanine and β-aminoisobutyric acid, respectively, with concomitant production of ammonia and carbon dioxide.">PMID:24526388</a></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/29976570" title="β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine catabolic pathway responsible for breakdown of uracil-, thymine- and pyrimidine-based antimetabolites such as 5-fluorouracil.">PMID:29976570</a></li>
+</ul>
+<p>Kinetics: Km 15.5 uM for N-carbamoyl-beta-alanine <a href="https://pubmed.ncbi.nlm.nih.gov/10415095">PMID:10415095</a>; positive cooperativity, Hill ~2.0<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/11508704">PMID:11508704</a>; kcat 0.47/s, pH optimum 6.5 <a href="https://pubmed.ncbi.nlm.nih.gov/29976570">PMID:29976570</a>. Expressed cDNA gives high activity<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/10542323">PMID:10542323</a>.</p>
+<h2 id="family-structure">Family / structure</h2>
+<p>Nitrilase (carbon-nitrogen hydrolase) superfamily, BUP family.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/24526388" title="Higher eukaryotic βUP belong to the nitrilase superfamily of enzymes">PMID:24526388</a><br />
+Catalytic nucleophile Cys233 (UniProt ACT_SITE 233; mutagenesis C233A abolishes activity, PMID:29976570).<br />
+Nitrilase-like catalytic tetrad Cys233/Lys196/Glu119/Glu207 (PMID:29976570 abstract).</p>
+<h2 id="oligomerization">Oligomerization</h2>
+<p>Homodimer -&gt; homotetramer -&gt; homooctamer -&gt; higher oligomers; pH- and ligand-dependent allosteric<br />
+regulation. Substrate promotes higher-MW active species; product beta-alanine dissociates to inactive<br />
+dimers.<br />
+- <a href="https://pubmed.ncbi.nlm.nih.gov/29976570" title="Existing as a homodimer at pH 9, the enzyme increasingly associates to form octamers and larger oligomers with decreasing pH.">PMID:29976570</a><br />
+UniProt SUBUNIT: "Homodimer, homotetramer, homooctamer; can also form higher homooligomers."</p>
+<h2 id="zinc-not-a-zinc-enzyme-curatorially-important">Zinc — NOT a zinc enzyme (curatorially important)</h2>
+<p>Early work reported ~0.5 zinc atoms/subunit and predicted a zinc site from sequence <a href="https://pubmed.ncbi.nlm.nih.gov/11508704">PMID:11508704</a>.<br />
+The crystal structure (PMID:29976570) shows NO bound zinc and that the predicted residues are too far<br />
+apart to form a site. The GOA "NOT|enables zinc ion binding" IDA (PMID:29976570) correctly negates the<br />
+earlier prediction. Supporting text taken from the UniProt CAUTION note (file: reference), since the<br />
+PMID:29976570 cache is abstract-only and does not restate the zinc conclusion verbatim.</p>
+<h2 id="localization">Localization</h2>
+<p>Cytoplasmic/cytosolic (UniProt SUBCELLULAR LOCATION: Cytoplasm; Reactome cytosol). The extracellular<br />
+exosome HDA (PMID:19056867) is a large-scale urinary-exosome proteomics detection — real observation but<br />
+not the site of function; keep as non-core. IEA cytoplasm (GO:0005737) is the broader parent of cytosol.</p>
+<h2 id="disease">Disease</h2>
+<p>Beta-ureidopropionase deficiency (UPB1D, MIM:613161), autosomal recessive, N-carbamyl-beta-amino<br />
+aciduria; highly variable neurological phenotype (intellectual disability, seizures, hypotonia,<br />
+microcephaly) to asymptomatic. Many loss-of-function missense variants (e.g., R326Q common in Japanese<br />
+population) act via impaired oligomer assembly / active-site disruption.<br />
+- [PMID:22525402 all 6 mutant enzymes had significantly decreased activity; markedly elevated<br />
+  N-carbamyl-beta-alanine/aminoisobutyric acid in urine and plasma]<br />
+- [PMID:24526388 R326Q high prevalence; E271K and R326Q profound activity decrease]</p>
+<h2 id="go-term-notes">GO term notes</h2>
+<ul>
+<li>Core MF: GO:0003837 beta-ureidopropionase activity (EXP/IDA/IBA/IEA all agree). Verified label + Rhea.</li>
+<li>Core BP: GO:0019483 beta-alanine biosynthetic process (IDA/IBA/IEA). Note UniProt DR line lists the<br />
+  more specific GO:0033396 "beta-alanine biosynthetic process via 3-ureidopropionate" — but that term<br />
+  is now OBSOLETE (represents a GO-CAM model), so GO:0019483 is the correct level.</li>
+<li>GO:0046135 pyrimidine nucleoside catabolic process (IMP, PMID:22525402): the enzyme acts on<br />
+  N-carbamoyl-beta-alanine (a nucleobase-degradation intermediate), NOT a nucleoside. Better parent is<br />
+  GO:0006212 uracil catabolic process / GO:0006208 pyrimidine nucleobase catabolic process. MODIFY.</li>
+<li>in utero embryonic development (GO:0001701) and liver development (GO:0001889): IEA orthology transfer<br />
+  from rat (Q03248) via GO_REF:0000107. No evidence UPB1 has a developmental role beyond being a<br />
+  metabolic enzyme expressed in liver; keep as non-core (over-annotation candidates from Ensembl transfer).</li>
+<li>protein homodimerization / homooligomerization / homotetramerization: real (structural), supports the<br />
+  allosteric mechanism; keep, but oligomerization is a means to catalytic regulation, not the core<br />
+  biological function.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9UBR1
+gene_symbol: UPB1
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UPB1 encodes beta-ureidopropionase (N-carbamoyl-beta-alanine amidohydrolase;
+  beta-alanine synthase; EC 3.5.1.6), the third and final enzyme of the reductive
+  pyrimidine catabolic pathway. It hydrolyses N-carbamoyl-beta-alanine
+  (3-ureidopropanoate) to beta-alanine, ammonia and carbon dioxide, and likewise
+  converts N-carbamoyl-beta-aminoisobutyrate (from thymine degradation) to
+  beta-aminoisobutyrate, ammonia and CO2. It acts downstream of dihydropyrimidine
+  dehydrogenase (DPYD) and dihydropyrimidinase (DPYS), and its product beta-alanine
+  is a precursor for carnosine and other metabolites. The enzyme is a member of the
+  nitrilase (carbon-nitrogen hydrolase) superfamily, using an active-site cysteine
+  nucleophile (Cys233), and is cytosolic, highly expressed in liver. It assembles
+  into homodimers, homotetramers, homooctamers and larger homooligomers, with
+  substrate- and pH-dependent allosteric regulation of activity through oligomer
+  state. Loss-of-function variants in UPB1 cause beta-ureidopropionase deficiency
+  (UPB1D), an inborn error of pyrimidine degradation characterised by
+  N-carbamyl-beta-amino aciduria and a highly variable phenotype ranging from
+  neurological involvement (intellectual disability, seizures, hypotonia,
+  microcephaly) to asymptomatic; the enzyme is also relevant to catabolism of
+  fluoropyrimidine anticancer drugs.
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PAN-GO/GO_Central IBA basis for the beta-ureidopropionase activity and
+      beta-alanine biosynthetic process annotations; consistent with experimental
+      evidence for this gene.
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Maps UniProt subcellular location (Cytoplasm) to GO:0005737; correct but
+      more general than the cytosol location supported by Reactome.
+- id: GO_REF:0000107
+  title: Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Ensembl Compara orthology transfer from rat (Q03248) underlying the
+      developmental-process annotations; mechanically valid but the transferred
+      developmental roles are not established for the metabolic enzyme itself.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      ARBA/RHEA/EC-based IEA supporting the core enzyme activity and pathway;
+      concordant with the experimental annotations.
+- id: PMID:10415095
+  title: A radiochemical assay for beta-ureidopropionase using radiolabeled N-carbamyl-beta-alanine
+    obtained via hydrolysis of [2-(14)C]5, 6-dihydrouracil.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Radiochemical assay of human beta-ureidopropionase; establishes catalytic
+      activity and Km (15.5 uM) for N-carbamyl-beta-alanine.
+- id: PMID:10542323
+  title: cDNA cloning, genomic structure and chromosomal localization of the human
+    BUP-1 gene encoding beta-ureidopropionase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cloning of human UPB1/BUP-1; heterologous expression confirms
+      beta-ureidopropionase activity and identity of the cDNA.
+- id: PMID:11508704
+  title: Expression and properties of human liver beta-ureidopropionase.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Characterises recombinant human liver enzyme; reports positive cooperativity
+      and 0.54 zinc atoms/subunit with a predicted zinc site (later shown by the
+      crystal structure to be absent).
+- id: PMID:19056867
+  title: Large-scale proteomics and phosphoproteomics of urinary exosomes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale urinary-exosome proteomics; a real high-throughput detection of
+      the protein in exosomes, not evidence for the site of catalytic function.
+- id: PMID:22525402
+  title: &#39;ß-ureidopropionase deficiency: phenotype, genotype and protein structural
+    consequences in 16 patients.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Defines the enzyme as the third step of pyrimidine degradation; functional
+      analysis of disease mutations (all significantly decrease activity) and
+      oligomer assembly; establishes involvement in pyrimidine catabolism.
+- id: PMID:24526388
+  title: Clinical, biochemical and molecular analysis of 13 Japanese patients with
+    β-ureidopropionase deficiency demonstrates high prevalence of the c.977G &gt; A (p.R326Q)
+    mutation [corrected].
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full-text available; details the third catabolic step reaction, nitrilase
+      superfamily membership, and loss-of-function variants acting via impaired
+      oligomer assembly.
+- id: PMID:29976570
+  title: Crystal structure and pH-dependent allosteric regulation of human β-ureidopropionase,
+    an enzyme involved in anticancer drug metabolism.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Crystal structure (T299C variant); catalytic tetrad and Cys233 nucleophile;
+      pH/oligomerization-dependent allosteric regulation; shows the enzyme lacks
+      bound zinc (basis for the NOT zinc ion binding annotation).
+- id: Reactome:R-HSA-73591
+  title: conversion of 3-ureidopropionate to beta-alanine
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the cytosolic conversion of 3-ureidopropionate to
+      beta-alanine + CO2 + NH3; supports cytosol localization.
+- id: Reactome:R-HSA-73620
+  title: conversion of 3-Ureidoiosbutyrate to 3-Aminoisobutyrate
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reactome reaction for the cytosolic conversion of 3-ureidoisobutyrate to
+      (R)-3-aminoisobutyrate + CO2 + NH3 (thymine branch); supports cytosol
+      localization.
+- id: file:human/UPB1/UPB1-uniprot.txt
+  title: UniProtKB Q9UBR1 (BUP1_HUMAN) entry
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      UniProt curated record; source for the SUBUNIT (oligomerization) and CAUTION
+      (lack of bound zinc) statements used as supporting text.
+existing_annotations:
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetic (IBA) annotation of the core beta-ureidopropionase catalytic
+      activity, concordant with direct experimental evidence in human.
+    action: ACCEPT
+    reason: &gt;-
+      This is the defining molecular function of UPB1 and is supported by multiple
+      experimental studies of the human enzyme; the IBA is at the correct level of
+      specificity.
+    supported_by:
+    - reference_id: PMID:24526388
+      supporting_text: &gt;-
+        The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results
+        in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid
+        into β-alanine and β-aminoisobutyric acid, respectively, with concomitant
+        production of ammonia and carbon dioxide.
+- term:
+    id: GO:0019483
+    label: beta-alanine biosynthetic process
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetic annotation to beta-alanine biosynthesis, the biological process
+      in which UPB1 produces beta-alanine as the terminal step of pyrimidine
+      catabolism.
+    action: ACCEPT
+    reason: &gt;-
+      UPB1 generates beta-alanine directly from N-carbamoyl-beta-alanine; this is a
+      correct and well-supported process annotation. Note that the UniProt DR line
+      lists the more specific term GO:0033396 (beta-alanine biosynthetic process via
+      3-ureidopropionate), but that term is now obsolete, so GO:0019483 is the
+      appropriate level.
+    supported_by:
+    - reference_id: PMID:22525402
+      supporting_text: &gt;-
+        ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway
+        and
+        catalyzes the conversion of N-carbamyl-ß-alanine and
+        N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid,
+        ammonia and CO(2).
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Automated (ARBA/RHEA/EC 3.5.1.6) inference of the core enzyme activity,
+      identical to the experimentally supported molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Redundant with the EXP/IDA/IBA annotations to GO:0003837 and correctly mapped
+      from EC 3.5.1.6 / RHEA:11184.
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine
+        catabolic pathway responsible for breakdown of uracil-, thymine- and
+        pyrimidine-based antimetabolites such as 5-fluorouracil.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Automated subcellular-location mapping placing UPB1 in the cytoplasm,
+      consistent with its cytosolic localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct but general; the more precise cytosol term (GO:0005829) is supported
+      by Reactome. Keeping the cytoplasm parent is acceptable.
+    supported_by:
+    - reference_id: file:human/UPB1/UPB1-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Cytoplasm.&#39;
+- term:
+    id: GO:0001701
+    label: in utero embryonic development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Developmental-process annotation transferred by Ensembl Compara orthology from
+      rat; not supported by any direct evidence that UPB1 has a role in embryonic
+      development beyond its metabolic function.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      This is an electronic orthology transfer (GO_REF:0000107) from rat Q03248, not
+      evidence about human UPB1. UPB1 is a pyrimidine-catabolic enzyme; there is no
+      literature support for a specific role in in utero embryonic development. The
+      phenotype associated with loss of function is a metabolic/neurological inborn
+      error, not an embryonic-development defect. Flagging as over-annotated rather
+      than removing, as it is an automated inference rather than a clearly wrong
+      mapping.
+    supported_by:
+    - reference_id: file:human/UPB1/UPB1-uniprot.txt
+      supporting_text: &gt;-
+        Catalyzes a late step in pyrimidine degradation
+- term:
+    id: GO:0001889
+    label: liver development
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000107
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Liver-development annotation transferred by Ensembl Compara orthology from
+      rat; UPB1 is highly expressed in liver but there is no evidence it participates
+      in liver morphogenesis/development.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Electronic orthology transfer from rat (GO_REF:0000107). High hepatic
+      expression reflects where pyrimidine catabolism occurs, not a role in the
+      developmental process of the liver. No experimental evidence links UPB1 to
+      liver development. Marked as over-annotated rather than removed since it is an
+      automated inference.
+    supported_by:
+    - reference_id: file:human/UPB1/UPB1-uniprot.txt
+      supporting_text: &#39;TISSUE SPECIFICITY: Detected in liver (at protein level).&#39;
+- term:
+    id: GO:0019483
+    label: beta-alanine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Automated (UniPathway UPA00131 / orthology) annotation to beta-alanine
+      biosynthesis, redundant with the experimental and IBA annotations.
+    action: ACCEPT
+    reason: &gt;-
+      Correct process annotation supported by UniPathway (beta-alanine biosynthesis)
+      and by the experimental IDA annotations to the same term.
+    supported_by:
+    - reference_id: file:human/UPB1/UPB1-uniprot.txt
+      supporting_text: &#39;PATHWAY: Amino-acid biosynthesis; beta-alanine biosynthesis.&#39;
+- term:
+    id: GO:0019483
+    label: beta-alanine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:22525402
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence that UPB1 produces beta-alanine as the terminal
+      step of the pyrimidine degradation pathway.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental study of the human enzyme and disease mutants establishes its
+      role in converting N-carbamyl-beta-alanine to beta-alanine.
+    supported_by:
+    - reference_id: PMID:22525402
+      supporting_text: &gt;-
+        ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway
+        and
+        catalyzes the conversion of N-carbamyl-ß-alanine and
+        N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid,
+        ammonia and CO(2).
+- term:
+    id: GO:0019483
+    label: beta-alanine biosynthetic process
+  evidence_type: IDA
+  original_reference_id: PMID:29976570
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Direct experimental evidence (biochemical/structural characterisation of the
+      human enzyme) for beta-alanine production from N-carbamoyl-beta-alanine.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal-structure paper biochemically characterises the human enzyme&#39;s
+      conversion of N-carbamoyl-beta-alanine, the reaction that generates
+      beta-alanine.
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine
+        catabolic pathway responsible for breakdown of uracil-, thymine- and
+        pyrimidine-based antimetabolites such as 5-fluorouracil.
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10415095
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental radiochemical assay measuring human beta-ureidopropionase
+      activity on N-carbamyl-beta-alanine.
+    action: ACCEPT
+    reason: &gt;-
+      Direct enzymatic assay of the human protein with kinetic characterisation (Km
+      15.5 uM), establishing the core molecular function.
+    supported_by:
+    - reference_id: PMID:10415095
+      supporting_text: &gt;-
+        Human beta-ureidopropionase
+        obeyed Michaelis-Menten kinetics with an apparent Km for N-carbamyl-beta-alanine
+        of 15.5 +/- 1.9 microM.
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: EXP
+  original_reference_id: PMID:10542323
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental confirmation that the cloned human UPB1 cDNA encodes an active
+      beta-ureidopropionase.
+    action: ACCEPT
+    reason: &gt;-
+      Heterologous expression of the human cDNA yielded high beta-ureidopropionase
+      activity, confirming the enzyme&#39;s molecular function.
+    supported_by:
+    - reference_id: PMID:10542323
+      supporting_text: &gt;-
+        Expression of the
+        human cDNA in an Escherichia coli and eukaryotic COS-7 expression system
+        revealed a very high beta-ureidopropionase enzymatic activity, thus confirming
+        the identity of the cDNA.
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: EXP
+  original_reference_id: PMID:11508704
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental characterisation of purified recombinant human liver
+      beta-ureidopropionase, including cooperativity toward its substrate.
+    action: ACCEPT
+    reason: &gt;-
+      Purification and biochemical assay of the human enzyme directly establish the
+      beta-ureidopropionase activity.
+    supported_by:
+    - reference_id: PMID:11508704
+      supporting_text: &gt;-
+        exhibited positive cooperativity with N-carbamoyl-beta-alanine as the
+        substrate with a Hill coefficient 2.0
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: EXP
+  original_reference_id: PMID:24526388
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental activity measurements of wild-type and mutant human UPB1,
+      confirming beta-ureidopropionase catalytic activity.
+    action: ACCEPT
+    reason: &gt;-
+      Functional assays of human UPB1 (EC 3.5.1.6) catalysing the third catabolic
+      step directly support this molecular function.
+    supported_by:
+    - reference_id: PMID:24526388
+      supporting_text: &gt;-
+        The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results
+        in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid
+        into β-alanine and β-aminoisobutyric acid, respectively, with concomitant
+        production of ammonia and carbon dioxide.
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: IDA
+  original_reference_id: PMID:22525402
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct assay evidence that human UPB1 has beta-ureidopropionase activity, with
+      disease mutants showing reduced activity.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental measurement of enzyme activity in wild-type and mutant human UPB1
+      directly supports this molecular function.
+    supported_by:
+    - reference_id: PMID:22525402
+      supporting_text: &gt;-
+        Heterologous expression of the 6
+        mutant enzymes in Escherichia coli showed that all mutations yielded mutant
+        ß-ureidopropionase proteins with significantly decreased activity.
+- term:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  evidence_type: IDA
+  original_reference_id: PMID:29976570
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Direct biochemical/structural evidence for human beta-ureidopropionase
+      activity, including catalytic residue and kinetic characterisation.
+    action: ACCEPT
+    reason: &gt;-
+      The crystal-structure study biochemically characterises the catalytic activity
+      of recombinant human UPB1.
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        β-Ureidopropionase (βUP) catalyzes the third step of the reductive pyrimidine
+        catabolic pathway responsible for breakdown of uracil-, thymine- and
+        pyrimidine-based antimetabolites such as 5-fluorouracil.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IDA
+  original_reference_id: PMID:29976570
+  qualifier: enables
+  negated: true
+  review:
+    summary: &gt;-
+      NOT annotation correctly asserting that human UPB1 does not bind zinc, refuting
+      an earlier sequence-based prediction.
+    action: ACCEPT
+    reason: &gt;-
+      Although early work reported ~0.5 zinc atoms/subunit and predicted a zinc site,
+      the crystal structure shows no bound zinc and that the predicted residues are
+      too far apart to form a site. The negated annotation is correct and should be
+      retained to prevent erroneous propagation of a zinc-binding function.
+    supported_by:
+    - reference_id: file:human/UPB1/UPB1-uniprot.txt
+      supporting_text: &gt;-
+        The crystal structure indicates a lack of bound
+        zinc ions, and shows that the residues that were predicted to bind zinc
+        are too far apart in space to form a zinc binding site
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IDA
+  original_reference_id: PMID:29976570
+  qualifier: enables
+  review:
+    summary: &gt;-
+      UPB1 forms homodimers, the basic building block of its higher-order
+      oligomeric assemblies.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homodimerization is experimentally established and structurally important, but
+      it is a means of assembling the active oligomer rather than the core catalytic
+      function of the enzyme. Retained as non-core supporting activity.
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        Existing as a homodimer at pH 9, the enzyme increasingly associates to
+        form octamers and larger oligomers with decreasing pH.
+- term:
+    id: GO:0046135
+    label: pyrimidine nucleoside catabolic process
+  evidence_type: IMP
+  original_reference_id: PMID:22525402
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Annotation to pyrimidine catabolism based on disease-mutation analysis, but the
+      chosen term (nucleoside catabolism) is inaccurate: UPB1 acts on
+      N-carbamoyl-beta-alanine, a nucleobase-degradation intermediate, not a
+      nucleoside.
+    action: MODIFY
+    reason: &gt;-
+      The gene is genuinely involved in pyrimidine catabolism (loss of function
+      causes accumulation of N-carbamyl-beta-amino acids), so the essence is correct,
+      but nucleoside catabolism is the wrong branch. UPB1 acts downstream of base
+      ring-opening on the ureido acid, so the appropriate terms are uracil catabolic
+      process (GO:0006212) and, more generally, pyrimidine nucleobase catabolic
+      process (GO:0006208).
+    proposed_replacement_terms:
+    - id: GO:0006212
+      label: uracil catabolic process
+    - id: GO:0006208
+      label: pyrimidine nucleobase catabolic process
+    supported_by:
+    - reference_id: PMID:22525402
+      supporting_text: &gt;-
+        markedly elevated levels
+        of N-carbamyl-ß-alanine and N-carbamyl-ß-aminoisobutyric acid in urine and
+        plasma.
+- term:
+    id: GO:0051260
+    label: protein homooligomerization
+  evidence_type: IDA
+  original_reference_id: PMID:22525402
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UPB1 assembles into higher-order homooligomers, which underlies its
+      substrate/pH-dependent allosteric regulation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homooligomerization is experimentally supported and mechanistically relevant to
+      activity regulation, but it is a supporting structural property rather than the
+      core biological function (pyrimidine catabolism / beta-alanine biosynthesis).
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        Existing as a homodimer at pH 9, the enzyme increasingly associates to
+        form octamers and larger oligomers with decreasing pH.
+- term:
+    id: GO:0051289
+    label: protein homotetramerization
+  evidence_type: IDA
+  original_reference_id: PMID:29976570
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      UPB1 forms homotetramers as part of its progression from dimers to larger
+      oligomeric states.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Homotetramerization is part of the experimentally observed oligomerization
+      series; retained as a non-core supporting property rather than the core
+      function.
+    supported_by:
+    - reference_id: PMID:29976570
+      supporting_text: &gt;-
+        Existing as a homodimer at pH 9, the enzyme increasingly associates to
+        form octamers and larger oligomers with decreasing pH.
+- term:
+    id: GO:0070062
+    label: extracellular exosome
+  evidence_type: HDA
+  original_reference_id: PMID:19056867
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput detection of UPB1 in urinary exosomes; a real proteomic
+      observation but not the site of catalytic function.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a large-scale mass-spectrometry detection in urinary exosomes, not
+      evidence for the functional localization of the enzyme, which is cytosolic.
+      Retained as non-core to reflect the proteomic observation without implying an
+      extracellular functional role.
+    supported_by:
+    - reference_id: PMID:19056867
+      supporting_text: &gt;-
+        Normal human urine contains large numbers of exosomes
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73591
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization inferred from the Reactome reaction for conversion of
+      3-ureidopropionate to beta-alanine.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with UniProt (Cytoplasm) and the known cytosolic site of pyrimidine
+      catabolism; this is the functionally relevant location.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73591
+      supporting_text: &gt;-
+        Cytosolic 3-ureidopropionase catalyzes the reaction of 3-ureidopropionate
+        and water to form beta-alanine, CO2, and NH3
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-73620
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Cytosolic localization inferred from the Reactome reaction for conversion of
+      3-ureidoisobutyrate to 3-aminoisobutyrate (thymine branch).
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the cytosolic function of UPB1 in both the uracil- and
+      thymine-derived branches of pyrimidine catabolism.
+    supported_by:
+    - reference_id: Reactome:R-HSA-73620
+      supporting_text: &gt;-
+        Cytosolic UPB1 (beta-ureidopropionase) catalyzes the reaction of 3-ureidoisobutyrate
+        and H2O to form (R)-3-aminoisobutyrate, CO2, and NH3
+core_functions:
+- description: &gt;-
+    Beta-ureidopropionase catalytic activity: hydrolyses N-carbamoyl-beta-alanine to
+    beta-alanine, ammonia and CO2 (and N-carbamoyl-beta-aminoisobutyrate to
+    beta-aminoisobutyrate), the third and final step of reductive pyrimidine
+    catabolism.
+  molecular_function:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  directly_involved_in:
+  - id: GO:0006212
+    label: uracil catabolic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:24526388
+    supporting_text: &gt;-
+      The third step, catalyzed by β-ureidopropionase (βUP) (EC 3.5.1.6), results
+      in conversion of N-carbamyl-β-alanine and N-carbamyl-β-aminoisobutyric acid
+      into β-alanine and β-aminoisobutyric acid, respectively, with concomitant
+      production of ammonia and carbon dioxide.
+- description: &gt;-
+    Production of beta-alanine (and beta-aminoisobutyrate) as the terminal metabolic
+    output of the pyrimidine degradation pathway, in the cytosol.
+  molecular_function:
+    id: GO:0003837
+    label: beta-ureidopropionase activity
+  directly_involved_in:
+  - id: GO:0019483
+    label: beta-alanine biosynthetic process
+  locations:
+  - id: GO:0005829
+    label: cytosol
+  supported_by:
+  - reference_id: PMID:22525402
+    supporting_text: &gt;-
+      ß-ureidopropionase is the third enzyme of the pyrimidine degradation pathway
+      and
+      catalyzes the conversion of N-carbamyl-ß-alanine and
+      N-carbamyl-ß-aminoisobutyric acid to ß-alanine and ß-aminoisobutyric acid,
+      ammonia and CO(2).
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does the substrate/pH-dependent oligomerization of human UPB1 regulate flux
+    through pyrimidine catabolism in vivo, or is it primarily an in vitro phenomenon?
+- question: &gt;-
+    To what extent does reduced UPB1 activity modulate systemic fluoropyrimidine
+    (e.g. 5-fluorouracil) catabolism and toxicity, given that its substrates derive
+    from these antimetabolites?
+suggested_experiments:
+- description: &gt;-
+    Determine a substrate- or product-bound crystal/cryo-EM structure of human UPB1
+    to define the catalytic mechanism and the basis of allosteric activation by
+    oligomer assembly.
+- description: &gt;-
+    Metabolomic profiling of UPB1-deficient patient cells or knockout models to
+    quantify accumulation of N-carbamyl-beta-alanine / N-carbamyl-beta-aminoisobutyrate
+    and depletion of beta-alanine and downstream carnosine.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

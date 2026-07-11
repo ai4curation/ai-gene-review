@@ -1,0 +1,3329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nhr-47 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nhr-47</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q17370" target="_blank" class="term-link">
+                        Q17370
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Caenorhabditis elegans</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nhr-47";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q17370" data-a="DESCRIPTION: nhr-47 (C24G6.4) is one of the ~280 nuclear hormon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>nhr-47 (C24G6.4) is one of the ~280 nuclear hormone receptors (NHRs) of Caenorhabditis elegans, the great majority of which arose by a nematode-specific expansion of an ancestral HNF4-like orphan receptor and are termed supplementary nuclear receptors (supnrs). The 579-residue protein has the canonical nuclear-receptor architecture: an N-terminal DNA-binding domain built from two C4-type (Cys4) zinc-finger motifs that coordinate zinc, and a C-terminal ligand-binding domain. On the basis of this diagnostic domain organization and phylogenetic placement, NHR-47 is a zinc-dependent, sequence-specific DNA-binding transcription factor of the nuclear-receptor superfamily that acts in the nucleus to regulate RNA polymerase II transcription. It is annotated as an orphan receptor: no endogenous ligand has been identified. NHR-47 is expressed in head and tail neurons, the ventral nerve cord, the spermatheca, the pharynx and the intestine, and it physically interacts with another nuclear receptor, NHR-17. The only reported loss-of-function phenotypes are in the germline: knockdown modulates susceptibility to environmental toxicants (polystyrene nanoparticles and 6-PPD-quinone), where NHR-47 acts as a positive mediator of reproductive and transgenerational toxicity and lies upstream of insulin, Ephrin and Wnt ligand-gene expression. nhr-47 transcription is also induced by exposure to the vertebrate steroid estradiol. Its endogenous physiological role, its ligand (if any), and its direct transcriptional targets remain undetermined.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NHR-47 is a nuclear-receptor transcription factor and acts in the nucleus. Supported by the canonical NR DNA-binding domain and UniProt subcellular location.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is expected for a functional nuclear-receptor transcription factor and is independently annotated from UniProt SubCell mapping. This is a core cellular-component assignment.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0000978" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-specific DNA binding at Pol II cis-regulatory regions is the diagnostic molecular function of the NR DNA-binding domain (two C4 zinc fingers) that NHR-47 possesses.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the conserved NR DBD architecture and phylogenetic placement in the HNF4-like DNA-binding-domain class. A core molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004879" target="_blank" class="term-link">
+                                    GO:0004879
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0004879" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NHR-47 is a member of the nuclear-receptor superfamily with a canonical DBD and ligand-binding domain; nuclear receptor activity (ligand-modulated sequence-specific DNA-binding TF activity) is its family-level molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Well supported by domain architecture and family membership. Note that NHR-47 is an orphan receptor: no ligand is known, so the ligand-modulated aspect of this term is inferred, not demonstrated (see knowledge_gaps). Retained as a core MF.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                    GO:0006357
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of transcription by RNA polymerase II</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0006357" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> As a sequence-specific DNA-binding TF of the NR family, NHR-47 regulates Pol II transcription. This is the core biological process for the molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly follows from the nuclear-receptor / DNA-binding-TF molecular function and nuclear localization. Core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030154" target="_blank" class="term-link">
+                                    GO:0030154
+                                </a>
+                            </span>
+                            <span class="term-label">cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0030154" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A generic biological process propagated across the nuclear-receptor family by phylogenetic inference. No nhr-47-specific evidence links it to a differentiation program.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a broad pan-family IBA propagation. NHR-47 has no reported role in cell differentiation; its only experimental phenotypes are germline toxicant responses. Retain (family inference is not contradicted) but mark non-core rather than core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000978" target="_blank" class="term-link">
+                                    GO:0000978
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase II cis-regulatory region sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0000978" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO assignment (IPR049636, HNF4-like DBD) of the same sequence-specific Pol II DNA-binding function, in agreement with the IBA annotation above.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent InterPro domain-based support for the core sequence-specific DNA-binding molecular function. Consistent with the phylogenetic annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003700" target="_blank" class="term-link">
+                                    GO:0003700
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-binding transcription factor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0003700" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General DNA-binding transcription factor activity assigned from the nuclear-receptor zinc-finger domain (IPR001628). NHR-47 is a bona fide DNA-binding TF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct parent molecular function for a nuclear-receptor TF; supported by the C4 zinc-finger DBD. Core MF (the RNA Pol II-specific children above are the more precise forms).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization from UniProt Swiss-Prot subcellular-location mapping (SL-0191), consistent with the IBA nucleus annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Independent support for nuclear localization of this transcription factor. Core CC.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006355" target="_blank" class="term-link">
+                                    GO:0006355
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0006355" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> General (DNA-templated) transcription-regulation term from InterPro. This is the broad parent of the RNA Pol II-specific regulation term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but less informative than the RNA polymerase II-specific regulation term (GO:0006357) already accepted as core. Retain as a non-core general annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0008270" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The two C4-type (Cys4) zinc-finger motifs of the NR DNA-binding domain coordinate zinc; zinc binding is a structural molecular function underpinning DNA binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Directly supported by the diagnostic C4 zinc-finger DBD (ZN_FING 11-31 and 47-71 in UniProt Q17370). Structural MF that enables the core DNA-binding function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030522" target="_blank" class="term-link">
+                                    GO:0030522
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0030522" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Auto-inferred by inter-ontology logic from nuclear receptor activity (GO:0004879). For an orphan receptor with no known ligand, the signaling-pathway aspect is unproven.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A logically-derived (GO_REF:0000108) consequence of the nuclear-receptor MF, not direct evidence. Because NHR-47 is an orphan receptor with no demonstrated ligand-activated signaling, retain as non-core rather than core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                                    GO:0043565
+                                </a>
+                            </span>
+                            <span class="term-label">sequence-specific DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0043565" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-specific DNA binding assigned from the NR zinc-finger domain (IPR001628); the general parent of the Pol II cis-regulatory DNA-binding term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported by the conserved C4 zinc-finger DBD. Core MF (parent of GO:0000978).
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19123269
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Empirically controlled mapping of the Caenorhabditis elegans...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0005515" data-r="PMID:19123269" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental yeast two-hybrid interaction captured in the worm interactome; the partner is the nuclear receptor NHR-17 (UniProtKB:Q17589). &#34;Protein binding&#34; is an uninformative molecular-function term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A real, curated physical interaction (NHR-47&lt;-&gt;NHR-17), so it should not be removed. However GO:0005515 conveys no specific molecular function, and a single Y2H edge does not justify a more informative MF (e.g. nuclear receptor binding) as a core function. Retain as non-core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23791784
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Extensive rewiring and complex evolutionary dynamics in a C....
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q17370" data-a="GO:0005515" data-r="PMID:23791784" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Second experimental interaction annotation (C. elegans multiparameter TF network), again with NHR-17 (UniProtKB:Q17589). Uninformative &#34;protein binding&#34; term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Corroborates the NHR-47&lt;-&gt;NHR-17 interaction from an independent dataset. Keep (real interaction) but non-core; GO:0005515 does not describe a specific molecular function.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Sequence-specific DNA-binding transcription factor of the nuclear-receptor superfamily. NHR-47 carries the diagnostic nuclear-receptor DNA-binding domain formed by two C4-type (Cys4) zinc-finger motifs that coordinate zinc, together with a C-terminal ligand-binding domain. Acting in the nucleus, it binds RNA polymerase II cis-regulatory regions in a sequence-specific manner to regulate transcription. It is an orphan receptor (no ligand identified), belonging to the HNF4-derived supplementary nuclear receptor class of C. elegans.</h3>
+                <span class="vote-buttons" data-g="Q17370" data-a="FUNCTION: Sequence-specific DNA-binding transcription factor..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004879" target="_blank" class="term-link">
+                            nuclear receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006357" target="_blank" class="term-link">
+                                regulation of transcription by RNA polymerase II
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15983867" target="_blank" class="term-link">
+                                PMID:15983867
+                            </a>
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Zinc-dependent, sequence-specific DNA binding. The two C4 zinc fingers of the NR DNA-binding domain coordinate zinc and mediate recognition of specific DNA response elements, providing the biochemical basis for NHR-47 transcription-factor activity.</h3>
+                <span class="vote-buttons" data-g="Q17370" data-a="FUNCTION: Zinc-dependent, sequence-specific DNA binding. The..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043565" target="_blank" class="term-link">
+                            sequence-specific DNA binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15983867" target="_blank" class="term-link">
+                                PMID:15983867
+                            </a>
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19123269" target="_blank" class="term-link">
+                            PMID:19123269
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Empirically controlled mapping of the Caenorhabditis elegans protein-protein interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23791784" target="_blank" class="term-link">
+                            PMID:23791784
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter transcription factor network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15983867" target="_blank" class="term-link">
+                            PMID:15983867
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Explosive lineage-specific expansion of the orphan nuclear receptor HNF4 in nematodes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/38922100" target="_blank" class="term-link">
+                            PMID:38922100
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Transgenerational Response of Germline Nuclear Hormone Receptor Genes to Nanoplastics at Predicted Environmental Doses in Caenorhabditis elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40482507" target="_blank" class="term-link">
+                            PMID:40482507
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">6-PPD quinone induces response of nuclear hormone receptors in the germline associated with formation of reproductive toxicity in Caenorhabditis elegans.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21676746" target="_blank" class="term-link">
+                            PMID:21676746
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Changes in Nuclear Receptor and Vitellogenin Gene Expression in Response to Steroids and Heavy Metal in Caenorhabditis elegans.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is NHR-47 a ligand-regulated receptor, and if so what endogenous metabolite or lipid binds its ligand-binding domain, or is it a constitutive/orphan transcriptional regulator?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Nuclear-receptor biochemists, C. elegans NHR-family biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="Q: Is NHR-47 a ligand-regulated receptor, and if so w..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the direct genomic binding sites and target genes of NHR-47, and does it act as a transcriptional activator or repressor?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Transcription / gene-regulatory-network biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="Q: What are the direct genomic binding sites and targ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the endogenous (non-toxicant) physiological role of nhr-47, given its expression in neurons, the ventral nerve cord, spermatheca, pharynx and intestine and its germline role in toxicant responses?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: C. elegans developmental / germline biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="Q: What is the endogenous (non-toxicant) physiologica..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine the direct NHR-47 regulon by ChIP-seq or CUT&amp;RUN with an endogenously tagged NHR-47, combined with RNA-seq of a null mutant, to identify direct target genes and the DNA response element and to establish activator vs repressor behavior.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Genome-wide binding assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="EXPERIMENT: Determine the direct NHR-47 regulon by ChIP-seq or..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express and purify the NHR-47 ligand-binding domain and screen for bound endogenous lipids/metabolites (e.g. by lipidomics of co-purified ligands or reporter-based ligand-sensing assays) to test whether NHR-47 is ligand-regulated or a true orphan.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Ligand identification</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="EXPERIMENT: Express and purify the NHR-47 ligand-binding domai..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate and characterize a null allele (CRISPR) across development, metabolism, reproduction, stress and innate-immune assays to define the baseline endogenous function, and test genetic interaction with the interacting receptor nhr-17.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: Loss-of-function phenotyping</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q17370" data-a="EXPERIMENT: Generate and characterize a null allele (CRISPR) a..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether NHR-47 binds an endogenous small-molecule ligand — and, if so, its chemical identity — is unknown. It is classified as an orphan receptor, and as a member of the HNF4-derived supplementary nuclear receptors it may have lost or substantially altered ligand-dependent regulation.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> NHR-47 has a canonical nuclear-receptor ligand-binding domain (UniProt NR LBD, residues 164-553), but UniProt annotates it as an orphan nuclear receptor and no ligand has been reported. nhr-47 transcription is induced by estradiol exposure, but transcriptional induction is not evidence that estradiol (or any specific molecule) is a direct NHR-47 ligand.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Knowing whether NHR-47 is ligand-regulated (and by what) would determine whether it is a sensor of a metabolite/hormone or a constitutive/orphan transcriptional regulator, and would shape any pharmacological or genetic strategy to control its activity.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"This origin has specific implications for the role of ligand binding in the function and evolution of the nematode supplementary nuclear receptors."</em> — PMID:15983867</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct transcriptional targets and the DNA response element bound by NHR-47 in vivo are undetermined, and it is unknown whether NHR-47 acts as an activator or a repressor. No ChIP, reporter, or motif data define its regulon; the downstream genes that change on nhr-47 knockdown in toxicant assays (e.g. ins-3, daf-28, efn-3) are whole-organism readouts, not demonstrated direct targets.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> NHR-47 is a sequence-specific DNA-binding transcription factor and participates in the C. elegans transcription-factor interaction network, and knockdown alters downstream secreted-ligand gene expression, but no bona fide direct target has been established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Identifying direct targets and the response element would convert NHR-47 from a predicted TF into a defined regulator and reveal the pathway(s) it controls.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"expressions of ins-3, daf-28, and ins-39 encoding insulin ligands, efn-3 encoding Ephrin ligand, and lin-44 encoding Wnt ligand, as well as expressions of their receptor genes (daf-2, vab-1, and/or mig-1), were dysregulated by the RNAi of daf-12, nhr-14, nhr-47, and nhr-12"</em> — PMID:38922100</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The endogenous physiological role and definitive loss-of-function phenotype of nhr-47 are unresolved. Its only reported phenotypes are germline RNAi effects that modulate susceptibility to environmental toxicants (polystyrene nanoparticles and 6-PPD-quinone); no baseline developmental, metabolic, or immune phenotype, and no characterized null mutant, has been reported.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> nhr-47 is expressed in neurons, ventral nerve cord, spermatheca, pharynx and intestine, and germline knockdown modulates transgenerational/reproductive toxicant responses, but a stand-alone required function under normal conditions has not been defined.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A defined loss-of-function phenotype would anchor NHR-47&#39;s biological process annotation, which is currently only family-propagated (IBA) or inferred from a toxicant-stress context.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"RNAi of daf-12, nhr-14, and nhr-47 caused resistance, whereas RNAi of nhr-12 conferred susceptibility to transgenerational PS-NP toxicity"</em> — PMID:38922100</li>
+
+                <li><em>"6-PPDQ reproductive toxicity was suppressed by nhr-47, nhr-14, daf-12, and nhr-249 RNAi and accelerated by nhr-12, nhr-145, and nhr-171 RNAi"</em> — PMID:40482507</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nhr-47-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q17370" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: NHR-47 (C24G6.4) in *Caenorhabditis elegans*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">22 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-04T17:24:09.725428</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nhr-47-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-nhr-47-c24g64-in-caenorhabditis-elegans">Comprehensive Research Report: NHR-47 (C24G6.4) in <em>Caenorhabditis elegans</em></h1>
+<h2 id="gene-identity-and-nomenclature">Gene Identity and Nomenclature</h2>
+<p>NHR-47 (UniProt: Q17370) is a nuclear hormone receptor encoded by the gene <em>nhr-47</em> (systematic/ORF name C24G6.4) on chromosome II of <em>Caenorhabditis elegans</em>. The gene carries an older synonym, <em>csr-1</em>, which must not be confused with the well-characterized CSR-1 Argonaute protein involved in small RNA pathways—a completely distinct gene product. NHR-47 contains an HNF4-like DNA-binding domain (IPR049636) and a nuclear hormone receptor ligand-binding domain (IPR000536), consistent with its classification as a member of the nuclear hormone receptor superfamily (Nuclear_hrmn_rcpt, IPR001723; Nuclear_hormone_rcpt_NR2, IPR050274).</p>
+<p>The following table summarizes verified properties and available experimental data for NHR-47:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>NHR-47 summary</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene / protein identifiers</td>
+<td><strong>Gene name:</strong> nhr-47; <strong>Systematic name / ORF:</strong> C24G6.4; <strong>UniProt accession:</strong> Q17370; <strong>Reported synonym:</strong> csr-1 <em>(must not be confused with the unrelated CSR-1 Argonaute gene)</em> (novillo2005changesinnuclear pages 3-4)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Caenorhabditis elegans</em> (novillo2005changesinnuclear pages 3-4)</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>Nuclear hormone receptor (NHR); HNF4-like <strong>supplementary NHR</strong> within the nematode-expanded receptor family (taubert2011nuclearhormonereceptors pages 2-4, taubert2011nuclearhormonereceptors pages 1-2)</td>
+</tr>
+<tr>
+<td>Core domains</td>
+<td>HNF4-like DNA-binding domain and nuclear receptor ligand-binding domain; domain architecture is consistent with a canonical ligand-regulated transcription factor in the NHR superfamily (taubert2011nuclearhormonereceptors pages 2-4, taubert2011nuclearhormonereceptors pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted molecular function</td>
+<td>Putative ligand-dependent transcription factor / transcriptional regulator responding to lipophilic small molecules, inferred from its NHR family membership and HNF4-like architecture (taubert2011nuclearhormonereceptors pages 2-4, taubert2011nuclearhormonereceptors pages 1-2)</td>
+</tr>
+<tr>
+<td>Direct experimental evidence: steroid responsiveness</td>
+<td><strong>Estradiol-induced upregulation:</strong> 10 μM estradiol increased <strong>nhr-47</strong> expression <strong>3.4-fold</strong> in microarray analysis, identifying it as an estradiol-responsive NHR (novillo2005changesinnuclear pages 3-4)</td>
+</tr>
+<tr>
+<td>Direct experimental evidence: C. elegans phenotype</td>
+<td>Published RNAi experiments in <em>C. elegans</em> reported <strong>no observable phenotype</strong> for <strong>nhr-47</strong>, indicating either redundancy, condition-specific function, or weak effect under standard assay conditions (reported in Ciche et al. summarizing prior RNAi studies) (ciche2007postembryonicrnaiin pages 6-8)</td>
+</tr>
+<tr>
+<td>Cross-species ortholog evidence</td>
+<td>RNAi of the <em>Heterorhabditis bacteriophora</em> ortholog <strong>Hba-nhr-47</strong> usually caused <strong>no obvious phenotype</strong>, with only <strong>3–12% sterility</strong> in some trials, supporting a subtle or context-dependent role (ciche2007postembryonicrnaiin pages 4-6, ciche2007postembryonicrnaiin pages 6-8)</td>
+</tr>
+<tr>
+<td>Putative biological processes</td>
+<td>Likely part of an <strong>estrogen-sensitive gene network</strong> associated with <strong>vitellogenesis</strong>, lipid availability, and broader metabolic/endocrine responses; however, no direct downstream targets have been established for nhr-47 itself (novillo2005changesinnuclear pages 3-4)</td>
+</tr>
+<tr>
+<td>Predicted subcellular localization</td>
+<td><strong>Nucleus</strong> (inferred), because NHR-47 contains an HNF4-like DNA-binding domain and belongs to a family of nuclear transcription factors; no nhr-47-specific localization study was found (taubert2011nuclearhormonereceptors pages 2-4, taubert2011nuclearhormonereceptors pages 1-2)</td>
+</tr>
+<tr>
+<td>Evolutionary context</td>
+<td>Member of the nematode-specific expansion of HNF4-related receptors: <em>C. elegans</em> has <strong>284</strong> NHRs overall, including <strong>269 supplementary NHRs (supnrs)</strong> derived from an ancient HNF4-like ancestor; this expansion is far larger than in humans or flies (arda2010functionalmodularityof pages 2-3, taubert2011nuclearhormonereceptors pages 2-4, taubert2011nuclearhormonereceptors pages 1-2, arda2010functionalmodularityof pages 9-10)</td>
+</tr>
+<tr>
+<td>Broader functional context of family</td>
+<td>HNF4-like C. elegans NHRs commonly regulate <strong>metabolism, fat storage/catabolism, xenobiotic responses, and physiological adaptation</strong>, often in modular gene-regulatory networks; nhr-47 is therefore plausibly metabolic/endocrine, though not directly characterized (arda2010functionalmodularityof pages 2-3, taubert2011nuclearhormonereceptors pages 2-4, arda2010functionalmodularityof pages 3-4)</td>
+</tr>
+<tr>
+<td>Characterization status</td>
+<td><strong>Poorly characterized / orphan receptor.</strong> The literature provides direct evidence for steroid-responsive expression but little mechanistic information on ligands, tissue expression, target genes, or physiological necessity under standard conditions (novillo2005changesinnuclear pages 3-4, ciche2007postembryonicrnaiin pages 6-8)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table consolidates verified identifiers, family/domain assignment, and the limited direct experimental evidence available for C. elegans NHR-47. It is useful as a high-confidence quick reference because the gene is sparsely characterized and easily confused with unrelated genes sharing similar names.</em></p>
+<h2 id="evolutionary-context-the-nematode-specific-hnf4-expansion">Evolutionary Context: The Nematode-Specific HNF4 Expansion</h2>
+<p>To understand NHR-47, it is essential to place it within the broader evolutionary and functional context of the massively expanded nuclear hormone receptor family in <em>C. elegans</em>. While the human genome encodes 48 NHRs and <em>Drosophila</em> has 18, the <em>C. elegans</em> genome encodes approximately 284 NHR genes—roughly six times the human complement (taubert2011nuclearhormonereceptors pages 1-2). Of these, only 15 are "conserved" NHRs belonging to five of the six metazoan NHR subfamilies (NR1, NR2, NR4, NR5, and NR6), while the remaining 269 are "supplementary NHRs" (supnrs) that appear to have derived from a single ancient HNF4-like ancestor through lineage-specific gene duplication events (taubert2011nuclearhormonereceptors pages 2-4). This expansion is one of the most dramatic in any metazoan transcription factor family, and the resulting supnrs show rapid evolutionary divergence—approximately 50% of NHRs in related nematode species such as <em>C. briggsae</em> and <em>C. remanei</em> are species-specific, indicating that NHRs evolve more rapidly than other transcription factor classes (arda2010functionalmodularityof pages 9-10).</p>
+<p>NHR-47 belongs to this expanded HNF4-derived supplementary NHR class. Despite the large number of supnrs, only about 50 NHRs in <em>C. elegans</em> have known functions or detectable phenotypes when mutated or depleted (taubert2011nuclearhormonereceptors pages 1-2). NHR-47 is among the majority of these supplementary receptors that remain functionally uncharacterized.</p>
+<h2 id="predicted-molecular-function">Predicted Molecular Function</h2>
+<p>As a canonical nuclear hormone receptor, NHR-47 is predicted to function as a ligand-dependent transcription factor. Nuclear hormone receptors typically bind small lipophilic molecules (ligands) through their C-terminal ligand-binding domain, undergo conformational changes, and regulate transcription of target genes by binding specific DNA response elements through their N-terminal zinc-finger DNA-binding domain. For NHR-47 specifically, no endogenous ligand has been identified, classifying it as an orphan receptor.</p>
+<p>The HNF4-like domain architecture of NHR-47 places it in the NR2A class of nuclear receptors. In vertebrates, the HNF4 receptors (HNF4α and HNF4γ) play central roles in cholesterol, amino acid, carbohydrate, lipid, and xenobiotic metabolism, as well as liver-specific gene expression (novillo2005changesinnuclear pages 4-5). In <em>C. elegans</em>, where the intestine performs many of the metabolic functions of the vertebrate liver, HNF4-type NHRs have been shown to regulate fat storage and catabolism, xenobiotic detoxification, and physiological adaptation to environmental and nutritional cues (arda2010functionalmodularityof pages 2-3, arda2010functionalmodularityof pages 3-4). By extension, NHR-47 is plausibly involved in metabolic regulation, though direct evidence for this remains lacking.</p>
+<h2 id="known-experimental-evidence">Known Experimental Evidence</h2>
+<h3 id="steroid-responsiveness">Steroid Responsiveness</h3>
+<p>The most direct functional data for <em>nhr-47</em> comes from a microarray study by Novillo et al. (2005), which examined changes in nuclear receptor gene expression in <em>C. elegans</em> exposed to vertebrate steroids and cholesterol. This study demonstrated that 10 μM estradiol induced a 3.4-fold upregulation of <em>nhr-47</em> expression (novillo2005changesinnuclear pages 3-4). Importantly, each steroid tested (progesterone, estradiol, cholesterol) activated or inhibited entirely distinct subsets of NR genes, with no overlap between treatments, and estradiol specifically regulated 11 of 25 NRs identified as steroid-responsive (novillo2005changesinnuclear pages 1-1). The authors suggested that estradiol-responsive genes, including <em>nhr-47</em>, may constitute an estrogen-sensitive gene network related to vitellogenesis, since vitellogenin production depends on lipid availability to gastrointestinal cells involved in yolk protein synthesis (novillo2005changesinnuclear pages 3-4). This is biologically plausible given that the <em>C. elegans</em> intestine is the primary site of vitellogenin synthesis and that NHRs are known to respond to cholesterol-derived lipophilic signals in nematodes (novillo2005changesinnuclear pages 1-3, novillo2005changesinnuclear pages 5-6).</p>
+<h3 id="rnai-phenotype-analysis">RNAi Phenotype Analysis</h3>
+<p>Published RNAi experiments of <em>nhr-47</em> in <em>C. elegans</em> have reported no observable phenotype under standard laboratory conditions (ciche2007postembryonicrnaiin pages 6-8). This finding was noted across multiple independent genome-wide RNAi screens. In the related insect-parasitic nematode <em>Heterorhabditis bacteriophora</em>, RNAi of the ortholog <em>Hba-nhr-47</em> also generally resulted in no observable defect, although very low-penetrance sterility (3–12%) was noted in some experimental trials (ciche2007postembryonicrnaiin pages 4-6, ciche2007postembryonicrnaiin pages 6-8). The absence of a strong loss-of-function phenotype is consistent with three possible explanations: (1) functional redundancy among the many HNF4-derived supplementary NHRs, (2) a context- or condition-dependent role that is not revealed under standard culture conditions, or (3) a subtle function below the detection threshold of typical phenotypic screens.</p>
+<h3 id="evolutionary-sequence-relationships">Evolutionary Sequence Relationships</h3>
+<p>A study of selfish toxin-antidote elements in <em>Caenorhabditis</em> species noted that the SLOW-1 protein, a toxin component in <em>C. tropicalis</em> that is homologous to nuclear hormone receptors, shares sequence similarity with <em>C. elegans</em> NHR-47 (17.9% identity) (bendavid2021ubiquitousselfishtoxinantidote pages 9-11). SLOW-1 retains an NHR ligand-binding domain but lacks the canonical DNA-binding domain and instead possesses transmembrane domains, suggesting it may function as a dominant-negative element that sequesters NHR ligands. While this does not directly inform NHR-47 function, it highlights the evolutionary versatility of the HNF4-derived NHR ligand-binding domain in nematodes and the potential for NHR-47-like proteins to interact with lipophilic signaling molecules.</p>
+<h2 id="subcellular-localization">Subcellular Localization</h2>
+<p>No direct localization study has been performed for NHR-47. However, as a nuclear hormone receptor containing a zinc-finger DNA-binding domain, NHR-47 is predicted to localize to the nucleus, where it would function as a transcription factor. Well-characterized family members such as NHR-86 have been confirmed to localize predominantly to the nuclei of intestinal, excretory gland, and neuronal cells (arda2010functionalmodularityof pages 6-7), and NHR-49 functions in the nucleus to regulate target gene expression (motola2006identificationofligands pages 39-43). By analogy, NHR-47 is expected to occupy a similar nuclear compartment in metabolically active tissues.</p>
+<h2 id="broader-functional-context-of-the-nhr-family">Broader Functional Context of the NHR Family</h2>
+<p>The metabolic gene regulatory network (GRN) of <em>C. elegans</em> was experimentally mapped by Arda et al. (2010) using yeast one-hybrid assays, revealing that NHRs are significantly enriched as regulators of metabolic gene promoters—over one quarter of all transcription factors in the metabolic GRN are NHRs (arda2010functionalmodularityof pages 2-3). The metabolic GRN is highly modular, with approximately 60% of NHRs organized into two dominant modules that predominantly regulate genes involved in fat storage and catabolism (arda2010functionalmodularityof pages 3-4). RNAi of most NHRs in these modules resulted in increased lipid staining by Nile Red and Oil-Red-O, indicating roles in lipid metabolism (arda2010functionalmodularityof pages 3-4). These findings suggest that the expansion of the HNF4 family in nematodes has been functionally linked to metabolic regulation, with multiple supplementary NHRs sharing fat-regulatory roles after duplication and divergence.</p>
+<p>Furthermore, the Mediator subunit MDT-15 has been identified as a key cofactor that preferentially interacts with metabolic NHRs, and several NHRs form regulatory cascades in which one NHR controls the expression of another (arda2010functionalmodularityof pages 5-6). These inter-NHR regulatory circuits are proposed to enable rapid and adaptive responses to environmental and physiological changes such as nutrient availability (arda2010functionalmodularityof pages 9-10).</p>
+<h2 id="limitations-and-current-status">Limitations and Current Status</h2>
+<p>NHR-47 remains a poorly characterized orphan nuclear hormone receptor. The available evidence establishes it as an estradiol-responsive member of the massively expanded HNF4-derived supplementary NHR family in <em>C. elegans</em>, but no endogenous ligand, specific target genes, tissue-specific expression pattern, or robust loss-of-function phenotype has been reported. Its function may be obscured by redundancy with other supplementary NHRs, or it may act under specific environmental, nutritional, or developmental conditions not routinely tested in laboratory screens. The protein's function can be inferred from its domain and family architecture: NHR-47 is most likely a ligand-dependent nuclear transcription factor involved in metabolic gene regulation, potentially participating in steroid/lipid-responsive signaling pathways related to vitellogenesis and lipid homeostasis. Future studies employing targeted knockouts, condition-specific screens (e.g., steroid exposure, dietary stress), and tissue-specific expression reporters will be needed to elucidate the precise biological role of this receptor.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(novillo2005changesinnuclear pages 3-4): A. Novillo, S. Won, Christine Li, and I. Callard. Changes in nuclear receptor and vitellogenin gene expression in response to steroids and heavy metal in caenorhabditis elegans1. Integrative and Comparative Biology, 45:61-71, Jan 2005. URL: https://doi.org/10.1093/icb/45.1.61, doi:10.1093/icb/45.1.61. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taubert2011nuclearhormonereceptors pages 2-4): Stefan Taubert, Jordan D. Ward, and Keith R. Yamamoto. Nuclear hormone receptors in nematodes: evolution and function. Molecular and Cellular Endocrinology, 334:49-55, Mar 2011. URL: https://doi.org/10.1016/j.mce.2010.04.021, doi:10.1016/j.mce.2010.04.021. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(taubert2011nuclearhormonereceptors pages 1-2): Stefan Taubert, Jordan D. Ward, and Keith R. Yamamoto. Nuclear hormone receptors in nematodes: evolution and function. Molecular and Cellular Endocrinology, 334:49-55, Mar 2011. URL: https://doi.org/10.1016/j.mce.2010.04.021, doi:10.1016/j.mce.2010.04.021. This article has 136 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ciche2007postembryonicrnaiin pages 6-8): Todd A Ciche and Paul W Sternberg. Postembryonic rnai in heterorhabditis bacteriophora: a nematode insect parasite and host for insect pathogenic symbionts. BMC Developmental Biology, 7:101-101, Sep 2007. URL: https://doi.org/10.1186/1471-213x-7-101, doi:10.1186/1471-213x-7-101. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ciche2007postembryonicrnaiin pages 4-6): Todd A Ciche and Paul W Sternberg. Postembryonic rnai in heterorhabditis bacteriophora: a nematode insect parasite and host for insect pathogenic symbionts. BMC Developmental Biology, 7:101-101, Sep 2007. URL: https://doi.org/10.1186/1471-213x-7-101, doi:10.1186/1471-213x-7-101. This article has 78 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arda2010functionalmodularityof pages 2-3): H Efsun Arda, Stefan Taubert, Lesley T MacNeil, Colin C Conine, Ben Tsuda, Marc Van Gilst, Reynaldo Sequerra, Lynn Doucette‐Stamm, Keith R Yamamoto, and Albertha J M Walhout. Functional modularity of nuclear hormone receptors in a caenorhabditis elegans metabolic gene regulatory network. Molecular Systems Biology, 6:367-367, May 2010. URL: https://doi.org/10.1038/msb.2010.23, doi:10.1038/msb.2010.23. This article has 148 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arda2010functionalmodularityof pages 9-10): H Efsun Arda, Stefan Taubert, Lesley T MacNeil, Colin C Conine, Ben Tsuda, Marc Van Gilst, Reynaldo Sequerra, Lynn Doucette‐Stamm, Keith R Yamamoto, and Albertha J M Walhout. Functional modularity of nuclear hormone receptors in a caenorhabditis elegans metabolic gene regulatory network. Molecular Systems Biology, 6:367-367, May 2010. URL: https://doi.org/10.1038/msb.2010.23, doi:10.1038/msb.2010.23. This article has 148 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arda2010functionalmodularityof pages 3-4): H Efsun Arda, Stefan Taubert, Lesley T MacNeil, Colin C Conine, Ben Tsuda, Marc Van Gilst, Reynaldo Sequerra, Lynn Doucette‐Stamm, Keith R Yamamoto, and Albertha J M Walhout. Functional modularity of nuclear hormone receptors in a caenorhabditis elegans metabolic gene regulatory network. Molecular Systems Biology, 6:367-367, May 2010. URL: https://doi.org/10.1038/msb.2010.23, doi:10.1038/msb.2010.23. This article has 148 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novillo2005changesinnuclear pages 4-5): A. Novillo, S. Won, Christine Li, and I. Callard. Changes in nuclear receptor and vitellogenin gene expression in response to steroids and heavy metal in caenorhabditis elegans1. Integrative and Comparative Biology, 45:61-71, Jan 2005. URL: https://doi.org/10.1093/icb/45.1.61, doi:10.1093/icb/45.1.61. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novillo2005changesinnuclear pages 1-1): A. Novillo, S. Won, Christine Li, and I. Callard. Changes in nuclear receptor and vitellogenin gene expression in response to steroids and heavy metal in caenorhabditis elegans1. Integrative and Comparative Biology, 45:61-71, Jan 2005. URL: https://doi.org/10.1093/icb/45.1.61, doi:10.1093/icb/45.1.61. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novillo2005changesinnuclear pages 1-3): A. Novillo, S. Won, Christine Li, and I. Callard. Changes in nuclear receptor and vitellogenin gene expression in response to steroids and heavy metal in caenorhabditis elegans1. Integrative and Comparative Biology, 45:61-71, Jan 2005. URL: https://doi.org/10.1093/icb/45.1.61, doi:10.1093/icb/45.1.61. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(novillo2005changesinnuclear pages 5-6): A. Novillo, S. Won, Christine Li, and I. Callard. Changes in nuclear receptor and vitellogenin gene expression in response to steroids and heavy metal in caenorhabditis elegans1. Integrative and Comparative Biology, 45:61-71, Jan 2005. URL: https://doi.org/10.1093/icb/45.1.61, doi:10.1093/icb/45.1.61. This article has 59 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bendavid2021ubiquitousselfishtoxinantidote pages 9-11): Eyal Ben-David, Pinelopi Pliota, Sonya A. Widen, Alevtina Koreshova, Tzitziki Lemus-Vergara, Philipp Verpukhovskiy, Sridhar Mandali, Christian Braendle, Alejandro Burga, and Leonid Kruglyak. Ubiquitous selfish toxin-antidote elements in caenorhabditis species. Current Biology, 31:990-1001.e5, Mar 2021. URL: https://doi.org/10.1016/j.cub.2020.12.013, doi:10.1016/j.cub.2020.12.013. This article has 61 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arda2010functionalmodularityof pages 6-7): H Efsun Arda, Stefan Taubert, Lesley T MacNeil, Colin C Conine, Ben Tsuda, Marc Van Gilst, Reynaldo Sequerra, Lynn Doucette‐Stamm, Keith R Yamamoto, and Albertha J M Walhout. Functional modularity of nuclear hormone receptors in a caenorhabditis elegans metabolic gene regulatory network. Molecular Systems Biology, 6:367-367, May 2010. URL: https://doi.org/10.1038/msb.2010.23, doi:10.1038/msb.2010.23. This article has 148 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(motola2006identificationofligands pages 39-43): Daniel L. Motola, Carolyn L. Cummins, Veerle Rottiers, Kamalesh K. Sharma, Tingting Li, Yong Li, Kelly Suino-Powell, H. Eric Xu, Richard J. Auchus, Adam Antebi, and David J. Mangelsdorf. Identification of ligands for daf-12 that govern dauer formation and reproduction in c. elegans. Cell, 124:1209-1223, Mar 2006. URL: https://doi.org/10.1016/j.cell.2006.01.037, doi:10.1016/j.cell.2006.01.037. This article has 590 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(arda2010functionalmodularityof pages 5-6): H Efsun Arda, Stefan Taubert, Lesley T MacNeil, Colin C Conine, Ben Tsuda, Marc Van Gilst, Reynaldo Sequerra, Lynn Doucette‐Stamm, Keith R Yamamoto, and Albertha J M Walhout. Functional modularity of nuclear hormone receptors in a caenorhabditis elegans metabolic gene regulatory network. Molecular Systems Biology, 6:367-367, May 2010. URL: https://doi.org/10.1038/msb.2010.23, doi:10.1038/msb.2010.23. This article has 148 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nhr-47-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>novillo2005changesinnuclear pages 3-4</li>
+<li>ciche2007postembryonicrnaiin pages 6-8</li>
+<li>taubert2011nuclearhormonereceptors pages 1-2</li>
+<li>taubert2011nuclearhormonereceptors pages 2-4</li>
+<li>arda2010functionalmodularityof pages 9-10</li>
+<li>novillo2005changesinnuclear pages 4-5</li>
+<li>novillo2005changesinnuclear pages 1-1</li>
+<li>bendavid2021ubiquitousselfishtoxinantidote pages 9-11</li>
+<li>arda2010functionalmodularityof pages 6-7</li>
+<li>motola2006identificationofligands pages 39-43</li>
+<li>arda2010functionalmodularityof pages 2-3</li>
+<li>arda2010functionalmodularityof pages 3-4</li>
+<li>arda2010functionalmodularityof pages 5-6</li>
+<li>ciche2007postembryonicrnaiin pages 4-6</li>
+<li>novillo2005changesinnuclear pages 1-3</li>
+<li>novillo2005changesinnuclear pages 5-6</li>
+<li>https://doi.org/10.1093/icb/45.1.61,</li>
+<li>https://doi.org/10.1016/j.mce.2010.04.021,</li>
+<li>https://doi.org/10.1186/1471-213x-7-101,</li>
+<li>https://doi.org/10.1038/msb.2010.23,</li>
+<li>https://doi.org/10.1016/j.cub.2020.12.013,</li>
+<li>https://doi.org/10.1016/j.cell.2006.01.037,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nhr-47-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q17370" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nhr-47-c-elegans-research-notes">nhr-47 (C. elegans) — research notes</h1>
+<p>Gene: <strong>nhr-47</strong> / sequence name <strong>C24G6.4</strong> / WormBase <strong>WBGene00003637</strong> / UniProt <strong>Q17370</strong> (NHR47_CAEEL).<br />
+Locus: Chromosome V. Protein: 579 aa nuclear hormone receptor.</p>
+<h2 id="provenance-conventions">Provenance conventions</h2>
+<p>Inline provenance uses <code>[PMID:xxxxx "verbatim quote"]</code>. WormBase/Alliance-curated statements<br />
+(no direct primary PMID to hand) are marked <code>[WormBase/AGR]</code> and are NOT used as verbatim<br />
+<code>supporting_text</code> in the review; only cached-publication PMID quotes are used for that.</p>
+<h2 id="summary-nhr-47-is-a-dark-hnf4-derived-orphan-nuclear-receptor">Summary: nhr-47 is a "dark" HNF4-derived orphan nuclear receptor</h2>
+<p>nhr-47 is one of the ~280 nuclear hormone receptors (NHRs) of C. elegans, the great majority of<br />
+which arose by a nematode-specific expansion of an ancestral HNF4-like orphan receptor and remain<br />
+functionally uncharacterized ("supplementary nuclear receptors", supnrs)<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15983867" title="the supplementary\nnuclear receptors (supnrs) originated from an explosive burst of duplications of\na unique orphan receptor, HNF4">PMID:15983867</a>. Its DNA-binding domain is HNF4-like (CDD cd06960 NR_DBD_HNF4A;<br />
+InterPro IPR049636 HNF4-like_DBD).</p>
+<h2 id="molecular-architecture-known-from-sequenceuniprot-q17370">Molecular architecture (KNOWN, from sequence/UniProt Q17370)</h2>
+<ul>
+<li>Two C4-type (Cys4) zinc-finger motifs (ZN_FING 11–31 and 47–71) forming a canonical nuclear-receptor<br />
+  DNA-binding domain (DNA_BIND 8–83). Coordinates zinc (KW Metal-binding, Zinc, Zinc-finger).</li>
+<li>A nuclear-receptor ligand-binding domain (NR LBD, residues 164–553; PROSITE PS51843).</li>
+<li>UniProt FUNCTION: "Orphan nuclear receptor." SUBCELLULAR LOCATION: Nucleus.</li>
+<li>Documented physical interaction (IntAct EBI-2412077/EBI-2412071): Q17370 (nhr-47) &lt;-&gt; Q17589 (nhr-17),<br />
+  NbExp=3. nhr-17 is itself another nuclear hormone receptor.</li>
+<li>Therefore, from sequence + family, nhr-47 is confidently a zinc-finger, sequence-specific<br />
+  DNA-binding transcription factor of the nuclear-receptor superfamily that acts in the nucleus.<br />
+  (This is what the IBA/IEA GO annotations capture.)</li>
+</ul>
+<h2 id="expression-known-curated-wormbaseagr">Expression (KNOWN, curated) [WormBase/AGR]</h2>
+<p>Alliance/WormBase automated + MOD-provided descriptions for WBGene00003637:<br />
+- Expressed in head neurons, tail neurons, ventral nerve cord, spermatheca, intestine, and pharynx.<br />
+- "gene expression of nhr-47 appears to be induced upon exposure of worm cultures to estradiol"<br />
+  (WormBase MOD-provided gene description; primary microarray reference not located in cache — recorded<br />
+  here as curated context only, not used as review supporting_text).</p>
+<h2 id="functional-data-the-only-experimental-phenotypes-reported-for-nhr-47">Functional data (the only experimental phenotypes reported for nhr-47)</h2>
+<p>Two toxicology studies from one group (Southeast University / Dayong Wang lab) are the only primary<br />
+papers that assign nhr-47 a phenotype, both in the <strong>germline</strong> and in an <strong>environmental-toxicant</strong><br />
+context:</p>
+<ol>
+<li>Nanoplastics, transgenerational toxicity <a href="https://pubmed.ncbi.nlm.nih.gov/38922100">PMID:38922100</a>:</li>
+<li>nhr-47 is one of only 4 of 33 germline-expressed NHRs whose expression responds to polystyrene<br />
+     nanoparticles; it is UP-regulated<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38922100" title="the expressions of nhr-14, nhr-47, and daf-12 were significantly increased by exposure to 10 μg/L of PS-NPs">PMID:38922100</a>.</li>
+<li>Germline RNAi of nhr-47 makes animals RESISTANT to transgenerational nanoplastic toxicity<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38922100" title="daf-12(RNAi), nhr-14(RNAi), and nhr-47(RNAi) nematodes showed resistance to transgenerational PS-NP toxicity">PMID:38922100</a>.</li>
+<li>
+<p>Under exposure, nhr-47 RNAi changes downstream secreted-ligand gene expression<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/38922100" title="the RNAi of nhr-47 decreased expressions of germline ins-3, ins-39, daf-28, and efn-3 in PS-NP-exposed animals">PMID:38922100</a><br />
+     (ins-3/ins-39/daf-28 = insulin ligands; efn-3 = Ephrin) — i.e. nhr-47 sits upstream of insulin/Ephrin<br />
+     signalling in this stress context. These are downstream/indirect readouts, NOT demonstrated direct targets.</p>
+</li>
+<li>
+<p>6-PPD-quinone, reproductive toxicity <a href="https://pubmed.ncbi.nlm.nih.gov/40482507">PMID:40482507</a>:</p>
+</li>
+<li>nhr-47 is among germline NHRs whose knockdown SUPPRESSES 6-PPDQ reproductive toxicity<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/40482507" title="6-PPDQ reproductive toxicity was suppressed by nhr-47, nhr-14, daf-12, and nhr-249 RNAi and accelerated by nhr-12, nhr-145, and nhr-171 RNAi">PMID:40482507</a>.</li>
+<li>nhr-47 expression is modulated by DNA-damage-checkpoint and ferroptosis-related signals under 6-PPDQ.</li>
+</ol>
+<p>Consistent theme: in the germline, nhr-47 acts (with daf-12/nhr-14) as a positive mediator of<br />
+toxicant-induced reproductive/transgenerational toxicity; knocking it down is protective.</p>
+<h2 id="interaction-network-context">Interaction / network context</h2>
+<ul>
+<li>Y2H interactome maps nhr-47 into the worm protein interaction network <a href="https://pubmed.ncbi.nlm.nih.gov/19123269">PMID:19123269</a> (WI8);<br />
+  the specific nhr-47&lt;-&gt;nhr-17 interaction is recorded in IntAct/UniProt (not stated verbatim in the paper text).</li>
+<li>nhr-47 is one node in the C. elegans multiparameter transcription-factor network <a href="https://pubmed.ncbi.nlm.nih.gov/23791784">PMID:23791784</a>,<br />
+  a study of protein-DNA / protein-protein / TF-TF network rewiring across paralogs.</li>
+<li>These two PMIDs underlie the two GOA IPI "protein binding" annotations (with_from UniProtKB:Q17589 = nhr-17).</li>
+</ul>
+<h2 id="known-vs-not-known-explicit">KNOWN vs NOT-KNOWN (explicit)</h2>
+<p>KNOWN:<br />
+- Molecular identity: zinc-finger, sequence-specific DNA-binding transcription factor of the<br />
+  nuclear-receptor (HNF4-derived supnr) family; nuclear localization; binds zinc.<br />
+- Physically interacts with nhr-17.<br />
+- Expressed in neurons, ventral nerve cord, spermatheca, pharynx, intestine.<br />
+- Germline knockdown modulates susceptibility to two environmental toxicants (nanoplastics, 6-PPDQ),<br />
+  positioning it upstream of insulin/Ephrin/Wnt ligand-gene expression in that stress context.</p>
+<p>NOT KNOWN (knowledge gaps):<br />
+- Ligand: whether nhr-47 has any endogenous small-molecule ligand, and its identity — it is an orphan<br />
+  receptor, and supnrs may have altered/lost ligand-dependence<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/15983867" title="This origin has specific implications for the\nrole of ligand binding in the function and evolution of the nematode\nsupplementary nuclear receptors">PMID:15983867</a>.<br />
+- Direct target genes / response element: no ChIP, reporter, or motif defines the nhr-47 regulon;<br />
+  it is unknown whether it is an activator or repressor, and whether the toxicant-context downstream<br />
+  genes (ins-3, daf-28, efn-3, …) are direct or indirect targets.<br />
+- Definitive loss-of-function role: no baseline null-mutant developmental/metabolic/immune phenotype;<br />
+  the only phenotypes are germline RNAi effects in toxicant-challenge assays.</p>
+<h2 id="go-annotation-review-orientation">GO annotation review orientation</h2>
+<ul>
+<li>All 14 GOA annotations are IBA (phylogenetic), IEA (InterPro/UniProt), or IPI (interactome).</li>
+<li>MF/CC core (nuclear receptor activity, RNA Pol II cis-regulatory sequence-specific DNA binding,<br />
+  sequence-specific DNA binding, DNA-binding TF activity, zinc ion binding, nucleus) is well supported<br />
+  by the diagnostic domain architecture → ACCEPT as core.</li>
+<li>BP terms are family-propagated/inferred (regulation of transcription, intracellular receptor<br />
+  signaling) → KEEP; "cell differentiation" (IBA) has no nhr-47-specific support → KEEP_AS_NON_CORE<br />
+  (generic pan-NHR propagation).</li>
+<li>Two IPI "protein binding" annotations (nhr-17): experimental but uninformative term; do not REMOVE<br />
+  (real interaction), KEEP_AS_NON_CORE and flag that a more informative MF term is not warranted from<br />
+  a single Y2H edge.</li>
+</ul>
+<h2 id="falcon-deep-research-addendum-geneswormnhr-47nhr-47-deep-research-falconmd">Falcon deep-research addendum (genes/worm/nhr-47/nhr-47-deep-research-falcon.md)</h2>
+<p>Genuine Edison "deep research" report (23-min run, 22 citations). Key points, each attributed<br />
+to the falcon-cited primary source (NOT independently full-text-verified here unless noted):</p>
+<ul>
+<li><strong>csr-1 synonym caution</strong>: the UniProt <code>Synonyms=csr-1</code> for nhr-47 is an OLD locus synonym and<br />
+  must NOT be confused with the CSR-1 Argonaute (a distinct gene). Falcon flags this explicitly.</li>
+<li><strong>Estradiol responsiveness (the source of the WormBase estradiol statement)</strong>: Novillo et al. 2005<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/21676746">PMID:21676746</a> microarray of steroid-exposed C. elegans; falcon reports "10 μM estradiol increased<br />
+  nhr-47 expression 3.4-fold". NOTE: the cached PubMed abstract of PMID:21676746 does NOT name nhr-47<br />
+  (the per-gene 3.4-fold value is in the full text / supplementary data and in WormBase curation), so I<br />
+  do NOT attach a verbatim nhr-47 supporting_text to this PMID; it is added to references as the<br />
+  estradiol-induction source with correctness VERIFIED and no gene-specific quote.</li>
+<li><strong>No robust RNAi phenotype</strong>: falcon reports genome-wide RNAi of nhr-47 in C. elegans gave "no<br />
+  observable phenotype" (via Ciche &amp; Sternberg 2007, which also reports the H. bacteriophora ortholog<br />
+  Hba-nhr-47 RNAi is mostly phenotype-free, ~3-12% sterility in some trials). Consistent with knowledge<br />
+  gap #3 (no defined loss-of-function role); treated as supporting context, not review provenance,<br />
+  because the C. elegans nhr-47 no-phenotype claim is a secondary summary.</li>
+<li><strong>Family/metabolic context</strong>: Taubert, Ward &amp; Yamamoto 2011 (NHRs in nematodes) and Arda et al. 2010<br />
+  (metabolic gene-regulatory network; NHRs enriched as metabolic-promoter regulators, modular, MDT-15<br />
+  cofactor). Places nhr-47 in the HNF4-derived supnr class plausibly linked to metabolism — but nhr-47<br />
+  itself is uncharacterized in these.</li>
+<li><strong>Discrepancy</strong>: falcon states nhr-47 is on "chromosome II"; UniProt Q17370 says Chromosome V. Trust<br />
+  UniProt (Chromosome V). Did NOT propagate falcon's chromosome claim.</li>
+</ul>
+<p>Net effect on review: falcon corroborates the orphan/dark framing, the estradiol angle, and the<br />
+absence of a robust loss-of-function phenotype; it did not surface any definitive ligand, direct<br />
+target, or physiological role. No core-function or knowledge-gap conclusion was changed by it.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q17370
+gene_symbol: nhr-47
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:6239
+  label: Caenorhabditis elegans
+description: &gt;-
+  nhr-47 (C24G6.4) is one of the ~280 nuclear hormone receptors (NHRs) of
+  Caenorhabditis elegans, the great majority of which arose by a nematode-specific
+  expansion of an ancestral HNF4-like orphan receptor and are termed supplementary
+  nuclear receptors (supnrs). The 579-residue protein has the canonical nuclear-receptor
+  architecture: an N-terminal DNA-binding domain built from two C4-type (Cys4)
+  zinc-finger motifs that coordinate zinc, and a C-terminal ligand-binding domain.
+  On the basis of this diagnostic domain organization and phylogenetic placement,
+  NHR-47 is a zinc-dependent, sequence-specific DNA-binding transcription factor of
+  the nuclear-receptor superfamily that acts in the nucleus to regulate RNA
+  polymerase II transcription. It is annotated as an orphan receptor: no endogenous
+  ligand has been identified. NHR-47 is expressed in head and tail neurons, the
+  ventral nerve cord, the spermatheca, the pharynx and the intestine, and it
+  physically interacts with another nuclear receptor, NHR-17. The only reported
+  loss-of-function phenotypes are in the germline: knockdown modulates susceptibility
+  to environmental toxicants (polystyrene nanoparticles and 6-PPD-quinone), where
+  NHR-47 acts as a positive mediator of reproductive and transgenerational toxicity
+  and lies upstream of insulin, Ephrin and Wnt ligand-gene expression. nhr-47
+  transcription is also induced by exposure to the vertebrate steroid estradiol. Its
+  endogenous physiological role, its ligand (if any), and its direct transcriptional
+  targets remain undetermined.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: PMID:19123269
+  title: Empirically controlled mapping of the Caenorhabditis elegans protein-protein
+    interactome network.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput yeast two-hybrid interactome (Worm Interactome / WI8). Underlies
+      one of the two GOA IPI protein-binding annotations for nhr-47. The specific
+      NHR-47&lt;-&gt;NHR-17 edge is recorded in IntAct/UniProt (with_from UniProtKB:Q17589);
+      the paper text itself reports the network methodology rather than naming nhr-47,
+      so no gene-specific verbatim quote is available from the cached full text.
+- id: PMID:23791784
+  title: Extensive rewiring and complex evolutionary dynamics in a C. elegans multiparameter
+    transcription factor network.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      C. elegans multiparameter transcription-factor network (protein-DNA, protein-protein,
+      TF-TF). Underlies the second GOA IPI protein-binding annotation for nhr-47 (again
+      with NHR-17, UniProtKB:Q17589). Abstract-only in cache; the interaction is captured
+      in IntAct rather than quoted verbatim in the available text.
+- id: PMID:15983867
+  title: Explosive lineage-specific expansion of the orphan nuclear receptor HNF4 in
+    nematodes.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Establishes the phylogenetic context for nhr-47: the C. elegans supplementary
+      nuclear receptors (supnrs), including the HNF4-like DBD class to which nhr-47
+      belongs, arose from an explosive HNF4 duplication and are predominantly orphan
+      receptors with uncertain ligand-dependence. Cited in the UniProt entry for Q17370.
+- id: PMID:38922100
+  title: Transgenerational Response of Germline Nuclear Hormone Receptor Genes to Nanoplastics
+    at Predicted Environmental Doses in Caenorhabditis elegans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary functional study naming nhr-47: germline-expressed, up-regulated by
+      polystyrene nanoparticles, and germline RNAi confers resistance to transgenerational
+      nanoplastic toxicity, with downstream effects on insulin/Ephrin ligand-gene
+      expression. One of only two primary papers reporting an nhr-47 phenotype. Full text
+      is MDPI-hosted and not downloadable by the validator, so supporting_text quotes are
+      taken from the abstract only.
+- id: PMID:40482507
+  title: 6-PPD quinone induces response of nuclear hormone receptors in the germline
+    associated with formation of reproductive toxicity in Caenorhabditis elegans.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Second primary functional study naming nhr-47: knockdown suppresses 6-PPD-quinone
+      reproductive toxicity, and nhr-47 expression is modulated by DNA-damage-checkpoint
+      and ferroptosis-related signals. Abstract-only in cache but the nhr-47 result is
+      explicit in the abstract.
+- id: PMID:21676746
+  title: Changes in Nuclear Receptor and Vitellogenin Gene Expression in Response to
+    Steroids and Heavy Metal in Caenorhabditis elegans.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      DNA-microarray study of steroid-responsive nuclear-receptor gene expression in
+      C. elegans; it is the primary source of the WormBase-curated statement that nhr-47
+      is induced by estradiol (full text reports ~3.4-fold induction by 10 uM estradiol).
+      The cached PubMed abstract does not name nhr-47 (the per-gene value is in the full
+      text / supplementary data), so no gene-specific verbatim supporting_text is attached
+      to this reference; it is cited as the estradiol-responsiveness source only.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      NHR-47 is a nuclear-receptor transcription factor and acts in the nucleus.
+      Supported by the canonical NR DNA-binding domain and UniProt subcellular location.
+    action: ACCEPT
+    reason: &gt;-
+      Nuclear localization is expected for a functional nuclear-receptor transcription
+      factor and is independently annotated from UniProt SubCell mapping. This is a
+      core cellular-component assignment.
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-specific DNA binding at Pol II cis-regulatory regions is the diagnostic
+      molecular function of the NR DNA-binding domain (two C4 zinc fingers) that NHR-47
+      possesses.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the conserved NR DBD architecture and phylogenetic placement in
+      the HNF4-like DNA-binding-domain class. A core molecular function.
+- term:
+    id: GO:0004879
+    label: nuclear receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      NHR-47 is a member of the nuclear-receptor superfamily with a canonical DBD and
+      ligand-binding domain; nuclear receptor activity (ligand-modulated sequence-specific
+      DNA-binding TF activity) is its family-level molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Well supported by domain architecture and family membership. Note that NHR-47 is
+      an orphan receptor: no ligand is known, so the ligand-modulated aspect of this
+      term is inferred, not demonstrated (see knowledge_gaps). Retained as a core MF.
+- term:
+    id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      As a sequence-specific DNA-binding TF of the NR family, NHR-47 regulates Pol II
+      transcription. This is the core biological process for the molecular function.
+    action: ACCEPT
+    reason: &gt;-
+      Directly follows from the nuclear-receptor / DNA-binding-TF molecular function and
+      nuclear localization. Core process.
+- term:
+    id: GO:0030154
+    label: cell differentiation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      A generic biological process propagated across the nuclear-receptor family by
+      phylogenetic inference. No nhr-47-specific evidence links it to a differentiation
+      program.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      This is a broad pan-family IBA propagation. NHR-47 has no reported role in cell
+      differentiation; its only experimental phenotypes are germline toxicant responses.
+      Retain (family inference is not contradicted) but mark non-core rather than core.
+- term:
+    id: GO:0000978
+    label: RNA polymerase II cis-regulatory region sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      InterPro2GO assignment (IPR049636, HNF4-like DBD) of the same sequence-specific
+      Pol II DNA-binding function, in agreement with the IBA annotation above.
+    action: ACCEPT
+    reason: &gt;-
+      Independent InterPro domain-based support for the core sequence-specific DNA-binding
+      molecular function. Consistent with the phylogenetic annotation.
+- term:
+    id: GO:0003700
+    label: DNA-binding transcription factor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      General DNA-binding transcription factor activity assigned from the nuclear-receptor
+      zinc-finger domain (IPR001628). NHR-47 is a bona fide DNA-binding TF.
+    action: ACCEPT
+    reason: &gt;-
+      Correct parent molecular function for a nuclear-receptor TF; supported by the C4
+      zinc-finger DBD. Core MF (the RNA Pol II-specific children above are the more precise
+      forms).
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Nuclear localization from UniProt Swiss-Prot subcellular-location mapping (SL-0191),
+      consistent with the IBA nucleus annotation.
+    action: ACCEPT
+    reason: &gt;-
+      Independent support for nuclear localization of this transcription factor. Core CC.
+- term:
+    id: GO:0006355
+    label: regulation of DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      General (DNA-templated) transcription-regulation term from InterPro. This is the
+      broad parent of the RNA Pol II-specific regulation term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Not wrong, but less informative than the RNA polymerase II-specific regulation term
+      (GO:0006357) already accepted as core. Retain as a non-core general annotation.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      The two C4-type (Cys4) zinc-finger motifs of the NR DNA-binding domain coordinate
+      zinc; zinc binding is a structural molecular function underpinning DNA binding.
+    action: ACCEPT
+    reason: &gt;-
+      Directly supported by the diagnostic C4 zinc-finger DBD (ZN_FING 11-31 and 47-71 in
+      UniProt Q17370). Structural MF that enables the core DNA-binding function.
+- term:
+    id: GO:0030522
+    label: intracellular receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Auto-inferred by inter-ontology logic from nuclear receptor activity (GO:0004879).
+      For an orphan receptor with no known ligand, the signaling-pathway aspect is
+      unproven.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A logically-derived (GO_REF:0000108) consequence of the nuclear-receptor MF, not
+      direct evidence. Because NHR-47 is an orphan receptor with no demonstrated
+      ligand-activated signaling, retain as non-core rather than core.
+- term:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-specific DNA binding assigned from the NR zinc-finger domain (IPR001628);
+      the general parent of the Pol II cis-regulatory DNA-binding term.
+    action: ACCEPT
+    reason: &gt;-
+      Supported by the conserved C4 zinc-finger DBD. Core MF (parent of GO:0000978).
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:19123269
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Experimental yeast two-hybrid interaction captured in the worm interactome; the
+      partner is the nuclear receptor NHR-17 (UniProtKB:Q17589). &#34;Protein binding&#34; is
+      an uninformative molecular-function term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      A real, curated physical interaction (NHR-47&lt;-&gt;NHR-17), so it should not be removed.
+      However GO:0005515 conveys no specific molecular function, and a single Y2H edge does
+      not justify a more informative MF (e.g. nuclear receptor binding) as a core function.
+      Retain as non-core.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:23791784
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Second experimental interaction annotation (C. elegans multiparameter TF network),
+      again with NHR-17 (UniProtKB:Q17589). Uninformative &#34;protein binding&#34; term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Corroborates the NHR-47&lt;-&gt;NHR-17 interaction from an independent dataset. Keep (real
+      interaction) but non-core; GO:0005515 does not describe a specific molecular function.
+core_functions:
+- description: &gt;-
+    Sequence-specific DNA-binding transcription factor of the nuclear-receptor
+    superfamily. NHR-47 carries the diagnostic nuclear-receptor DNA-binding domain
+    formed by two C4-type (Cys4) zinc-finger motifs that coordinate zinc, together with
+    a C-terminal ligand-binding domain. Acting in the nucleus, it binds RNA polymerase
+    II cis-regulatory regions in a sequence-specific manner to regulate transcription.
+    It is an orphan receptor (no ligand identified), belonging to the HNF4-derived
+    supplementary nuclear receptor class of C. elegans.
+  molecular_function:
+    id: GO:0004879
+    label: nuclear receptor activity
+  directly_involved_in:
+  - id: GO:0006357
+    label: regulation of transcription by RNA polymerase II
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:15983867
+- description: &gt;-
+    Zinc-dependent, sequence-specific DNA binding. The two C4 zinc fingers of the NR
+    DNA-binding domain coordinate zinc and mediate recognition of specific DNA
+    response elements, providing the biochemical basis for NHR-47 transcription-factor
+    activity.
+  molecular_function:
+    id: GO:0043565
+    label: sequence-specific DNA binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - reference_id: PMID:15983867
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether NHR-47 binds an endogenous small-molecule ligand — and, if so, its
+    chemical identity — is unknown. It is classified as an orphan receptor, and as a
+    member of the HNF4-derived supplementary nuclear receptors it may have lost or
+    substantially altered ligand-dependent regulation.
+  boundary: &gt;-
+    NHR-47 has a canonical nuclear-receptor ligand-binding domain (UniProt NR LBD,
+    residues 164-553), but UniProt annotates it as an orphan nuclear receptor and no
+    ligand has been reported. nhr-47 transcription is induced by estradiol exposure, but
+    transcriptional induction is not evidence that estradiol (or any specific molecule)
+    is a direct NHR-47 ligand.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Knowing whether NHR-47 is ligand-regulated (and by what) would determine whether it
+    is a sensor of a metabolite/hormone or a constitutive/orphan transcriptional regulator,
+    and would shape any pharmacological or genetic strategy to control its activity.
+  provenance:
+  - reference_id: PMID:15983867
+    supporting_text: &gt;-
+      This origin has specific implications for the role of ligand binding in the
+      function and evolution of the nematode supplementary nuclear receptors.
+- gap_statement: &gt;-
+    The direct transcriptional targets and the DNA response element bound by NHR-47
+    in vivo are undetermined, and it is unknown whether NHR-47 acts as an activator or a
+    repressor. No ChIP, reporter, or motif data define its regulon; the downstream genes
+    that change on nhr-47 knockdown in toxicant assays (e.g. ins-3, daf-28, efn-3) are
+    whole-organism readouts, not demonstrated direct targets.
+  boundary: &gt;-
+    NHR-47 is a sequence-specific DNA-binding transcription factor and participates in
+    the C. elegans transcription-factor interaction network, and knockdown alters
+    downstream secreted-ligand gene expression, but no bona fide direct target has been
+    established.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Identifying direct targets and the response element would convert NHR-47 from a
+    predicted TF into a defined regulator and reveal the pathway(s) it controls.
+  provenance:
+  - reference_id: PMID:38922100
+    supporting_text: &gt;-
+      expressions of ins-3, daf-28, and ins-39 encoding insulin ligands, efn-3 encoding
+      Ephrin ligand, and lin-44 encoding Wnt ligand, as well as expressions of their
+      receptor genes (daf-2, vab-1, and/or mig-1), were dysregulated by the RNAi of
+      daf-12, nhr-14, nhr-47, and nhr-12
+- gap_statement: &gt;-
+    The endogenous physiological role and definitive loss-of-function phenotype of
+    nhr-47 are unresolved. Its only reported phenotypes are germline RNAi effects that
+    modulate susceptibility to environmental toxicants (polystyrene nanoparticles and
+    6-PPD-quinone); no baseline developmental, metabolic, or immune phenotype, and no
+    characterized null mutant, has been reported.
+  boundary: &gt;-
+    nhr-47 is expressed in neurons, ventral nerve cord, spermatheca, pharynx and
+    intestine, and germline knockdown modulates transgenerational/reproductive toxicant
+    responses, but a stand-alone required function under normal conditions has not been
+    defined.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    A defined loss-of-function phenotype would anchor NHR-47&#39;s biological process
+    annotation, which is currently only family-propagated (IBA) or inferred from a
+    toxicant-stress context.
+  provenance:
+  - reference_id: PMID:38922100
+    supporting_text: &gt;-
+      RNAi of daf-12, nhr-14, and nhr-47 caused resistance, whereas RNAi of nhr-12
+      conferred susceptibility to transgenerational PS-NP toxicity
+  - reference_id: PMID:40482507
+    supporting_text: &gt;-
+      6-PPDQ reproductive toxicity was suppressed by nhr-47, nhr-14, daf-12, and nhr-249
+      RNAi and accelerated by nhr-12, nhr-145, and nhr-171 RNAi
+suggested_questions:
+- question: &gt;-
+    Is NHR-47 a ligand-regulated receptor, and if so what endogenous metabolite or lipid
+    binds its ligand-binding domain, or is it a constitutive/orphan transcriptional
+    regulator?
+  experts:
+  - Nuclear-receptor biochemists
+  - C. elegans NHR-family biologists
+- question: &gt;-
+    What are the direct genomic binding sites and target genes of NHR-47, and does it act
+    as a transcriptional activator or repressor?
+  experts:
+  - Transcription / gene-regulatory-network biologists
+- question: &gt;-
+    What is the endogenous (non-toxicant) physiological role of nhr-47, given its
+    expression in neurons, the ventral nerve cord, spermatheca, pharynx and intestine and
+    its germline role in toxicant responses?
+  experts:
+  - C. elegans developmental / germline biologists
+suggested_experiments:
+- experiment_type: Genome-wide binding assay
+  description: &gt;-
+    Determine the direct NHR-47 regulon by ChIP-seq or CUT&amp;RUN with an endogenously
+    tagged NHR-47, combined with RNA-seq of a null mutant, to identify direct target genes
+    and the DNA response element and to establish activator vs repressor behavior.
+- experiment_type: Ligand identification
+  description: &gt;-
+    Express and purify the NHR-47 ligand-binding domain and screen for bound endogenous
+    lipids/metabolites (e.g. by lipidomics of co-purified ligands or reporter-based
+    ligand-sensing assays) to test whether NHR-47 is ligand-regulated or a true orphan.
+- experiment_type: Loss-of-function phenotyping
+  description: &gt;-
+    Generate and characterize a null allele (CRISPR) across development, metabolism,
+    reproduction, stress and innate-immune assays to define the baseline endogenous
+    function, and test genetic interaction with the interacting receptor nhr-17.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

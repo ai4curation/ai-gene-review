@@ -1,0 +1,2662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>acn1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>acn1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O74380" target="_blank" class="term-link">
+                        O74380
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "acn1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O74380" data-a="DESCRIPTION: acn1 (systematic name SPBC3H7.05c) is an uncharact..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>acn1 (systematic name SPBC3H7.05c) is an uncharacterized, non-essential polytopic integral membrane protein of the fission yeast Schizosaccharomyces pombe. Its sequence carries a single Wax_synthase_dom / MBOAT_2 domain (InterPro IPR032805, Pfam PF13813), placing it in the wax-synthase branch of the membrane-bound O-acyltransferase (MBOAT) superfamily; the protein is predicted to span the membrane with nine transmembrane helices. Characterized MBOAT enzymes are acyl-CoA-dependent acyltransferases that transfer acyl chains onto lipid, sterol, fatty-alcohol, or protein acceptors, and by homology acn1 is inferred to be an acyltransferase, most plausibly acting in neutral-lipid (e.g. wax-ester or diacylglycerol) metabolism. However, no direct biochemical, genetic, or cell-biological study of acn1 has been published: its catalytic activity, physiological substrate, and biological role are all unknown. A genome-scale GFP screen assigned it a mitochondrial membrane localization, which is atypical for an MBOAT enzyme (most localize to the endoplasmic reticulum). It has no apparent Saccharomyces cerevisiae ortholog but is conserved across fungi and more broadly in eukaryotes.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                    GO:0031966
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74380" data-a="GO:0031966" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic annotation mapped from the UniProt Subcellular Location statement &#34;Mitochondrion membrane {ECO:0000305}; Multi-pass membrane protein {ECO:0000305}&#34; (SL-0171). The underlying primary evidence is a genome-wide GFP localization screen (PMID:16823372), and PomBase independently records a mitochondrion localization (HDA). This is a reasonable location call for a multi-pass membrane protein and is the only localization datum available, so it is retained; it is marked non-core because a single genome-scale screen is moderate-confidence and a mitochondrial localization is atypical for an MBOAT-family acyltransferase (family members are usually ER-resident), leaving the true compartment and topology unresolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Supported location call, but derived from a single high-throughput screen (via UniProt ECO:0000305 inference) and biologically atypical for the family; keep as a location without treating it as a core, mechanism-defining assertion.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O74380
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005575" target="_blank" class="term-link">
+                                    GO:0005575
+                                </a>
+                            </span>
+                            <span class="term-label">cellular_component</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O74380" data-a="GO:0005575" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level &#34;no data&#34; placeholder (ND, GO_REF:0000015) recording that no specific cellular-component annotation has been curated. This is a bookkeeping annotation, not a biological statement; it is superseded in practice by the mitochondrial membrane location above. No action needed beyond noting it.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Standard ND root placeholder; correctly indicates absence of curated CC data and should be left as-is per GO_REF:0000015 conventions.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O74380" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root-level &#34;no data&#34; placeholder (ND, GO_REF:0000015) recording that no biological process has been curated for acn1. This is accurate: the biological process in which acn1 acts is genuinely unknown (see knowledge_gaps). It is a bookkeeping annotation and should remain until an experimentally supported process is established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Standard ND root placeholder that correctly reflects the absence of any curated, evidence-supported biological process for this dark gene.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    GO:0016747
+                                </a>
+                            </span>
+                            <span class="term-label">acyltransferase activity, transferring groups other than amino-acyl groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O74380" data-a="GO:0016747" data-r="GO_REF:0000024" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity (ISS) annotation transferred by a PomBase curator from the paralog gup1 (SPAC24H6.01c; WITH/FROM PomBase:SPAC24H6.01c), an MBOAT annotated to the same term. acn1 carries the Wax_synthase_dom / MBOAT_2 domain (IPR032805 / PF13813) and the MBOAT superfamily is defined by acyl-CoA-dependent acyltransferase activity, so a general acyltransferase MF is domain-appropriate and is retained. It is kept as non-core because (i) the transfer is from a different MBOAT subfamily (gup1 uses Pfam PF03062, MBOAT_fam, and acts in GPI-anchor biosynthesis, whereas acn1 uses the wax-synthase-domain PF13813), so it supports family-level activity but NOT gup1&#39;s specific substrate/process; and (ii) no assay has demonstrated that acn1 is catalytically active or identified its acyl donor/acceptor. This is the most specific defensible molecular-function term; anything narrower (wax-ester synthase, DGAT, GPI-anchor acyltransferase) would be over-annotation. Note the current term is GO:0016747 because the older O-acyltransferase term (GO:0008374) used in the UniProt DR line is now obsolete.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain/family-appropriate general acyltransferase activity supported by ISS from an MBOAT paralog, but unproven for acn1 and transferred from a different MBOAT subfamily; retain as a reasonable family-level MF without treating it as an established, substrate-defined core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O74380
+
+                                </span>
+
+                                <div class="support-text">Pfam; PF13813; MBOAT_2; 1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProt:O74380
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR032805; Wax_synthase_dom.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted acyl-CoA-dependent membrane-bound acyltransferase (MBOAT superfamily, wax-synthase branch). By homology to characterized MBOAT enzymes, acn1 is inferred to transfer an acyl group onto a lipid, sterol, or fatty-alcohol acceptor, most plausibly in neutral-lipid (wax-ester or diacylglycerol) metabolism. This is a family/domain-level inference only: the catalytic activity has not been demonstrated for acn1, and its physiological acyl donor and acceptor substrates are unknown. Included at the most general defensible level (GO:0016747) with the specific reaction deliberately left open; see knowledge_gaps.</h3>
+                <span class="vote-buttons" data-g="O74380" data-a="FUNCTION: Predicted acyl-CoA-dependent membrane-bound acyltr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                            acyltransferase activity, transferring groups other than amino-acyl groups
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031966" target="_blank" class="term-link">
+                                mitochondrial membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:O74380
+
+                        </span>
+
+                        <div class="finding-text">Pfam; PF13813; MBOAT_2; 1.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProt:O74380
+
+                        </span>
+
+                        <div class="finding-text">SUBCELLULAR LOCATION: Mitochondrion membrane</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProt:O74380
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry O74380 (YNV5_SCHPO), Uncharacterized membrane protein C3H7.05c</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/37787768" target="_blank" class="term-link">
+                            PMID:37787768
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Broad functional profiling of fission yeast proteins using phenomics and machine learning.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40424131" target="_blank" class="term-link">
+                            PMID:40424131
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Formation of giant ER sheets by pentadecanoic acid causes lipotoxicity in fission yeast.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/acn1/acn1-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Deep research report (falcon/Edison): acn1 / SPBC3H7.05c functional annotation</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is acn1 a catalytically active acyltransferase, and what acyl-CoA donor and lipid/fatty-alcohol/sterol acceptor does it use?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="Q: Is acn1 a catalytically active acyltransferase, an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does acn1 localize to the endoplasmic reticulum (as expected for an MBOAT) or genuinely to the mitochondrial membrane as suggested by the ORFeome GFP screen?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="Q: Does acn1 localize to the endoplasmic reticulum (a..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does acn1 contribute to neutral-lipid (wax-ester or triacylglycerol/sterol-ester) metabolism in S. pombe, i.e. does an acn1 deletion or overexpression change the lipid droplet / storage-lipid profile?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="Q: Does acn1 contribute to neutral-lipid (wax-ester o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express recombinant acn1 (in S. pombe or a heterologous host) and assay acyltransferase activity in vitro against a panel of acyl-CoA donors and candidate acceptors (diacylglycerol, fatty alcohols, sterols, lysophospholipids), reading out product formation by mass spectrometry.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: acn1 is an acyl-CoA-dependent acyltransferase of the wax-synthase/DGAT1-type MBOAT branch acting in neutral-lipid biosynthesis.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="EXPERIMENT: Express recombinant acn1 (in S. pombe or a heterol..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare untargeted lipidomes of an acn1-deletion strain versus wild type (and versus dga1/plh1 mutants) under standard and lipid-stress conditions to detect changes in triacylglycerol, wax esters, sterol esters, or phospholipid species.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Loss of acn1 alters a specific neutral-lipid or membrane-lipid pool, revealing its in vivo product.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative lipidomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="EXPERIMENT: Compare untargeted lipidomes of an acn1-deletion s..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Determine acn1 subcellular localization and topology using endogenous fluorescent tagging with co-localization against ER and mitochondrial markers, and protease-protection / topology mapping of the transmembrane helices.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: acn1 resides in the ER membrane (consistent with the MBOAT family) rather than the mitochondrion.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: fluorescence microscopy and membrane topology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O74380" data-a="EXPERIMENT: Determine acn1 subcellular localization and topolo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether acn1 is a catalytically active acyltransferase, and if so what reaction it catalyzes, is undetermined. No enzymatic assay has been performed on the acn1 protein; the acyltransferase molecular-function annotation is inferred entirely from the MBOAT/wax-synthase domain and from ISS transfer from the paralog gup1.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> acn1 unambiguously carries a Wax_synthase_dom / MBOAT_2 domain (InterPro IPR032805, Pfam PF13813) and is predicted to be a nine-transmembrane integral membrane protein, and the MBOAT superfamily is defined by acyl-CoA-dependent acyltransferase activity with a conserved catalytic histidine. The acn1 sequence retains candidate His/Asn residues, so catalytic competence is plausible. What is NOT established is any measured activity or the enzyme&#39;s substrate specificity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether acn1 is a bona fide enzyme (and validates the propagated GO acyltransferase annotation) or a catalytically inactive family member, and defines which branch of lipid/protein acylation it belongs to.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Heterologous expression of acn1 and in vitro acyltransferase assays with candidate acyl-CoA donors and lipid/fatty-alcohol/sterol acceptors, plus lipidomic comparison of an acn1-deletion versus wild-type S. pombe strain.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Uncharacterized membrane protein C3H7.05c"</em> — UniProt:O74380</li>
+
+                <li><em>"Extensive literature searches did not identify any primary research articles that have directly characterized the function, enzymatic activity, or biological role of acn1/SPBC3H7.05c."</em> — file:SCHPO/acn1/acn1-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiological substrate(s) of acn1 (its acyl donor and acyl acceptor) are unknown. It is undetermined whether acn1 acts on diacylglycerol (DGAT-type), a fatty alcohol (wax-ester synthase-type), a sterol, a lysophospholipid, or a protein/peptide acceptor.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The MBOAT superfamily splits into subgroups by substrate — sterol/diacylglycerol acylation (ACAT/DGAT1), protein/peptide acylation (PORCN, HHAT, GOAT), and lysophospholipid re-acylation (LPCAT, MBOAT7) — and the wax-synthase branch acylates fatty alcohols to make wax esters. In S. pombe, terminal triacylglycerol synthesis is carried out by dga1 (a DGAT2-fold enzyme unrelated to MBOATs) and plh1 (PDAT), so acn1 would be a distinct enzyme class rather than a redundant copy of those. Which subgroup acn1 belongs to has not been tested.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Substrate identity would define acn1&#39;s biochemical reaction and place it in a specific lipid- or protein-acylation pathway, and would let a specific GO molecular-function term replace the current general one.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Substrate-resolved in vitro assays (panel of acyl-CoA donors versus DAG, fatty alcohols, sterols, lysophospholipids) and untargeted lipidomics of acn1-deletion cells.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"All functional predictions described herein are based on domain-based inference"</em> — file:SCHPO/acn1/acn1-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process and physiological role of acn1 are unknown. No pathway, developmental role, or cellular process has been established; the only curated biological-process annotation is a root-level &#34;no data&#34; placeholder.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> acn1 deletion is viable with normal cell morphology, and available phenotypes come almost entirely from genome-wide high-throughput screens (broad drug/stress resistance and sensitivity, minor nitrogen/carbon-source growth changes; PMID:37787768) plus low-throughput overexpression phenotypes (septation defects; PMID:23695302). In a lipotoxicity screen, acn1 deletion did not alter growth on pentadecanoic acid (PMID:40424131). These pleiotropic screen hits do not converge on a mechanism. The PomBase gene name (acn1, from a proposed &#34;ACetylation of Nsf&#34; hypothesis) is not backed by any published functional study.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Assigning acn1 to a biological process (e.g. neutral-lipid storage, membrane lipid remodeling, or an unrelated pathway) is required to move it out of the conserved-unknown set and to interpret its many screen phenotypes.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Targeted loss-of-function and epistasis analysis under lipid-metabolic and stress conditions, combined with the substrate/activity assays above, to connect a defined biochemical activity to a cellular process.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Most biomedical research focuses on genes that are already well-studied"</em> — PMID:37787768</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> acn1&#39;s subcellular compartment is unresolved. The family prior (MBOAT enzymes are typically ER-resident) conflicts with the single experimental datum for acn1, a genome-wide GFP screen that reported mitochondrial localization.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">CC_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> UniProt records &#34;Mitochondrion membrane&#34; as a multi-pass membrane protein (ECO:0000305 curator inference from the ORFeome GFP dataset, PMID:16823372) and PomBase records a mitochondrion HDA localization; no ER localization has been reported for acn1 specifically. Characterized MBOAT/DGAT1/ACAT enzymes are ER-membrane proteins, creating a genuine tension between the location prior and the observed screen result.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving whether acn1 is truly mitochondrial (which would be unusual for an MBOAT and biologically informative) or ER-localized (matching the family) constrains its likely substrates and pathway.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Endogenous-tagged, high-resolution co-localization microscopy with mitochondrial and ER markers, and/or subcellular fractionation, in S. pombe.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"SUBCELLULAR LOCATION: Mitochondrion membrane"</em> — UniProt:O74380</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(acn1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O74380" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research Report: acn1 / SPBC3H7.05c in *Schizosaccharomyces pombe*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">26 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-06T18:20:31.238393</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="acn1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-acn1-spbc3h705c-in-schizosaccharomyces-pombe">Research Report: acn1 / SPBC3H7.05c in <em>Schizosaccharomyces pombe</em></h1>
+<h2 id="gene-identity-verification">Gene Identity Verification</h2>
+<p>The gene symbol <strong>acn1</strong> corresponds to the systematic ORF name <strong>SPBC3H7.05c</strong> in the fission yeast <em>Schizosaccharomyces pombe</em> (strain 972 / ATCC 24843), encoding UniProt accession O74380. UniProt describes this protein as "Uncharacterized membrane protein C3H7.05c." Extensive literature searches did not identify any primary research articles that have directly characterized the function, enzymatic activity, or biological role of acn1/SPBC3H7.05c. No gene symbol ambiguity was identified—there is no well-characterized gene with the symbol "acn1" in another organism that would cause confusion. <strong>The functional annotation presented below is therefore primarily inferred from domain architecture and homology to characterized members of the MBOAT (membrane-bound O-acyltransferase) superfamily.</strong></p>
+<h2 id="summary-of-key-properties">Summary of Key Properties</h2>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene Name</td>
+<td><strong>acn1 / SPBC3H7.05c</strong>; corresponds to the S. pombe ORF encoding an uncharacterized membrane protein in UniProt (holic2020metabolismofphospholipids pages 1-4)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><strong>Schizosaccharomyces pombe</strong> (fission yeast) (holic2020metabolismofphospholipids pages 1-4)</td>
+</tr>
+<tr>
+<td>UniProt Accession</td>
+<td><strong>O74380</strong> (user-supplied target identifier; direct literature characterization not found)</td>
+</tr>
+<tr>
+<td>Protein Domains</td>
+<td><strong>Wax_synthase_dom (IPR032805)</strong> and <strong>MBOAT_2 (PF13813)</strong>, consistent with a membrane-bound O-acyltransferase-type protein; MBOAT proteins are integral membrane acyltransferases with conserved catalytic features (pierce2023arisingtide pages 2-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3, cheng2022heterologousexpressionand pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted Function</td>
+<td><strong>Acyl-CoA-dependent acyltransferase</strong>, most likely involved in <strong>neutral lipid biosynthesis</strong> or lipid remodeling by analogy to MBOAT-family DGAT1/WS enzymes (pierce2023arisingtide pages 2-4, pierce2023arisingtide pages 1-2, chang2011membraneboundoacyltransferases(mboats) pages 1-3, cheng2022heterologousexpressionand pages 1-2)</td>
+</tr>
+<tr>
+<td>Predicted Reaction</td>
+<td>Likely <strong>transfer of an acyl group from acyl-CoA to a lipid or fatty alcohol acceptor</strong>; plausible activities include <strong>diacylglycerol acyltransferase-like</strong> or <strong>wax synthase-like</strong> reactions based on domain content and homologous enzyme chemistry (cheng2022heterologousexpressionand pages 1-2, turkish2009thegeneticsof pages 3-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3, cheng2022heterologousexpressionand pages 13-15)</td>
+</tr>
+<tr>
+<td>Predicted Localization</td>
+<td>Most likely an <strong>integral membrane protein of the endoplasmic reticulum (ER)</strong>; MBOAT/DGAT1 enzymes commonly localize to ER membranes, and neutral lipid synthesis in S. pombe is ER-linked (chang2011membraneboundoacyltransferases(mboats) pages 3-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3, cheng2022heterologousexpressionand pages 9-11, meyers2017theproteinand pages 9-13)</td>
+</tr>
+<tr>
+<td>Known Pathway Context</td>
+<td>Best placed in <strong>neutral lipid biosynthesis</strong> context in S. pombe, where <strong>dga1</strong> and <strong>plh1</strong> catalyze terminal TAG synthesis and lipid droplets store TAG and sterol esters; acn1 may represent an additional uncharacterized acyltransferase in this broader lipid-metabolic network (zhang2003schizosaccharomycespombecells pages 2-4, holic2020metabolismofphospholipids pages 24-26, meyers2017theproteinand pages 9-13)</td>
+</tr>
+<tr>
+<td>Evidence Type</td>
+<td><strong>Domain-based inference only</strong>; no direct primary literature function, localization, or biochemical characterization was identified for <strong>acn1/SPBC3H7.05c</strong> specifically (holic2020metabolismofphospholipids pages 1-4, holic2020metabolismofphospholipids pages 4-6)</td>
+</tr>
+<tr>
+<td>Protein Family</td>
+<td><strong>MBOAT (membrane-bound O-acyltransferase) superfamily</strong>, whose members catalyze acyl transfer reactions on diverse lipid substrates and typically contain multiple transmembrane segments (pierce2023arisingtide pages 2-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3, pierce2023arisingtide pages 1-2)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the verified identity, domain architecture, and evidence-based functional inferences for the uncharacterized S. pombe protein acn1/SPBC3H7.05c. It is useful because direct experimental studies are lacking, so the most reliable interpretation comes from domain composition and comparison with characterized MBOAT-family enzymes.</em></p>
+<h2 id="1-domain-architecture-and-predicted-enzymatic-function">1. Domain Architecture and Predicted Enzymatic Function</h2>
+<h3 id="mboat-superfamily-membership">MBOAT Superfamily Membership</h3>
+<p>The acn1 gene product contains two key domains: the <strong>MBOAT_2 domain</strong> (Pfam PF13813) and the <strong>Wax_synthase_dom</strong> (InterPro IPR032805). Both domains place this protein firmly within the <strong>membrane-bound O-acyltransferase (MBOAT) superfamily</strong>, first identified by Hofmann in 2000. The MBOAT superfamily encompasses a diverse group of integral membrane enzymes that share conserved features including multiple transmembrane domains and catalytically essential histidine and asparagine residues in the active site (pierce2023arisingtide pages 2-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3). These enzymes catalyze acylation reactions on diverse substrates—including cholesterol, diacylglycerol, phospholipids, peptides, and proteins—using acyl-CoA thioesters as acyl donors (pierce2023arisingtide pages 1-2).</p>
+<p>The MBOAT family is divided into three functional subgroups based on substrate specificity: (1) enzymes that acylate the hydroxyl groups of cholesterol or diacylglycerol (including ACAT/SOAT and DGAT1); (2) enzymes that acylate amino acid residues in proteins or peptide hormones (including PORCN, HHAT, and GOAT); and (3) enzymes that acylate lysophospholipids to reform phospholipids (including LPCAT, LPIAT/MBOAT7) (chang2011membraneboundoacyltransferases(mboats) pages 1-3, chang2011membraneboundoacyltransferases(mboats) pages 3-4).</p>
+<h3 id="wax-synthase-domain-and-predicted-catalytic-activity">Wax Synthase Domain and Predicted Catalytic Activity</h3>
+<p>The presence of the wax synthase domain (IPR032805) is particularly informative. Wax synthase (WS) enzymes are a class of MBOAT-type proteins that catalyze the formation of <strong>wax esters</strong> through the acylation of <strong>fatty alcohols</strong> with <strong>fatty acyl-CoA</strong> substrates (cheng2022heterologousexpressionand pages 1-2). Characterized plant WS enzymes are relatively small integral membrane proteins of 333–351 amino acid residues with seven or eight predicted transmembrane spanning domains and approximately 50% sequence identity with the well-characterized jojoba WS (cheng2022heterologousexpressionand pages 2-3). These enzymes exhibit broad substrate specificity, capable of assembling not only wax esters but also ethyl and benzyl esters (cheng2022heterologousexpressionand pages 17-19, cheng2022heterologousexpressionand pages 13-15).</p>
+<p>DGAT1, a closely related MBOAT member, catalyzes the transfer of acyl groups from acyl-CoA to diacylglycerol to form triacylglycerols (TAG) and shares 15–25% amino acid sequence identity with ACATs (liu2011functionalandtopological pages 30-36). DGAT1 belongs to the same MBOAT superfamily and contains multiple transmembrane domains with a conserved histidine residue essential for catalytic function (pierce2023arisingtide pages 1-2, chang2011membraneboundoacyltransferases(mboats) pages 1-3). The combination of the MBOAT_2 and Wax_synthase_dom domains in acn1 strongly suggests that this protein functions as an <strong>acyl-CoA-dependent acyltransferase</strong>, most likely catalyzing the transfer of acyl chains from acyl-CoA to lipid or fatty alcohol acceptor substrates. The predicted reaction is most consistent with <strong>wax ester synthase</strong> and/or <strong>diacylglycerol acyltransferase</strong> activity.</p>
+<h2 id="2-biological-context-neutral-lipid-metabolism-in-s-pombe">2. Biological Context: Neutral Lipid Metabolism in <em>S. pombe</em></h2>
+<h3 id="known-acyltransferases-in-s-pombe">Known Acyltransferases in <em>S. pombe</em></h3>
+<p>To contextualize acn1, it is essential to consider the known enzymes of neutral lipid biosynthesis in <em>S. pombe</em>. Zhang et al. (2003) demonstrated that two gene products, <strong>Plh1p</strong> (a phospholipid:diacylglycerol acyltransferase homologous to <em>S. cerevisiae</em> LRO1) and <strong>Dga1p</strong> (an acyl-CoA:diacylglycerol acyltransferase homologous to human DGAT2), are responsible for the terminal step of triacylglycerol (TAG) synthesis in <em>S. pombe</em> (zhang2003schizosaccharomycespombecells pages 2-4). Deletion of <em>plh1</em> alone reduces TAG synthesis by approximately 50%, and double deletion of both <em>plh1</em> and <em>dga1</em> results in near-total loss of TAG synthesis. Additionally, <em>S. pombe</em> contains two proteins homologous to <em>S. cerevisiae</em> Are1p and Are2p that catalyze sterol esterification (zhang2003schizosaccharomycespombecells pages 2-4).</p>
+<p>Notably, <em>dga1</em> is a DGAT2-family member, which is structurally unrelated to DGAT1/MBOAT-type enzymes. The acn1 gene product, with its MBOAT_2 and wax synthase domains, represents a <strong>distinct class of acyltransferase</strong> from the known Dga1p and Plh1p enzymes. It may therefore represent an additional, as-yet-uncharacterized acyltransferase in the <em>S. pombe</em> neutral lipid biosynthetic network—potentially functioning as a DGAT1-type enzyme or wax ester synthase.</p>
+<h3 id="lipid-droplets-and-storage-lipids">Lipid Droplets and Storage Lipids</h3>
+<p>In <em>S. pombe</em>, neutral lipids are stored in lipid droplets composed primarily of sterol esters (SEs) and triacylglycerols (TAGs), with SE:TAG ratios varying from 36:64 to 56:44 depending on growth conditions (meyers2017theproteinand pages 9-13). Key lipid droplet-associated proteins include Erg6p (delta-sterol C-methyltransferase), Erg1p (squalene monooxygenase), and Lcf1p (fatty acid-CoA ligase), along with the TAG lipases Ptl1p, Ptl2p, and Ptl3p (meyers2017theproteinand pages 13-17). The acn1 gene product, if it indeed functions as an acyltransferase in neutral lipid synthesis, would likely contribute to the production of these storage lipids.</p>
+<h3 id="phospholipid-metabolism-context">Phospholipid Metabolism Context</h3>
+<p><em>S. pombe</em> phospholipid metabolism uses pathways similar to those in <em>S. cerevisiae</em>, with three gene products—Ale1 (SPBC16A3.10), Slc1 (SPAC1851.02), and Vps66 (SPAC1783.02c)—predicted to possess acylglycerol acyltransferase activities based on homology (holic2020metabolismofphospholipids pages 13-15). The acn1 protein is distinct from these enzymes in its domain architecture but may participate in related acyl-CoA-dependent lipid modification pathways.</p>
+<h2 id="3-predicted-subcellular-localization">3. Predicted Subcellular Localization</h2>
+<p>No direct experimental evidence exists for the subcellular localization of the acn1 gene product. However, inference from characterized MBOAT family members provides strong predictions. DGAT1 is an ER-resident enzyme (chang2011membraneboundoacyltransferases(mboats) pages 3-4), and ACAT1 functions to protect against excess cholesterol accumulation in ER membranes (chang2011membraneboundoacyltransferases(mboats) pages 1-3). The Arabidopsis wax synthase MBOAT enzymes localize to extra-plastidial membrane systems including the endoplasmic reticulum and plasma membrane (cheng2022heterologousexpressionand pages 9-11, cheng2022heterologousexpressionand pages 2-3). In <em>S. pombe</em>, neutral lipid synthesis occurs at the ER, with lipid droplets budding from ER membranes. Based on these considerations, acn1 is predicted to be an <strong>integral membrane protein of the endoplasmic reticulum (ER)</strong>, consistent with its multiple predicted transmembrane domains and MBOAT family membership.</p>
+<h2 id="4-structural-and-evolutionary-considerations">4. Structural and Evolutionary Considerations</h2>
+<p>The MBOAT superfamily has been extensively characterized at the structural level in recent years. All MBOAT members share a central core fold containing a catalytically essential histidine residue embedded within transmembrane domains, and a conserved asparagine residue in a hydrophilic region (chang2011membraneboundoacyltransferases(mboats) pages 1-3, pierce2023arisingtide pages 7-8). The first experimentally determined MBOAT structure (DltB from bacteria) revealed conserved structural features including ring-shaped or funnel-like transmembrane arrangements and channels connecting the lumen to the cytoplasm, which were subsequently confirmed in other family members (pierce2023arisingtide pages 7-8). These structural features are expected to be conserved in acn1.</p>
+<p>The co-occurrence of the wax synthase domain with the MBOAT_2 domain is characteristic of proteins involved in neutral lipid ester biosynthesis. Prokaryotic WS/DGAT enzymes are structurally unrelated to the eukaryotic MBOAT-type wax synthases (waltermann2007keyenzymesfor pages 1-2), indicating that acn1 represents the eukaryotic MBOAT-type lineage of acyltransferases rather than the bacterial WS/DGAT family.</p>
+<h2 id="5-limitations-and-conclusions">5. Limitations and Conclusions</h2>
+<p><strong>The gene symbol acn1 / SPBC3H7.05c encodes an uncharacterized membrane protein for which no direct functional studies have been published.</strong> The protein has not been the subject of targeted biochemical characterization, localization studies, or mutant phenotype analysis in the primary literature. All functional predictions described herein are based on domain-based inference from the Wax_synthase_dom (IPR032805) and MBOAT_2 (PF13813) domains, and from the well-characterized properties of the broader MBOAT superfamily (pierce2023arisingtide pages 2-4, chang2011membraneboundoacyltransferases(mboats) pages 1-3, pierce2023arisingtide pages 1-2).</p>
+<p>Based on the available evidence, the most parsimonious interpretation is that acn1 encodes an <strong>acyl-CoA-dependent membrane-bound acyltransferase</strong>, likely involved in <strong>neutral lipid biosynthesis</strong> (TAG and/or wax ester synthesis) or <strong>lipid remodeling</strong>. The protein is predicted to function as an integral membrane enzyme of the <strong>endoplasmic reticulum</strong>, catalyzing the transfer of acyl groups from acyl-CoA to lipid or fatty alcohol acceptor substrates. In <em>S. pombe</em>, where TAG synthesis is known to depend on Plh1p and Dga1p (zhang2003schizosaccharomycespombecells pages 2-4), acn1 may represent an additional or accessory acyltransferase with a potentially distinct substrate specificity. Biochemical characterization—including heterologous expression, enzymatic assays with defined substrates, and localization studies—will be necessary to definitively establish the function of this protein.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(holic2020metabolismofphospholipids pages 1-4): Roman Holič, Lucia Pokorná, and Peter Griač. Metabolism of phospholipids in the yeast <i>schizosaccharomyces pombe</i>. Dec 2020. URL: https://doi.org/10.1002/yea.3451, doi:10.1002/yea.3451. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierce2023arisingtide pages 2-4): Mariah R. Pierce and James L. Hougland. A rising tide lifts all mboats: recent progress in structural and functional understanding of membrane bound o-acyltransferases. Frontiers in Physiology, May 2023. URL: https://doi.org/10.3389/fphys.2023.1167873, doi:10.3389/fphys.2023.1167873. This article has 23 citations.</p>
+</li>
+<li>
+<p>(chang2011membraneboundoacyltransferases(mboats) pages 1-3): Catherine C. Y. Chang, Jie Sun, and Ta-Yuan Chang. Membrane-bound o-acyltransferases (mboats). Frontiers in Biology, 6:177-182, Jun 2011. URL: https://doi.org/10.1007/s11515-011-1149-z, doi:10.1007/s11515-011-1149-z. This article has 82 citations.</p>
+</li>
+<li>
+<p>(cheng2022heterologousexpressionand pages 1-2): Daolin Cheng, Ling Li, Ludmila Rizhsky, Priyanka Bhandary, and Basil J. Nikolau. Heterologous expression and characterization of plant wax ester producing enzymes. Metabolites, 12:577, Jun 2022. URL: https://doi.org/10.3390/metabo12070577, doi:10.3390/metabo12070577. This article has 11 citations.</p>
+</li>
+<li>
+<p>(pierce2023arisingtide pages 1-2): Mariah R. Pierce and James L. Hougland. A rising tide lifts all mboats: recent progress in structural and functional understanding of membrane bound o-acyltransferases. Frontiers in Physiology, May 2023. URL: https://doi.org/10.3389/fphys.2023.1167873, doi:10.3389/fphys.2023.1167873. This article has 23 citations.</p>
+</li>
+<li>
+<p>(turkish2009thegeneticsof pages 3-4): Aaron R. Turkish and Stephen L. Sturley. The genetics of neutral lipid biosynthesis: an evolutionary perspective. American journal of physiology. Endocrinology and metabolism, 297 1:E19-27, Jul 2009. URL: https://doi.org/10.1152/ajpendo.90898.2008, doi:10.1152/ajpendo.90898.2008. This article has 76 citations.</p>
+</li>
+<li>
+<p>(cheng2022heterologousexpressionand pages 13-15): Daolin Cheng, Ling Li, Ludmila Rizhsky, Priyanka Bhandary, and Basil J. Nikolau. Heterologous expression and characterization of plant wax ester producing enzymes. Metabolites, 12:577, Jun 2022. URL: https://doi.org/10.3390/metabo12070577, doi:10.3390/metabo12070577. This article has 11 citations.</p>
+</li>
+<li>
+<p>(chang2011membraneboundoacyltransferases(mboats) pages 3-4): Catherine C. Y. Chang, Jie Sun, and Ta-Yuan Chang. Membrane-bound o-acyltransferases (mboats). Frontiers in Biology, 6:177-182, Jun 2011. URL: https://doi.org/10.1007/s11515-011-1149-z, doi:10.1007/s11515-011-1149-z. This article has 82 citations.</p>
+</li>
+<li>
+<p>(cheng2022heterologousexpressionand pages 9-11): Daolin Cheng, Ling Li, Ludmila Rizhsky, Priyanka Bhandary, and Basil J. Nikolau. Heterologous expression and characterization of plant wax ester producing enzymes. Metabolites, 12:577, Jun 2022. URL: https://doi.org/10.3390/metabo12070577, doi:10.3390/metabo12070577. This article has 11 citations.</p>
+</li>
+<li>
+<p>(meyers2017theproteinand pages 9-13): Alex Meyers, Karuna Chourey, Taylor M. Weiskittel, Susan Pfiffner, John R. Dunlap, Robert L. Hettich, and Paul Dalhaimer. The protein and neutral lipid composition of lipid droplets isolated from the fission yeast, schizosaccharomyces pombe. Journal of Microbiology, 55:112-122, Jan 2017. URL: https://doi.org/10.1007/s12275-017-6205-1, doi:10.1007/s12275-017-6205-1. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zhang2003schizosaccharomycespombecells pages 2-4): Qian Zhang, Hai Kee Chieu, Choon Pei Low, Shaochong Zhang, Chew Kiat Heng, and Hongyuan Yang. Schizosaccharomyces pombe cells deficient in triacylglycerols synthesis undergo apoptosis upon entry into the stationary phase*. Journal of Biological Chemistry, 278:47145-47155, Nov 2003. URL: https://doi.org/10.1074/jbc.m306998200, doi:10.1074/jbc.m306998200. This article has 143 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(holic2020metabolismofphospholipids pages 24-26): Roman Holič, Lucia Pokorná, and Peter Griač. Metabolism of phospholipids in the yeast <i>schizosaccharomyces pombe</i>. Dec 2020. URL: https://doi.org/10.1002/yea.3451, doi:10.1002/yea.3451. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(holic2020metabolismofphospholipids pages 4-6): Roman Holič, Lucia Pokorná, and Peter Griač. Metabolism of phospholipids in the yeast <i>schizosaccharomyces pombe</i>. Dec 2020. URL: https://doi.org/10.1002/yea.3451, doi:10.1002/yea.3451. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(cheng2022heterologousexpressionand pages 2-3): Daolin Cheng, Ling Li, Ludmila Rizhsky, Priyanka Bhandary, and Basil J. Nikolau. Heterologous expression and characterization of plant wax ester producing enzymes. Metabolites, 12:577, Jun 2022. URL: https://doi.org/10.3390/metabo12070577, doi:10.3390/metabo12070577. This article has 11 citations.</p>
+</li>
+<li>
+<p>(cheng2022heterologousexpressionand pages 17-19): Daolin Cheng, Ling Li, Ludmila Rizhsky, Priyanka Bhandary, and Basil J. Nikolau. Heterologous expression and characterization of plant wax ester producing enzymes. Metabolites, 12:577, Jun 2022. URL: https://doi.org/10.3390/metabo12070577, doi:10.3390/metabo12070577. This article has 11 citations.</p>
+</li>
+<li>
+<p>(liu2011functionalandtopological pages 30-36): Functional and Topological Analysis of Acyl-CoA:Diacylglycerol Acyltransferase 2 From Saccharomyces cerevisiae This article has 4 citations.</p>
+</li>
+<li>
+<p>(meyers2017theproteinand pages 13-17): Alex Meyers, Karuna Chourey, Taylor M. Weiskittel, Susan Pfiffner, John R. Dunlap, Robert L. Hettich, and Paul Dalhaimer. The protein and neutral lipid composition of lipid droplets isolated from the fission yeast, schizosaccharomyces pombe. Journal of Microbiology, 55:112-122, Jan 2017. URL: https://doi.org/10.1007/s12275-017-6205-1, doi:10.1007/s12275-017-6205-1. This article has 22 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(holic2020metabolismofphospholipids pages 13-15): Roman Holič, Lucia Pokorná, and Peter Griač. Metabolism of phospholipids in the yeast <i>schizosaccharomyces pombe</i>. Dec 2020. URL: https://doi.org/10.1002/yea.3451, doi:10.1002/yea.3451. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(pierce2023arisingtide pages 7-8): Mariah R. Pierce and James L. Hougland. A rising tide lifts all mboats: recent progress in structural and functional understanding of membrane bound o-acyltransferases. Frontiers in Physiology, May 2023. URL: https://doi.org/10.3389/fphys.2023.1167873, doi:10.3389/fphys.2023.1167873. This article has 23 citations.</p>
+</li>
+<li>
+<p>(waltermann2007keyenzymesfor pages 1-2): Marc Wältermann, Tim Stöveken, and Alexander Steinbüchel. Key enzymes for biosynthesis of neutral lipid storage compounds in prokaryotes: properties, function and occurrence of wax ester synthases/acyl-coa:diacylglycerol acyltransferases. Biochimie, 89(2):230-242, Feb 2007. URL: https://doi.org/10.1016/j.biochi.2006.07.013, doi:10.1016/j.biochi.2006.07.013. This article has 156 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="acn1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>holic2020metabolismofphospholipids pages 1-4</li>
+<li>pierce2023arisingtide pages 1-2</li>
+<li>cheng2022heterologousexpressionand pages 1-2</li>
+<li>cheng2022heterologousexpressionand pages 2-3</li>
+<li>liu2011functionalandtopological pages 30-36</li>
+<li>zhang2003schizosaccharomycespombecells pages 2-4</li>
+<li>meyers2017theproteinand pages 9-13</li>
+<li>meyers2017theproteinand pages 13-17</li>
+<li>holic2020metabolismofphospholipids pages 13-15</li>
+<li>pierce2023arisingtide pages 7-8</li>
+<li>waltermann2007keyenzymesfor pages 1-2</li>
+<li>pierce2023arisingtide pages 2-4</li>
+<li>turkish2009thegeneticsof pages 3-4</li>
+<li>cheng2022heterologousexpressionand pages 13-15</li>
+<li>cheng2022heterologousexpressionand pages 9-11</li>
+<li>holic2020metabolismofphospholipids pages 24-26</li>
+<li>holic2020metabolismofphospholipids pages 4-6</li>
+<li>cheng2022heterologousexpressionand pages 17-19</li>
+<li>https://doi.org/10.1002/yea.3451,</li>
+<li>https://doi.org/10.3389/fphys.2023.1167873,</li>
+<li>https://doi.org/10.1007/s11515-011-1149-z,</li>
+<li>https://doi.org/10.3390/metabo12070577,</li>
+<li>https://doi.org/10.1152/ajpendo.90898.2008,</li>
+<li>https://doi.org/10.1007/s12275-017-6205-1,</li>
+<li>https://doi.org/10.1074/jbc.m306998200,</li>
+<li>https://doi.org/10.1016/j.biochi.2006.07.013,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(acn1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O74380" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="acn1-spbc3h705c-o74380-curation-notes">acn1 (SPBC3H7.05c / O74380) — curation notes</h1>
+<p>Fission yeast (<em>Schizosaccharomyces pombe</em> 972 / ATCC 24843). UniProt entry name <strong>YNV5_SCHPO</strong>.<br />
+PomBase standard name <strong>acn1</strong>; systematic name <strong>SPBC3H7.05c</strong>; UniProt accession <strong>O74380</strong>.</p>
+<h2 id="summary-bottom-line">Summary / bottom line</h2>
+<p><code>acn1</code> is an <strong>understudied ("conserved unknown") gene</strong> encoding a polytopic<br />
+integral membrane protein of the <strong>membrane-bound O-acyltransferase (MBOAT)<br />
+superfamily</strong>. PomBase characterisation status is <em>conserved unknown</em> and UniProt<br />
+PE level is <em>4: Predicted</em>. There is <strong>no dedicated functional/biochemical study</strong><br />
+of acn1; essentially all annotations are either sequence/domain-based inference or<br />
+high-throughput screen phenotypes. The confident statements one can make are about<br />
+its <strong>domain architecture and localization</strong>; its <strong>specific molecular substrate,<br />
+biological process, and physiological role remain unknown</strong>.</p>
+<h2 id="identity-and-provenance">Identity and provenance</h2>
+<ul>
+<li>PomBase gene page (API <code>www.pombase.org/api/v1/dataset/latest/data/gene/SPBC3H7.05c</code>):</li>
+<li><code>name: acn1</code>, <code>product: "membrane bound O-Acyl transferase (MBOAT) family"</code>,<br />
+<code>characterisation_status: conserved unknown</code>, <code>deletion_viability: viable</code>,<br />
+<code>uniprot_identifier: O74380</code>.</li>
+<li><code>name_descriptions: ["ACetylation of Hy8Z (Nitrogen Signaling Factor (NSF)"]</code> —<br />
+    i.e. the symbol <em>acn1</em> was coined from a proposed "ACetylation of Nsf"<br />
+    hypothesis; this is a name derivation, <strong>not</strong> experimentally established<br />
+    function.</li>
+<li>Taxonomic distribution flags: <code>conserved in eukaryotes</code>, <code>conserved in fungi</code>,<br />
+<code>no apparent S. cerevisiae ortholog</code> (PBO:0000055).</li>
+</ul>
+<h2 id="domain-sequence-analysis-from-uniprot-o74380-record-inline">Domain / sequence analysis (from UniProt O74380 record, inline)</h2>
+<ul>
+<li>357 aa; 9 predicted TM helices (TRANSMEM 13-33, 44-64, 72-92, 148-168, 181-201,<br />
+  203-223, 266-286, 293-313, 327-347) — a <strong>multi-pass integral membrane protein</strong>.</li>
+<li>InterPro <strong>IPR032805 (Wax_synthase_dom)</strong> / Pfam <strong>PF13813 (MBOAT_2)</strong>. This is the<br />
+  wax-synthase branch of the MBOAT superfamily (distinct Pfam clan member from the<br />
+  "core" MBOAT PF03062). Pfam PF13813 = "Membrane bound O-acyl transferase family";<br />
+  associated activity is O-acyltransferase (verified via InterPro API PF13813).</li>
+<li>MBOAT enzymes carry a conserved catalytic His in a hydrophobic stretch and an<br />
+  invariant upstream Asn/His. In acn1 the His residues fall at 65/66, 250, 287, 326;<br />
+  H287 sits in the conserved <strong>"...ALFHDFAY..."</strong> block (the LYHDFAF fingerprint that<br />
+  UniProt's OMA record captured), and H250 in "...WSRDWH...". Presence of these<br />
+  His/Asn residues is <strong>consistent with</strong> a retained catalytic capacity but does not<br />
+  by itself prove activity or identify a substrate. [inline sequence inspection]</li>
+</ul>
+<h2 id="existing-go-annotations-from-acn1-goatsv-4-goa-lines">Existing GO annotations (from acn1-goa.tsv; 4 GOA lines)</h2>
+<ol>
+<li><strong>GO:0031966 mitochondrial membrane</strong> — IEA, GO_REF:0000044 (UniProtKB-SubCell<br />
+   mapping SL-0171). Derived from the UniProt subcellular-location statement<br />
+   "Mitochondrion membrane {ECO:0000305}; Multi-pass membrane protein {ECO:0000305}".<br />
+   ECO:0000305 = curator inference (not direct assay). The primary evidence for a<br />
+   mitochondrial localization is the ORFeome GFP screen <a href="https://pubmed.ncbi.nlm.nih.gov/16823372">PMID:16823372</a>.</li>
+<li><strong>GO:0005575 cellular_component</strong> — ND, GO_REF:0000015 (root "no data" placeholder).</li>
+<li><strong>GO:0008150 biological_process</strong> — ND, GO_REF:0000015 (root "no data" placeholder).</li>
+<li><strong>GO:0016747 acyltransferase activity, transferring groups other than amino-acyl<br />
+   groups</strong> — ISS, GO_REF:0000024, <code>WITH/FROM: PomBase:SPAC24H6.01c</code>. Transferred by<br />
+   curator judgment of sequence similarity from <strong>gup1</strong> (SPAC24H6.01c, Q09758), an<br />
+   MBOAT (product "membrane bound O-acyltransferase, MBOAT Gup1"; annotated to<br />
+   GO:0006506 GPI anchor biosynthetic process). NOTE: gup1 uses Pfam PF03062<br />
+   (MBOAT_fam) whereas acn1 uses PF13813 (Wax_synthase_dom) — related superfamily,<br />
+<strong>different subfamily</strong>; the ISS supports family-level acyltransferase activity but<br />
+   NOT gup1's specific GPI-anchor function.</li>
+</ol>
+<p>Also present in the UniProt DR block (not in GOA TSV): GO:0005739 mitochondrion<br />
+HDA:PomBase (from the ORFeome localization dataset), and the now-<strong>obsolete</strong><br />
+GO:0008374 O-acyltransferase (superseded by GO:0016747). Verified GO:0008374 is<br />
+obsolete via QuickGO.</p>
+<h2 id="localization-evidence">Localization evidence</h2>
+<ul>
+<li><strong>Mitochondrion / mitochondrial membrane</strong>: ORFeome-wide GFP localization study<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/16823372" title="ORFeome cloning and global analysis of protein localization in the   fission yeast Schizosaccharomyces pombe">PMID:16823372</a> underlies the HDA mitochondrion call and<br />
+  the UniProt SubCell statement. This is a genome-scale screen (moderate confidence<br />
+  for any single protein); a mitochondrial <em>membrane</em> MBOAT is somewhat atypical (most<br />
+  characterized MBOATs are ER/Golgi/plasma-membrane), so localization deserves a<br />
+  caveat but is the only localization datum available.</li>
+</ul>
+<h2 id="phenotype-data-all-high-throughput-or-overexpression-pombase-fypo">Phenotype data (all high-throughput or overexpression; PomBase FYPO)</h2>
+<ul>
+<li><strong>PMID:37787768</strong> (Bähler lab broad phenomics / machine-learning profiling of fission<br />
+  yeast proteins) contributes ~20 FYPO annotations for acn1delta, e.g. multidrug<br />
+  resistance/sensitivity (resistance to diamide, KCl, terbinafine, tert-butyl<br />
+  hydroperoxide; sensitivity to cadmium, rapamycin, torin1, tunicamycin, brefeldin A,<br />
+  vanadate, X-rays), and nitrogen/carbon-source growth changes (FYPO:0009091 decreased<br />
+  growth on lysine+proline N source; FYPO:0009076 increased growth on sucrose). These<br />
+  are <strong>pleiotropic screen hits</strong>, not evidence of a specific molecular function.</li>
+<li><strong>PMID:23695302</strong> (fission-yeast TF overexpression analysis) contributes low-throughput<br />
+<strong>overexpression</strong> phenotypes (FYPO:0001406 increased septum thickness; multiseptate /<br />
+  mono-septate binucleate-anucleate cells). Overexpression phenotypes are weak evidence<br />
+  for endogenous function.</li>
+<li><strong>PMID:40424131</strong> (Formation of giant ER sheets by pentadecanoic acid causes<br />
+  lipotoxicity in fission yeast, PNAS 2025) contributes FYPO:0010042 <strong>"normal growth on<br />
+  pentadecanoic acid"</strong> for acn1delta — i.e. acn1 was screened in a lipotoxicity study<br />
+  and its deletion did <strong>not</strong> alter C15:0 sensitivity (a <em>negative</em> result). acn1 is<br />
+  not discussed in that paper's body text.</li>
+</ul>
+<h2 id="known-vs-not-known">KNOWN vs NOT-known</h2>
+<p>KNOWN (well-supported):<br />
+- It is a <strong>polytopic integral membrane protein</strong> (9 TM helices; UniProt/DeepTMHMM).<br />
+- It belongs to the <strong>MBOAT superfamily, wax-synthase (PF13813/IPR032805) branch</strong>.<br />
+- It <strong>localizes to mitochondria / mitochondrial membrane</strong> (ORFeome GFP screen; single<br />
+  moderate-confidence line of evidence).<br />
+- Deletion is <strong>viable</strong> with <strong>no gross morphology defect</strong> (FYPO:0002177), consistent<br />
+  with a non-essential gene.<br />
+- It has <strong>no apparent S. cerevisiae ortholog</strong> but is conserved across fungi/eukaryotes.</p>
+<p>NOT known (knowledge gaps):<br />
+- <strong>Molecular function / catalytic activity</strong>: whether acn1 is a <em>catalytically active</em><br />
+  acyltransferase, and if so its <strong>acyl-donor and acceptor substrates</strong>, are unknown. The<br />
+  MF annotation is ISS-from-paralog at the general "acyltransferase, non-amino-acyl"<br />
+  level only.<br />
+- <strong>Biological process</strong>: unknown. The "acn1 = ACetylation of Nsf" name is a hypothesis,<br />
+  not established. No BP annotation with experimental support exists.<br />
+- <strong>Physiological role / pathway</strong>: unknown. Phenotypes are broad pleiotropic<br />
+  screen/overexpression hits that do not converge on a mechanism.<br />
+- <strong>Localization detail</strong>: sub-mitochondrial location and topology unverified beyond a<br />
+  single genome-scale GFP dataset; a mitochondrial-membrane MBOAT is atypical.<br />
+- <strong>Direct interactors / regulation</strong>: none experimentally established for function.</p>
+<h2 id="candidate-mf-for-core_functions">Candidate MF for core_functions</h2>
+<ul>
+<li><strong>GO:0016747</strong> (acyltransferase activity, transferring groups other than amino-acyl<br />
+  groups) is the most specific <em>defensible</em> MF: it is the current (non-obsolete) term,<br />
+  it is family/domain-appropriate for an MBOAT, and it is what GOA already carries via<br />
+  ISS. Anything more specific (wax-ester synthase, DGAT, GPI-anchor acyltransferase,<br />
+  protein-serine O-palmitoleoyltransferase, etc.) would be an over-annotation given no<br />
+  substrate data. core_functions should carry at most this one MF with an explicit<br />
+  low-confidence/uncertainty note, plus the mitochondrial-membrane location; the primary<br />
+  deliverable is the knowledge_gaps section.</li>
+</ul>
+<h2 id="falcon-deep-research-acn1-deep-research-falconmd-edison-26-citations">Falcon deep research (acn1-deep-research-falcon.md, Edison, 26 citations)</h2>
+<p>The falcon report (completed 2026-07-06, 1659 s) independently reached the same<br />
+conclusion and adds useful comparative context. Key points (all secondary/inferential,<br />
+about the MBOAT family, NOT direct acn1 data):<br />
+- No primary research article has characterized acn1/SPBC3H7.05c function, activity, or<br />
+  role; all inference is domain/homology-based. (converges with my analysis.)<br />
+- MBOAT superfamily = integral-membrane acyltransferases with conserved catalytic His<br />
+  (in a TM stretch) + upstream Asn; three functional subgroups (sterol/DAG acylation<br />
+  e.g. ACAT/DGAT1; protein/peptide acylation e.g. PORCN/HHAT/GOAT; lyso-phospholipid<br />
+  re-acylation e.g. LPCAT/MBOAT7). The <strong>wax-synthase (WS) branch</strong> acylates fatty<br />
+  alcohols with fatty-acyl-CoA to make wax esters, and DGAT1-type members make TAG.<br />
+- Predicted acn1 activity: <strong>acyl-CoA-dependent acyltransferase</strong>, most consistent with<br />
+  wax-ester-synthase and/or DGAT1-type chemistry — but substrate is unknown.<br />
+- S. pombe neutral-lipid context: TAG synthesis is by dga1 (DGAT2 fold, structurally<br />
+  UNRELATED to MBOAT) and plh1 (PDAT); sterol esterification by Are1/Are2 homologs<br />
+  (Zhang et al. 2003, JBC). acn1 (MBOAT/DGAT1-type) is therefore a <strong>distinct enzyme<br />
+  class</strong> and, if catalytically active, would be an additional/accessory acyltransferase.<br />
+- Predicted localization by MBOAT analogy: <strong>endoplasmic reticulum</strong> (DGAT1/ACAT are<br />
+  ER-resident). NOTE this CONFLICTS with the only experimental localization datum for<br />
+  acn1 (mitochondrion, ORFeome GFP screen PMID:16823372). This discrepancy is itself a<br />
+  knowledge gap — the family prior says ER, the single S. pombe screen says mitochondrion.<br />
+- CAVEAT on the report: it treats "Wax_synthase_dom (IPR032805)" and "MBOAT_2 (PF13813)"<br />
+  as two domains; they are the SAME domain (InterPro IPR032805 is the InterPro entry for<br />
+  Pfam PF13813). Do not double-count. The falcon DOI citations are family reviews, not<br />
+  acn1-specific; I will NOT cite them as supporting acn1 function directly.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O74380
+gene_symbol: acn1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: &gt;-
+  acn1 (systematic name SPBC3H7.05c) is an uncharacterized, non-essential
+  polytopic integral membrane protein of the fission yeast Schizosaccharomyces
+  pombe. Its sequence carries a single Wax_synthase_dom / MBOAT_2 domain
+  (InterPro IPR032805, Pfam PF13813), placing it in the wax-synthase branch of the
+  membrane-bound O-acyltransferase (MBOAT) superfamily; the protein is predicted to
+  span the membrane with nine transmembrane helices. Characterized MBOAT enzymes are
+  acyl-CoA-dependent acyltransferases that transfer acyl chains onto lipid, sterol,
+  fatty-alcohol, or protein acceptors, and by homology acn1 is inferred to be an
+  acyltransferase, most plausibly acting in neutral-lipid (e.g. wax-ester or
+  diacylglycerol) metabolism. However, no direct biochemical, genetic, or cell-biological
+  study of acn1 has been published: its catalytic activity, physiological substrate, and
+  biological role are all unknown. A genome-scale GFP screen assigned it a mitochondrial
+  membrane localization, which is atypical for an MBOAT enzyme (most localize to the
+  endoplasmic reticulum). It has no apparent Saccharomyces cerevisiae ortholog but is
+  conserved across fungi and more broadly in eukaryotes.
+existing_annotations:
+- term:
+    id: GO:0031966
+    label: mitochondrial membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic annotation mapped from the UniProt Subcellular Location statement
+      &#34;Mitochondrion membrane {ECO:0000305}; Multi-pass membrane protein {ECO:0000305}&#34;
+      (SL-0171). The underlying primary evidence is a genome-wide GFP localization screen
+      (PMID:16823372), and PomBase independently records a mitochondrion localization
+      (HDA). This is a reasonable location call for a multi-pass membrane protein and is
+      the only localization datum available, so it is retained; it is marked non-core
+      because a single genome-scale screen is moderate-confidence and a mitochondrial
+      localization is atypical for an MBOAT-family acyltransferase (family members are
+      usually ER-resident), leaving the true compartment and topology unresolved.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Supported location call, but derived from a single high-throughput screen (via
+      UniProt ECO:0000305 inference) and biologically atypical for the family; keep as a
+      location without treating it as a core, mechanism-defining assertion.
+    supported_by:
+    - reference_id: UniProt:O74380
+      supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+- term:
+    id: GO:0005575
+    label: cellular_component
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: is_active_in
+  review:
+    summary: &gt;-
+      Root-level &#34;no data&#34; placeholder (ND, GO_REF:0000015) recording that no specific
+      cellular-component annotation has been curated. This is a bookkeeping annotation,
+      not a biological statement; it is superseded in practice by the mitochondrial
+      membrane location above. No action needed beyond noting it.
+    action: ACCEPT
+    reason: &gt;-
+      Standard ND root placeholder; correctly indicates absence of curated CC data and
+      should be left as-is per GO_REF:0000015 conventions.
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root-level &#34;no data&#34; placeholder (ND, GO_REF:0000015) recording that no biological
+      process has been curated for acn1. This is accurate: the biological process in which
+      acn1 acts is genuinely unknown (see knowledge_gaps). It is a bookkeeping annotation
+      and should remain until an experimentally supported process is established.
+    action: ACCEPT
+    reason: &gt;-
+      Standard ND root placeholder that correctly reflects the absence of any curated,
+      evidence-supported biological process for this dark gene.
+- term:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity (ISS) annotation transferred by a PomBase curator from the
+      paralog gup1 (SPAC24H6.01c; WITH/FROM PomBase:SPAC24H6.01c), an MBOAT annotated to
+      the same term. acn1 carries the Wax_synthase_dom / MBOAT_2 domain (IPR032805 /
+      PF13813) and the MBOAT superfamily is defined by acyl-CoA-dependent acyltransferase
+      activity, so a general acyltransferase MF is domain-appropriate and is retained.
+      It is kept as non-core because (i) the transfer is from a different MBOAT subfamily
+      (gup1 uses Pfam PF03062, MBOAT_fam, and acts in GPI-anchor biosynthesis, whereas
+      acn1 uses the wax-synthase-domain PF13813), so it supports family-level activity
+      but NOT gup1&#39;s specific substrate/process; and (ii) no assay has demonstrated that
+      acn1 is catalytically active or identified its acyl donor/acceptor. This is the most
+      specific defensible molecular-function term; anything narrower (wax-ester synthase,
+      DGAT, GPI-anchor acyltransferase) would be over-annotation. Note the current term is
+      GO:0016747 because the older O-acyltransferase term (GO:0008374) used in the UniProt
+      DR line is now obsolete.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Domain/family-appropriate general acyltransferase activity supported by ISS from an
+      MBOAT paralog, but unproven for acn1 and transferred from a different MBOAT subfamily;
+      retain as a reasonable family-level MF without treating it as an established,
+      substrate-defined core function.
+    supported_by:
+    - reference_id: UniProt:O74380
+      supporting_text: &#34;Pfam; PF13813; MBOAT_2; 1.&#34;
+    - reference_id: UniProt:O74380
+      supporting_text: &#34;InterPro; IPR032805; Wax_synthase_dom.&#34;
+core_functions:
+- description: &gt;-
+    Predicted acyl-CoA-dependent membrane-bound acyltransferase (MBOAT superfamily,
+    wax-synthase branch). By homology to characterized MBOAT enzymes, acn1 is inferred to
+    transfer an acyl group onto a lipid, sterol, or fatty-alcohol acceptor, most plausibly
+    in neutral-lipid (wax-ester or diacylglycerol) metabolism. This is a family/domain-level
+    inference only: the catalytic activity has not been demonstrated for acn1, and its
+    physiological acyl donor and acceptor substrates are unknown. Included at the most
+    general defensible level (GO:0016747) with the specific reaction deliberately left
+    open; see knowledge_gaps.
+  molecular_function:
+    id: GO:0016747
+    label: acyltransferase activity, transferring groups other than amino-acyl groups
+  locations:
+  - id: GO:0031966
+    label: mitochondrial membrane
+  supported_by:
+  - reference_id: UniProt:O74380
+    supporting_text: &#34;Pfam; PF13813; MBOAT_2; 1.&#34;
+  - reference_id: UniProt:O74380
+    supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+knowledge_gaps:
+- gap_statement: &gt;-
+    Whether acn1 is a catalytically active acyltransferase, and if so what reaction it
+    catalyzes, is undetermined. No enzymatic assay has been performed on the acn1 protein;
+    the acyltransferase molecular-function annotation is inferred entirely from the
+    MBOAT/wax-synthase domain and from ISS transfer from the paralog gup1.
+  boundary: &gt;-
+    acn1 unambiguously carries a Wax_synthase_dom / MBOAT_2 domain (InterPro IPR032805,
+    Pfam PF13813) and is predicted to be a nine-transmembrane integral membrane protein,
+    and the MBOAT superfamily is defined by acyl-CoA-dependent acyltransferase activity
+    with a conserved catalytic histidine. The acn1 sequence retains candidate His/Asn
+    residues, so catalytic competence is plausible. What is NOT established is any measured
+    activity or the enzyme&#39;s substrate specificity.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Determines whether acn1 is a bona fide enzyme (and validates the propagated GO
+    acyltransferase annotation) or a catalytically inactive family member, and defines
+    which branch of lipid/protein acylation it belongs to.
+  resolution: &gt;-
+    Heterologous expression of acn1 and in vitro acyltransferase assays with candidate
+    acyl-CoA donors and lipid/fatty-alcohol/sterol acceptors, plus lipidomic comparison of
+    an acn1-deletion versus wild-type S. pombe strain.
+  provenance:
+  - reference_id: UniProt:O74380
+    supporting_text: &#34;Uncharacterized membrane protein C3H7.05c&#34;
+  - reference_id: file:SCHPO/acn1/acn1-deep-research-falcon.md
+    supporting_text: &gt;-
+      Extensive literature searches did not identify any primary research articles that
+      have directly characterized the function, enzymatic activity, or biological role of
+      acn1/SPBC3H7.05c.
+- gap_statement: &gt;-
+    The physiological substrate(s) of acn1 (its acyl donor and acyl acceptor) are unknown.
+    It is undetermined whether acn1 acts on diacylglycerol (DGAT-type), a fatty alcohol
+    (wax-ester synthase-type), a sterol, a lysophospholipid, or a protein/peptide acceptor.
+  boundary: &gt;-
+    The MBOAT superfamily splits into subgroups by substrate — sterol/diacylglycerol
+    acylation (ACAT/DGAT1), protein/peptide acylation (PORCN, HHAT, GOAT), and
+    lysophospholipid re-acylation (LPCAT, MBOAT7) — and the wax-synthase branch acylates
+    fatty alcohols to make wax esters. In S. pombe, terminal triacylglycerol synthesis is
+    carried out by dga1 (a DGAT2-fold enzyme unrelated to MBOATs) and plh1 (PDAT), so acn1
+    would be a distinct enzyme class rather than a redundant copy of those. Which subgroup
+    acn1 belongs to has not been tested.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Substrate identity would define acn1&#39;s biochemical reaction and place it in a specific
+    lipid- or protein-acylation pathway, and would let a specific GO molecular-function
+    term replace the current general one.
+  resolution: &gt;-
+    Substrate-resolved in vitro assays (panel of acyl-CoA donors versus DAG, fatty
+    alcohols, sterols, lysophospholipids) and untargeted lipidomics of acn1-deletion cells.
+  provenance:
+  - reference_id: file:SCHPO/acn1/acn1-deep-research-falcon.md
+    supporting_text: &gt;-
+      All functional predictions described herein are based on domain-based inference
+- gap_statement: &gt;-
+    The biological process and physiological role of acn1 are unknown. No pathway,
+    developmental role, or cellular process has been established; the only curated
+    biological-process annotation is a root-level &#34;no data&#34; placeholder.
+  boundary: &gt;-
+    acn1 deletion is viable with normal cell morphology, and available phenotypes come
+    almost entirely from genome-wide high-throughput screens (broad drug/stress
+    resistance and sensitivity, minor nitrogen/carbon-source growth changes; PMID:37787768)
+    plus low-throughput overexpression phenotypes (septation defects; PMID:23695302). In a
+    lipotoxicity screen, acn1 deletion did not alter growth on pentadecanoic acid
+    (PMID:40424131). These pleiotropic screen hits do not converge on a mechanism. The
+    PomBase gene name (acn1, from a proposed &#34;ACetylation of Nsf&#34; hypothesis) is not backed
+    by any published functional study.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    Assigning acn1 to a biological process (e.g. neutral-lipid storage, membrane lipid
+    remodeling, or an unrelated pathway) is required to move it out of the conserved-unknown
+    set and to interpret its many screen phenotypes.
+  resolution: &gt;-
+    Targeted loss-of-function and epistasis analysis under lipid-metabolic and
+    stress conditions, combined with the substrate/activity assays above, to connect a
+    defined biochemical activity to a cellular process.
+  provenance:
+  - reference_id: PMID:37787768
+    supporting_text: &gt;-
+      Most biomedical research focuses on genes that are already well-studied
+- gap_statement: &gt;-
+    acn1&#39;s subcellular compartment is unresolved. The family prior (MBOAT enzymes are
+    typically ER-resident) conflicts with the single experimental datum for acn1, a
+    genome-wide GFP screen that reported mitochondrial localization.
+  boundary: &gt;-
+    UniProt records &#34;Mitochondrion membrane&#34; as a multi-pass membrane protein (ECO:0000305
+    curator inference from the ORFeome GFP dataset, PMID:16823372) and PomBase records a
+    mitochondrion HDA localization; no ER localization has been reported for acn1
+    specifically. Characterized MBOAT/DGAT1/ACAT enzymes are ER-membrane proteins,
+    creating a genuine tension between the location prior and the observed screen result.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: CC_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving whether acn1 is truly mitochondrial (which would be unusual for an MBOAT and
+    biologically informative) or ER-localized (matching the family) constrains its likely
+    substrates and pathway.
+  resolution: &gt;-
+    Endogenous-tagged, high-resolution co-localization microscopy with mitochondrial and ER
+    markers, and/or subcellular fractionation, in S. pombe.
+  provenance:
+  - reference_id: UniProt:O74380
+    supporting_text: &#34;SUBCELLULAR LOCATION: Mitochondrion membrane&#34;
+suggested_questions:
+- question: &gt;-
+    Is acn1 a catalytically active acyltransferase, and what acyl-CoA donor and
+    lipid/fatty-alcohol/sterol acceptor does it use?
+- question: &gt;-
+    Does acn1 localize to the endoplasmic reticulum (as expected for an MBOAT) or genuinely
+    to the mitochondrial membrane as suggested by the ORFeome GFP screen?
+- question: &gt;-
+    Does acn1 contribute to neutral-lipid (wax-ester or triacylglycerol/sterol-ester)
+    metabolism in S. pombe, i.e. does an acn1 deletion or overexpression change the lipid
+    droplet / storage-lipid profile?
+suggested_experiments:
+- description: &gt;-
+    Express recombinant acn1 (in S. pombe or a heterologous host) and assay acyltransferase
+    activity in vitro against a panel of acyl-CoA donors and candidate acceptors
+    (diacylglycerol, fatty alcohols, sterols, lysophospholipids), reading out product
+    formation by mass spectrometry.
+  hypothesis: &gt;-
+    acn1 is an acyl-CoA-dependent acyltransferase of the wax-synthase/DGAT1-type MBOAT
+    branch acting in neutral-lipid biosynthesis.
+  experiment_type: in vitro enzyme assay
+- description: &gt;-
+    Compare untargeted lipidomes of an acn1-deletion strain versus wild type (and versus
+    dga1/plh1 mutants) under standard and lipid-stress conditions to detect changes in
+    triacylglycerol, wax esters, sterol esters, or phospholipid species.
+  hypothesis: &gt;-
+    Loss of acn1 alters a specific neutral-lipid or membrane-lipid pool, revealing its
+    in vivo product.
+  experiment_type: comparative lipidomics
+- description: &gt;-
+    Determine acn1 subcellular localization and topology using endogenous fluorescent
+    tagging with co-localization against ER and mitochondrial markers, and protease-protection
+    / topology mapping of the transmembrane helices.
+  hypothesis: &gt;-
+    acn1 resides in the ER membrane (consistent with the MBOAT family) rather than the
+    mitochondrion.
+  experiment_type: fluorescence microscopy and membrane topology
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: UniProt:O74380
+  title: &#34;UniProtKB entry O74380 (YNV5_SCHPO), Uncharacterized membrane protein C3H7.05c&#34;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Primary record for the reviewed protein. Establishes the Wax_synthase_dom / MBOAT_2
+      domain (IPR032805 / PF13813), the nine predicted transmembrane helices, the
+      mitochondrial-membrane subcellular-location inference, and the &#34;Predicted&#34; (PE 4)
+      status. All supporting_text quotes are verbatim from the cached UniProt record.
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast
+    Schizosaccharomyces pombe.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Genome-wide GFP localization screen that underlies the mitochondrial localization
+      call for acn1 (via the UniProt SubCell inference and PomBase HDA annotation).
+      Cached entry is abstract-only and does not name acn1 in the abstract, so it is
+      supporting/contextual rather than a direct functional characterization.
+- id: PMID:37787768
+  title: Broad functional profiling of fission yeast proteins using phenomics and machine
+    learning.
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Large-scale dark-gene phenomics study; the source of most acn1 FYPO phenotype
+      annotations (broad drug/stress resistance and sensitivity). Frames the
+      conserved-unknown (&#34;unknome&#34;) problem that acn1 exemplifies. Provides pleiotropic
+      screen phenotypes, not mechanism.
+- id: PMID:40424131
+  title: Formation of giant ER sheets by pentadecanoic acid causes lipotoxicity in fission
+    yeast.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Lipotoxicity screen contributing the FYPO annotation that acn1 deletion shows normal
+      growth on pentadecanoic acid (a negative result). acn1 is not discussed in the paper&#39;s
+      body text; relevant only as screen context linking acn1 to lipid metabolism datasets.
+- id: file:SCHPO/acn1/acn1-deep-research-falcon.md
+  title: &#34;Deep research report (falcon/Edison): acn1 / SPBC3H7.05c functional annotation&#34;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Automated deep-research synthesis. Its acn1-specific conclusion (no primary functional
+      characterization exists; function inferable only from the MBOAT/wax-synthase domain)
+      is consistent with independent inspection of UniProt, PomBase, and the primary
+      literature. Its DOI citations are MBOAT-family reviews, not acn1-specific studies, and
+      are treated as family background only. Note it double-lists IPR032805 and PF13813 as
+      two domains; they are the same domain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

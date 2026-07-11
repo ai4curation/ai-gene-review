@@ -66,30 +66,12 @@ clearly labeled as review-level or database-level support.
 Evaluate the hypothesis from the supplied seed context, primary literature, and
 publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
 when they already exist in the repository, are intentionally withheld from this
-prompt so the report can be compared against them after the run.
-
-Do not rely on literature alone. Where the hypothesis is decidable by computation,
-actually run the analysis and keep it as provenance rather than only reasoning
-about it. Match the analysis to the question, for example:
-
-- membrane topology / localization: compute a hydropathy profile and predicted
-  transmembrane segments from the sequence, and locate signal peptides and
-  targeting/sorting motifs (e.g. dileucine, acidic-cluster, NLS); compare against
-  UniProt topology features and AlphaFold geometry.
-- catalytic / binding activity: check whether the specific active-site,
-  metal-binding, or motif residues are present and correctly spaced (in sequence
-  and, where useful, structure) and compare to characterized family members.
-- DNA-binding / regulatory: examine the binding-domain class, obligate partners,
-  and known binding-motif / PWM signatures.
-- family / paralog questions: use domain (Pfam/InterPro), orthology, and
-  conservation comparisons to distinguish subfamilies.
-
-Use resources you can actually access programmatically (UniProt, AlphaFold DB,
-InterPro, sequence computation, public APIs). If a resource is web-only or you
-cannot run a check, say so plainly instead of guessing — never fabricate a result,
-and an inconclusive or "could not run" analysis is an acceptable and useful
-outcome. Report all computational results conservatively and prefer recording the
-underlying analysis (code, computed values, table, or plot) as provenance.
+prompt so the report can be compared against them after the run. Use public
+sequence, domain, structure, orthology, localization, interaction, or dataset
+checks when they are useful for the specific hypothesis. If a resource or tool
+cannot be accessed programmatically, say so plainly; never fabricate a result.
+Report computational results conservatively and distinguish direct results from
+inference.
 
 ## Required Output
 

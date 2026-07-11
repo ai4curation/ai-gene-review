@@ -1,0 +1,2966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EFM6 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>EFM6</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P53970" target="_blank" class="term-link">
+                        P53970
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Saccharomyces cerevisiae</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "EFM6";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P53970" data-a="DESCRIPTION: EFM6 (YNL024C) is a cytoplasmic S-adenosyl-L-methi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>EFM6 (YNL024C) is a cytoplasmic S-adenosyl-L-methionine-dependent protein-lysine N-methyltransferase of the seven-beta-strand (Class I) methyltransferase superfamily, specifically a member of methyltransferase family 16 (MTF16) within the METTL21 clade. It methylates the eukaryotic translation elongation factor 1A (eEF1A, encoded in S. cerevisiae by the paralogous genes TEF1 and TEF2) on lysine 390. EFM6 is one of a set of dedicated elongation-factor methyltransferases in budding yeast; the four known lysine methylations of eEF1A are each installed by a distinct enzyme, with EFM6 responsible for the Lys390 site. The enzyme is highly substrate-specific: despite being the closest yeast sequence homolog of the human Hsp70-specific methyltransferase METTL21A, it does not methylate yeast Hsp70 proteins. eEF1A-Lys390 methylation is a low-occupancy modification and is not conserved to mammalian eEF1A; the physiological consequence of the modification is not established.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008276" target="_blank" class="term-link">
+                                    GO:0008276
+                                </a>
+                            </span>
+                            <span class="term-label">protein methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0008276" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically inferred protein methyltransferase activity. Correct but general: EFM6 is experimentally a protein-LYSINE N-methyltransferase acting on eEF1A-Lys390 (PMID:26115316), a specific child of this term. Retained as a valid parent; the specific molecular function is captured by GO:0016279.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The essence (protein methyltransferase) is correct, but a more informative and experimentally supported term exists (GO:0016279 protein-lysine N-methyltransferase activity, already annotated by IEA and consistent with PMID:26115316).
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">TERM SCOPING PROBLEM</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000378681</span>
+
+                                    &middot; METTL21/protein methyltransferase family node
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                    <div class="propagation-comment">The family-level protein methyltransferase activity is correct for EFM6, but the IBA term is a general parent; EFM6&#39;s experimentally established activity is the more specific protein-lysine N-methyltransferase activity (GO:0016279), so this is a granularity issue, not a bad transfer.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016279" target="_blank" class="term-link">
+                                    protein-lysine N-methyltransferase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26115316" target="_blank" class="term-link">
+                                        PMID:26115316
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we here show that the YNL024C gene is required for methylation of eEF1A at Lys390, the only of these methylations for which the responsible MTase has not yet been identified.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic cytoplasmic-localization annotation (UniProt SubCell/UniRule). Consistent with the experimental HDA localization (PMID:14562095) and with a translation-associated cytoplasmic methyltransferase.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008757" target="_blank" class="term-link">
+                                    GO:0008757
+                                </a>
+                            </span>
+                            <span class="term-label">S-adenosylmethionine-dependent methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0008757" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Electronic (ARBA) SAM-dependent methyltransferase activity. Correct general parent term; the SAM-binding scaffold (motif I region, residues around 51/87-89/115) is intact in EFM6 and its SAM-dependent activity is experimentally established (PMID:26115316). More specific term GO:0016279 also annotated.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016279" target="_blank" class="term-link">
+                                    GO:0016279
+                                </a>
+                            </span>
+                            <span class="term-label">protein-lysine N-methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0016279" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Protein-lysine N-methyltransferase activity, the correct specific molecular function. This exactly matches the experimental demonstration that EFM6 methylates eEF1A on the epsilon-amino group of Lys390 (PMID:26115316). Core molecular function of EFM6.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/26115316" target="_blank" class="term-link">
+                                        PMID:26115316
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">over-expression of Ynl024c caused a dramatic increase in Lys390 methylation, with trimethylation becoming the predominant state.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008757" target="_blank" class="term-link">
+                                    GO:0008757
+                                </a>
+                            </span>
+                            <span class="term-label">S-adenosylmethionine-dependent methyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12872006" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12872006
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Automated identification of putative methyltransferases from...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0008757" data-r="PMID:12872006" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity prediction of SAM-dependent methyltransferase activity from the genome-wide Katz/Clarke MTase catalog. A correct general parent term, later confirmed experimentally (PMID:26115316). Redundant with the ARBA IEA annotation to the same term.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14562095
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Global analysis of protein localization in budding yeast.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0005737" data-r="PMID:14562095" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Experimental (high-throughput GFP) cytoplasmic localization from the global yeast localization study. Consistent with EFM6 acting on the abundant cytoplasmic translation factor eEF1A. Core cellular location.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P53970" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Root biological_process with No Data. This honestly reflects the state of knowledge: although EFM6&#39;s molecular function (eEF1A-Lys390 methylation) is established, the downstream biological process served by this low-occupancy modification is unknown and described as an enigma (PMID:26115316). No specific BP should be invented.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The biological role of EFM6-mediated eEF1A methylation is genuinely undetermined in the literature; ND is the appropriate state rather than an over-annotated process term.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>S-adenosyl-L-methionine-dependent protein-lysine N-methyltransferase that monomethylates (and, when overexpressed, di-/tri-methylates) eukaryotic translation elongation factor 1A (eEF1A; TEF1/TEF2) on Lys390 in the cytoplasm. EFM6 is highly specific for this eEF1A site and is the dedicated enzyme for the Lys390 modification, distinct from the other elongation-factor methyltransferases.</h3>
+                <span class="vote-buttons" data-g="P53970" data-a="FUNCTION: S-adenosyl-L-methionine-dependent protein-lysine N..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016279" target="_blank" class="term-link">
+                            protein-lysine N-methyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26115316" target="_blank" class="term-link">
+                                PMID:26115316
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we here show that the YNL024C gene is required for methylation of eEF1A at Lys390, the only of these methylations for which the responsible MTase has not yet been identified.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/26115316" target="_blank" class="term-link">
+                                PMID:26115316
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">demonstrating that the enzyme is highly specific for eEF1A</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with manually curated functional descriptions</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic transfer of experimentally verified manual GO annotation data to orthologs using Ensembl Compara</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined automated annotation with UniProt keyword to GO mapping and UniRule</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12872006" target="_blank" class="term-link">
+                            PMID:12872006
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automated identification of putative methyltransferases from genomic open reading frames.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide computational method assigning S-adenosylmethionine-dependent methyltransferase functionality to yeast open reading frames on the basis of seven-strand twisted beta-sheet signature motifs; source of the ISS methyltransferase-activity prediction for EFM6.</div>
+
+                        <div class="finding-text">"automatic assignment of S-adenosylmethionine (AdoMet)-dependent methyltransferase functionality to genomic open reading frames based on predicted protein sequences."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14562095" target="_blank" class="term-link">
+                            PMID:14562095
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Global analysis of protein localization in budding yeast.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Genome-wide GFP-fusion localization study; the basis for the experimental (HDA) cytoplasmic localization annotation for EFM6.</div>
+
+                        <div class="finding-text">"a collection of yeast strains expressing full-length, chromosomally tagged green fluorescent protein fusion proteins"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26115316" target="_blank" class="term-link">
+                            PMID:26115316
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Saccharomyces cerevisiae Eukaryotic Elongation Factor 1A (eEF1A) Is Methylated at Lys-390 by a METTL21-Like Methyltransferase.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">YNL024C/EFM6 is required for methylation of eEF1A at Lys390; the residue is monomethylated in wild-type cells but exclusively unmethylated in a ynl024c deletion strain, establishing EFM6 as the responsible methyltransferase.</div>
+
+                        <div class="finding-text">"we here show that the YNL024C gene is required for methylation of eEF1A at Lys390, the only of these methylations for which the responsible MTase has not yet been identified."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Overexpression of EFM6 dramatically increases eEF1A-Lys390 methylation, with trimethylation becoming predominant, demonstrating that EFM6 activity drives the modification.</div>
+
+                        <div class="finding-text">"over-expression of Ynl024c caused a dramatic increase in Lys390 methylation, with trimethylation becoming the predominant state."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EFM6 directly methylates eEF1A in vitro (GTP-dependent labelling of the ~50 kDa eEF1A band by an E. coli extract expressing EFM6), indicating a direct methyltransferase activity on eEF1A rather than an indirect effect.</div>
+
+                        <div class="finding-text">"when GTP was present, a markedly stronger, Ynl024c-specific labelling was observed in the 50 kDa region of the ynl024cΔ yeast extract"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EFM6 is highly specific for eEF1A and, unlike its closest human homolog METTL21A, does not methylate yeast Hsp70 proteins.</div>
+
+                        <div class="finding-text">"demonstrating that the enzyme is highly specific for eEF1A"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">EFM6 harbours the conserved seven-beta-strand methyltransferase motifs (Motif I, Motif post I, Motif II) and the MTF16 hallmark DXXY motif, confirming it as a Class I SAM-dependent methyltransferase.</div>
+
+                        <div class="finding-text">"Ynl024c harbours hallmark conserved motifs found in 7BS MTases, i. e. Motif I, Motif post I and Motif II"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The biological significance of EFM6-mediated eEF1A-Lys390 methylation is unknown and remains to be determined.</div>
+
+                        <div class="finding-text">"the precise function of Efm6-mediated eEF1A methylation does remain an enigma and further studies are required to reveal its role."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the physiological function of eEF1A-Lys390 methylation, and under what conditions (stress, sporulation, aging) is it regulated?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Yeast translation and elongation-factor biologists, Protein methylation / post-translational modification biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53970" data-a="Q: What is the physiological function of eEF1A-Lys390..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does EFM6 act as a standalone methyltransferase on eEF1A, and does the GTP/GDP conformational state of eEF1A gate the modification?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Methyltransferase enzymologists, eEF1A structural biologists</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53970" data-a="Q: Does EFM6 act as a standalone methyltransferase on..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare efm6Δ and eEF1A-K390R strains to wild type across growth, translational fidelity, stress and sporulation conditions, and non-canonical eEF1A assays (actin bundling, nuclear export), including quantitative phenotyping and proteomics.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: eEF1A-Lys390 methylation modulates a specific (possibly non-canonical) eEF1A function or a stress/aging response rather than bulk translation.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative phenotyping / functional assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53970" data-a="EXPERIMENT: Compare efm6Δ and eEF1A-K390R strains to wild type..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute methylation with purified active EFM6 and eEF1A in defined GTP- vs GDP-bound states and measure steady-state kinetics; if soluble EFM6 cannot be purified, use co-expression or on-substrate/extract-based quantitative assays.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: EFM6 is a self-sufficient methyltransferase whose activity depends on the eEF1A nucleotide state.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P53970" data-a="EXPERIMENT: Reconstitute methylation with purified active EFM6..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The biological process served by EFM6-mediated methylation of eEF1A at Lys390 is undetermined. It is not known why this specific low-occupancy lysine methylation is installed, what phenotype (if any) it modulates, or which of eEF1A&#39;s canonical (translation) or non-canonical (e.g. actin bundling, nuclear export) activities it influences.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">BP_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The molecular function is firmly established: EFM6 is a SAM-dependent protein-lysine N-methyltransferase that specifically and directly methylates eEF1A on Lys390 (deletion abolishes the modification, overexpression drives di/tri-methylation, and an EFM6-containing extract methylates eEF1A in vitro). What is unknown is the downstream consequence, not the activity or the substrate site.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> eEF1A is one of the most abundant proteins in the cell and carries four distinct, enzyme-dedicated lysine methylations; understanding what the Lys390 mark does would clarify why the cell maintains a dedicated methyltransferase for a modification present on only a small fraction of eEF1A molecules, and whether it tunes a specific eEF1A subfunction or acts as a regulated switch.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Determine a phenotype for efm6Δ (and for eEF1A K390R) under stress/aging/sporulation and non-canonical eEF1A assays; test whether Lys390 methylation is regulated in response to physiological cues; identify any interacting demethylase; measure effects on translational fidelity and on eEF1A actin/nuclear functions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"the precise function of Efm6-mediated eEF1A methylation does remain an enigma and further studies are required to reveal its role."</em> — PMID:26115316</li>
+
+                <li><em>"simultaneous mutations of the four lysine methylation sites to arginine does not affect the proliferation rate of the resulting mutant yeast strain nor the enzymatic properties of the eEF1A protein in vitro"</em> — PMID:26115316</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether EFM6 is enzymatically active as an isolated, purified protein, and its steady-state kinetic parameters and possible cofactor/partner requirements on eEF1A, are not established.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Direct methylation was demonstrated only from crude E. coli extracts overexpressing EFM6 (and required GTP), because soluble recombinant EFM6 with activity could not be purified; genetic and in vivo evidence for EFM6-dependent Lys390 methylation is nonetheless unambiguous.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A reconstituted single-enzyme assay would confirm EFM6 acts alone (versus needing a partner or a particular eEF1A/GTP conformational state) and enable mechanistic and structural study of an otherwise well-defined activity.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Obtain soluble active recombinant EFM6 (e.g. alternative tags/hosts, co-expression with eEF1A, or on-substrate assays) and measure kinetics against eEF1A in defined GTP/GDP-bound states.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"We were unable to purify recombinant soluble Efm6 protein showing activity on eEF1A."</em> — PMID:26115316</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Whether EFM6 has any substrate other than eEF1A-Lys390 is untested beyond the exclusion of yeast Hsp70 proteins.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> EFM6 does not methylate yeast Hsp70 (Ssa1/Ssb1/Ssb2) despite being the closest yeast homolog of the Hsp70-specific human METTL21A, and it is highly specific for eEF1A; no unbiased, proteome-wide substrate screen for EFM6 has been reported.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Excluding or discovering additional substrates would define the full functional scope of the enzyme and rule out (or in) a broader role beyond eEF1A.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Perform an activity-based, proteome-wide substrate screen (e.g. using EFM6 as enzyme source with a methyltransferase-deficient extract, or SILAC/heavy-methyl profiling of efm6Δ vs WT).</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"demonstrating that the enzyme is highly specific for eEF1A"</em> — PMID:26115316</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(EFM6-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53970" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Comprehensive Research Report: EFM6 (YNL024C) — A Protein-Lysine N-Methyltransferase in *Saccharomyces cerevisiae*</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-05T13:07:08.944777</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="EFM6-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="EFM6-deep-research-falcon_artifacts/artifact-01.md" class="term-link">Edison artifact artifact-01</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="comprehensive-research-report-efm6-ynl024c-a-protein-lysine-n-methyltransferase-in-saccharomyces-cerevisiae">Comprehensive Research Report: EFM6 (YNL024C) — A Protein-Lysine N-Methyltransferase in <em>Saccharomyces cerevisiae</em></h1>
+<h2 id="1-gene-and-protein-identity">1. Gene and Protein Identity</h2>
+<p>EFM6 (Elongation Factor Methyltransferase 6) is encoded by the <em>YNL024C</em> open reading frame in <em>Saccharomyces cerevisiae</em> (strain ATCC 204508 / S288c). The protein was originally uncharacterized and was renamed from Ynl024c to Efm6 following the discovery of its enzymatic function, in accordance with the nomenclature established for similar elongation factor methyltransferases in yeast (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2). The gene product is classified as a class I-like SAM-binding methyltransferase belonging to the seven-β-strand (7BS) methyltransferase superfamily, specifically within Methyltransferase Family 16 (MTF16), which also includes the human METTL21 proteins (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7).</p>
+<p>The key properties of EFM6 are summarized below:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene name</td>
+<td><strong>EFM6</strong> (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2)</td>
+</tr>
+<tr>
+<td>Systematic name</td>
+<td><strong>YNL024C</strong> (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2)</td>
+</tr>
+<tr>
+<td>UniProt accession</td>
+<td><strong>P53970</strong></td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Saccharomyces cerevisiae</em> strain S288c / ATCC 204508 (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2)</td>
+</tr>
+<tr>
+<td>Protein length / molecular weight</td>
+<td>Not established in the gathered literature evidence; refer to UniProt entry P53970 for sequence-level metadata</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>Class I-like SAM-binding methyltransferase; seven-β-strand (7BS) methyltransferase; Methyltransferase Family 16 (MTF16); METTL21-like protein (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Key domains</td>
+<td>EFM6; Methyltransf_16 / IPR019410; SAM-dependent methyltransferases superfamily / IPR029063; PF10294 (from UniProt annotation)</td>
+</tr>
+<tr>
+<td>Enzymatic activity</td>
+<td>Protein-lysine N-methyltransferase; catalyzes methylation of eEF1A lysine residue using AdoMet/SAM; EC 2.1.1.- (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14)</td>
+</tr>
+<tr>
+<td>Substrate</td>
+<td>Eukaryotic elongation factor 1A (eEF1A), specifically <strong>Lys390</strong> in the 2015 primary paper; some reviews number the equivalent site as Lys395 (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Methyl donor</td>
+<td>S-adenosylmethionine / AdoMet / SAM (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Key catalytic / cofactor-binding residues</td>
+<td><strong>Asp170</strong> and <strong>Tyr173</strong> in the DXXY motif, <strong>Trp143</strong> stacking with the adenine of AdoMet, and <strong>Asp115</strong> contacting the ribose moiety of AdoMet (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Conserved motifs / fold</td>
+<td>Canonical 7BS methyltransferase Motif I, Post I, Motif II, and downstream <strong>DXXY</strong> motif; modeled canonical 7BS topology with two additional N-terminal β-strands (z1, z2) (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>In vivo methylation level</td>
+<td>In wild-type yeast, Lys390 methylation is low-occupancy, about <strong>~20% monomethylation</strong> / ~0.2 methyl groups per eEF1A molecule; overexpression of Efm6 markedly increases methylation and can drive higher methylation states including trimethylation (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 7-9)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Not directly established in the gathered EFM6 literature; <strong>cytoplasmic localization is inferred</strong> from its substrate eEF1A and role in translation elongation (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4, jakobsson2018regulationofeukaryotic pages 7-9)</td>
+</tr>
+<tr>
+<td>Biological pathway / process</td>
+<td>Post-translational modification of the translation elongation factor eEF1A within the broader eEF1A methylation network that modulates translation-related functions; EFM6 expression is reported to increase under hypoxia (jakobsson2018regulationofeukaryotic pages 5-7, jakobsson2018regulationofeukaryotic pages 7-9)</td>
+</tr>
+<tr>
+<td>Closest human homologs</td>
+<td>Closely related to <strong>METTL21 family</strong> proteins, especially <strong>METTL21A</strong>, and discussed in relation to human <strong>eEF1A-KMT3/METTL21B</strong> as a close functional family member; however, mammalian eEF1A Lys392 (equivalent position) is unmethylated, indicating divergence in substrate/site usage (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 4-5, jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the core molecular, enzymatic, structural, and functional properties of the yeast EFM6/YNL024C protein based on the gathered evidence and the supplied UniProt record. It is useful as a compact reference for functional annotation and for distinguishing EFM6 from related METTL21-family methyltransferases.</em></p>
+<h2 id="2-enzymatic-activity-and-substrate-specificity">2. Enzymatic Activity and Substrate Specificity</h2>
+<h3 id="21-primary-reaction">2.1 Primary Reaction</h3>
+<p>EFM6 functions as a protein-lysine N-methyltransferase (EC 2.1.1.-). Its sole identified substrate is eukaryotic translation elongation factor 1A (eEF1A), and it specifically catalyzes the methylation of lysine 390 (Lys390) on this protein using S-adenosylmethionine (AdoMet/SAM) as the methyl donor (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14). EEF1A is a highly abundant, essential protein that functions as the eukaryotic homolog of bacterial EF-Tu, delivering aminoacylated tRNAs to the ribosomal A-site during the elongation phase of mRNA translation (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4).</p>
+<h3 id="22-methylation-stoichiometry-and-dynamics">2.2 Methylation Stoichiometry and Dynamics</h3>
+<p>In wild-type yeast cells, Lys390 methylation occurs at very low occupancy, with only approximately 20% of eEF1A molecules bearing monomethylation at this residue (~0.2 methyl groups per eEF1A molecule) (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 7-9). In a <em>ynl024c</em>Δ knockout strain, Lys390 is exclusively unmethylated, confirming that Efm6 is the sole enzyme responsible for this modification (jakobsson2015saccharomycescerevisiaeeukaryotic pages 7-9). Notably, overexpression of Efm6 causes a dramatic increase in Lys390 methylation, elevating it to approximately 2 methyl groups per eEF1A molecule, with trimethylation becoming the predominant modification state (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 7-9). This observation indicates that the entire cellular pool of eEF1A is accessible as substrate for Efm6, and that the low in vivo methylation level reflects limited Efm6 enzyme availability under normal growth conditions rather than substrate inaccessibility (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14).</p>
+<h3 id="23-substrate-specificity-what-efm6-does-not-methylate">2.3 Substrate Specificity — What EFM6 Does Not Methylate</h3>
+<p>Despite high sequence similarity to human METTL21A — an Hsp70-specific lysine methyltransferase — Efm6 does not methylate yeast Hsp70 proteins (SSA1, SSA3, SSB1, SSB2) at their corresponding lysine residues (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4, jakobsson2015saccharomycescerevisiaeeukaryotic pages 7-9, jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2). This finding indicates that while Efm6 and METTL21A share structural features, they have diverged in substrate specificity. EFM6 was the last of the four previously known eEF1A methylation sites to have its responsible methyltransferase identified (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14).</p>
+<h2 id="3-structural-basis-of-catalytic-activity">3. Structural Basis of Catalytic Activity</h2>
+<p>Efm6 adopts the canonical seven-β-strand (7BS) methyltransferase fold, with two additional N-terminal β-strands (z1 and z2) as revealed by structural modeling using human METTL21A as a template (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7). The protein contains several conserved motifs characteristic of class I methyltransferases:</p>
+<ul>
+<li><strong>Motif I, Post I, and Motif II</strong>: canonical SAM-binding motifs of the 7BS family.</li>
+<li><strong>DXXY motif</strong>: a hallmark of MTF16 family enzymes, located downstream of Motif II. In Efm6, the key catalytic residues <strong>Asp170</strong> and <strong>Tyr173</strong> within this motif are positioned near the methyl group of AdoMet.</li>
+<li><strong>Trp143</strong>: stacks with the adenine base of AdoMet, contributing to cofactor binding.</li>
+<li><strong>Asp115</strong> (in Motif Post I): forms hydrogen bonds with hydroxyl groups on the ribose moiety of AdoMet (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7).</li>
+</ul>
+<p>Sequence comparison reveals that Efm6 shows higher similarity to human METTL21A than to any other <em>S. cerevisiae</em> protein, including the related yeast methyltransferase Efm2 (jakobsson2015saccharomycescerevisiaeeukaryotic pages 4-5, jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7). The structural and sequence similarity between Efm6 and the METTL21 family is even higher than between some human METTL21 paralogs themselves (jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7).</p>
+<h2 id="4-context-within-the-eef1a-methylation-landscape">4. Context Within the eEF1A Methylation Landscape</h2>
+<p>EEF1A in <em>S. cerevisiae</em> is one of the most extensively post-translationally modified translation factors, bearing methylation at multiple lysine residues. Five dedicated eEF1A-specific lysine methyltransferases have been identified in yeast, each targeting a distinct residue:</p>
+<table>
+<thead>
+<tr>
+<th>Enzyme</th>
+<th>Systematic name / gene</th>
+<th>Target residue on <em>S. cerevisiae</em> eEF1A</th>
+<th>Methylation state</th>
+<th>MTase family</th>
+<th>Human orthologue / counterpart (if known)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Efm1</td>
+<td><strong>EFM1</strong></td>
+<td>Lys30</td>
+<td>Monomethylation</td>
+<td>SET-domain KMT</td>
+<td>No clear human orthologue established in the gathered evidence</td>
+<td>One of the first yeast eEF1A-specific KMTs identified (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Efm4</td>
+<td><strong>EFM4</strong></td>
+<td>Lys316</td>
+<td>Dimethylation</td>
+<td>7BS methyltransferase</td>
+<td>METTL10 / eEF1A-KMT2; human site Lys318 trimethylated</td>
+<td>Yeast Lys316 methylation is conserved functionally to human Lys318 methylation (jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Efm5</td>
+<td><strong>EFM5</strong></td>
+<td>Lys79</td>
+<td>Trimethylation</td>
+<td>7BS methyltransferase</td>
+<td>N6AMT2 / eEF1A-KMT1</td>
+<td>Originally notable because a putative RNA MTase was found to methylate eEF1A Lys79 (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td><strong>Efm6</strong></td>
+<td><strong>YNL024C / EFM6</strong></td>
+<td><strong>Lys390</strong> (also referred to as Lys395 in some review numbering)</td>
+<td><strong>Primarily monomethylation in vivo; overexpression can drive higher methylation, including trimethylation</strong></td>
+<td><strong>7BS methyltransferase; MTF16 / METTL21-like</strong></td>
+<td><strong>No direct human orthologue for the same site; closest homologue discussed is METTL21B / eEF1A-KMT3, but mammalian Lys392 is unmethylated</strong></td>
+<td><strong>Focus of this report. Identified as the enzyme responsible for the previously orphan eEF1A Lys390 methylation site in yeast</strong> (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2018regulationofeukaryotic pages 7-9, jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+<tr>
+<td>Efm7</td>
+<td><strong>EFM7</strong></td>
+<td>Lys3</td>
+<td>Dimethylation</td>
+<td>7BS methyltransferase</td>
+<td>No human orthologue specified in the gathered evidence</td>
+<td>Dual activity: also methylates the N-terminus of eEF1A (jakobsson2018regulationofeukaryotic pages 5-7)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table summarizes the known eEF1A-specific lysine methyltransferases in </em>S. cerevisiae<em>, their target residues, methylation states, enzyme families, and human counterparts where known. Efm6/YNL024C is highlighted because it is the focus gene and catalyzes the Lys390 methylation event discussed in the report.</em></p>
+<p>Each of these methyltransferases was identified primarily through knockout studies in <em>S. cerevisiae</em>, followed by mass spectrometric analysis of eEF1A methylation status (jakobsson2018regulationofeukaryotic pages 5-7, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14). The methylation at Lys79 and Lys316 is conserved to human eEF1A, with human orthologs N6AMT2 (eEF1A-KMT1) and METTL10 (eEF1A-KMT2) catalyzing the corresponding modifications (jakobsson2018regulationofeukaryotic pages 5-7). Except for Efm1, which is a SET-domain protein, all of the identified eEF1A-specific KMTs in yeast and human belong to the 7BS family of methyltransferases (jakobsson2018regulationofeukaryotic pages 5-7).</p>
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>The subcellular localization of Efm6 has not been explicitly established through dedicated localization studies in the literature reviewed. However, its function can be confidently inferred to occur in the <strong>cytoplasm</strong>, as its substrate eEF1A is a cytoplasmic translation elongation factor that functions at the ribosome during mRNA translation (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4). The closest human homolog of Efm6 discussed in this context — eEF1A-KMT3/METTL21B — has been shown to be partially cytosolic and partially localized to centrosomes, suggesting potential non-canonical functions (jakobsson2018regulationofeukaryotic pages 7-9, jakobsson2018regulationofeukaryotic pages 5-7). It has been suggested that eEF1A methylation may occur prior to complex assembly, as proteins within larger complexes may become inaccessible for methylation once assembled (jakobsson2015saccharomycescerevisiaeeukaryotic pages 14-16).</p>
+<h2 id="6-biological-significance-and-pathway-context">6. Biological Significance and Pathway Context</h2>
+<h3 id="61-role-in-translation-regulation">6.1 Role in Translation Regulation</h3>
+<p>EEF1A is a GTPase that delivers aminoacylated tRNAs to the ribosomal A-site during translational elongation, and its proper function is critical for efficient and accurate protein synthesis (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4). The ablation of eEF1A-modifying methyltransferases has been associated with translation-related phenotypes such as decreased accuracy of protein synthesis and increased sensitivity to protein synthesis inhibitors (jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4). However, the specific functional consequence of Lys390 methylation by Efm6 remains largely elusive. Structural analysis of eEF1A revealed that Lys390 does not show striking co-localization with residues involved in known eEF1A functional activities, including actin interaction, nuclear transport, GTP-binding, or tRNA binding (jakobsson2015saccharomycescerevisiaeeukaryotic pages 14-16, jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14).</p>
+<h3 id="62-hypoxia-responsive-regulation">6.2 Hypoxia-Responsive Regulation</h3>
+<p>A particularly notable finding is that <em>EFM6</em> expression is strongly upregulated by hypoxia, suggesting that Efm6-mediated Lys390 methylation may serve as a hypoxia-inducible modulator of protein synthesis (jakobsson2018regulationofeukaryotic pages 7-9). This dynamic, inducible nature of Efm6-mediated methylation is consistent with a regulatory rather than constitutive "editing" role for this modification (jakobsson2018regulationofeukaryotic pages 7-9). The concept of dynamic, stress-responsive eEF1A methylation has been extended to the mammalian system, where the close Efm6 family member eEF1A-KMT3 is induced by various stressors such as growth factor withdrawal and ER stress, with concomitant increases in methylation at its target site (jakobsson2018regulationofeukaryotic pages 5-7).</p>
+<h3 id="63-phenotypic-effects-of-loss-of-eef1a-methylation">6.3 Phenotypic Effects of Loss of eEF1A Methylation</h3>
+<p>A yeast quadruple mutant in which all four previously known methylated lysine residues of eEF1A (K30R, K79R, K316R, K395R) were simultaneously replaced with arginine was viable and showed no obvious growth phenotype under standard laboratory conditions (jakobsson2018regulationofeukaryotic pages 7-9). This suggests that the effects of eEF1A lysine methylation on the basic, essential function of eEF1A are modest during near-optimal growth conditions. However, it has been proposed that methylation may protect lysine residues against ubiquitin-mediated degradation, a function that would also be preserved by lysine-to-arginine substitution, potentially masking the true importance of methylation (jakobsson2018regulationofeukaryotic pages 7-9).</p>
+<h3 id="64-the-eef1a-code-hypothesis">6.4 The "eEF1A Code" Hypothesis</h3>
+<p>The abundance and specificity of lysine methylations on eEF1A, installed by multiple dedicated KMTs, has led to the proposal of an "eEF1A code" — analogous to the histone code — in which combinatorial lysine methylation patterns regulate eEF1A function, potentially influencing both canonical translation and non-canonical functions such as actin cytoskeleton regulation and viral replication (jakobsson2018regulationofeukaryotic pages 7-9, jakobsson2018regulationofeukaryotic pages 5-7). Efm6-mediated Lys390 methylation represents one layer of this regulatory code.</p>
+<h2 id="7-evolutionary-conservation-and-divergence">7. Evolutionary Conservation and Divergence</h2>
+<p>Efm6 is the closest <em>S. cerevisiae</em> sequence homolog of the human METTL21 protein family (METTL21A, METTL21B/eEF1A-KMT3, METTL21C, VCP-KMT/METTL21D), with METTL21A being the most closely related human protein in reciprocal BLAST searches (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2, jakobsson2015saccharomycescerevisiaeeukaryotic pages 4-5). Despite this high sequence similarity, the substrate specificity has diverged: human METTL21A methylates Hsp70 proteins, whereas yeast Efm6 methylates eEF1A at Lys390 (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2). Furthermore, the Lys390 residue in eEF1A, although structurally conserved in mammalian eEF1A (corresponding to Lys392), is exclusively unmethylated in rabbit reticulocytes and human HeLa cells, indicating that this particular methylation event is yeast-specific (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14). This represents a case of functional divergence following gene duplication and speciation, where homologous enzymes have acquired different substrate specificities.</p>
+<h2 id="8-summary">8. Summary</h2>
+<p>EFM6 (YNL024C, UniProt P53970) is a seven-β-strand methyltransferase in <em>S. cerevisiae</em> that catalyzes the SAM-dependent monomethylation of eEF1A at Lys390. It was identified in 2015 as the last of the yeast eEF1A-specific lysine methyltransferases (jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2). The enzyme operates in the cytoplasm, where its substrate eEF1A functions in translational elongation. Its methylation activity is notable for being low-occupancy under normal conditions but highly inducible through enzyme overexpression and under hypoxic stress, suggesting a regulatory rather than constitutive role (jakobsson2018regulationofeukaryotic pages 7-9). Although structurally homologous to human METTL21 proteins, Efm6 targets eEF1A rather than Hsp70 proteins, and the Lys390 methylation event it catalyzes is not conserved in mammals (jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14, jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2). The precise functional consequence of Lys390 methylation remains an active area of investigation, but current evidence places it within a broader regulatory framework — the proposed "eEF1A code" — that modulates translation through combinatorial post-translational modifications of this essential elongation factor.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2018regulationofeukaryotic pages 5-7): Magnus E. Jakobsson, Jędrzej Małecki, and Pål Ø. Falnes. Regulation of eukaryotic elongation factor 1 alpha (eef1a) by dynamic lysine methylation. RNA Biology, 15:314-319, Mar 2018. URL: https://doi.org/10.1080/15476286.2018.1440875, doi:10.1080/15476286.2018.1440875. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2018regulationofeukaryotic pages 7-9): Magnus E. Jakobsson, Jędrzej Małecki, and Pål Ø. Falnes. Regulation of eukaryotic elongation factor 1 alpha (eef1a) by dynamic lysine methylation. RNA Biology, 15:314-319, Mar 2018. URL: https://doi.org/10.1080/15476286.2018.1440875, doi:10.1080/15476286.2018.1440875. This article has 64 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 4-5): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 7-9): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jakobsson2015saccharomycescerevisiaeeukaryotic pages 14-16): Magnus E. Jakobsson, Erna Davydova, Jędrzej Małecki, Anders Moen, and Pål Ø. Falnes. Saccharomyces cerevisiae eukaryotic elongation factor 1a (eef1a) is methylated at lys-390 by a mettl21-like methyltransferase. PLoS ONE, 10:e0131426, Jun 2015. URL: https://doi.org/10.1371/journal.pone.0131426, doi:10.1371/journal.pone.0131426. This article has 45 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="EFM6-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+<li><a href="EFM6-deep-research-falcon_artifacts/artifact-01.md">Edison artifact artifact-01</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 1-2</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 5-7</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 2-4</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 7-9</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 12-14</li>
+<li>jakobsson2018regulationofeukaryotic pages 5-7</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 14-16</li>
+<li>jakobsson2018regulationofeukaryotic pages 7-9</li>
+<li>jakobsson2015saccharomycescerevisiaeeukaryotic pages 4-5</li>
+<li>https://doi.org/10.1371/journal.pone.0131426,</li>
+<li>https://doi.org/10.1080/15476286.2018.1440875,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(EFM6-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P53970" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="efm6-ynl024c-curation-notes">EFM6 (YNL024C) — curation notes</h1>
+<p>UniProt: P53970 (EFM6_YEAST). SGD: S000004969. Systematic name YNL024C. 246 aa, 27.7 kDa.<br />
+Standard name EFM6 = "Elongation Factor Methyltransferase 6".</p>
+<h2 id="summary-of-identity-domain-from-uniprot-p53970-record-read-inline">Summary of identity / domain (from UniProt P53970 record, read inline)</h2>
+<ul>
+<li>RecName: <strong>Protein-lysine N-methyltransferase EFM6</strong>; EC=2.1.1.- .</li>
+<li>SIMILARITY: "Belongs to the class I-like SAM-binding methyltransferase superfamily.<br />
+  METTL21 family. EFM6 subfamily." So EFM6 is a <strong>seven-beta-strand (7BS) / Class I<br />
+  SAM-dependent methyltransferase</strong>, specifically an MTase-Family-16 (MTF16 / Methyltransf_16)<br />
+  member. Pfam PF10294 (Methyltransf_16); InterPro IPR033684 (EFM6), IPR019410<br />
+  (Methyltransf_16), IPR029063 (SAM-dependent MTases superfamily). Gene3D 3.40.50.150.<br />
+  HAMAP MF_03198 (Methyltr_EFM6). PANTHER PTHR14614:SF152 "PROTEIN-LYSINE<br />
+  N-METHYLTRANSFERASE EFM6".</li>
+<li><strong>SAM-binding site present</strong> (motif I and downstream elements): UniProt BINDING features<br />
+  for S-adenosyl-L-methionine at residues 51, 87-89, 115, 143, 169 (by similarity to human<br />
+  Q9H867 = METTL21A and HAMAP MF_03198). So the SAM-binding scaffold (motif I region and<br />
+  post-I) is intact → the protein is expected to be a competent SAM-dependent methyltransferase.</li>
+<li>SUBCELLULAR LOCATION: Cytoplasm (HAMAP + PubMed:14562095).</li>
+<li>Abundance: ~1760 molecules/cell in log-phase SD medium (PubMed:14562106).</li>
+</ul>
+<h2 id="known-efm6-specific-experimental-evidence">KNOWN (EFM6-specific experimental evidence)</h2>
+<p>The molecular function of EFM6 is firmly established — this gene is NOT functionally dark;<br />
+only its physiological/biological role is unknown.</p>
+<ul>
+<li><strong>EFM6 methylates eukaryotic elongation factor 1A (eEF1A; TEF1/TEF2) at Lys390.</strong><br />
+  [PMID:26115316 Jakobsson et al. 2015, "we here show that the YNL024C gene is required for<br />
+  methylation of eEF1A at Lys390, the only of these methylations for which the responsible<br />
+  MTase has not yet been identified"].</li>
+<li>Genetic dependence: [PMID:26115316, "Lys390 was found in a partially monomethylated state<br />
+  in wild-type yeast cells but was exclusively unmethylated in a ynl024cΔ strain"].</li>
+<li>Overexpression drives higher methylation: [PMID:26115316, "over-expression of Ynl024c<br />
+  caused a dramatic increase in Lys390 methylation, with trimethylation becoming the<br />
+  predominant state"]. Also [PMID:26115316, "when Ynl024c was overexpressed ... the di- and<br />
+  tri-methylated forms of Lys390 in eEF1A were the dominant species (&gt;70% of total)"].</li>
+<li>Direct catalysis in vitro (crude extract, GTP-dependent): [PMID:26115316, "when GTP was<br />
+  present, a markedly stronger, Ynl024c-specific labelling was observed in the 50 kDa region<br />
+  of the ynl024cΔ yeast extract"] and [PMID:26115316, "Taken together, these results suggest<br />
+  that the Ynl024c protein is capable of directly methylating eEF1A ... but reflect KMT<br />
+  activity of Ynl024c on eEF1A"].</li>
+<li>High substrate specificity for eEF1A (does NOT methylate yeast Hsp70, unlike its closest<br />
+  human homolog METTL21A): [PMID:26115316, "the lysine in Ssa1/Ssb1/Ssb2 that correspond to<br />
+  the target site of human METTL21A in Hsp70 was exclusively found as unmethylated in cells<br />
+  overexpressing Ynl024c ... demonstrating that the enzyme is highly specific for eEF1A"] and<br />
+  [PMID:26115316, "yeast Hsp70 proteins are unmethylated ... consequently, that Ynl024c is<br />
+  likely not a functional orthologue of human METTL21A"].</li>
+<li>Domain/motif analysis (bioinformatics in the same paper): [PMID:26115316, "an alignment of<br />
+  Ynl024c with the human METTL21 proteins clearly demonstrates that Ynl024c harbours hallmark<br />
+  conserved motifs found in 7BS MTases, i. e. Motif I, Motif post I and Motif II ... Ynl024c<br />
+  possesses the characteristic DXXY ... motif"]. Predicted catalytic residues Asp170/Tyr173<br />
+  (DXXY), Trp143, Asp115 (post-I) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>.</li>
+<li>Cytoplasmic localization (global GFP study): [PMID:14562095 Huh et al. 2003] — HDA evidence<br />
+  in GOA; consistent with a translation-machinery-associated enzyme.</li>
+<li>Putative-MTase prediction (genome-wide bioinformatics, basis of ISS): [PMID:12872006 Katz,<br />
+  Dlakić, Clarke 2003, "automatic assignment of S-adenosylmethionine (AdoMet)-dependent<br />
+  methyltransferase functionality to genomic open reading frames"]; abstract-only.</li>
+</ul>
+<h2 id="separating-efm6-from-the-other-efm-methyltransferases">Separating EFM6 from the other EFM methyltransferases</h2>
+<p>eEF1A carries four methylated lysines, each installed by a distinct, dedicated enzyme<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>:<br />
+- <strong>Lys30</strong> by <strong>Efm1</strong> (Yhl039w; a SET-domain enzyme, not 7BS) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>.<br />
+- <strong>Lys79</strong> by <strong>Efm5</strong> (YGR001C) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>.<br />
+- <strong>Lys316</strong> by <strong>Efm4</strong> / See1 (human ortholog METTL10) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>. (The paper's<br />
+  abstract writes "Lys318" but the Results table and Discussion consistently write "Lys316";<br />
+  the Efm4/See1 site is the same eEF1A dimethylation regardless of the numbering slip.)<br />
+- <strong>Lys390</strong> by <strong>Efm6</strong> / Ynl024c (this gene) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>.</p>
+<p>Other "Efm" enzymes act on eEF2, not eEF1A: Efm2 (YBR271W, eEF2 Lys613) and Efm3 (YJR129C,<br />
+eEF2 Lys509; human ortholog FAM86A/eEF2-KMT) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a>. Efm2 is EFM6's closest yeast<br />
+paralog (BLAST e=7e-7) but has a different substrate (eEF2). <strong>Care must be taken NOT to<br />
+transfer eEF2 substrate or the other Lys sites to EFM6.</strong> The Lys390-specific evidence is<br />
+uniquely attributed to YNL024C/EFM6.</p>
+<p>Closest human homolog is METTL21A (HSPA-KMT; e=2e-17), but EFM6 is NOT its functional<br />
+ortholog (see Hsp70 result above). Lys390-equivalent (Lys392) in human/rabbit eEF1A is<br />
+unmethylated [PMID:26115316, "Lys392 was exclusively detected as unmethylated ... mammalian<br />
+METTL21 enzymes do not target this site"] — so the modification and, by extension, EFM6's<br />
+in-vivo role are not conserved to mammals.</p>
+<h2 id="not-known-genuine-knowledge-gaps">NOT known (genuine knowledge gaps)</h2>
+<ul>
+<li><strong>Physiological/biological role of eEF1A-Lys390 methylation is unknown.</strong> [PMID:26115316,<br />
+  "the precise function of Efm6-mediated eEF1A methylation does remain an enigma and further<br />
+  studies are required to reveal its role"]. No downstream biological process can be assigned<br />
+  → BP is legitimately ND.</li>
+<li>No growth/fitness phenotype tied to the methylation: [PMID:26115316, "simultaneous<br />
+  mutations of the four lysine methylation sites to arginine does not affect the proliferation<br />
+  rate of the resulting mutant yeast strain nor the enzymatic properties of the eEF1A protein<br />
+  in vitro"].</li>
+<li>The modification is low-occupancy (~20% mono in WT; a separate study ~5%) <a href="https://pubmed.ncbi.nlm.nih.gov/26115316">PMID:26115316</a> —<br />
+  functional significance of such low stoichiometry is unclear.</li>
+<li>Recombinant soluble Efm6 could not be purified; direct activity shown only from crude<br />
+  extracts, so kinetics / a fully reconstituted single-protein assay are lacking<br />
+  [PMID:26115316, "We were unable to purify recombinant soluble Efm6 protein showing activity<br />
+  on eEF1A"].</li>
+<li>Whether EFM6 has additional substrates beyond eEF1A is untested (only Hsp70 excluded;<br />
+  eEF1A found via candidate approach).</li>
+<li>Regulation (whether Lys390 methylation responds to stimuli / cell state, possible demethylase)<br />
+  is speculative [PMID:26115316 Discussion].</li>
+</ul>
+<h2 id="go-annotation-review-plan">GO annotation review plan</h2>
+<p>7 GOA annotations:<br />
+1. GO:0008276 protein methyltransferase activity — IBA (GO_REF:0000033). Correct but general;<br />
+   EFM6 is specifically a protein-LYSINE N-MTase → MODIFY toward GO:0016279 as core; keep IBA<br />
+   framing. Actually the more specific GO:0016279 is already separately annotated (IEA), so<br />
+   ACCEPT this general IBA as a valid (if less specific) parent; core function captured by<br />
+   GO:0016279.<br />
+2. GO:0005737 cytoplasm — IEA (GO_REF:0000120, UniRule/SubCell). ACCEPT (redundant with HDA).<br />
+3. GO:0008757 SAM-dependent methyltransferase activity — IEA (ARBA). ACCEPT; general parent MF.<br />
+4. GO:0016279 protein-lysine N-methyltransferase activity — IEA (UniRule). ACCEPT — this is<br />
+   the correct specific MF, matching the experimental eEF1A-Lys390 result. CORE.<br />
+5. GO:0008757 SAM-dependent methyltransferase activity — ISS (PMID:12872006). ACCEPT; general<br />
+   parent, computational prediction consistent with experiment.<br />
+6. GO:0005737 cytoplasm — HDA (PMID:14562095). ACCEPT — experimental localization. CORE location.<br />
+7. GO:0008150 biological_process — ND (GO_REF:0000015). ACCEPT/KEEP — BP genuinely unknown<br />
+   (root ND); do not invent a BP. This IS the honest state given the enigmatic role.</p>
+<p>Note: the strongest experimental MF evidence (PMID:26115316, IDA/IMP-grade eEF1A-Lys390) is<br />
+NOT itself in GOA as a separate row, but the IEA GO:0016279 term coincides with it. I will<br />
+cite PMID:26115316 in the review reasons and core_functions.</p>
+<h2 id="falcon-deep-research-efm6-deep-research-falconmd-corroboration-extra-context">Falcon deep-research (EFM6-deep-research-falcon.md) — corroboration + extra context</h2>
+<p>Falcon completed (1279 s, 11 citations) and is fully consistent with the primary paper. It<br />
+draws on PMID:26115316 plus a review I did not cache (Jakobsson, Małecki, Falnes 2018, RNA<br />
+Biology, "Regulation of eukaryotic elongation factor 1 alpha (eEF1A) by dynamic lysine<br />
+methylation", DOI:10.1080/15476286.2018.1440875). Extra context NOT added to the review YAML<br />
+(uncached review → no verifiable supporting_text; recorded here only, not as a GO claim):<br />
+- EFM6 expression reported to be upregulated by hypoxia → possible stress-responsive/regulatory<br />
+  role for Lys390 methylation (per the 2018 review). This strengthens the "regulated switch"<br />
+  hypothesis in the knowledge_gaps but is not itself GO-annotatable evidence for a BP.<br />
+- The "eEF1A code" framing: multiple dedicated KMTs install a combinatorial methylation pattern<br />
+  on eEF1A; methylation may also protect lysines from ubiquitin-mediated degradation (a role<br />
+  that would be preserved by K→R and thus masked in the quadruple-K→R mutant).<br />
+- Efm7 (EFM7) methylates eEF1A Lys3 (a fifth eEF1A KMT, post-dating the 2015 paper). So the<br />
+  full set of yeast eEF1A KMTs is Efm1 (Lys30, SET), Efm4/See1 (Lys316), Efm5 (Lys79),<br />
+  Efm6 (Lys390, this gene), Efm7 (Lys3). Care: keep EFM6 = Lys390 only.<br />
+- The alternate residue number "Lys395" seen in some reviews is a numbering variant of the same<br />
+  eEF1A site; the primary paper uses Lys390 (mature-protein numbering), which I follow.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P53970
+gene_symbol: EFM6
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:559292
+  label: Saccharomyces cerevisiae
+description: &gt;-
+  EFM6 (YNL024C) is a cytoplasmic S-adenosyl-L-methionine-dependent protein-lysine
+  N-methyltransferase of the seven-beta-strand (Class I) methyltransferase superfamily,
+  specifically a member of methyltransferase family 16 (MTF16) within the METTL21 clade.
+  It methylates the eukaryotic translation elongation factor 1A (eEF1A, encoded in
+  S. cerevisiae by the paralogous genes TEF1 and TEF2) on lysine 390. EFM6 is one of a
+  set of dedicated elongation-factor methyltransferases in budding yeast; the four
+  known lysine methylations of eEF1A are each installed by a distinct enzyme, with EFM6
+  responsible for the Lys390 site. The enzyme is highly substrate-specific: despite being
+  the closest yeast sequence homolog of the human Hsp70-specific methyltransferase METTL21A,
+  it does not methylate yeast Hsp70 proteins. eEF1A-Lys390 methylation is a low-occupancy
+  modification and is not conserved to mammalian eEF1A; the physiological consequence of
+  the modification is not established.
+references:
+- id: GO_REF:0000015
+  title: &#39;Gene Ontology annotation through association of InterPro records with manually
+    curated functional descriptions&#39;
+  findings: []
+- id: GO_REF:0000033
+  title: &#39;Annotation inferences using phylogenetic trees&#39;
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      GO_Central IBA pipeline reference for the phylogenetically inferred
+      protein methyltransferase activity annotation; consistent with the
+      experimentally established protein-lysine methyltransferase function.
+- id: GO_REF:0000104
+  title: &#39;Automatic transfer of experimentally verified manual GO annotation data to
+    orthologs using Ensembl Compara&#39;
+  findings: []
+- id: GO_REF:0000117
+  title: &#39;Electronic Gene Ontology annotations created by ARBA machine learning models&#39;
+  findings: []
+- id: GO_REF:0000120
+  title: &#39;Combined automated annotation with UniProt keyword to GO mapping and UniRule&#39;
+  findings: []
+- id: PMID:12872006
+  title: Automated identification of putative methyltransferases from genomic open
+    reading frames.
+  findings:
+  - statement: &gt;-
+      Genome-wide computational method assigning S-adenosylmethionine-dependent
+      methyltransferase functionality to yeast open reading frames on the basis of
+      seven-strand twisted beta-sheet signature motifs; source of the ISS
+      methyltransferase-activity prediction for EFM6.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      automatic assignment of S-adenosylmethionine (AdoMet)-dependent methyltransferase
+      functionality to genomic open reading frames based on predicted protein sequences.
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only, but this is the well-known Katz/Dlakic/Clarke yeast MTase catalog;
+      it correctly predicts EFM6 as a SAM-dependent methyltransferase, a prediction later
+      experimentally confirmed by PMID:26115316. Supports the general SAM-MTase activity
+      annotation, not a specific substrate.
+- id: PMID:14562095
+  title: Global analysis of protein localization in budding yeast.
+  findings:
+  - statement: &gt;-
+      Genome-wide GFP-fusion localization study; the basis for the experimental (HDA)
+      cytoplasmic localization annotation for EFM6.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      a collection of yeast strains expressing full-length, chromosomally tagged green
+      fluorescent protein fusion proteins
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Abstract-only cache; the Huh et al. global GFP localization dataset is the standard
+      source for the cytoplasm HDA annotation. Cytoplasmic localization is consistent with
+      a translation-machinery-associated methyltransferase.
+- id: PMID:26115316
+  title: Saccharomyces cerevisiae Eukaryotic Elongation Factor 1A (eEF1A) Is Methylated
+    at Lys-390 by a METTL21-Like Methyltransferase.
+  findings:
+  - statement: &gt;-
+      YNL024C/EFM6 is required for methylation of eEF1A at Lys390; the residue is
+      monomethylated in wild-type cells but exclusively unmethylated in a ynl024c deletion
+      strain, establishing EFM6 as the responsible methyltransferase.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      we here show that the YNL024C gene is required for methylation of eEF1A at Lys390,
+      the only of these methylations for which the responsible MTase has not yet been
+      identified.
+  - statement: &gt;-
+      Overexpression of EFM6 dramatically increases eEF1A-Lys390 methylation, with
+      trimethylation becoming predominant, demonstrating that EFM6 activity drives the
+      modification.
+    reference_section_type: ABSTRACT
+    supporting_text: &gt;-
+      over-expression of Ynl024c caused a dramatic increase in Lys390 methylation, with
+      trimethylation becoming the predominant state.
+  - statement: &gt;-
+      EFM6 directly methylates eEF1A in vitro (GTP-dependent labelling of the ~50 kDa eEF1A
+      band by an E. coli extract expressing EFM6), indicating a direct methyltransferase
+      activity on eEF1A rather than an indirect effect.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      when GTP was present, a markedly stronger, Ynl024c-specific labelling was observed in
+      the 50 kDa region of the ynl024cΔ yeast extract
+  - statement: &gt;-
+      EFM6 is highly specific for eEF1A and, unlike its closest human homolog METTL21A,
+      does not methylate yeast Hsp70 proteins.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      demonstrating that the enzyme is highly specific for eEF1A
+  - statement: &gt;-
+      EFM6 harbours the conserved seven-beta-strand methyltransferase motifs (Motif I,
+      Motif post I, Motif II) and the MTF16 hallmark DXXY motif, confirming it as a Class I
+      SAM-dependent methyltransferase.
+    reference_section_type: RESULTS
+    supporting_text: &gt;-
+      Ynl024c harbours hallmark conserved motifs found in 7BS MTases, i. e. Motif I, Motif
+      post I and Motif II
+  - statement: &gt;-
+      The biological significance of EFM6-mediated eEF1A-Lys390 methylation is unknown and
+      remains to be determined.
+    reference_section_type: DISCUSSION
+    supporting_text: &gt;-
+      the precise function of Efm6-mediated eEF1A methylation does remain an enigma and
+      further studies are required to reveal its role.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified primary research article (Jakobsson et al. 2015, PLoS ONE). This
+      is the defining functional characterization of EFM6/YNL024C. Full text read; all
+      supporting_text quotes are verbatim substrings. The Lys390 substrate is uniquely and
+      experimentally attributed to YNL024C, distinct from the other Efm enzymes (Efm1/4/5 on
+      other eEF1A lysines; Efm2/3 on eEF2).
+existing_annotations:
+- term:
+    id: GO:0008276
+    label: protein methyltransferase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Phylogenetically inferred protein methyltransferase activity. Correct but general:
+      EFM6 is experimentally a protein-LYSINE N-methyltransferase acting on eEF1A-Lys390
+      (PMID:26115316), a specific child of this term. Retained as a valid parent; the
+      specific molecular function is captured by GO:0016279.
+    action: MODIFY
+    reason: &gt;-
+      The essence (protein methyltransferase) is correct, but a more informative and
+      experimentally supported term exists (GO:0016279 protein-lysine N-methyltransferase
+      activity, already annotated by IEA and consistent with PMID:26115316).
+    proposed_replacement_terms:
+    - id: GO:0016279
+      label: protein-lysine N-methyltransferase activity
+    supported_by:
+    - reference_id: PMID:26115316
+      supporting_text: &gt;-
+        we here show that the YNL024C gene is required for methylation of eEF1A at Lys390,
+        the only of these methylations for which the responsible MTase has not yet been
+        identified.
+    propagation_review:
+      root_cause: TERM_SCOPING_PROBLEM
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000378681
+        source_label: METTL21/protein methyltransferase family node
+        source_status: SUPPORTS_TRANSFER
+        comment: &gt;-
+          The family-level protein methyltransferase activity is correct for EFM6, but the
+          IBA term is a general parent; EFM6&#39;s experimentally established activity is the more
+          specific protein-lysine N-methyltransferase activity (GO:0016279), so this is a
+          granularity issue, not a bad transfer.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Electronic cytoplasmic-localization annotation (UniProt SubCell/UniRule). Consistent
+      with the experimental HDA localization (PMID:14562095) and with a translation-associated
+      cytoplasmic methyltransferase.
+    action: ACCEPT
+- term:
+    id: GO:0008757
+    label: S-adenosylmethionine-dependent methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Electronic (ARBA) SAM-dependent methyltransferase activity. Correct general parent
+      term; the SAM-binding scaffold (motif I region, residues around 51/87-89/115) is
+      intact in EFM6 and its SAM-dependent activity is experimentally established
+      (PMID:26115316). More specific term GO:0016279 also annotated.
+    action: ACCEPT
+- term:
+    id: GO:0016279
+    label: protein-lysine N-methyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Protein-lysine N-methyltransferase activity, the correct specific molecular function.
+      This exactly matches the experimental demonstration that EFM6 methylates eEF1A on the
+      epsilon-amino group of Lys390 (PMID:26115316). Core molecular function of EFM6.
+    action: ACCEPT
+    supported_by:
+    - reference_id: PMID:26115316
+      supporting_text: &gt;-
+        over-expression of Ynl024c caused a dramatic increase in Lys390 methylation, with
+        trimethylation becoming the predominant state.
+- term:
+    id: GO:0008757
+    label: S-adenosylmethionine-dependent methyltransferase activity
+  evidence_type: ISS
+  original_reference_id: PMID:12872006
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Sequence-similarity prediction of SAM-dependent methyltransferase activity from the
+      genome-wide Katz/Clarke MTase catalog. A correct general parent term, later confirmed
+      experimentally (PMID:26115316). Redundant with the ARBA IEA annotation to the same term.
+    action: ACCEPT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: HDA
+  original_reference_id: PMID:14562095
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Experimental (high-throughput GFP) cytoplasmic localization from the global yeast
+      localization study. Consistent with EFM6 acting on the abundant cytoplasmic
+      translation factor eEF1A. Core cellular location.
+    action: ACCEPT
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Root biological_process with No Data. This honestly reflects the state of knowledge:
+      although EFM6&#39;s molecular function (eEF1A-Lys390 methylation) is established, the
+      downstream biological process served by this low-occupancy modification is unknown and
+      described as an enigma (PMID:26115316). No specific BP should be invented.
+    action: ACCEPT
+    reason: &gt;-
+      The biological role of EFM6-mediated eEF1A methylation is genuinely undetermined in the
+      literature; ND is the appropriate state rather than an over-annotated process term.
+core_functions:
+- description: &gt;-
+    S-adenosyl-L-methionine-dependent protein-lysine N-methyltransferase that
+    monomethylates (and, when overexpressed, di-/tri-methylates) eukaryotic translation
+    elongation factor 1A (eEF1A; TEF1/TEF2) on Lys390 in the cytoplasm. EFM6 is highly
+    specific for this eEF1A site and is the dedicated enzyme for the Lys390 modification,
+    distinct from the other elongation-factor methyltransferases.
+  molecular_function:
+    id: GO:0016279
+    label: protein-lysine N-methyltransferase activity
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      we here show that the YNL024C gene is required for methylation of eEF1A at Lys390,
+      the only of these methylations for which the responsible MTase has not yet been
+      identified.
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      demonstrating that the enzyme is highly specific for eEF1A
+knowledge_gaps:
+- gap_statement: &gt;-
+    The biological process served by EFM6-mediated methylation of eEF1A at Lys390 is
+    undetermined. It is not known why this specific low-occupancy lysine methylation is
+    installed, what phenotype (if any) it modulates, or which of eEF1A&#39;s canonical
+    (translation) or non-canonical (e.g. actin bundling, nuclear export) activities it
+    influences.
+  boundary: &gt;-
+    The molecular function is firmly established: EFM6 is a SAM-dependent protein-lysine
+    N-methyltransferase that specifically and directly methylates eEF1A on Lys390
+    (deletion abolishes the modification, overexpression drives di/tri-methylation, and an
+    EFM6-containing extract methylates eEF1A in vitro). What is unknown is the downstream
+    consequence, not the activity or the substrate site.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: BP_DARK
+  status: OPEN
+  significance: &gt;-
+    eEF1A is one of the most abundant proteins in the cell and carries four distinct,
+    enzyme-dedicated lysine methylations; understanding what the Lys390 mark does would
+    clarify why the cell maintains a dedicated methyltransferase for a modification present
+    on only a small fraction of eEF1A molecules, and whether it tunes a specific eEF1A
+    subfunction or acts as a regulated switch.
+  resolution: &gt;-
+    Determine a phenotype for efm6Δ (and for eEF1A K390R) under stress/aging/sporulation and
+    non-canonical eEF1A assays; test whether Lys390 methylation is regulated in response to
+    physiological cues; identify any interacting demethylase; measure effects on translational
+    fidelity and on eEF1A actin/nuclear functions.
+  provenance:
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      the precise function of Efm6-mediated eEF1A methylation does remain an enigma and
+      further studies are required to reveal its role.
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      simultaneous mutations of the four lysine methylation sites to arginine does not affect
+      the proliferation rate of the resulting mutant yeast strain nor the enzymatic properties
+      of the eEF1A protein in vitro
+- gap_statement: &gt;-
+    Whether EFM6 is enzymatically active as an isolated, purified protein, and its steady-state
+    kinetic parameters and possible cofactor/partner requirements on eEF1A, are not established.
+  boundary: &gt;-
+    Direct methylation was demonstrated only from crude E. coli extracts overexpressing EFM6
+    (and required GTP), because soluble recombinant EFM6 with activity could not be purified;
+    genetic and in vivo evidence for EFM6-dependent Lys390 methylation is nonetheless
+    unambiguous.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    A reconstituted single-enzyme assay would confirm EFM6 acts alone (versus needing a
+    partner or a particular eEF1A/GTP conformational state) and enable mechanistic and
+    structural study of an otherwise well-defined activity.
+  resolution: &gt;-
+    Obtain soluble active recombinant EFM6 (e.g. alternative tags/hosts, co-expression with
+    eEF1A, or on-substrate assays) and measure kinetics against eEF1A in defined
+    GTP/GDP-bound states.
+  provenance:
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      We were unable to purify recombinant soluble Efm6 protein showing activity on eEF1A.
+- gap_statement: &gt;-
+    Whether EFM6 has any substrate other than eEF1A-Lys390 is untested beyond the exclusion of
+    yeast Hsp70 proteins.
+  boundary: &gt;-
+    EFM6 does not methylate yeast Hsp70 (Ssa1/Ssb1/Ssb2) despite being the closest yeast homolog
+    of the Hsp70-specific human METTL21A, and it is highly specific for eEF1A; no unbiased,
+    proteome-wide substrate screen for EFM6 has been reported.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Excluding or discovering additional substrates would define the full functional scope of
+    the enzyme and rule out (or in) a broader role beyond eEF1A.
+  resolution: &gt;-
+    Perform an activity-based, proteome-wide substrate screen (e.g. using EFM6 as enzyme source
+    with a methyltransferase-deficient extract, or SILAC/heavy-methyl profiling of efm6Δ vs WT).
+  provenance:
+  - reference_id: PMID:26115316
+    supporting_text: &gt;-
+      demonstrating that the enzyme is highly specific for eEF1A
+suggested_questions:
+- question: &gt;-
+    What is the physiological function of eEF1A-Lys390 methylation, and under what conditions
+    (stress, sporulation, aging) is it regulated?
+  experts:
+  - Yeast translation and elongation-factor biologists
+  - Protein methylation / post-translational modification biologists
+- question: &gt;-
+    Does EFM6 act as a standalone methyltransferase on eEF1A, and does the GTP/GDP conformational
+    state of eEF1A gate the modification?
+  experts:
+  - Methyltransferase enzymologists
+  - eEF1A structural biologists
+suggested_experiments:
+- hypothesis: &gt;-
+    eEF1A-Lys390 methylation modulates a specific (possibly non-canonical) eEF1A function or a
+    stress/aging response rather than bulk translation.
+  description: &gt;-
+    Compare efm6Δ and eEF1A-K390R strains to wild type across growth, translational fidelity,
+    stress and sporulation conditions, and non-canonical eEF1A assays (actin bundling, nuclear
+    export), including quantitative phenotyping and proteomics.
+  experiment_type: comparative phenotyping / functional assays
+- hypothesis: &gt;-
+    EFM6 is a self-sufficient methyltransferase whose activity depends on the eEF1A nucleotide state.
+  description: &gt;-
+    Reconstitute methylation with purified active EFM6 and eEF1A in defined GTP- vs GDP-bound
+    states and measure steady-state kinetics; if soluble EFM6 cannot be purified, use co-expression
+    or on-substrate/extract-based quantitative assays.
+  experiment_type: in vitro enzymology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
