@@ -113,7 +113,7 @@ def review_status(row: dict[str, str]) -> dict[str, str]:
 def pathway_members(
     project_dir: Path, pathway: str
 ) -> tuple[str, str, list[dict[str, str]]]:
-    pathway_id = pathway.replace("kegg:", "")
+    pathway_id = pathway.replace("kegg:", "").replace("unipathway:", "")
     partition = read_tsv(project_dir / "data" / "psepk_pathway_partition.tsv")
     membership = read_tsv(project_dir / "data" / "psepk_pathway_membership.tsv")
     by_key: dict[tuple[str, str], dict[str, str]] = {}
@@ -149,7 +149,8 @@ def pathway_members(
                 "membership_pathway_id": pathway_id,
                 "membership_pathway_name": pathway_name,
                 "is_primary_for_pathway": "true"
-                if row.get("primary_bucket_id") == f"kegg:{pathway_id}"
+                if row.get("primary_bucket_id")
+                in {pathway_id, f"kegg:{pathway_id}", f"unipathway:{pathway_id}"}
                 else "false",
                 **review_status(row),
             }
