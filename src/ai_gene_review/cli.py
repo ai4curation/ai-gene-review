@@ -3809,7 +3809,9 @@ def scan_module(
         typer.echo(f"{comp}\t{ipr}\t" + "\t".join(cells))
 
     if homology:
-        typer.echo(f"\nMethod B - phmmer homology (Y = E<=1e-5):")
+        gated = source_taxon is not None
+        legend = "O = reciprocal ortholog, h = homolog only (not reciprocal)" if gated else "Y = E<=1e-5"
+        typer.echo(f"\nMethod B - phmmer homology ({legend}):")
         hom = tables["homology"]
         typer.echo("component\t" + "\t".join(_lab(t) for t in tax_list))
         for comp in comps:
@@ -3818,6 +3820,9 @@ def scan_module(
                 r = next((x for x in hom if x["component"] == comp and x["taxon"] == t), None)
                 if not r or r["best_hit"] == "-":
                     cells.append("none")
+                elif gated and t != source_taxon:
+                    mark = "O" if r.get("ortholog") else ("h" if r["detected"] else "n")
+                    cells.append(f"{mark}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
                 else:
                     cells.append(f"{'Y' if r['detected'] else 'n'}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
             typer.echo(comp + "\t" + "\t".join(cells))

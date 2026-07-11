@@ -100,6 +100,24 @@ Every component is a reciprocal best hit — independently confirming the FraD/F
 SepJ ortholog calls — and the two NOSP7 amidases resolve cleanly: **B2J2S4 = AmiC2 ortholog,
 B2J2S3 = AmiC1 ortholog** (a tandem pair, mirroring the 7120 alr0093/alr0092 arrangement).
 
+The same RBH run assigns the *Anabaena variabilis* (TRIV2, taxon 240292) orthologs, all
+reciprocal: FraD **Q3MGQ1**, FraC **Q3MGQ2**, FraE **Q3MGQ0** (syntenic operon), SepN
+**Q3MF16**, SepJ **Q3MGV3**, and the tandem amidases **AmiC2 Q3MD47 / AmiC1 Q3MD48**.
+
+### Reciprocity gate on the homology call (`--homology --source-taxon`)
+
+With a source taxon, the homology table adds `reciprocal` / `ortholog` columns: a hit is an
+**ortholog (`O`)** only if it is significant *and* a reciprocal best hit; otherwise it is a
+**homolog-only (`h`)** hit. This auto-flags broad-domain false positives — e.g. the amidase
+hits in the unicellular negatives (*Synechocystis* P73736, *Synechococcus* Q31KM9) drop from
+`Y` to `h`, correctly marking them as housekeeping-amidase paralogs, not SJ orthologs.
+
+Caveat (honest limitation): RBH is necessary but not sufficient for the broadest families.
+SepJ and FraE still score `O` in *Synechocystis* because their transporter families
+(DMT/EamA, ABC-2) are ancient and the unicellular genome's single family member is genuinely
+the mutual best match. For those, the SJ-specific signal is the **operon/synteny context**
+(absent in unicellular genomes), not sequence reciprocity alone.
+
 ## Interpretation for the module
 
 - The module scans a new genome successfully; both positive genomes contain detectable

@@ -1,8 +1,20 @@
 """Offline tests for the generic module genome-scan tool and module detection."""
 from pathlib import Path
 
-from ai_gene_review.module_scan import Component, extract_components
+import pytest
+
+from ai_gene_review.module_scan import Component, extract_components, _acc_from_name
 from ai_gene_review.render_modules import is_module_document
+
+
+@pytest.mark.parametrize("name,expected", [
+    ("tr|B2J2S4|B2J2S4_NOSP7", "B2J2S4"),
+    ("sp|P46079|Y2393_NOSS1", "P46079"),
+    ("A0ACD7RWW5", "A0ACD7RWW5"),
+    ("plainname", "plainname"),
+])
+def test_acc_from_name(name, expected):
+    assert _acc_from_name(name) == expected
 
 
 def test_extract_components_family_and_exemplars():

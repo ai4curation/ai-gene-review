@@ -192,8 +192,16 @@ def scan_family_membership(components: list[Component], taxa: list[str]) -> list
 
 
 def scan_homology(components: list[Component], taxa: list[str],
-                  cache_dir: Path, evalue: float = DEFAULT_EVALUE) -> list[dict]:
-    """phmmer each component exemplar against each taxon's reference proteome."""
+                  cache_dir: Path, evalue: float = DEFAULT_EVALUE,
+                  source_taxon: Optional[str] = None) -> list[dict]:
+    """phmmer each component exemplar against each taxon's reference proteome.
+
+    If ``source_taxon`` (the exemplars' organism) is given, each forward best hit is
+    reverse-searched against the source proteome and the rows gain ``reciprocal`` and
+    ``ortholog`` (= a significant hit that is also a reciprocal best hit) columns, so
+    broad-domain hits that are really paralogs are flagged rather than counted as
+    orthologs.
+    """
     try:
         import pyhmmer  # noqa: F401  (optional dependency)
     except ImportError as e:  # pragma: no cover
@@ -218,36 +226,69 @@ def scan_homology(components: list[Component], taxa: list[str],
         seq.name = c.label.encode()
         queries[c.label] = (acc, seq)
 
+    # optional reciprocity gate: load the exemplars' source proteome once so each
+    # forward best hit can be reverse-searched (a broad-domain hit that is really a
+    # paralog then fails the reciprocal check and is flagged as not an ortholog).
+    src_block = None
+    if source_taxon:
+        src_upid = reference_proteome(source_taxon)
+        if src_upid:
+            src_fa = _download(f"{UNIPROT}/uniprotkb/stream?query=(proteome:{src_upid})"
+                               f"&format=fasta&includeIsoform=false", cache_dir / f"{src_upid}.fasta")
+            with pyhmmer.easel.SequenceFile(str(src_fa), digital=True, alphabet=alph) as sf:
+                src_block = sf.read_block()
+
+    def _seq_name(s) -> str:
+        return s.name.decode() if isinstance(s.name, (bytes, bytearray)) else s.name
+
     rows: list[dict] = []
     for tax in taxa:
+        gated = source_taxon is not None and tax != source_taxon and src_block is not None
         upid = reference_proteome(tax)
         if not upid:
-            for label in queries:
-                rows.append(dict(component=label, taxon=tax, proteome="(none)",
-                                 best_hit="-", evalue="", pct_id="", detected=False))
+            for label, (acc, _q) in queries.items():
+                row = dict(component=label, taxon=tax, proteome="(none)", exemplar=acc,
+                           best_hit="-", evalue="", pct_id="", detected=False)
+                if gated:
+                    row.update(reciprocal=False, ortholog=False)
+                rows.append(row)
             continue
         fa = _download(f"{UNIPROT}/uniprotkb/stream?query=(proteome:{upid})"
                        f"&format=fasta&includeIsoform=false", cache_dir / f"{upid}.fasta")
         with pyhmmer.easel.SequenceFile(str(fa), digital=True, alphabet=alph) as sf:
             targets = sf.read_block()
+        tgt_by_name = {_seq_name(s): s for s in targets} if gated else {}
         for label, (acc, q) in queries.items():
             hits = pyhmmer.plan7.Pipeline(alph).search_seq(q, targets)
             if len(hits) == 0:
-                rows.append(dict(component=label, taxon=tax, proteome=upid, exemplar=acc,
-                                 best_hit="-", evalue="", pct_id="", detected=False))
+                row = dict(component=label, taxon=tax, proteome=upid, exemplar=acc,
+                           best_hit="-", evalue="", pct_id="", detected=False)
+                if gated:
+                    row.update(reciprocal=False, ortholog=False)
+                rows.append(row)
                 continue
             best = hits[0]
-            name = best.name.decode() if isinstance(best.name, (bytes, bytearray)) else best.name
+            name = _seq_name(best)
             pct = ""
             try:
                 mid = best.best_domain.alignment.identity_sequence
                 pct = round(100 * sum(ch.isalpha() for ch in mid) / len(mid), 1) if mid else ""
             except Exception:
                 pass
-            rows.append(dict(component=label, taxon=tax, proteome=upid, exemplar=acc,
-                             best_hit=name.split("|")[1] if "|" in name else name,
-                             evalue=f"{best.evalue:.1e}", pct_id=pct,
-                             detected=best.evalue <= evalue))
+            detected = best.evalue <= evalue
+            row = dict(component=label, taxon=tax, proteome=upid, exemplar=acc,
+                       best_hit=_acc_from_name(name), evalue=f"{best.evalue:.1e}",
+                       pct_id=pct, detected=detected)
+            if gated:
+                reciprocal = False
+                hseq = tgt_by_name.get(name)
+                if hseq is not None:
+                    rev = pyhmmer.plan7.Pipeline(alph).search_seq(hseq, src_block)
+                    if len(rev) > 0:
+                        reciprocal = _acc_from_name(_seq_name(rev[0])) == acc
+                # ortholog call = a significant hit that is ALSO a reciprocal best hit
+                row.update(reciprocal=reciprocal, ortholog=detected and reciprocal)
+            rows.append(row)
     return rows
 
 
@@ -349,7 +390,7 @@ def scan_module(module_path: Path, taxa: list[str], *, homology: bool = False,
         "family_membership": scan_family_membership(components, taxa),
     }
     if homology:
-        out["homology"] = scan_homology(components, taxa, cache, evalue)
+        out["homology"] = scan_homology(components, taxa, cache, evalue, source_taxon=source_taxon)
     if rbh:
         if not source_taxon:
             raise ValueError("rbh=True requires source_taxon (the exemplars' organism taxon id)")
