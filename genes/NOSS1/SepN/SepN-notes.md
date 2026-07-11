@@ -60,6 +60,10 @@ family:
   together with FraD, mirroring FraD's own restriction to filamentous cyanobacteria.
   [PMID:36470860 "SepN always co-occurs with FraD."]
 
+- **PANTHER:** no classification. *Nostoc* sp. PCC 7120 (taxon 103690) is not among
+  PANTHER's ~144 reference genomes, and InterPro reports no PANTHER (PTHR) signature for
+  A0ACD7RWW5 — so, like FraD, SepN has no PANTHER family/subfamily or PAINT ancestral node.
+
 The lack of a formal domain model is expected for a small, lineage-specific structural
 protein; the family is best defined operationally by the FraD co-occurrence and the
 Nostocales-signature distribution. This restriction to multicellular cyanobacteria is

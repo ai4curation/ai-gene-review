@@ -75,6 +75,11 @@ FraD is the founding/reference member of a small, taxonomically restricted famil
 - **NCBIfam NF037953** — "septal junction protein FraD" (dedicated FraD HMM).
 - **TCDB 1.V.1.1.1** — "the filamentous cyanobacterial septal pore (septum) family."
 
+- **PANTHER:** no classification. *Nostoc* sp. PCC 7120 (taxon 103690) is not among
+  PANTHER's ~144 reference genomes, and InterPro reports no PANTHER (PTHR) signature
+  overlapping P46079, so there is no PANTHER family/subfamily or PAINT ancestral node for
+  FraD. The FraD family is instead captured by the DUF5357/IPR020360/NF037953 models above.
+
 The family is confined to **filamentous, heterocyst-forming / multicellular cyanobacteria**
 (Nostocales and relatives); there is no known homolog outside this lineage. FraD and its
 partner **SepN co-occur** phylogenetically — SepN is essentially never found without FraD
