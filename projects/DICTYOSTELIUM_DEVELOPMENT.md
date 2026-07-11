@@ -1,6 +1,6 @@
 ---
 title: "Dictyostelium Development Project"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [DICDI]
 ---
@@ -200,10 +200,27 @@ Behavior of the multicellular slug and tip organizer.
 ## Status & Next Steps
 
 - [x] Enumerate developmental modules and candidate genes (this page)
-- [ ] Resolve dictyBase symbols → UniProt accessions (`just fetch-gene DICDI <gene>`)
-- [ ] Seed reviews for Priority 1 genes
-- [ ] Add deep-research + notes per gene
-- [ ] Review existing annotations against GO developmental terms
+- [x] Resolve dictyBase symbols → UniProt accessions (`fetch-gene DICDI <gene>`)
+- [x] Fetch GOA + UniProt + cached publications for all priority genes
+- [x] **Review existing GO annotations for all 32 priority genes (P1–P4)** —
+  every annotation adjudicated (ACCEPT / KEEP_AS_NON_CORE / MODIFY / REMOVE /
+  MARK_AS_OVER_ANNOTATED / UNDECIDED), with `description`, `core_functions`, and
+  verbatim-quoted `supported_by` evidence; all pass `ai-gene-review validate`.
+- [ ] Add per-gene `GENE-notes.md` deep-research journals where missing
+- [ ] Expert sign-off / second-pass QA of the reviews
+- [ ] Extend to remaining modules not yet in the priority list (e.g. cGMP
+  guanylyl cyclases gcA/sgcA, TF gtaC, tipA)
+
+### Reviewed genes (32, all validated)
+
+| Priority | Genes |
+|----------|-------|
+| P1 — cAMP relay & chemotaxis | acaA, carA, gpaB, dagA, regA, pdsA, pkaC, rasC, pten, mhcA |
+| P2 — adhesion / DIF-1 / patterning | csaA, cadA, tgrB1, tgrC1, dmtA, dimB, cudA |
+| P3 — terminal differentiation & culmination | ecmA, ecmB, cotB, spiA, acbA, dhkA, tagC, grlE |
+| P4 — TFs / counting / autophagy | gbfA, statA, srfA, smlA, ctnA, atg1, yakA |
+
+(`mlcD` was already reviewed prior to this project. `tgrC1` = `lagC`/`gp150`.)
 
 ## Existing DICDI reviews in the repo
 
