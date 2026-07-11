@@ -3731,6 +3731,100 @@ def subtraction_report(
     )
 
 
+@app.command()
+def scan_module(
+    module_path: Annotated[
+        Path, typer.Argument(help="ModuleReview YAML (e.g. modules/septal_junction.yaml)")
+    ],
+    taxa: Annotated[
+        Optional[str],
+        typer.Option("--taxa", help="Comma-separated NCBI taxon ids to scan"),
+    ] = None,
+    targets: Annotated[
+        Optional[Path],
+        typer.Option("--targets", help="JSON file of target genomes colocated with the "
+                     "module: list of {taxon, label, class} objects"),
+    ] = None,
+    homology: Annotated[
+        bool, typer.Option("--homology", help="Also run phmmer homology (needs pyhmmer)")
+    ] = False,
+    out_dir: Annotated[
+        Optional[Path],
+        typer.Option("--out", "-o", help="Directory for result TSVs (default: alongside module)"),
+    ] = None,
+):
+    """Scan target genomes for members of a module, using the module's own family
+    terms and representative-member exemplars (generic gap-filling / member detection).
+
+    Examples:
+        ai-gene-review scan-module modules/septal_junction.yaml --taxa 63737,1111708
+        ai-gene-review scan-module modules/septal_junction.yaml \\
+            --targets modules/septal_junction/scan_targets.json --homology
+    """
+    import json as _json
+    from ai_gene_review.module_scan import scan_module as _scan
+
+    labels: dict[str, str] = {}
+    tax_list: list[str] = []
+    if targets:
+        spec = _json.loads(Path(targets).read_text())
+        for t in spec:
+            tid = str(t["taxon"])
+            tax_list.append(tid)
+            labels[tid] = f"{t.get('class', '')}:{t.get('label', tid)}".strip(":")
+    if taxa:
+        tax_list += [t.strip() for t in taxa.split(",") if t.strip()]
+    tax_list = list(dict.fromkeys(tax_list))
+    if not tax_list:
+        typer.echo("Provide --taxa and/or --targets", err=True)
+        raise typer.Exit(code=1)
+
+    tables = _scan(Path(module_path), tax_list, homology=homology)
+
+    def _lab(tid: str) -> str:
+        return labels.get(tid, tid)
+
+    typer.echo(f"Components grounded in {module_path}:")
+    for c in tables["components"]:
+        typer.echo(f"  - {c['component']}: family={c['family_terms']} exemplars={c['exemplars']}")
+
+    typer.echo("\nMethod A - InterPro family membership (n members per taxon):")
+    fam = tables["family_membership"]
+    comps = list(dict.fromkeys(r["component"] for r in fam))
+    typer.echo("component\tinterpro\t" + "\t".join(_lab(t) for t in tax_list))
+    for comp in comps:
+        rs = [r for r in fam if r["component"] == comp]
+        ipr = rs[0]["interpro"]
+        cells = [str(next((r["n_members"] for r in rs if r["taxon"] == t), "")) for t in tax_list]
+        typer.echo(f"{comp}\t{ipr}\t" + "\t".join(cells))
+
+    if homology:
+        typer.echo(f"\nMethod B - phmmer homology (Y = E<=1e-5):")
+        hom = tables["homology"]
+        typer.echo("component\t" + "\t".join(_lab(t) for t in tax_list))
+        for comp in comps:
+            cells = []
+            for t in tax_list:
+                r = next((x for x in hom if x["component"] == comp and x["taxon"] == t), None)
+                if not r or r["best_hit"] == "-":
+                    cells.append("none")
+                else:
+                    cells.append(f"{'Y' if r['detected'] else 'n'}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
+            typer.echo(comp + "\t" + "\t".join(cells))
+
+    out = out_dir or Path(module_path).with_suffix("")
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, rows in tables.items():
+        if not rows:
+            continue
+        cols = list(rows[0].keys())
+        p = out / f"scan_{name}.tsv"
+        p.write_text("\t".join(cols) + "\n" + "\n".join(
+            "\t".join(str(r[c]) for c in cols) for r in rows) + "\n")
+        typer.echo(f"wrote {p}", err=True)
+
+
 def main():
     """Main entry point for the CLI."""
     app()
