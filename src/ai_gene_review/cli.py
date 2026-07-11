@@ -3771,7 +3771,7 @@ def scan_module(
             --targets modules/septal_junction/scan_targets.json --homology
     """
     import json as _json
-    from ai_gene_review.module_scan import scan_module as _scan
+    from ai_gene_review.module_scan import scan_module as _scan, organism_name as _org
 
     labels: dict[str, str] = {}
     tax_list: list[str] = []
@@ -3787,6 +3787,12 @@ def scan_module(
     if not tax_list:
         typer.echo("Provide --taxa and/or --targets", err=True)
         raise typer.Exit(code=1)
+
+    # Guard rail: show the organism each taxon actually resolves to, so a wrong-taxon id
+    # (e.g. a fungus taxon pasted for a cyanobacterium) is obvious before trusting results.
+    typer.echo("Resolved target organisms:")
+    for tid in tax_list:
+        typer.echo(f"  {tid}\t{_org(tid) or '(unknown taxon!)'}")
 
     tables = _scan(Path(module_path), tax_list, homology=homology,
                    rbh=rbh, source_taxon=source_taxon)

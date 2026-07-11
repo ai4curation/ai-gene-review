@@ -151,6 +151,19 @@ def interpro_members(interpro_id: str, taxon: str, page_size: int = 200) -> list
     return accs
 
 
+def organism_name(taxon: str) -> Optional[str]:
+    """Return the scientific name for an NCBI taxon id (via UniProt taxonomy), or None.
+
+    Used as a guard rail: printing the resolved organism makes a wrong-taxon id (e.g. a
+    fungus taxon pasted in place of a cyanobacterium) obvious before a negative result is
+    trusted.
+    """
+    raw = _get(f"{UNIPROT}/taxonomy/{taxon}?fields=scientific_name&format=json")
+    if not raw:
+        return None
+    return json.loads(raw).get("scientificName")
+
+
 def reference_proteome(taxon: str) -> Optional[str]:
     """Return the reference/representative proteome UPID for a taxon, if any."""
     raw = _get(f"{UNIPROT}/proteomes/search?query=(organism_id:{taxon})&format=json&size=10")

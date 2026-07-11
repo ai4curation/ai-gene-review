@@ -72,14 +72,37 @@ and the fraC–fraD–fraE operon is syntenic (Cylst_1330 / Cylst_1329 / Cylst_1
 standalone and both 7120 AmiC exemplars reciprocate to it, so the AmiC1/AmiC2 duplication
 appears to be a *Nostoc/Anabaena*-specific event rather than ancestral to the module.
 
-**Chlorogloeopsis fritschii PCC 6912 (taxon 246409, Stigonematales / true-branching) — a
-genuine absence.** Despite being a heterocyst-former, this genome yields **no detectable
-FraD, FraC, FraE, SepN or AmiC** (family membership = 0 for IPR020360/IPR054663; homology =
-no hit), and only a weak, non-reciprocal SepJ-domain hit. The full 16,971-protein proteome
-was searched, so this is a real negative, not a data artifact: the FraD/SepN septal-junction
-module is **not universal across heterocyst-forming cyanobacteria** — the deepest-branching
-Stigonematales lineage sampled here either uses a divergent SJ system or lacks these
-components. A worthwhile follow-up question for the module.
+**The module IS conserved in the Stigonematales (deepest-branching heterocyst-formers).**
+
+> ⚠️ **Correction.** An earlier version of this file reported a "genuine absence" of the
+> module in *Chlorogloeopsis fritschii* PCC 6912 based on a scan of **taxon 246409**. That
+> taxon id is **wrong** — NCBITaxon:246409 is *Rhizopus delemar*, a **fungus** (its
+> 16,971-protein proteome is what got scanned). Scanning a fungus for cyanobacterial
+> proteins trivially returns nothing; the "absence" was a taxon-id data-entry error, not
+> biology. The correct *Chlorogloeopsis fritschii* PCC 6912 is **NCBITaxon:211165**.
+
+Re-scanning the correct proteomes shows the module is present and conserved across the
+Stigonematales:
+
+- ***Chlorogloeopsis fritschii* PCC 6912 (taxon 211165)** — all six components are
+  reciprocal orthologs (51–66% id): FraD A0A433MW52, FraC A0A3S0ZK90, FraE A0A3S0XFY1,
+  SepN A0A433NK59, SepJ A0A433MWN9, AmiC A0A3S0ZNT3.
+- ***Fischerella thermalis* JSC-11 (taxon 741277)** — all six components reciprocal (48–66%
+  id): FraD G6FUM3, FraC G6FUM4, FraE G6FUM2 (syntenic operon FJSC11DRAFT_2571/2570/2569),
+  SepN G6FVY1, SepJ G6FMI5, AmiC G6FW05.
+
+So FraD/SepN and the whole module reach the true-branching Stigonematales, consistent with
+the SepN discovery paper's report of SepN across Nostocaceae, Oscillatoriales **and
+Stigonematales** (PMID:36470860). Like *Cylindrospermum*, these genomes carry a **single
+standalone AmiC** (no tandem AmiC1), reinforcing that the AmiC1/AmiC2 duplication is a
+*Nostoc/Anabaena*-specific event.
+
+**Methodological lesson (why this matters for the tool):** a "no hits" result can be a
+metadata error (wrong taxon / a mis-assembled or non-target proteome), not a biological
+absence. Guard rails: (1) confirm the resolved **organism name** for each taxon before
+trusting a negative — `scan-module` now prints it; (2) cross-check a negative against
+InterPro **family membership by genus** (the FraD family IPR020360 is present in
+*Chlorogloeopsis* and *Fischerella*), which is what exposed this error.
 
 ## Candidate members for curation
 
