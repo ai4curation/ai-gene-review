@@ -491,6 +491,9 @@ module-deep-research-falcon module *args="":
 module-deep-research-cyberian module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" cyberian {{args}}
 
+module-deep-research-openscientist module *args="":
+    uv run python scripts/module_deep_research_wrapper.py "{{module}}" openscientist {{args}}
+
 module-deep-research-codex module *args="":
     uv run python scripts/module_deep_research_wrapper.py "{{module}}" codex {{args}}
 

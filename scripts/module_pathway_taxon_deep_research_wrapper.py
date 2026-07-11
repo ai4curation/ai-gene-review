@@ -27,7 +27,15 @@ from module_deep_research_wrapper import (
 )
 
 
-PROVIDERS = ("openai", "perplexity", "perplexity-lite", "falcon", "cyberian", "codex")
+PROVIDERS = (
+    "openai",
+    "perplexity",
+    "perplexity-lite",
+    "falcon",
+    "cyberian",
+    "codex",
+    "openscientist",
+)
 DEFAULT_TEMPLATE = Path("templates/module_pathway_taxon_research.md.j2")
 DEFAULT_MAX_GENES = 80
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
