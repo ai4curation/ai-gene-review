@@ -1,0 +1,2944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lcdH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lcdH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R32" target="_blank" class="term-link">
+                        Q88R32
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lcdH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R32" data-a="DESCRIPTION: lcdH encodes a cytoplasmic NAD(+)-dependent L-carn..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lcdH encodes a cytoplasmic NAD(+)-dependent L-carnitine dehydrogenase that oxidizes L-carnitine to 3-dehydrocarnitine in bacterial carnitine metabolism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasm is the supported cellular location for the soluble L-carnitine dehydrogenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt places LcdH in the cytoplasm and the GOA row carries the same UniProtKB-SubCell/UniRule-derived location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006631" target="_blank" class="term-link">
+                                    GO:0006631
+                                </a>
+                            </span>
+                            <span class="term-label">fatty acid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0006631" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Fatty acid metabolism is not the informative process for this L-carnitine dehydrogenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation appears to come from broad 3-hydroxyacyl-CoA dehydrogenase InterPro domains, whereas the reviewed UniProt entry and pathway annotation identify LcdH as an L-carnitine dehydrogenase in carnitine metabolism. Keep carnitine metabolism/catabolism as the core process unless further evidence links PP_0302 to fatty-acid metabolism in KT2440.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=L-carnitine dehydrogenase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amine and polyamine metabolism; carnitine metabolism.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006631	fatty acid metabolic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009437" target="_blank" class="term-link">
+                                    GO:0009437
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0009437" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carnitine metabolism is the correct broad biological process for LcdH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records the L-carnitine dehydrogenase reaction and places the enzyme in carnitine metabolism; GOA links this process through UniRule and UniPathway UPA00117.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amine and polyamine metabolism; carnitine metabolism.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0009437	carnitine metabolic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016491" target="_blank" class="term-link">
+                                    GO:0016491
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0016491" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Oxidoreductase activity is true but less informative than the carnitine 3-dehydrogenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LcdH performs an NAD(+)-dependent oxidation reaction, so this broad parent is valid. The core molecular function should be the specific GO:0047728 carnitine 3-dehydrogenase activity already present in GOA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016491	oxidoreductase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016616" target="_blank" class="term-link">
+                                    GO:0016616
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0016616" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This oxidoreductase parent is chemically consistent but not as specific as the L-carnitine dehydrogenase term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reaction oxidizes the carnitine alcohol group using NAD(+), matching this parent term. Because GO:0047728 captures the same chemistry with the correct substrate specificity, this broader InterPro-derived term should remain non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0016616	oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042413" target="_blank" class="term-link">
+                                    GO:0042413
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0042413" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carnitine catabolism is appropriate for the dehydrogenation of L-carnitine to 3-dehydrocarnitine.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> LcdH catalyzes oxidation of L-carnitine in the carnitine metabolism pathway, and bacterial carnitine-metabolism literature describes this dehydrogenase as the first catabolic step in Pseudomonas carnitine assimilation. This process is the best current biological-process framing for UPA00117 while downstream product utilization remains outside the single-gene module boundary.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the NAD(+)-dependent oxidation of L-carnitine to 3-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9037756" target="_blank" class="term-link">
+                                        PMID:9037756
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The first catabolic step is catalysed by</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Amine and polyamine metabolism; carnitine metabolism.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0042413	carnitine catabolic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047728" target="_blank" class="term-link">
+                                    GO:0047728
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine 3-dehydrogenase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0047728" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0047728 is the exact molecular function for LcdH.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt entry names PP_0302 as L-carnitine dehydrogenase, assigns EC 1.1.1.108, and gives the Rhea reaction converting carnitine and NAD(+) to 3-dehydrocarnitine, NADH, and a proton. The same enzymatic activity was directly purified from a P. putida strain and shown to oxidize L-carnitine to 3-dehydrocarnitine with L-carnitine and NAD(+) specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=L-carnitine dehydrogenase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=1.1.1.108</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3058208" target="_blank" class="term-link">
+                                        PMID:3058208
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">catalyzes the oxidation of L-carnitine to</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/3058208" target="_blank" class="term-link">
+                                        PMID:3058208
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">specific for L-carnitine and NAD+</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">L-carnitine dehydrogenase (EC 1.1.1.108)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0047728	carnitine 3-dehydrogenase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051287" target="_blank" class="term-link">
+                                    GO:0051287
+                                </a>
+                            </span>
+                            <span class="term-label">NAD binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0051287" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD binding is supported as a cofactor-binding feature, but the enzymatic activity is the core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/HAMAP records an NAD(+) binding feature and the dehydrogenase reaction requires NAD(+). The binding term is correct as supporting biochemical context but should not replace the specific carnitine 3-dehydrogenase molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;NAD(+)&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0051287	NAD binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070403" target="_blank" class="term-link">
+                                    GO:0070403
+                                </a>
+                            </span>
+                            <span class="term-label">NAD+ binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R32" data-a="GO:0070403" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> NAD+ binding is supported but secondary to the specific dehydrogenase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt feature table identifies an NAD(+) binding region and the Rhea reaction uses NAD(+) as electron acceptor. The specific carnitine 3-dehydrogenase activity remains the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/ligand=&#34;NAD(+)&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lcdH/lcdH-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0070403	NAD+ binding</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>NAD(+)-dependent oxidation of L-carnitine to 3-dehydrocarnitine in carnitine catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88R32" data-a="FUNCTION: NAD(+)-dependent oxidation of L-carnitine to 3-deh..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047728" target="_blank" class="term-link">
+                            carnitine 3-dehydrogenase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042413" target="_blank" class="term-link">
+                                carnitine catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009437" target="_blank" class="term-link">
+                                carnitine metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=L-carnitine dehydrogenase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/3058208" target="_blank" class="term-link">
+                                PMID:3058208
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">catalyzes the oxidation of L-carnitine to</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9037756" target="_blank" class="term-link">
+                                PMID:9037756
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The first catabolic step is catalysed by</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lcdH/lcdH-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0047728	carnitine 3-dehydrogenase activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lcdH/lcdH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for lcdH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt/HAMAP supplies the reviewed L-carnitine dehydrogenase name, EC/Rhea reaction, carnitine metabolism pathway, NAD(+) binding feature, homodimer subunit state, and cytoplasmic location.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lcdH/lcdH-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for lcdH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the nine annotations reviewed for lcdH.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR48075/PTHR48075-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for lcdH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched PANTHER metadata places L-carnitine dehydrogenases within a broad 3-hydroxyacyl-CoA dehydrogenase family, supporting caution around broad family-level fatty-acid annotations.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lcdH/lcdH-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for lcdH</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">OpenScientist found same-species biochemical support for L-carnitine dehydrogenase activity, a KT2440 carnitine-catabolism gene-cluster context, and an important caveat that GO:0008859 in the report is not the correct GO term for LcdH.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/3058208" target="_blank" class="term-link">
+                            PMID:3058208
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Purification and properties of carnitine dehydrogenase from Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified P. putida carnitine dehydrogenase catalyzes oxidation of L-carnitine to 3-dehydrocarnitine and is specific for L-carnitine and NAD(+).</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9037756" target="_blank" class="term-link">
+                            PMID:9037756
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bacterial carnitine metabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Review of bacterial carnitine metabolism describes Pseudomonas assimilation of L-carnitine and identifies L-carnitine dehydrogenase as the first catabolic step.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/565193" target="_blank" class="term-link">
+                            PMID:565193
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">[Interrelationships between carnitine metabolism and fatty acid assimilation in Pseudomonas putida (author&#39;s transl)].</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">P. putida physiology study reports growth on L-carnitine and induction of carnitine dehydrogenase by L-carnitine and gamma-butyrobetaine.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 enzymes consume the LcdH product 3-dehydrocarnitine, and should they be modeled as adjacent steps to UPA00117 or as a separate carnitine-utilization module?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R32" data-a="Q: Which KT2440 enzymes consume the LcdH product 3-de..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is there direct biochemical or genetic evidence for PP_0302-dependent L-carnitine utilization in P. putida KT2440, or is the current annotation entirely transferred from homologous L-carnitine dehydrogenases?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R32" data-a="Q: Is there direct biochemical or genetic evidence fo..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type and lcdH deletion KT2440 growth on L-carnitine as sole carbon or nitrogen source, and measure accumulation or loss of 3-dehydrocarnitine by targeted LC-MS.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: growth phenotype and metabolite profiling</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R32" data-a="EXPERIMENT: Compare wild-type and lcdH deletion KT2440 growth ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_0302 and assay NAD(+)-dependent L-carnitine oxidation to 3-dehydrocarnitine across candidate related substrates to confirm substrate specificity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R32" data-a="EXPERIMENT: Purify PP_0302 and assay NAD(+)-dependent L-carnit..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lcdH-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R32" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *lcdH* (L-carnitine dehydrogenase, UniProt Q88R32)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T14:17:47.743649</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lcdH-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lcdH-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-lcdh-l-carnitine-dehydrogenase-uniprot-q88r32">Functional Annotation Report: <em>lcdH</em> (L-carnitine dehydrogenase, UniProt Q88R32)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)<br />
+<strong>Gene:</strong> <em>lcdH</em> (ordered locus PP_0302)<br />
+<strong>Protein:</strong> L-carnitine dehydrogenase (CDH / L-CDH), EC 1.1.1.108<br />
+<strong>UniProt:</strong> Q88R32 · HAMAP rule MF_02129</p>
+<hr />
+<h2 id="0-gene-identity-verification">0. Gene identity verification</h2>
+<p>The target was verified against all provided UniProt criteria before research:</p>
+<ul>
+<li><strong>Gene symbol / function match:</strong> The symbol <em>lcdH</em> denotes <strong>l</strong>‑<strong>c</strong>arnitine <strong>d</strong>e<strong>h</strong>ydrogenase, consistent with the UniProt description "L-carnitine dehydrogenase, EC 1.1.1.108."</li>
+<li><strong>Organism match:</strong> Primary biochemical literature characterizes carnitine dehydrogenase from <em>Pseudomonas putida</em> (strain IFP 206) — the same species as the target strain KT2440 — with the identical EC number 1.1.1.108 (Goulas 1988, PMID 3058208). KT2440-specific pathway context is corroborated by studies in the closely related <em>P. aeruginosa</em> and by classic <em>P. putida</em> physiology work (Kleber 1978, PMID 565193).</li>
+<li><strong>Family / domain match:</strong> Literature and UniProt agree that the enzyme belongs to the 3‑hydroxyacyl‑CoA dehydrogenase family and carries an N‑terminal NAD‑binding Rossmann domain (IPR006176) and C‑terminal helical catalytic domain (IPR006108), matching the provided domain list.</li>
+</ul>
+<p><strong>Conclusion:</strong> The gene symbol is unambiguous for this protein and the literature is directly on-target. No conflicting-gene problem was encountered. Research proceeded with high confidence.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p><em>lcdH</em> encodes <strong>L-carnitine dehydrogenase (EC 1.1.1.108)</strong>, a soluble, cytoplasmic, NAD⁺-dependent oxidoreductase that catalyzes the <strong>reversible oxidation of L-carnitine to 3-dehydrocarnitine</strong>:</p>
+<blockquote>
+<p><strong>L-carnitine + NAD⁺ ⇌ 3-dehydrocarnitine + NADH + H⁺</strong></p>
+</blockquote>
+<p>The enzyme is <strong>strictly specific for the L-(−)-enantiomer of carnitine and for NAD⁺</strong>. It performs the <strong>committed first step of aerobic L-carnitine catabolism</strong>, enabling <em>P. putida</em> to use L-carnitine as a sole source of carbon, nitrogen, and energy. Its product feeds a downstream pathway (3-dehydrocarnitine → glycine betaine → dimethylglycine → sarcosine → glycine). Structurally it is a homodimer of the 3-hydroxyacyl-CoA dehydrogenase (HAD) superfamily fold, acting in the cytoplasm.</p>
+<hr />
+<h2 id="2-key-findings-with-evidence">2. Key findings with evidence</h2>
+<h3 id="21-catalyzed-reaction-and-cofactor">2.1 Catalyzed reaction and cofactor</h3>
+<p>Carnitine dehydrogenase (carnitine:NAD⁺ oxidoreductase, EC 1.1.1.108) purified from <em>P. putida</em> IFP 206 "catalyzes the oxidation of L-carnitine to 3-dehydrocarnitine" using NAD⁺ (Goulas 1988, PMID 3058208). The reaction is reversible; the enzyme has distinct pH optima for the two directions (pH 9.0 for oxidation, pH 7.0 for the reduction of 3-dehydrocarnitine back to L-carnitine), a hallmark of a thermodynamically balanced dehydrogenase.</p>
+<p>Mechanistically, the enzyme oxidizes the <strong>C3 secondary hydroxyl</strong> of carnitine to a <strong>C3 keto group</strong>, exactly analogous to how 3-hydroxyacyl-CoA dehydrogenases oxidize the 3-hydroxyl of their substrates — consistent with its assignment to that structural family (UniProt Q88R32; IPR026578 L-carnitine_dehydrogenase signature).</p>
+<h3 id="22-substrate-and-stereospecificity">2.2 Substrate and stereospecificity</h3>
+<p>The enzyme "is specific for L-carnitine and NAD⁺" (Goulas 1988, PMID 3058208): it does not oxidize D-carnitine and does not substitute NADP⁺ for NAD⁺. Km values for both substrates were determined. This stereospecificity is mirrored physiologically — <em>P. putida</em> and <em>Acinetobacter</em> grow on L-carnitine but not on D-carnitine as a sole carbon source unless L-carnitine is co-supplied (Kleber et al. 1977, PMID 849100; Kleber et al. 1978, PMID 565193).</p>
+<h3 id="23-physical-biochemical-properties">2.3 Physical / biochemical properties</h3>
+<ul>
+<li>Molecular mass ≈ <strong>62 kDa</strong>, a <strong>homodimer of two identical subunits</strong> (~31 kDa each) (Goulas 1988, PMID 3058208).</li>
+<li>Isoelectric point <strong>4.7</strong>; temperature optimum <strong>30 °C</strong>; purified <strong>72-fold to homogeneity</strong>.</li>
+</ul>
+<h3 id="24-pathway-role-committed-first-step-of-carnitine-catabolism">2.4 Pathway role — committed first step of carnitine catabolism</h3>
+<p>"Some, especially <em>Pseudomonas</em> species, assimilate L-(−)-carnitine as sole source of carbon and nitrogen. <strong>The first catabolic step is catalysed by the L-(−)-carnitine dehydrogenase</strong>" (Kleber 1997 review, PMID 9037756). The product, 3-dehydrocarnitine, "is in turn metabolized to glycine betaine (GB), an intermediate metabolite in the catabolism of carnitine to glycine" (Wargo &amp; Hogan 2009, PMID 19406895). Downstream, glycine betaine is demethylated stepwise to dimethylglycine → sarcosine → glycine by the GB-catabolic genes (gbcAB, dgcAB, soxBDAG) (Wargo et al. 2008, PMID 17951379). The deacetylation of 3-dehydrocarnitine to glycine betaine is proposed to involve a 3-ketoacid CoA-transferase (PA1999-PA2000 in <em>P. aeruginosa</em>) (Wargo &amp; Hogan 2009, PMID 19406895).</p>
+<p><strong>Full catabolic route initiated by lcdH:</strong><br />
+L-carnitine → <strong>[lcdH]</strong> → 3-dehydrocarnitine → glycine betaine → dimethylglycine → sarcosine → glycine.</p>
+<h3 id="25-regulation">2.5 Regulation</h3>
+<p>Expression is <strong>substrate-inducible</strong>: "L-Carnitine induced the carnitine dehydrogenase," and γ-butyrobetaine also induces it; synthesis "was repressed by glycinebetaine, glucose and long-chain fatty acids" (Kleber et al. 1978, PMID 565193). This links enzyme production to carnitine availability and to catabolite/pathway-product repression, so the cell makes the enzyme only when L-carnitine is present and preferred carbon sources are absent.</p>
+<h3 id="26-localization">2.6 Localization</h3>
+<p>The enzyme was recovered from <strong>soluble crude extract</strong> and purified without membrane solubilization (Goulas 1988, PMID 3058208; activities measured in crude extract, Kleber 1978, PMID 565193), indicating a <strong>cytoplasmic</strong> location. This is where imported L-carnitine is oxidized. No signal/transmembrane features are indicated for this HAD-family soluble dehydrogenase.</p>
+<h3 id="27-structural-inference">2.7 Structural inference</h3>
+<p>UniProt Q88R32 places the protein in the <strong>3-hydroxyacyl-CoA dehydrogenase family</strong> with:<br />
+- <strong>N-terminal NAD-binding Rossmann domain</strong> (IPR006176, 3-OHacyl-CoA_DH_NAD-bd) — binds NAD⁺.<br />
+- <strong>C-terminal α-helical catalytic/dimerization domain</strong> (IPR006108, 3HC_DH_C; 6-phosphogluconate-dehydrogenase-like fold IPR008927/IPR013328) — forms the dimer interface and completes the active site.<br />
+- <strong>L-carnitine dehydrogenase signature</strong> (IPR026578).</p>
+<p>The biochemically observed homodimer (Goulas 1988) matches this two-domain HAD fold, in which each subunit contributes a Rossmann NAD-binding module and a helical domain, and dimerization is required for a functional active site.</p>
+<h3 id="28-sequence-level-active-site-evidence-bioinformatic">2.8 Sequence-level active-site evidence (bioinformatic)</h3>
+<p>Direct analysis of the 321-residue Q88R32 sequence (UniProt REST) confirms the diagnostic motifs of the family:<br />
+- <strong>NAD-binding Rossmann fingerprint</strong> <code>G-S-G-V-I-G</code> at residues <strong>14–19</strong> — exactly the UniProt-annotated NAD binding site (14–19). This glycine-rich βαβ loop is the classic dinucleotide-binding signature.<br />
+- <strong>Substrate-binding motif</strong> <code>SSTSG</code> at residues <strong>117–121</strong>, a conserved segment of the 3-hydroxyacyl-CoA dehydrogenase substrate pocket.<br />
+- <strong>Family-diagnostic catalytic motif</strong> <code>GHPFNP</code> at residues <strong>140–145</strong>, containing catalytic <strong>His141</strong> — the general-base histidine that deprotonates the C3-hydroxyl of L-carnitine, enabling hydride transfer to NAD⁺ to form the 3-keto product. This is the same catalytic logic used by 3-hydroxyacyl-CoA dehydrogenases.</p>
+<p>UniProt/HAMAP (rule MF_02129) annotations independently confirm the manual findings: FUNCTION "Catalyzes the NAD(+)-dependent oxidation of L-carnitine to 3-dehydrocarnitine"; CATALYTIC "carnitine + NAD⁺ = 3-dehydrocarnitine + NADH + H⁺"; PATHWAY "Amine and polyamine metabolism; carnitine metabolism"; SUBUNIT "Homodimer"; SIMILARITY "3-hydroxyacyl-CoA dehydrogenase family, L-carnitine dehydrogenase subfamily." Database cross-references: KEGG <code>ppu:PP_0302</code>, BioCyc <code>PPUT160488:G1G01-334-MONOMER</code>, STRING <code>160488.PP_0302</code>.</p>
+<h3 id="29-genomic-context-a-dedicated-carnitine-catabolic-cluster-kt2440-specific">2.9 Genomic context — a dedicated carnitine catabolic cluster (KT2440-specific)</h3>
+<p>KEGG genome annotation shows that <em>lcdH</em> (PP_0302) lies within a compact, co-oriented carnitine-catabolism gene cluster in KT2440, giving direct strain-specific support for the pathway model:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Product</th>
+<th>KO / EC</th>
+<th>Role in pathway</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PP_0304</strong></td>
+<td>Carnitine/glycine betaine ABC-transporter substrate-binding protein</td>
+<td>K02002</td>
+<td><strong>Import</strong> of L-carnitine into the cytoplasm</td>
+</tr>
+<tr>
+<td><strong>PP_0302 (lcdH)</strong></td>
+<td>L-carnitine (carnitine 3-)dehydrogenase</td>
+<td>K17735 / EC 1.1.1.108</td>
+<td><strong>Step 1:</strong> L-carnitine → 3-dehydrocarnitine (NAD⁺)</td>
+</tr>
+<tr>
+<td><strong>PP_0303</strong></td>
+<td>Dehydrocarnitine cleavage enzyme (3-dehydrocarnitine:acetyl-CoA trimethylamine transferase)</td>
+<td>K27837 / EC 2.3.1.317</td>
+<td><strong>Step 2:</strong> 3-dehydrocarnitine → glycine betaine (removes acetyl unit as acetyl-CoA)</td>
+</tr>
+<tr>
+<td><strong>PP_0301</strong></td>
+<td>Betainyl-CoA thioesterase</td>
+<td>K27492 / EC 3.1.2.33</td>
+<td>Accessory CoA-ester hydrolysis</td>
+</tr>
+<tr>
+<td><strong>PP_0305</strong></td>
+<td>CdhR, AraC-family activator</td>
+<td>K17736</td>
+<td>Carnitine-catabolism transcriptional <strong>activator</strong></td>
+</tr>
+<tr>
+<td><strong>PP_0298</strong></td>
+<td>AraC-family, glycine betaine-responsive activator</td>
+<td>K21826</td>
+<td>Downstream/betaine-responsive regulation</td>
+</tr>
+</tbody>
+</table>
+<p>This gene order (transporter → dehydrogenase → cleavage enzyme → regulator) confirms that L-carnitine is first <strong>imported</strong> by the PP_0304 ABC transporter, then oxidized <strong>in the cytoplasm</strong> by lcdH, after which the adjacent PP_0303 cleavage enzyme converts the 3-dehydrocarnitine product to <strong>glycine betaine</strong>. The clustered activator <strong>CdhR (PP_0305)</strong> provides the molecular basis for the substrate-inducibility of the enzyme observed biochemically (Kleber 1978, PMID 565193). Notably, this KT2440 cluster identifies the downstream betaine-forming step precisely (EC 2.3.1.317), refining the earlier "3-ketoacid CoA-transferase" inference drawn from <em>P. aeruginosa</em>.</p>
+<hr />
+<h2 id="3-supported-and-refuted-hypotheses">3. Supported and refuted hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Verdict</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>lcdH</em> encodes an NAD⁺-dependent L-carnitine dehydrogenase (EC 1.1.1.108) oxidizing L-carnitine → 3-dehydrocarnitine</td>
+<td><strong>Supported</strong></td>
+<td>Goulas 1988 (PMID 3058208); UniProt/HAMAP MF_02129</td>
+</tr>
+<tr>
+<td>Enzyme is stereospecific (L-carnitine only) and NAD⁺-specific (not NADP⁺)</td>
+<td><strong>Supported</strong></td>
+<td>Goulas 1988 (PMID 3058208)</td>
+</tr>
+<tr>
+<td>It performs the committed first step of carnitine catabolism enabling growth on carnitine as C/N source</td>
+<td><strong>Supported</strong></td>
+<td>Kleber 1997 (PMID 9037756); Wargo &amp; Hogan 2009 (PMID 19406895)</td>
+</tr>
+<tr>
+<td>Product 3-dehydrocarnitine is routed to glycine betaine → glycine</td>
+<td><strong>Supported</strong></td>
+<td>Wargo &amp; Hogan 2009 (PMID 19406895); Wargo 2008 (PMID 17951379)</td>
+</tr>
+<tr>
+<td>Enzyme is cytoplasmic (soluble)</td>
+<td><strong>Supported (strong inference)</strong></td>
+<td>Soluble purification (PMID 3058208, 565193)</td>
+</tr>
+<tr>
+<td>Homodimeric HAD-family fold with Rossmann NAD-binding domain</td>
+<td><strong>Supported</strong></td>
+<td>PMID 3058208 + UniProt domain architecture + sequence motifs (GSGVIG, His141)</td>
+</tr>
+<tr>
+<td>lcdH sits in a dedicated carnitine catabolic cluster (importer + dehydrogenase + cleavage enzyme + CdhR activator)</td>
+<td><strong>Supported (KT2440 genomics)</strong></td>
+<td>KEGG PP_0298–PP_0305</td>
+</tr>
+<tr>
+<td>Enzyme uses NADP⁺ or acts on D-carnitine</td>
+<td><strong>Refuted</strong></td>
+<td>Goulas 1988 (PMID 3058208): specific for L-carnitine and NAD⁺</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-limitations-and-future-directions">4. Limitations and future directions</h2>
+<ul>
+<li><strong>Strain provenance:</strong> The definitive biochemical characterization (Goulas 1988) used <em>P. putida</em> IFP 206, not KT2440 directly; genetic dissection of the pathway was done in <em>P. aeruginosa</em> PA14. KT2440 (PP_0302) function is assigned by sequence/HAMAP orthology, which is well supported but not yet KT2440-specific enzymology.</li>
+<li><strong>No experimental 3D structure</strong> of this specific enzyme was located; the fold description rests on family/domain inference. AlphaFold modeling and superposition onto 3-hydroxyacyl-CoA dehydrogenase structures could confirm the active-site geometry and identify catalytic His/Asn residues.</li>
+<li><strong>Downstream deacetylation step</strong> (3-dehydrocarnitine → glycine betaine) mechanism is inferred (3-ketoacid CoA-transferase) but not fully enzymatically characterized in <em>P. putida</em>.</li>
+<li><strong>Future work:</strong> (i) KT2440 ΔPP_0302 knockout growth assays on L-carnitine; (ii) recombinant Q88R32 kinetics (Km, kcat for L-carnitine/NAD⁺); (iii) crystal/cryo-EM structure with NAD⁺/substrate to define catalytic residues; (iv) transcriptional mapping of the PP_0302 gene cluster and its regulator.</li>
+</ul>
+<hr />
+<h2 id="references-pmid">References (PMID)</h2>
+<ul>
+<li><strong>3058208</strong> — Goulas P. (1988) Purification and properties of carnitine dehydrogenase from <em>Pseudomonas putida</em>. <em>Biochim Biophys Acta</em>.</li>
+<li><strong>9037756</strong> — Kleber H-P. (1997) Bacterial carnitine metabolism. <em>FEMS Microbiol Lett</em>.</li>
+<li><strong>19406895</strong> — Wargo MJ, Hogan DA. (2009) Identification of genes required for <em>Pseudomonas aeruginosa</em> carnitine catabolism. <em>Microbiology</em>.</li>
+<li><strong>17951379</strong> — Wargo MJ, Szwergold BS, Hogan DA. (2008) Two gene clusters and a regulator required for <em>P. aeruginosa</em> glycine betaine catabolism. <em>J Bacteriol</em>.</li>
+<li><strong>565193</strong> — Kleber H-P, Seim H, Aurich H, Strack E. (1978) Interrelationships between carnitine metabolism and fatty acid assimilation in <em>Pseudomonas putida</em>.</li>
+<li><strong>849100</strong> — Kleber H-P, Seim H, Aurich H, Strack E. (1977) Utilization of trimethylammonium compounds by <em>Acinetobacter calcoaceticus</em>.</li>
+<li><strong>30670548</strong> — Bazire P, et al. (2019) Characterization of L-carnitine metabolism in <em>Sinorhizobium meliloti</em>. <em>J Bacteriol</em>.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lcdH-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lcdH-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R32
+gene_symbol: lcdH
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: lcdH encodes a cytoplasmic NAD(+)-dependent L-carnitine dehydrogenase that oxidizes L-carnitine to 3-dehydrocarnitine in bacterial carnitine metabolism.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Cytoplasm is the supported cellular location for the soluble L-carnitine dehydrogenase.
+    action: ACCEPT
+    reason: UniProt places LcdH in the cytoplasm and the GOA row carries the same UniProtKB-SubCell/UniRule-derived location.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+- term:
+    id: GO:0006631
+    label: fatty acid metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Fatty acid metabolism is not the informative process for this L-carnitine dehydrogenase.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The annotation appears to come from broad 3-hydroxyacyl-CoA dehydrogenase InterPro domains, whereas the reviewed UniProt entry and pathway annotation identify LcdH as an L-carnitine dehydrogenase in carnitine metabolism. Keep carnitine metabolism/catabolism as the core process unless further evidence links PP_0302 to fatty-acid metabolism in KT2440.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;RecName: Full=L-carnitine dehydrogenase&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;PATHWAY: Amine and polyamine metabolism; carnitine metabolism.&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0006631\tfatty acid metabolic process&#34;
+- term:
+    id: GO:0009437
+    label: carnitine metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Carnitine metabolism is the correct broad biological process for LcdH.
+    action: ACCEPT
+    reason: UniProt records the L-carnitine dehydrogenase reaction and places the enzyme in carnitine metabolism; GOA links this process through UniRule and UniPathway UPA00117.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;PATHWAY: Amine and polyamine metabolism; carnitine metabolism.&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0009437\tcarnitine metabolic process&#34;
+- term:
+    id: GO:0016491
+    label: oxidoreductase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: Oxidoreductase activity is true but less informative than the carnitine 3-dehydrogenase activity.
+    action: KEEP_AS_NON_CORE
+    reason: LcdH performs an NAD(+)-dependent oxidation reaction, so this broad parent is valid. The core molecular function should be the specific GO:0047728 carnitine 3-dehydrogenase activity already present in GOA.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0016491\toxidoreductase activity&#34;
+- term:
+    id: GO:0016616
+    label: oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: This oxidoreductase parent is chemically consistent but not as specific as the L-carnitine dehydrogenase term.
+    action: KEEP_AS_NON_CORE
+    reason: The reaction oxidizes the carnitine alcohol group using NAD(+), matching this parent term. Because GO:0047728 captures the same chemistry with the correct substrate specificity, this broader InterPro-derived term should remain non-core.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0016616\toxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor&#34;
+- term:
+    id: GO:0042413
+    label: carnitine catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  review:
+    summary: Carnitine catabolism is appropriate for the dehydrogenation of L-carnitine to 3-dehydrocarnitine.
+    action: ACCEPT
+    reason: LcdH catalyzes oxidation of L-carnitine in the carnitine metabolism pathway, and bacterial carnitine-metabolism literature describes this dehydrogenase as the first catabolic step in Pseudomonas carnitine assimilation. This process is the best current biological-process framing for UPA00117 while downstream product utilization remains outside the single-gene module boundary.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;Catalyzes the NAD(+)-dependent oxidation of L-carnitine to 3-&#34;
+    - reference_id: PMID:9037756
+      supporting_text: &#34;The first catabolic step is catalysed by&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;PATHWAY: Amine and polyamine metabolism; carnitine metabolism.&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0042413\tcarnitine catabolic process&#34;
+- term:
+    id: GO:0047728
+    label: carnitine 3-dehydrogenase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: GO:0047728 is the exact molecular function for LcdH.
+    action: ACCEPT
+    reason: The UniProt entry names PP_0302 as L-carnitine dehydrogenase, assigns EC 1.1.1.108, and gives the Rhea reaction converting carnitine and NAD(+) to 3-dehydrocarnitine, NADH, and a proton. The same enzymatic activity was directly purified from a P. putida strain and shown to oxidize L-carnitine to 3-dehydrocarnitine with L-carnitine and NAD(+) specificity.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;RecName: Full=L-carnitine dehydrogenase&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;EC=1.1.1.108&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);&#34;
+    - reference_id: PMID:3058208
+      supporting_text: &#34;catalyzes the oxidation of L-carnitine to&#34;
+    - reference_id: PMID:3058208
+      supporting_text: &#34;specific for L-carnitine and NAD+&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-deep-research-openscientist.md
+      supporting_text: &#34;L-carnitine dehydrogenase (EC 1.1.1.108)&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0047728\tcarnitine 3-dehydrogenase activity&#34;
+- term:
+    id: GO:0051287
+    label: NAD binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: NAD binding is supported as a cofactor-binding feature, but the enzymatic activity is the core function.
+    action: KEEP_AS_NON_CORE
+    reason: UniProt/HAMAP records an NAD(+) binding feature and the dehydrogenase reaction requires NAD(+). The binding term is correct as supporting biochemical context but should not replace the specific carnitine 3-dehydrogenase molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;/ligand=\&#34;NAD(+)\&#34;&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0051287\tNAD binding&#34;
+- term:
+    id: GO:0070403
+    label: NAD+ binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: NAD+ binding is supported but secondary to the specific dehydrogenase activity.
+    action: KEEP_AS_NON_CORE
+    reason: The UniProt feature table identifies an NAD(+) binding region and the Rhea reaction uses NAD(+) as electron acceptor. The specific carnitine 3-dehydrogenase activity remains the core molecular function.
+    supported_by:
+    - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+      supporting_text: &#34;/ligand=\&#34;NAD(+)\&#34;&#34;
+    - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+      supporting_text: &#34;GO:0070403\tNAD+ binding&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/lcdH/lcdH-uniprot.txt
+  title: UniProtKB reviewed entry for lcdH
+  findings:
+  - statement: UniProt/HAMAP supplies the reviewed L-carnitine dehydrogenase name, EC/Rhea reaction, carnitine metabolism pathway, NAD(+) binding feature, homodimer subunit state, and cytoplasmic location.
+- id: file:PSEPK/lcdH/lcdH-goa.tsv
+  title: QuickGO GOA annotations for lcdH
+  findings:
+  - statement: The fetched GOA table contains the nine annotations reviewed for lcdH.
+- id: file:interpro/panther/PTHR48075/PTHR48075-metadata.yaml
+  title: PANTHER family metadata for lcdH
+  findings:
+  - statement: The fetched PANTHER metadata places L-carnitine dehydrogenases within a broad 3-hydroxyacyl-CoA dehydrogenase family, supporting caution around broad family-level fatty-acid annotations.
+- id: file:PSEPK/lcdH/lcdH-deep-research-openscientist.md
+  title: OpenScientist deep research report for lcdH
+  findings:
+  - statement: OpenScientist found same-species biochemical support for L-carnitine dehydrogenase activity, a KT2440 carnitine-catabolism gene-cluster context, and an important caveat that GO:0008859 in the report is not the correct GO term for LcdH.
+- id: PMID:3058208
+  title: Purification and properties of carnitine dehydrogenase from Pseudomonas putida.
+  findings:
+  - statement: Purified P. putida carnitine dehydrogenase catalyzes oxidation of L-carnitine to 3-dehydrocarnitine and is specific for L-carnitine and NAD(+).
+- id: PMID:9037756
+  title: Bacterial carnitine metabolism.
+  findings:
+  - statement: Review of bacterial carnitine metabolism describes Pseudomonas assimilation of L-carnitine and identifies L-carnitine dehydrogenase as the first catabolic step.
+- id: PMID:565193
+  title: &#34;[Interrelationships between carnitine metabolism and fatty acid assimilation in Pseudomonas putida (author&#39;s transl)].&#34;
+  findings:
+  - statement: P. putida physiology study reports growth on L-carnitine and induction of carnitine dehydrogenase by L-carnitine and gamma-butyrobetaine.
+core_functions:
+- description: NAD(+)-dependent oxidation of L-carnitine to 3-dehydrocarnitine in carnitine catabolism.
+  molecular_function:
+    id: GO:0047728
+    label: carnitine 3-dehydrogenase activity
+  directly_involved_in:
+  - id: GO:0042413
+    label: carnitine catabolic process
+  - id: GO:0009437
+    label: carnitine metabolic process
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+    supporting_text: &#34;RecName: Full=L-carnitine dehydrogenase&#34;
+  - reference_id: file:PSEPK/lcdH/lcdH-uniprot.txt
+    supporting_text: &#34;Reaction=carnitine + NAD(+) = 3-dehydrocarnitine + NADH + H(+);&#34;
+  - reference_id: PMID:3058208
+    supporting_text: &#34;catalyzes the oxidation of L-carnitine to&#34;
+  - reference_id: PMID:9037756
+    supporting_text: &#34;The first catabolic step is catalysed by&#34;
+  - reference_id: file:PSEPK/lcdH/lcdH-goa.tsv
+    supporting_text: &#34;GO:0047728\tcarnitine 3-dehydrogenase activity&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Which KT2440 enzymes consume the LcdH product 3-dehydrocarnitine, and should they be modeled as adjacent steps to UPA00117 or as a separate carnitine-utilization module?
+- question: Is there direct biochemical or genetic evidence for PP_0302-dependent L-carnitine utilization in P. putida KT2440, or is the current annotation entirely transferred from homologous L-carnitine dehydrogenases?
+suggested_experiments:
+- description: Compare wild-type and lcdH deletion KT2440 growth on L-carnitine as sole carbon or nitrogen source, and measure accumulation or loss of 3-dehydrocarnitine by targeted LC-MS.
+  experiment_type: growth phenotype and metabolite profiling
+- description: Purify PP_0302 and assay NAD(+)-dependent L-carnitine oxidation to 3-dehydrocarnitine across candidate related substrates to confirm substrate specificity.
+  experiment_type: in vitro enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
