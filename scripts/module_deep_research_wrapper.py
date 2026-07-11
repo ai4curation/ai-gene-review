@@ -23,7 +23,16 @@ from typing import Any
 import yaml
 
 
-PROVIDERS = ("openai", "perplexity", "perplexity-lite", "falcon", "cyberian", "codex", "asta")
+PROVIDERS = (
+    "openai",
+    "perplexity",
+    "perplexity-lite",
+    "falcon",
+    "cyberian",
+    "codex",
+    "asta",
+    "openscientist",
+)
 DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
