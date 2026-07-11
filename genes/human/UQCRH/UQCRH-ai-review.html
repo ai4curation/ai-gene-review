@@ -1,0 +1,4233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UQCRH - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>UQCRH</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/P07919" target="_blank" class="term-link">
+                        P07919
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-initialized">
+                    INITIALIZED
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "UQCRH";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="P07919" data-a="DESCRIPTION: UQCRH (ubiquinol-cytochrome c reductase hinge prot..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UQCRH (ubiquinol-cytochrome c reductase hinge protein; cytochrome b-c1 complex subunit 6, also called Complex III subunit 6/VIII or the &#34;hinge&#34; protein) is a small (91-residue precursor; 14-91 mature) nuclear-encoded structural subunit of the mitochondrial respiratory chain Complex III (cytochrome bc1 / ubiquinol-cytochrome c oxidoreductase). It is imported into mitochondria via an unusually acidic N-terminal transit peptide and resides as a peripheral membrane protein on the intermembrane-space side of the mitochondrial inner membrane. UQCRH is one of the low-molecular-weight, non-catalytic subunits of the obligate CIII dimer; the catalytic redox centres are carried by cytochrome b (MT-CYB), cytochrome c1 (CYC1) and the Rieske iron-sulfur protein (UQCRFS1). The acidic hinge protein forms the docking interface that &#34;hinges&#34; cytochrome c to cytochrome c1, and is required for correct interaction and electron transfer between cytochrome c1 and soluble cytochrome c. Loss of UQCRH destabilizes the assembled holoenzyme, reduces Complex III catalytic activity, and causes mitochondrial complex III deficiency (nuclear type 11), presenting with lactic acidosis, hyperammonaemia, hypoglycaemia and encephalopathy. Its overall role is therefore structural/assembly and electron-transfer facilitation within Complex III during aerobic respiration and oxidative phosphorylation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045275" target="_blank" class="term-link">
+                                    GO:0045275
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex III</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0045275" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred assignment of UQCRH as a component of respiratory chain Complex III (cytochrome bc1). This is the correct, specific complex for this subunit and is strongly supported by structural, biochemical and disease evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UQCRH is a bona fide low-molecular-weight subunit of the 11-subunit cytochrome b-c1 complex (CIII); this is confirmed experimentally by cryo-EM structure and by the CIII deficiency caused by its loss. GO:0045275 is the current, correct term (the legacy GO:0005750 is obsolete).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">encodes a structural complex III (CIII) subunit</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">6 low-molecular weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006122" target="_blank" class="term-link">
+                                    GO:0006122
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial electron transport, ubiquinol to cytochrome c</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0006122" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetically-inferred involvement in the Complex III reaction that transfers electrons from ubiquinol to cytochrome c. This is the core biological process of Complex III and the most specific correct BP term for this subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As a subunit of CIII, UQCRH participates in the ubiquinol-to-cytochrome-c electron transport reaction; the hinge protein specifically mediates the cytochrome c1-cytochrome c docking/electron-transfer step. This is the representative core BP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CIII transports electrons from ubiquinol to cytochrome c and translocates protons across the inner mitochondrial membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Subcellular-location mapping to the mitochondrial inner membrane, consistent with UniProt annotation of UQCRH as a peripheral inner-membrane protein on the intermembrane side.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct and specific localization for a CIII subunit; independently supported by experimental IDA (PMID:28844695, ComplexPortal) and by UniProt subcellular location.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006122" target="_blank" class="term-link">
+                                    GO:0006122
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial electron transport, ubiquinol to cytochrome c</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0006122" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping (IPR003422, Cyt_b-c1_6 / hinge domain) to the CIII electron transport process. Duplicates the IBA core BP term via an orthogonal, domain-based line of evidence.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The hinge-domain signature correctly implies participation in ubiquinol-to-cytochrome-c electron transport; consistent with the IBA annotation. Duplicate of the core BP is acceptable.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0016020" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Generic ARBA electronic annotation to &#34;membrane&#34;. This is a high-level parent of the specific and experimentally supported mitochondrial inner membrane term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Not wrong, but uninformatively general: the specific location (GO:0005743 mitochondrial inner membrane) is well established, so the bare &#34;membrane&#34; term adds no information and should not be treated as a core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0098803" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic annotation placing UQCRH in a (generic) respiratory chain complex. Correct but is the parent of the specific term respiratory chain complex III (GO:0045275).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but less specific than GO:0045275, which captures the exact complex. Retain as a valid but non-core (redundant-parent) annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">6 low-molecular weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902600" target="_blank" class="term-link">
+                                    GO:1902600
+                                </a>
+                            </span>
+                            <span class="term-label">proton transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:1902600" data-r="GO_REF:0000108" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Logically-inferred BP from the quinol-cytochrome-c reductase activity term: Complex III couples electron transfer to translocation of protons across the inner membrane in the Q cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The proton translocation is a genuine, complex-level consequence of the CIII reaction, but UQCRH is a non-catalytic hinge subunit that does not itself conduct protons; this is a context/complex-level role rather than the subunit&#39;s core function. Keep as non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CIII transports electrons from ubiquinol to cytochrome c and translocates protons across the inner mitochondrial membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-164651
+
+                                </span>
+
+                                <div class="support-text">complex III transfers electrons from ubiquinol to cytochrome c, linking this process to translocation of protons across the membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:25416956
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A proteome-scale map of the human interactome network.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005515" data-r="PMID:25416956" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a proteome-scale binary interactome (Y2H) screen. The reported partners (e.g. ARL8A, RNF24, ENTREP3) are not Complex III subunits.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> &#34;Protein binding&#34; is uninformative and does not describe a molecular function; the high-throughput binary interactors are cytosolic/endosomal proteins with no obvious physiological relationship to a mitochondrial inner-membrane CIII subunit, so this is likely a non-specific/spurious interaction. Retained (not removed, per policy for experimental IPIs) but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                                        PMID:25416956
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A proteome-scale map of the human interactome network.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32296183
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A reference map of the human binary protein interactome.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005515" data-r="PMID:32296183" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Bare &#34;protein binding&#34; from a reference binary-interactome (HuRI, Y2H) map. Partners (e.g. NDFIP1, NDFIP2, PRRG1) are not Complex III components.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Same rationale as the other protein-binding IPI: uninformative MF term and non-CIII high-throughput binary partners with no established physiological role for this inner-membrane subunit. Retained but flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                                        PMID:32296183
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">A reference map of the human binary protein interactome.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct assay (ComplexPortal, from cryo-EM of the human respiratory megacomplex) localizing UQCRH to the mitochondrial inner membrane as part of Complex III.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental (IDA) localization to the correct, specific compartment; the cryo-EM structure resolves UQCRH within the membrane-embedded CIII dimer. Core localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link">
+                                        PMID:28844695
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are positioned to accept electrons on the surface of the c1 state CIII dimer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006122" target="_blank" class="term-link">
+                                    GO:0006122
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial electron transport, ubiquinol to cytochrome c</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0006122" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (NAS) involvement of UQCRH in the ubiquinol-to-cytochrome-c electron transport reaction of Complex III.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct core BP for a CIII subunit; the megacomplex structure shows cytochrome c docking on the c1-state CIII dimer, the reaction in which UQCRH&#39;s hinge role operates. Duplicate of the core BP term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link">
+                                        PMID:28844695
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">are positioned to accept electrons on the surface of the c1 state CIII dimer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045275" target="_blank" class="term-link">
+                                    GO:0045275
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex III</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0045275" data-r="PMID:28844695" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (IPI) assignment of UQCRH as a part of respiratory chain Complex III, based on the cryo-EM megacomplex structure.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimentally supported membership of the correct, specific complex; consistent with the IBA annotation and with UniProt&#39;s 11-subunit CIII composition. Core CC.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">6 low-molecular weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045333" target="_blank" class="term-link">
+                                    GO:0045333
+                                </a>
+                            </span>
+                            <span class="term-label">cellular respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28844695
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Architecture of Human Mitochondrial Respiratory Megacomplex ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0045333" data-r="PMID:28844695" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ComplexPortal (NAS) involvement in cellular respiration, reflecting Complex III&#39;s role in the respiratory electron transport chain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct high-level BP context, but broader than the specific core term GO:0006122; keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CIII transports electrons from ubiquinol to cytochrome c and translocates protons across the inner mitochondrial membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HTP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34800366
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative high-confidence human mitochondrial proteome an...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005739" data-r="PMID:34800366" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput mitochondrial proteome localization to the mitochondrion. Correct but a generic parent of the specific inner-membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate compartment but less specific than GO:0005743 (mitochondrial inner membrane), which is experimentally established; keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Sequence-similarity transfer (from ortholog UniProtKB:P00127) of the mitochondrial inner membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization; consistent with experimental IDA and UniProt. Duplicate of the core CC term via orthology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008121" target="_blank" class="term-link">
+                                    GO:0008121
+                                </a>
+                            </span>
+                            <span class="term-label">quinol-cytochrome-c reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:34750991
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterising a homozygous two-exon deletion in UQCRH: comp...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0008121" data-r="PMID:34750991" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IMP based on the homozygous two-exon UQCRH deletion, which reduces Complex III (quinol-cytochrome-c reductase) activity to ~50-60% of control. This is the whole-complex catalytic activity; UQCRH is a non-catalytic structural/hinge subunit, so the loss of activity reflects a structural/assembly requirement, not catalysis by UQCRH itself.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The catalytic centres of CIII are carried by cytochrome b (MT-CYB), cytochrome c1 (CYC1) and the Rieske protein (UQCRFS1); UQCRH is explicitly a structural subunit whose precise function &#34;remains to be fully elucidated&#34; and which &#34;hinges&#34; cytochrome c to c1. The IMP phenotype (loss of UQCRH lowers CIII activity) is fully explained by a structural/assembly role, and does not demonstrate that UQCRH itself enables quinol-cytochrome-c reductase catalysis. Assigning the complex&#39;s catalytic MF to this non-catalytic subunit is an over-annotation; the subunit&#39;s MF is better captured as structural molecule activity (GO:0005198) contributing to the complex activity. Retained (experimental) but flagged.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">confirmed a specific decrease of CIII activity to approximately 60% compared to control cell lines</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">remains to be fully elucidated</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">and &#39;hinges&#39; cytochrome c with cytochrome c1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20833797
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Phosphoproteome analysis of functional mitochondria isolated...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005739" data-r="PMID:20833797" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> High-throughput direct assay (mitochondrial phosphoproteome of human muscle) localizing UQCRH to the mitochondrion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but generic parent of the specific inner-membrane localization; keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-164651
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="Reactome:R-HSA-164651" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) localization to the mitochondrial inner membrane, from the pathway describing electron transfer from ubiquinol to cytochrome c by Complex III.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization consistent with experimental and UniProt evidence. Duplicate of the core CC term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    Reactome:R-HSA-164651
+
+                                </span>
+
+                                <div class="support-text">complex III transfers electrons from ubiquinol to cytochrome c, linking this process to translocation of protons across the membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9906017
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="Reactome:R-HSA-9906017" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner-membrane localization from the CIII assembly pathway (UQCRFS1 processing). Correct localization for the assembled complex context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization; consistent with all other lines of evidence. Duplicate of the core CC term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                    GO:0005743
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial inner membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            Reactome:R-HSA-9906042
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0005743" data-r="Reactome:R-HSA-9906042" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Reactome (TAS) inner-membrane localization from the CIII assembly pathway (TTC19 clearance of UQCRFS1 fragments). Correct localization for the complex context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct, specific localization; consistent with all other evidence. Duplicate of the core CC term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/UQCRH/UQCRH-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Mitochondrion inner membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006119" target="_blank" class="term-link">
+                                    GO:0006119
+                                </a>
+                            </span>
+                            <span class="term-label">oxidative phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2826252
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An extremely acidic amino-terminal presequence of the precur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0006119" data-r="PMID:2826252" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS involvement in oxidative phosphorylation, reflecting Complex III&#39;s place in the OXPHOS electron transport chain that drives ATP synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct high-level BP context but broader than the specific core term GO:0006122; keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                        PMID:34750991
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CIII transports electrons from ubiquinol to cytochrome c and translocates protons across the inner mitochondrial membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008121" target="_blank" class="term-link">
+                                    GO:0008121
+                                </a>
+                            </span>
+                            <span class="term-label">quinol-cytochrome-c reductase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2826252
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An extremely acidic amino-terminal presequence of the precur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0008121" data-r="PMID:2826252" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS (PINC) assignment of quinol-cytochrome-c reductase activity, i.e. the whole Complex III catalytic activity, to UQCRH. UQCRH is the non-catalytic hinge subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> As with the IMP annotation to the same term, this attributes the complex&#39;s catalytic MF to a structural, non-catalytic subunit. The 1987 paper itself describes UQCRH only as a subunit that &#34;hinges&#34; cytochrome c to c1, not as the catalytic entity. Better represented as structural molecule activity contributing to the complex activity; flagged as over-annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">and &#39;hinges&#39; cytochrome c with cytochrome c1</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009060" target="_blank" class="term-link">
+                                    GO:0009060
+                                </a>
+                            </span>
+                            <span class="term-label">aerobic respiration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2826252
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An extremely acidic amino-terminal presequence of the precur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0009060" data-r="PMID:2826252" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS involvement in aerobic respiration, reflecting the role of the ubiquinol-cytochrome-c reductase in the aerobic respiratory chain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct high-level BP context but broader than the specific core term GO:0006122; keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0098803" target="_blank" class="term-link">
+                                    GO:0098803
+                                </a>
+                            </span>
+                            <span class="term-label">respiratory chain complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:2826252
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    An extremely acidic amino-terminal presequence of the precur...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="P07919" data-a="GO:0098803" data-r="PMID:2826252" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> TAS assignment of UQCRH to a respiratory chain complex. Correct but generic parent of the specific respiratory chain complex III term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate but less specific than GO:0045275 (respiratory chain complex III); keep as valid non-core.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                        PMID:2826252
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase in</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Non-catalytic structural (hinge) subunit of mitochondrial respiratory Complex III (cytochrome bc1); provides the acidic docking interface that positions cytochrome c against cytochrome c1, contributing to the quinol-cytochrome-c reductase activity of the assembled complex and stabilizing the holoenzyme.</h3>
+                <span class="vote-buttons" data-g="P07919" data-a="FUNCTION: Non-catalytic structural (hinge) subunit of mitoch..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005198" target="_blank" class="term-link">
+                            structural molecule activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006122" target="_blank" class="term-link">
+                                mitochondrial electron transport, ubiquinol to cytochrome c
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005743" target="_blank" class="term-link">
+                                mitochondrial inner membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045275" target="_blank" class="term-link">
+                            respiratory chain complex III
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                                PMID:2826252
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">and &#39;hinges&#39; cytochrome c with cytochrome c1</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                                PMID:34750991
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">encodes a structural complex III (CIII) subunit</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20833797" target="_blank" class="term-link">
+                            PMID:20833797
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Phosphoproteome analysis of functional mitochondria isolated from resting human muscle reveals extensive phosphorylation of inner membrane protein complexes and enzymes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25416956" target="_blank" class="term-link">
+                            PMID:25416956
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A proteome-scale map of the human interactome network.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/2826252" target="_blank" class="term-link">
+                            PMID:2826252
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">An extremely acidic amino-terminal presequence of the precursor for the human mitochondrial hinge protein.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28844695" target="_blank" class="term-link">
+                            PMID:28844695
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32296183" target="_blank" class="term-link">
+                            PMID:32296183
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A reference map of the human binary protein interactome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34750991" target="_blank" class="term-link">
+                            PMID:34750991
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterising a homozygous two-exon deletion in UQCRH: comparing human and mouse phenotypes.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34800366" target="_blank" class="term-link">
+                            PMID:34800366
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative high-confidence human mitochondrial proteome and its dynamics in cellular context.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-164651
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electron transfer from ubiquinol to cytochrome c of complex III</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9906017
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Unknown peptidase cleaves UQCRFS1 subunit</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        Reactome:R-HSA-9906042
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TTC19 clears UQCRFS1 fragments from Complex III</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/UQCRH/UQCRH-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB P07919 (QCR6_HUMAN) Cytochrome b-c1 complex subunit 6, mitochondrial</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does UQCRH have any role beyond CIII assembly/structure and cytochrome c docking (e.g. a regulatory or supercomplex-organizing role), given the altered supercomplex distribution observed upon its loss?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="P07919" data-a="Q: Does UQCRH have any role beyond CIII assembly/stru..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Structure-guided mutagenesis of the acidic N-terminal region and the cytochrome c docking surface of UQCRH to quantify effects on cytochrome c1-cytochrome c electron transfer versus overall CIII assembly and stability.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The acidic hinge region of UQCRH is specifically required for cytochrome c docking and c1-to-c electron transfer, separable from its contribution to CIII holoenzyme assembly/stability.</em></p>
+
+
+                </div>
+                <span class="vote-buttons" data-g="P07919" data-a="EXPERIMENT: Structure-guided mutagenesis of the acidic N-termi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(UQCRH-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="P07919" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="uqcrh-p07919-review-notes">UQCRH (P07919) review notes</h1>
+<h2 id="identity">Identity</h2>
+<ul>
+<li>Cytochrome b-c1 complex subunit 6, mitochondrial (Complex III subunit 6 / subunit VIII).</li>
+<li>AltNames: Mitochondrial hinge protein; Cytochrome c1 non-heme 11 kDa protein; Ubiquinol-cytochrome c reductase complex 11 kDa protein.</li>
+<li>91 aa precursor; TRANSIT 1-13 (mitochondrial); mature chain 14-91. Belongs to UQCRH/QCR6 family.</li>
+<li>Small, non-catalytic <strong>structural subunit</strong> of mitochondrial respiratory Complex III (cytochrome bc1).</li>
+</ul>
+<h2 id="core-biology-verified">Core biology (verified)</h2>
+<ul>
+<li><strong>Hinge protein</strong>: "Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase in the respiratory chain and 'hinges' cytochrome c with cytochrome c1" [PMID:2826252 abstract].</li>
+<li>Structural component linking cytochromes c and c1: "Functional CIII is organised as a dimeric complex (CIII2) and UQCRH is thought to be a structural component linking the cytochromes c and c1 (Ohta et al, 1987)" <a href="https://pubmed.ncbi.nlm.nih.gov/34750991">PMID:34750991</a>.</li>
+<li>Deletion → impaired CIII activity (~50-60% residual), reduced holoenzyme MW, altered supercomplex distribution → CIII deficiency disease (MC3DN11) [PMID:34750991 IMP].</li>
+<li>One of the eight CIII subunits whose exact molecular role "remains to be fully elucidated" — i.e. non-catalytic; catalytic centres are MT-CYB, CYC1, UQCRFS1 <a href="https://pubmed.ncbi.nlm.nih.gov/34750991">PMID:34750991</a>.</li>
+<li>Location: mitochondrial inner membrane; peripheral membrane protein, intermembrane side [UniProt SUBCELLULAR LOCATION].</li>
+</ul>
+<h2 id="goa-aspectlabel-anchors-use-these-exact-current-terms">GOA aspect/label anchors (use these exact current terms)</h2>
+<ul>
+<li>CC: GO:0045275 respiratory chain complex III (NOT obsolete GO:0005750); GO:0005743 mitochondrial inner membrane; GO:0005739 mitochondrion; GO:0016020 membrane; GO:0098803 respiratory chain complex.</li>
+<li>BP: GO:0006122 mitochondrial electron transport, ubiquinol to cytochrome c; GO:0045333 cellular respiration; GO:0006119 oxidative phosphorylation; GO:0009060 aerobic respiration; GO:1902600 proton transmembrane transport.</li>
+<li>MF: GO:0008121 quinol-cytochrome-c reductase activity (the whole-complex activity; UQCRH is non-catalytic so this is contributes_to, not enables); GO:0005515 protein binding.</li>
+</ul>
+<h2 id="curation-decisions">Curation decisions</h2>
+<ul>
+<li>Structural subunit, non-catalytic. MF for core_functions = <strong>GO:0005198 structural molecule activity</strong>, plus contributes_to GO:0008121 (the complex catalytic activity). Do NOT invent a catalytic MF for the subunit itself.</li>
+<li>The two <code>enables GO:0008121</code> annotations (IMP PMID:34750991; TAS PMID:2826252) attribute the WHOLE-COMPLEX activity to the subunit. UQCRH is non-catalytic, so <code>enables</code> is an over-annotation of the subunit's function. IMP shows deletion reduces CIII activity (consistent with structural/assembly role) but does not show UQCRH itself is the catalytic entity → MODIFY toward structural molecule activity / MARK_AS_OVER_ANNOTATED. IMP not verifiable-as-catalytic; keep as over-annotated (do not REMOVE experimental).</li>
+<li>Bare <code>protein binding</code> IPIs (PMID:25416956, PMID:32296183): high-throughput Y2H binary interactions with non-CIII proteins (ARL8A, ENTREP3, NDFIP1/2, PRRG1, RNF24). MARK_AS_OVER_ANNOTATED (uninformative + likely non-physiological for a mito inner-membrane subunit).</li>
+<li>GO:0016020 membrane (IEA ARBA): too general given inner-membrane evidence → MARK_AS_OVER_ANNOTATED.</li>
+<li>GO:0098803 respiratory chain complex (IEA + TAS): correct but generic parent of GO:0045275 → KEEP_AS_NON_CORE.</li>
+<li>GO:0005739 mitochondrion (HTP/HDA): correct but generic parent of GO:0005743 → KEEP_AS_NON_CORE.</li>
+<li>GO:1902600 proton transmembrane transport (IEA from GO:0008121 inter-ontology link): the complex translocates protons via the Q-cycle; for the non-catalytic hinge subunit this is a complex-level/context role → KEEP_AS_NON_CORE.</li>
+<li>GO:0006119 oxidative phosphorylation, GO:0009060 aerobic respiration, GO:0045333 cellular respiration: broader BP context; core BP is GO:0006122 → KEEP_AS_NON_CORE.<br />
+</content><br />
+</invoke></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: P07919
+gene_symbol: UQCRH
+product_type: PROTEIN
+status: INITIALIZED
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  UQCRH (ubiquinol-cytochrome c reductase hinge protein; cytochrome b-c1 complex
+  subunit 6, also called Complex III subunit 6/VIII or the &#34;hinge&#34; protein) is a
+  small (91-residue precursor; 14-91 mature) nuclear-encoded structural subunit of
+  the mitochondrial respiratory chain Complex III (cytochrome bc1 / ubiquinol-cytochrome
+  c oxidoreductase). It is imported into mitochondria via an unusually acidic N-terminal
+  transit peptide and resides as a peripheral membrane protein on the intermembrane-space
+  side of the mitochondrial inner membrane. UQCRH is one of the low-molecular-weight,
+  non-catalytic subunits of the obligate CIII dimer; the catalytic redox centres are
+  carried by cytochrome b (MT-CYB), cytochrome c1 (CYC1) and the Rieske iron-sulfur
+  protein (UQCRFS1). The acidic hinge protein forms the docking interface that
+  &#34;hinges&#34; cytochrome c to cytochrome c1, and is required for correct interaction and
+  electron transfer between cytochrome c1 and soluble cytochrome c. Loss of UQCRH
+  destabilizes the assembled holoenzyme, reduces Complex III catalytic activity, and
+  causes mitochondrial complex III deficiency (nuclear type 11), presenting with lactic
+  acidosis, hyperammonaemia, hypoglycaemia and encephalopathy. Its overall role is
+  therefore structural/assembly and electron-transfer facilitation within Complex III
+  during aerobic respiration and oxidative phosphorylation.
+existing_annotations:
+- term:
+    id: GO:0045275
+    label: respiratory chain complex III
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred assignment of UQCRH as a component of respiratory
+      chain Complex III (cytochrome bc1). This is the correct, specific complex for
+      this subunit and is strongly supported by structural, biochemical and disease
+      evidence.
+    action: ACCEPT
+    reason: &gt;-
+      UQCRH is a bona fide low-molecular-weight subunit of the 11-subunit cytochrome
+      b-c1 complex (CIII); this is confirmed experimentally by cryo-EM structure and
+      by the CIII deficiency caused by its loss. GO:0045275 is the current, correct
+      term (the legacy GO:0005750 is obsolete).
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        encodes a structural complex III (CIII) subunit
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        6 low-molecular
+        weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,
+- term:
+    id: GO:0006122
+    label: mitochondrial electron transport, ubiquinol to cytochrome c
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Phylogenetically-inferred involvement in the Complex III reaction that transfers
+      electrons from ubiquinol to cytochrome c. This is the core biological process
+      of Complex III and the most specific correct BP term for this subunit.
+    action: ACCEPT
+    reason: &gt;-
+      As a subunit of CIII, UQCRH participates in the ubiquinol-to-cytochrome-c
+      electron transport reaction; the hinge protein specifically mediates the
+      cytochrome c1-cytochrome c docking/electron-transfer step. This is the
+      representative core BP.
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        CIII transports electrons from ubiquinol to cytochrome c and translocates
+        protons across the inner mitochondrial membrane
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase
+        in
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Subcellular-location mapping to the mitochondrial inner membrane, consistent
+      with UniProt annotation of UQCRH as a peripheral inner-membrane protein on the
+      intermembrane side.
+    action: ACCEPT
+    reason: &gt;-
+      Correct and specific localization for a CIII subunit; independently supported
+      by experimental IDA (PMID:28844695, ComplexPortal) and by UniProt subcellular
+      location.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0006122
+    label: mitochondrial electron transport, ubiquinol to cytochrome c
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      InterPro2GO mapping (IPR003422, Cyt_b-c1_6 / hinge domain) to the CIII electron
+      transport process. Duplicates the IBA core BP term via an orthogonal, domain-based
+      line of evidence.
+    action: ACCEPT
+    reason: &gt;-
+      The hinge-domain signature correctly implies participation in ubiquinol-to-cytochrome-c
+      electron transport; consistent with the IBA annotation. Duplicate of the core BP
+      is acceptable.
+    supported_by:
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase
+        in
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Generic ARBA electronic annotation to &#34;membrane&#34;. This is a high-level parent
+      of the specific and experimentally supported mitochondrial inner membrane term.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Not wrong, but uninformatively general: the specific location (GO:0005743
+      mitochondrial inner membrane) is well established, so the bare &#34;membrane&#34; term
+      adds no information and should not be treated as a core localization.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ARBA electronic annotation placing UQCRH in a (generic) respiratory chain
+      complex. Correct but is the parent of the specific term respiratory chain
+      complex III (GO:0045275).
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate but less specific than GO:0045275, which captures the exact complex.
+      Retain as a valid but non-core (redundant-parent) annotation.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        6 low-molecular
+        weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,
+- term:
+    id: GO:1902600
+    label: proton transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      Logically-inferred BP from the quinol-cytochrome-c reductase activity term:
+      Complex III couples electron transfer to translocation of protons across the
+      inner membrane in the Q cycle.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The proton translocation is a genuine, complex-level consequence of the CIII
+      reaction, but UQCRH is a non-catalytic hinge subunit that does not itself
+      conduct protons; this is a context/complex-level role rather than the subunit&#39;s
+      core function. Keep as non-core.
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        CIII transports electrons from ubiquinol to cytochrome c and translocates
+        protons across the inner mitochondrial membrane
+    - reference_id: Reactome:R-HSA-164651
+      supporting_text: &gt;-
+        complex III transfers electrons from ubiquinol to cytochrome c, linking this
+        process to translocation of protons across the membrane
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:25416956
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a proteome-scale binary interactome (Y2H) screen.
+      The reported partners (e.g. ARL8A, RNF24, ENTREP3) are not Complex III subunits.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      &#34;Protein binding&#34; is uninformative and does not describe a molecular function;
+      the high-throughput binary interactors are cytosolic/endosomal proteins with no
+      obvious physiological relationship to a mitochondrial inner-membrane CIII subunit,
+      so this is likely a non-specific/spurious interaction. Retained (not removed, per
+      policy for experimental IPIs) but flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:25416956
+      supporting_text: A proteome-scale map of the human interactome network.
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:32296183
+  qualifier: enables
+  review:
+    summary: &gt;-
+      Bare &#34;protein binding&#34; from a reference binary-interactome (HuRI, Y2H) map.
+      Partners (e.g. NDFIP1, NDFIP2, PRRG1) are not Complex III components.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Same rationale as the other protein-binding IPI: uninformative MF term and
+      non-CIII high-throughput binary partners with no established physiological role
+      for this inner-membrane subunit. Retained but flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:32296183
+      supporting_text: A reference map of the human binary protein interactome.
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: IDA
+  original_reference_id: PMID:28844695
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Direct assay (ComplexPortal, from cryo-EM of the human respiratory megacomplex)
+      localizing UQCRH to the mitochondrial inner membrane as part of Complex III.
+    action: ACCEPT
+    reason: &gt;-
+      Experimental (IDA) localization to the correct, specific compartment; the cryo-EM
+      structure resolves UQCRH within the membrane-embedded CIII dimer. Core localization.
+    supported_by:
+    - reference_id: PMID:28844695
+      supporting_text: &gt;-
+        are positioned to accept electrons on the surface of the c1 state CIII dimer
+- term:
+    id: GO:0006122
+    label: mitochondrial electron transport, ubiquinol to cytochrome c
+  evidence_type: NAS
+  original_reference_id: PMID:28844695
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ComplexPortal (NAS) involvement of UQCRH in the ubiquinol-to-cytochrome-c
+      electron transport reaction of Complex III.
+    action: ACCEPT
+    reason: &gt;-
+      Correct core BP for a CIII subunit; the megacomplex structure shows cytochrome c
+      docking on the c1-state CIII dimer, the reaction in which UQCRH&#39;s hinge role
+      operates. Duplicate of the core BP term.
+    supported_by:
+    - reference_id: PMID:28844695
+      supporting_text: &gt;-
+        are positioned to accept electrons on the surface of the c1 state CIII dimer
+- term:
+    id: GO:0045275
+    label: respiratory chain complex III
+  evidence_type: IPI
+  original_reference_id: PMID:28844695
+  qualifier: part_of
+  review:
+    summary: &gt;-
+      ComplexPortal (IPI) assignment of UQCRH as a part of respiratory chain Complex III,
+      based on the cryo-EM megacomplex structure.
+    action: ACCEPT
+    reason: &gt;-
+      Experimentally supported membership of the correct, specific complex; consistent
+      with the IBA annotation and with UniProt&#39;s 11-subunit CIII composition. Core CC.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        6 low-molecular
+        weight protein subunits UQCRH/QCR6, UQCRB/QCR7, UQCRQ/QCR8,
+- term:
+    id: GO:0045333
+    label: cellular respiration
+  evidence_type: NAS
+  original_reference_id: PMID:28844695
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      ComplexPortal (NAS) involvement in cellular respiration, reflecting Complex III&#39;s
+      role in the respiratory electron transport chain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct high-level BP context, but broader than the specific core term GO:0006122;
+      keep as valid non-core.
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        CIII transports electrons from ubiquinol to cytochrome c and translocates
+        protons across the inner mitochondrial membrane
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HTP
+  original_reference_id: PMID:34800366
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput mitochondrial proteome localization to the mitochondrion.
+      Correct but a generic parent of the specific inner-membrane localization.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate compartment but less specific than GO:0005743 (mitochondrial inner
+      membrane), which is experimentally established; keep as valid non-core.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Sequence-similarity transfer (from ortholog UniProtKB:P00127) of the mitochondrial
+      inner membrane localization.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization; consistent with experimental IDA and UniProt.
+      Duplicate of the core CC term via orthology.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0008121
+    label: quinol-cytochrome-c reductase activity
+  evidence_type: IMP
+  original_reference_id: PMID:34750991
+  qualifier: enables
+  review:
+    summary: &gt;-
+      IMP based on the homozygous two-exon UQCRH deletion, which reduces Complex III
+      (quinol-cytochrome-c reductase) activity to ~50-60% of control. This is the
+      whole-complex catalytic activity; UQCRH is a non-catalytic structural/hinge
+      subunit, so the loss of activity reflects a structural/assembly requirement,
+      not catalysis by UQCRH itself.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      The catalytic centres of CIII are carried by cytochrome b (MT-CYB), cytochrome c1
+      (CYC1) and the Rieske protein (UQCRFS1); UQCRH is explicitly a structural subunit
+      whose precise function &#34;remains to be fully elucidated&#34; and which &#34;hinges&#34;
+      cytochrome c to c1. The IMP phenotype (loss of UQCRH lowers CIII activity) is
+      fully explained by a structural/assembly role, and does not demonstrate that UQCRH
+      itself enables quinol-cytochrome-c reductase catalysis. Assigning the complex&#39;s
+      catalytic MF to this non-catalytic subunit is an over-annotation; the subunit&#39;s
+      MF is better captured as structural molecule activity (GO:0005198) contributing to
+      the complex activity. Retained (experimental) but flagged.
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        confirmed a specific decrease of CIII activity to approximately 60% compared
+        to control cell lines
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        remains to be fully elucidated
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        and &#39;hinges&#39; cytochrome c with cytochrome c1
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:20833797
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      High-throughput direct assay (mitochondrial phosphoproteome of human muscle)
+      localizing UQCRH to the mitochondrion.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but generic parent of the specific inner-membrane localization; keep as
+      valid non-core.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-164651
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) localization to the mitochondrial inner membrane, from the pathway
+      describing electron transfer from ubiquinol to cytochrome c by Complex III.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization consistent with experimental and UniProt evidence.
+      Duplicate of the core CC term.
+    supported_by:
+    - reference_id: Reactome:R-HSA-164651
+      supporting_text: &gt;-
+        complex III transfers electrons from ubiquinol to cytochrome c, linking this
+        process to translocation of protons across the membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9906017
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner-membrane localization from the CIII assembly pathway
+      (UQCRFS1 processing). Correct localization for the assembled complex context.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization; consistent with all other lines of evidence.
+      Duplicate of the core CC term.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0005743
+    label: mitochondrial inner membrane
+  evidence_type: TAS
+  original_reference_id: Reactome:R-HSA-9906042
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Reactome (TAS) inner-membrane localization from the CIII assembly pathway
+      (TTC19 clearance of UQCRFS1 fragments). Correct localization for the complex context.
+    action: ACCEPT
+    reason: &gt;-
+      Correct, specific localization; consistent with all other evidence. Duplicate of
+      the core CC term.
+    supported_by:
+    - reference_id: file:human/UQCRH/UQCRH-uniprot.txt
+      supporting_text: &gt;-
+        Mitochondrion inner membrane
+- term:
+    id: GO:0006119
+    label: oxidative phosphorylation
+  evidence_type: TAS
+  original_reference_id: PMID:2826252
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS involvement in oxidative phosphorylation, reflecting Complex III&#39;s place in
+      the OXPHOS electron transport chain that drives ATP synthesis.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct high-level BP context but broader than the specific core term GO:0006122;
+      keep as valid non-core.
+    supported_by:
+    - reference_id: PMID:34750991
+      supporting_text: &gt;-
+        CIII transports electrons from ubiquinol to cytochrome c and translocates
+        protons across the inner mitochondrial membrane
+- term:
+    id: GO:0008121
+    label: quinol-cytochrome-c reductase activity
+  evidence_type: TAS
+  original_reference_id: PMID:2826252
+  qualifier: enables
+  review:
+    summary: &gt;-
+      TAS (PINC) assignment of quinol-cytochrome-c reductase activity, i.e. the whole
+      Complex III catalytic activity, to UQCRH. UQCRH is the non-catalytic hinge subunit.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      As with the IMP annotation to the same term, this attributes the complex&#39;s
+      catalytic MF to a structural, non-catalytic subunit. The 1987 paper itself
+      describes UQCRH only as a subunit that &#34;hinges&#34; cytochrome c to c1, not as the
+      catalytic entity. Better represented as structural molecule activity contributing
+      to the complex activity; flagged as over-annotation.
+    supported_by:
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        and &#39;hinges&#39; cytochrome c with cytochrome c1
+- term:
+    id: GO:0009060
+    label: aerobic respiration
+  evidence_type: TAS
+  original_reference_id: PMID:2826252
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      TAS involvement in aerobic respiration, reflecting the role of the ubiquinol-cytochrome-c
+      reductase in the aerobic respiratory chain.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct high-level BP context but broader than the specific core term GO:0006122;
+      keep as valid non-core.
+    supported_by:
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase
+        in
+- term:
+    id: GO:0098803
+    label: respiratory chain complex
+  evidence_type: TAS
+  original_reference_id: PMID:2826252
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      TAS assignment of UQCRH to a respiratory chain complex. Correct but generic parent
+      of the specific respiratory chain complex III term.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Accurate but less specific than GO:0045275 (respiratory chain complex III); keep
+      as valid non-core.
+    supported_by:
+    - reference_id: PMID:2826252
+      supporting_text: &gt;-
+        Mitochondrial hinge protein is a subunit of ubiquinol-cytochrome-c reductase
+        in
+core_functions:
+- description: &gt;-
+    Non-catalytic structural (hinge) subunit of mitochondrial respiratory Complex III
+    (cytochrome bc1); provides the acidic docking interface that positions cytochrome c
+    against cytochrome c1, contributing to the quinol-cytochrome-c reductase activity of
+    the assembled complex and stabilizing the holoenzyme.
+  molecular_function:
+    id: GO:0005198
+    label: structural molecule activity
+  directly_involved_in:
+  - id: GO:0006122
+    label: mitochondrial electron transport, ubiquinol to cytochrome c
+  locations:
+  - id: GO:0005743
+    label: mitochondrial inner membrane
+  in_complex:
+    id: GO:0045275
+    label: respiratory chain complex III
+  contributes_to_molecular_function:
+    id: GO:0008121
+    label: quinol-cytochrome-c reductase activity
+  supported_by:
+  - reference_id: PMID:2826252
+    supporting_text: &gt;-
+      and &#39;hinges&#39; cytochrome c with cytochrome c1
+  - reference_id: PMID:34750991
+    supporting_text: &gt;-
+      encodes a structural complex III (CIII) subunit
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    Does UQCRH have any role beyond CIII assembly/structure and cytochrome c docking
+    (e.g. a regulatory or supercomplex-organizing role), given the altered supercomplex
+    distribution observed upon its loss?
+suggested_experiments:
+- description: &gt;-
+    Structure-guided mutagenesis of the acidic N-terminal region and the cytochrome c
+    docking surface of UQCRH to quantify effects on cytochrome c1-cytochrome c electron
+    transfer versus overall CIII assembly and stability.
+  hypothesis: &gt;-
+    The acidic hinge region of UQCRH is specifically required for cytochrome c docking
+    and c1-to-c electron transfer, separable from its contribution to CIII holoenzyme
+    assembly/stability.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs
+    by curator judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location
+    vocabulary mapping, accompanied by conservative changes to GO terms applied by
+    UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:20833797
+  title: Phosphoproteome analysis of functional mitochondria isolated from resting
+    human muscle reveals extensive phosphorylation of inner membrane protein complexes
+    and enzymes.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-throughput mitochondrial phosphoproteome; supports mitochondrion localization
+      only (HDA).
+- id: PMID:25416956
+  title: A proteome-scale map of the human interactome network.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Proteome-scale binary interactome; source of a bare protein-binding IPI with
+      non-CIII partners; not informative for UQCRH&#39;s core function.
+- id: PMID:2826252
+  title: An extremely acidic amino-terminal presequence of the precursor for the human
+    mitochondrial hinge protein.
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Original cloning of the human hinge protein; establishes it as a CIII subunit that
+      &#34;hinges&#34; cytochrome c to cytochrome c1 and has an unusually acidic import presequence.
+- id: PMID:28844695
+  title: Architecture of Human Mitochondrial Respiratory Megacomplex I(2)III(2)IV(2).
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Cryo-EM of the human respiratory megacomplex; resolves UQCRH within the CIII dimer
+      in the inner membrane; basis for ComplexPortal IDA/IPI/NAS annotations.
+- id: PMID:32296183
+  title: A reference map of the human binary protein interactome.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      HuRI reference binary interactome; source of a bare protein-binding IPI with
+      non-CIII partners; not informative for UQCRH&#39;s core function.
+- id: PMID:34750991
+  title: &#39;Characterising a homozygous two-exon deletion in UQCRH: comparing human
+    and mouse phenotypes.&#39;
+  findings: []
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      First disease report and functional (IMP) study; homozygous UQCRH deletion causes
+      CIII deficiency (~50-60% residual activity) in patients and a matching mouse model;
+      explicitly describes UQCRH as a structural CIII subunit that links cytochromes c and c1.
+- id: PMID:34800366
+  title: Quantitative high-confidence human mitochondrial proteome and its dynamics
+    in cellular context.
+  findings: []
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      High-confidence mitochondrial proteome; supports mitochondrion localization (HTP).
+- id: Reactome:R-HSA-164651
+  title: Electron transfer from ubiquinol to cytochrome c of complex III
+  findings: []
+- id: Reactome:R-HSA-9906017
+  title: Unknown peptidase cleaves UQCRFS1 subunit
+  findings: []
+- id: Reactome:R-HSA-9906042
+  title: TTC19 clears UQCRFS1 fragments from Complex III
+  findings: []
+- id: file:human/UQCRH/UQCRH-uniprot.txt
+  title: UniProtKB P07919 (QCR6_HUMAN) Cytochrome b-c1 complex subunit 6, mitochondrial
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
