@@ -251,22 +251,107 @@ def scan_homology(components: list[Component], taxa: list[str],
     return rows
 
 
+def _acc_from_name(name: str) -> str:
+    """Extract a UniProt accession from a FASTA/hit name (``tr|ACC|ID`` -> ``ACC``)."""
+    parts = name.split("|")
+    return parts[1] if len(parts) >= 2 else name
+
+
+def scan_rbh(components: list[Component], taxa: list[str], source_taxon: str,
+             cache_dir: Path, evalue: float = DEFAULT_EVALUE) -> list[dict]:
+    """Reciprocal-best-hit ortholog assignment (disambiguates paralogs).
+
+    For every exemplar of every component: forward-search it against each target
+    proteome (best hit H), then reverse-search H against the *source* proteome (the
+    exemplars' own organism); the pair is a reciprocal best hit iff H maps back to
+    that exemplar. This is what distinguishes true 1:1 orthologs from paralogs when a
+    component's family is broad (e.g. tandem amidase paralogs AmiC1/AmiC2).
+    """
+    try:
+        import pyhmmer  # noqa: F401
+    except ImportError as e:  # pragma: no cover
+        raise RuntimeError("RBH requires 'pyhmmer' (uv add pyhmmer).") from e
+    import pyhmmer
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    alph = pyhmmer.easel.Alphabet.amino()
+
+    def _proteome_block(upid: str):
+        fa = _download(f"{UNIPROT}/uniprotkb/stream?query=(proteome:{upid})"
+                       f"&format=fasta&includeIsoform=false", cache_dir / f"{upid}.fasta")
+        with pyhmmer.easel.SequenceFile(str(fa), digital=True, alphabet=alph) as sf:
+            return sf.read_block()
+
+    src_upid = reference_proteome(source_taxon)
+    if not src_upid:
+        raise RuntimeError(f"No reference proteome for source taxon {source_taxon}")
+    src_block = _proteome_block(src_upid)
+
+    # exemplars to test: (component, exemplar_acc)
+    pairs = [(c, acc) for c in components for acc in c.exemplars]
+
+    rows: list[dict] = []
+    for tax in taxa:
+        if tax == source_taxon:
+            continue
+        tgt_upid = reference_proteome(tax)
+        if not tgt_upid:
+            continue
+        tgt_block = _proteome_block(tgt_upid)
+        tgt_by_name = {(s.name.decode() if isinstance(s.name, (bytes, bytearray)) else s.name): s
+                       for s in tgt_block}
+        for c, acc in pairs:
+            fa = _download(f"{UNIPROT}/uniprotkb/{acc}.fasta", cache_dir / f"{acc}.fasta")
+            with pyhmmer.easel.SequenceFile(str(fa), digital=True, alphabet=alph) as sf:
+                q = next(iter(sf))
+            q.name = acc.encode()
+            fwd = pyhmmer.plan7.Pipeline(alph).search_seq(q, tgt_block)
+            if len(fwd) == 0:
+                rows.append(dict(component=c.label, exemplar=acc, taxon=tax,
+                                 fwd_hit="-", fwd_evalue="", rev_hit="", reciprocal=False))
+                continue
+            best = fwd[0]
+            hit_full = best.name.decode() if isinstance(best.name, (bytes, bytearray)) else best.name
+            hit_acc = _acc_from_name(hit_full)
+            # reverse search the hit sequence against the source proteome
+            hseq = tgt_by_name.get(hit_full)
+            rev_acc = ""
+            if hseq is not None:
+                rev = pyhmmer.plan7.Pipeline(alph).search_seq(hseq, src_block)
+                if len(rev) > 0:
+                    rname = rev[0].name.decode() if isinstance(rev[0].name, (bytes, bytearray)) else rev[0].name
+                    rev_acc = _acc_from_name(rname)
+            rows.append(dict(component=c.label, exemplar=acc, taxon=tax,
+                             fwd_hit=hit_acc, fwd_evalue=f"{best.evalue:.1e}",
+                             rev_hit=rev_acc, reciprocal=(rev_acc == acc)))
+    return rows
+
+
 def load_module(path: Path) -> dict:
     return yaml.safe_load(Path(path).read_text()) or {}
 
 
 def scan_module(module_path: Path, taxa: list[str], *, homology: bool = False,
+                rbh: bool = False, source_taxon: Optional[str] = None,
                 cache_dir: Optional[Path] = None,
                 evalue: float = DEFAULT_EVALUE) -> dict[str, list[dict]]:
-    """Run the family scan (and optionally homology) for one module. Returns tables."""
+    """Run the family scan (and optionally homology / RBH) for one module.
+
+    RBH requires ``source_taxon`` -- the taxon of the module's representative-member
+    exemplars (e.g. Nostoc PCC 7120 = 103690 for the septal-junction module).
+    """
     data = load_module(module_path)
     components = extract_components(data)
+    cache = cache_dir or (Path(module_path).parent / ".scan_cache")
     out: dict[str, list[dict]] = {
         "components": [dict(component=c.label, family_terms=";".join(c.family_terms) or "(none)",
                             exemplars=";".join(c.exemplars) or "(none)") for c in components],
         "family_membership": scan_family_membership(components, taxa),
     }
     if homology:
-        cache = cache_dir or (Path(module_path).parent / ".scan_cache")
         out["homology"] = scan_homology(components, taxa, cache, evalue)
+    if rbh:
+        if not source_taxon:
+            raise ValueError("rbh=True requires source_taxon (the exemplars' organism taxon id)")
+        out["rbh"] = scan_rbh(components, taxa, source_taxon, cache, evalue)
     return out

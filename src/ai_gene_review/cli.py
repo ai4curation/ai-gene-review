@@ -3748,6 +3748,15 @@ def scan_module(
     homology: Annotated[
         bool, typer.Option("--homology", help="Also run phmmer homology (needs pyhmmer)")
     ] = False,
+    rbh: Annotated[
+        bool, typer.Option("--rbh", help="Reciprocal-best-hit ortholog assignment "
+                           "(disambiguates paralogs; needs --source-taxon and pyhmmer)")
+    ] = False,
+    source_taxon: Annotated[
+        Optional[str],
+        typer.Option("--source-taxon", help="Taxon id of the module's exemplar organism "
+                     "(required for --rbh; e.g. 103690 for Nostoc PCC 7120)"),
+    ] = None,
     out_dir: Annotated[
         Optional[Path],
         typer.Option("--out", "-o", help="Directory for result TSVs (default: alongside module)"),
@@ -3779,7 +3788,8 @@ def scan_module(
         typer.echo("Provide --taxa and/or --targets", err=True)
         raise typer.Exit(code=1)
 
-    tables = _scan(Path(module_path), tax_list, homology=homology)
+    tables = _scan(Path(module_path), tax_list, homology=homology,
+                   rbh=rbh, source_taxon=source_taxon)
 
     def _lab(tid: str) -> str:
         return labels.get(tid, tid)
@@ -3811,6 +3821,13 @@ def scan_module(
                 else:
                     cells.append(f"{'Y' if r['detected'] else 'n'}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
             typer.echo(comp + "\t" + "\t".join(cells))
+
+    if rbh:
+        typer.echo("\nReciprocal best hits (reciprocal = true 1:1 ortholog):")
+        typer.echo("exemplar\ttaxon\tfwd_hit\tfwd_E\trev_hit\treciprocal")
+        for r in tables.get("rbh", []):
+            typer.echo(f"{r['exemplar']}\t{r['taxon']}\t{r['fwd_hit']}\t{r['fwd_evalue']}"
+                       f"\t{r['rev_hit']}\t{r['reciprocal']}")
 
     out = out_dir or Path(module_path).with_suffix("")
     out = Path(out)

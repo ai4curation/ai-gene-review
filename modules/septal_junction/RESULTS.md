@@ -75,6 +75,31 @@ High-confidence orthologs detected in the two positive genomes (the "gap-fill" c
 | SepJ | B2J1N1 | Q3MGV3 | exemplar homology (broad domain) |
 | AmiC | B2J2S4 (best) | Q3MD47 (best) | homology; paralog assignment needs RBH |
 
+## Reciprocal-best-hit ortholog assignment (`--rbh`)
+
+Because several components are grounded on broad domains, a forward best-hit can land on a
+paralog. Running RBH against the exemplars' source genome (Nostoc PCC 7120, taxon 103690)
+confirms 1:1 orthology and, critically, **disambiguates the tandem amidase paralogs**:
+
+```
+ai-gene-review scan-module modules/septal_junction.yaml \
+  --taxa 63737 --source-taxon 103690 --rbh
+```
+
+| 7120 exemplar | → NOSP7 fwd hit | → 7120 rev hit | reciprocal |
+|---------------|-----------------|----------------|:----------:|
+| FraD P46079 | B2IXC8 | P46079 | ✓ |
+| FraC P46078 | B2IXC9 | P46078 | ✓ |
+| FraE A0ACD7RSN5 | B2IXC7 | A0ACD7RSN5 | ✓ |
+| SepN A0ACD7RWW5 | B2IXD4 | A0ACD7RWW5 | ✓ |
+| SepJ A0ACD7RSI0 | B2J1N1 | A0ACD7RSI0 | ✓ |
+| **AmiC2** A0ACD7S2F2 | **B2J2S4** | A0ACD7S2F2 | ✓ |
+| **AmiC1** A0ACD7S1M0 | **B2J2S3** | A0ACD7S1M0 | ✓ |
+
+Every component is a reciprocal best hit — independently confirming the FraD/FraC/FraE/SepN/
+SepJ ortholog calls — and the two NOSP7 amidases resolve cleanly: **B2J2S4 = AmiC2 ortholog,
+B2J2S3 = AmiC1 ortholog** (a tandem pair, mirroring the 7120 alr0093/alr0092 arrangement).
+
 ## Interpretation for the module
 
 - The module scans a new genome successfully; both positive genomes contain detectable
