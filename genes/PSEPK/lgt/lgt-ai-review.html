@@ -1,0 +1,2190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lgt - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lgt</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88CN8" target="_blank" class="term-link">
+                        Q88CN8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lgt";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88CN8" data-a="DESCRIPTION: lgt encodes a multi-pass inner-membrane phosphatid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>lgt encodes a multi-pass inner-membrane phosphatidylglycerol--prolipoprotein diacylglyceryl transferase that catalyzes the first lipidation step of bacterial lipoprotein maturation.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CN8" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Plasma membrane is the correct GO cellular-component term for this bacterial inner-membrane Lgt enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt describes PSEPK Lgt as a multi-pass cell inner membrane protein and GOA records the corresponding bacterial plasma membrane localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cell inner membrane</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Multi-pass membrane protein</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005886	plasma membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008961" target="_blank" class="term-link">
+                                    GO:0008961
+                                </a>
+                            </span>
+                            <span class="term-label">phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CN8" data-a="GO:0008961" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> GO:0008961 is the exact molecular function for Lgt.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt/HAMAP names PP_5142 as phosphatidylglycerol--prolipoprotein diacylglyceryl transferase, assigns EC 2.5.1.145, and gives the Rhea reaction transferring a diacylglyceryl group from phosphatidylglycerol to a prolipoprotein cysteine.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">RecName: Full=Phosphatidylglycerol--prolipoprotein diacylglyceryl transferase</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">EC=2.5.1.145</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=L-cysteinyl-[prolipoprotein] + a 1,2-diacyl-sn-glycero-3-</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008961	phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The functional assignment for Q88CN8 derives from the Lgt family assignment (IPR001640, Pfam PF01790) and HAMAP rule MF_01147</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042158" target="_blank" class="term-link">
+                                    GO:0042158
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88CN8" data-a="GO:0042158" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lipoprotein biosynthesis is the correct process for Lgt&#39;s prolipoprotein lipidation reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Lgt catalyzes the diacylglyceryl transfer reaction described by UniProt as the first step in mature bacterial lipoprotein formation, so the lipoprotein biosynthetic process annotation is appropriate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">the first step in the formation of mature</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Protein modification; lipoprotein biosynthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/lgt/lgt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0042158	lipoprotein biosynthetic process</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfer of a diacylglyceryl group from phosphatidylglycerol to the conserved N-terminal cysteine of a prolipoprotein during bacterial lipoprotein maturation.</h3>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="FUNCTION: Transfer of a diacylglyceryl group from phosphatid..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008961" target="_blank" class="term-link">
+                            phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042158" target="_blank" class="term-link">
+                                lipoprotein biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lgt/lgt-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">RecName: Full=Phosphatidylglycerol--prolipoprotein diacylglyceryl transferase</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lgt/lgt-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">PATHWAY: Protein modification; lipoprotein biosynthesis</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lgt/lgt-goa.tsv
+
+                        </span>
+
+                        <div class="finding-text">GO:0008961	phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lgt/lgt-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for lgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt/HAMAP supplies the reviewed Lgt name, EC/Rhea reaction, lipoprotein biosynthesis pathway, multi-pass inner-membrane location, and Lgt-family assignment.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lgt/lgt-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for lgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The fetched GOA table contains the three annotations reviewed for lgt.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:interpro/panther/PTHR30589/PTHR30589-metadata.yaml
+
+                    </span>
+                </div>
+
+                <div class="reference-title">PANTHER family metadata for lgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PANTHER places Lgt in the prolipoprotein diacylglyceryl transferase family, integrated with InterPro IPR001640.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lgt/lgt-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for lgt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The OpenScientist gene report confirms Q88CN8/PP_5142 as a bona fide Lgt-family phosphatidylglycerol--prolipoprotein diacylglyceryl transferase, finds no gene-symbol ambiguity, and notes that KT2440-specific biochemical evidence has not been located.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is PP_5142 essential under standard KT2440 growth conditions, and are any noncanonical lipoprotein lipidation routes present in this strain?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="Q: Is PP_5142 essential under standard KT2440 growth ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which KT2440 lipoprotein substrates are most dependent on Lgt-mediated lipidation for envelope localization or function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="Q: Which KT2440 lipoprotein substrates are most depen..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_4236/Q88F63 carry an over-propagated Lgt-like annotation that should be corrected or qualified in a separate review?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="Q: Does PP_4236/Q88F63 carry an over-propagated Lgt-l..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild-type and conditional lgt-depletion KT2440 membrane proteomes to identify prolipoproteins that fail to mature or localize when Lgt activity is reduced.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: conditional depletion and membrane proteomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="EXPERIMENT: Compare wild-type and conditional lgt-depletion KT..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute PP_5142 with phosphatidylglycerol and model prolipoprotein peptides to measure diacylglyceryl transfer activity and substrate preferences.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88CN8" data-a="EXPERIMENT: Reconstitute PP_5142 with phosphatidylglycerol and..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lgt-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88CN8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *lgt* (Q88CN8, PP_5142) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-07-11T14:47:14.113239</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lgt-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lgt-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-lgt-q88cn8-pp_5142-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>lgt</em> (Q88CN8, PP_5142) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<ul>
+<li><strong>UniProt:</strong> Q88CN8</li>
+<li><strong>Gene:</strong> <em>lgt</em> (OrderedLocusName PP_5142)</li>
+<li><strong>Protein:</strong> Phosphatidylglycerol–prolipoprotein diacylglyceryl transferase; <strong>EC 2.5.1.145</strong></li>
+<li><strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (PSEPK), a Gammaproteobacterium</li>
+<li><strong>Family/Domains:</strong> Lgt family (IPR001640; Pfam PF01790); UniProt annotation derived from HAMAP rule MF_01147</li>
+</ul>
+<p><strong>Identity confirmed — no gene-symbol ambiguity.</strong> The gene symbol <em>lgt</em>, the EC number, the "phosphatidylglycerol–prolipoprotein diacylglyceryl transferase" description, and the Lgt/PF01790 family assignment all correspond precisely to a single, well-characterized and highly conserved bacterial enzyme. All literature retrieved (<em>E. coli</em>, <em>Corynebacterium</em>, <em>Listeria</em>, and pan-bacterial evolutionary/structural studies) describes exactly this enzyme. Because <em>P. putida</em> KT2440 itself has not been the subject of a dedicated Lgt biochemical study, function below is assigned from (i) the highly conserved enzyme family and HAMAP rule, (ii) mechanistic/structural work in model bacteria (directly transferable given the family's strong conservation), and (iii) direct sequence analysis of the Q88CN8 protein performed during this investigation.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <strong><em>lgt</em></strong> (UniProt <strong>Q88CN8</strong>; ordered locus <strong>PP_5142</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>phosphatidylglycerol–prolipoprotein diacylglyceryl transferase (Lgt; EC 2.5.1.145)</strong>, an integral inner-membrane enzyme that catalyzes the <strong>first and committed step of bacterial lipoprotein biogenesis</strong>. In this reaction, Lgt transfers the <em>sn</em>-1,2-diacylglyceryl moiety from the membrane phospholipid <strong>phosphatidylglycerol</strong> onto the sulfhydryl (thiol) side chain of the <strong>invariant cysteine</strong> within the "lipobox" motif of prolipoprotein signal sequences, generating a thioether-linked <em>S</em>-diacylglyceryl-prolipoprotein and releasing <em>sn</em>-glycerol-1-phosphate. This modification tethers otherwise-soluble secreted proteins to the membrane and licenses the downstream, universally conserved maturation steps (<strong>Lgt → LspA → Lnt</strong>).</p>
+<p>The identity of the <em>P. putida</em> protein is well supported. The gene symbol, EC number, Lgt family assignment (<strong>IPR001640 / Pfam PF01790</strong>), and HAMAP rule MF_01147 all agree with the biochemically characterized enzyme family. Direct sequence analysis performed during this investigation confirmed that the 268-residue <em>P. putida</em> ortholog <strong>retains the two catalytic arginines</strong> shown experimentally to be essential in <em>Escherichia coli</em> Lgt (Arg143 and Arg239), and hydropathy analysis confirmed the expected <strong>polytopic (~7 transmembrane helix) inner-membrane architecture</strong>. Lgt <em>modifies</em> other proteins for membrane anchoring but is <strong>not itself a lipoprotein</strong> — it has no cleavable signal peptide or lipobox of its own.</p>
+<p>Functionally, Lgt is <strong>essential for viability in Proteobacteria</strong>, the clade that contains <em>P. putida</em>. Its loss permeabilizes the outer membrane, causes abnormal morphology and cell death, and sensitizes cells to serum and antibiotics. Because it is essential, membrane-embedded, and structurally conserved, Lgt is an actively pursued <strong>antibacterial drug target</strong>. The enzyme performs its function at/within the <strong>cytoplasmic (inner) membrane</strong>, using two lipid-binding sites and a mechanism in which both the phospholipid substrate and the lipid-modified peptide product enter and exit the active site <strong>laterally</strong> through the lipid bilayer.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-lgt-catalyzes-the-first-committed-step-of-lipoprotein-biogenesis">Finding 1 — Lgt catalyzes the first, committed step of lipoprotein biogenesis</h3>
+<p>Lgt initiates lipoprotein maturation. The reaction it catalyzes (EC 2.5.1.145) is:</p>
+<blockquote>
+<p><strong>phosphatidylglycerol + [prolipoprotein]-L-cysteine → <em>sn</em>-1,2-diacylglyceryl-[prolipoprotein]-L-cysteine + <em>sn</em>-glycerol-1-phosphate</strong></p>
+</blockquote>
+<ul>
+<li><strong>Lipid donor:</strong> phosphatidylglycerol (PG), a native inner-membrane phospholipid.</li>
+<li><strong>Protein acceptor / substrate specificity:</strong> prolipoproteins bearing a <strong>lipobox</strong> motif (consensus [LVI]-[ASTVI]-[GAS]-<strong>C</strong>) at the end of their signal sequence. The invariant cysteine is the sole acceptor, and the diacylglyceryl group is attached via a thioether bond to its sulfhydryl.</li>
+</ul>
+<p>Substrate recognition and chemistry were defined structurally by Noland and colleagues, who describe that "<em>phosphatidylglycerol:prolipoprotein diacylglyceryl transferase (Lgt) recognizes a conserved lipobox motif within the prolipoprotein signal sequence and catalyzes the addition of diacylglycerol to an invariant cysteine</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/28698362/">PMID: 28698362</a>). This is the <strong>first and committed step</strong> of the pathway — once the diacylglyceryl group is attached, the substrate is irreversibly channeled toward becoming a mature lipoprotein. Legood and colleagues state that "<em>prolipoprotein phosphatidylglycerol diacylglyceryl transferase (Lgt) catalyzes the first and committed step</em>" of lipoprotein modification (<a href="https://pubmed.ncbi.nlm.nih.gov/42126242/">PMID: 42126242</a>). This designation is functionally important: Lgt sets the flux through the entire downstream maturation and sorting machinery.</p>
+<p>The functional assignment for Q88CN8 derives from the Lgt family assignment (IPR001640, Pfam PF01790) and HAMAP rule MF_01147, both of which map the protein onto this biochemically characterized enzyme class.</p>
+<h3 id="finding-2-lgt-is-an-integral-membrane-enzyme-with-two-lipid-binding-sites-and-a-lateral-catalytic-mechanism">Finding 2 — Lgt is an integral membrane enzyme with two lipid-binding sites and a lateral catalytic mechanism</h3>
+<p>The three-dimensional structure of <em>E. coli</em> Lgt was solved by Mao and colleagues in complex with its substrate <strong>phosphatidylglycerol</strong> (1.9 Å) and with the inhibitor <strong>palmitic acid</strong> (1.6 Å). These structures revealed <strong>two distinct lipid-binding sites</strong> and identified the catalytic architecture. The authors confirm that "<em>Lgt is an integral membrane enzyme that catalyses the first reaction of the three-step post-translational lipid modification</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>).</p>
+<p>Two conserved arginine residues, <strong>Arg143 and Arg239</strong>, were shown by complementation of <em>lgt</em>-knockout cells to be <strong>essential for diacylglyceryl transfer</strong>: "<em>revealed critical residues, including Arg143 and Arg239, that are essential for diacylglyceryl transfer</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>). These arginines are thought to stabilize the phosphate of the PG substrate / transition state and position it for nucleophilic attack by the cysteine thiolate.</p>
+<p>A defining mechanistic feature is that both the phospholipid substrate and the lipid-modified peptide product move <strong>laterally</strong> in and out of the membrane-embedded active site: "<em>substrate and product, lipid-modified lipobox-containing peptide, enter and leave the enzyme laterally relative to the lipid bilayer</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>). This reflects an enzyme whose reaction chemistry occurs at the membrane–water interface, handling hydrophobic substrates that partition into the bilayer. The chemical mechanism by which PG is <strong>activated</strong> for transfer was further dissected by Singh and colleagues, combining the X-ray structure of Lgt with that of apolipoprotein <em>N</em>-acyltransferase (<a href="https://pubmed.ncbi.nlm.nih.gov/31340643/">PMID: 31340643</a>).</p>
+<h3 id="finding-3-lgt-is-essential-for-viability-and-outer-membrane-integrity-in-proteobacteria">Finding 3 — Lgt is essential for viability and outer-membrane integrity in Proteobacteria</h3>
+<p>Deletion of <em>lgt</em> is lethal to the great majority of Gram-negative bacteria: "<em>Deletion of the lgt gene is lethal to most Gram-negative bacteria</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>). Legood and colleagues restate essentiality for the clade of interest — "<em>Due to its essentiality for cell viability in Proteobacteria</em>" — which directly includes <em>P. putida</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/42126242/">PMID: 42126242</a>).</p>
+<p>The physiological basis of this essentiality is envelope failure. Diao and colleagues showed that "<em>Lgt depletion in a clinical uropathogenic Escherichia coli strain leads to permeabilization of the outer membrane and increased sensitivity to serum killing and antibiotics</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">PMID: 33875545</a>). This links Lgt activity directly to the barrier function of the Gram-negative envelope: without lipoprotein maturation, structural and functional lipoproteins cannot be anchored in the outer membrane, and the envelope becomes leaky.</p>
+<p>Crucially, the lethality is <strong>not simply due to loss of a single abundant lipoprotein</strong>. Legood and colleagues found that Lgt depletion "<em>Leads to Abnormal Morphology and Cell Death in Escherichia coli That Is Independent of Major Lipoprotein Lpp</em>" (Braun's lipoprotein) (<a href="https://pubmed.ncbi.nlm.nih.gov/35938851/">PMID: 35938851</a>). Consistently, Diao and colleagues found Lgt inhibition "<em>Is Insensitive to Resistance Caused by Deletion of Braun's Lipoprotein</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">PMID: 33875545</a>). Essentiality therefore reflects the pathway's role in maturing the entire lipoproteome, not a single client.</p>
+<p>Essentiality is nonetheless <strong>clade-dependent</strong>. In some Actinobacteria — for example <em>Corynebacterium glutamicum</em> — Lgt is described as a "<em>unique, non-essential phosphatidylglycerol::prolipoprotein diacylglyceryl transferase</em>" (Dautin and colleagues, <a href="https://pubmed.ncbi.nlm.nih.gov/32490790/">PMID: 32490790</a>). This contrast underscores that the essentiality relevant to <em>P. putida</em> is a property of the Gram-negative envelope, where outer-membrane lipoproteins are indispensable. Because it is essential, conserved, and membrane-accessible, Lgt is a validated <strong>antibiotic target</strong>, and a small-molecule inhibitor (G2824) that blocks Lgt activity has been reported (<a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">PMID: 33875545</a>).</p>
+<h3 id="finding-4-the-p-putida-ortholog-retains-the-essential-catalytic-residues-sequence-level-evidence">Finding 4 — The <em>P. putida</em> ortholog retains the essential catalytic residues (sequence-level evidence)</h3>
+<p>Because most biochemical/structural work has used <em>E. coli</em> Lgt, it is important to establish that these conclusions transfer to Q88CN8. During this investigation, the UniProt sequences of <strong>LGT_PSEPK (Q88CN8, 268 aa)</strong> and <strong>LGT_ECOLI (P60955, 291 aa)</strong> were retrieved and aligned around the two experimentally validated catalytic arginines.</p>
+<table>
+<thead>
+<tr>
+<th>Catalytic region</th>
+<th><em>E. coli</em> (P60955)</th>
+<th><em>P. putida</em> (Q88CN8)</th>
+<th>Catalytic Arg conserved?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arg143 region</td>
+<td><code>GLGAGR143LGNFI</code></td>
+<td><code>GLGAGR·IGNFI</code> (10/11 identical)</td>
+<td><strong>Yes</strong></td>
+</tr>
+<tr>
+<td>Arg239 region</td>
+<td><code>GYGAFR239IIVEF</code></td>
+<td><code>CYGIFR·FAVEF</code></td>
+<td><strong>Yes</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Both <strong>Arg143 and Arg239</strong>, shown to be essential for diacylglyceryl transfer in <em>E. coli</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>), are conserved in the <em>P. putida</em> ortholog. The near-perfect conservation of the <code>GLGAGR</code> motif (10 of 11 residues identical) around Arg143 is especially strong evidence that the catalytic machinery — and therefore the reaction chemistry and substrate specificity — is preserved in <em>P. putida</em> Lgt. This provides a robust, residue-level bridge from the well-characterized <em>E. coli</em> enzyme to Q88CN8, reinforcing the functional assignment beyond family-level inference.</p>
+<h3 id="finding-5-lgt-is-a-polytopic-inner-membrane-protein-not-itself-a-lipoprotein">Finding 5 — Lgt is a polytopic inner-membrane protein, not itself a lipoprotein</h3>
+<p>Kyte–Doolittle hydropathy analysis of the Q88CN8 sequence (window 19, threshold 1.6) detected <strong>multiple strong transmembrane-like hydrophobic segments</strong> (approximately residues 56–76, 176–196, and 237–261), plus a hydrophobic N-terminal stretch (<code>MLPYPQIDPVALAIGPLKIHWYGLM</code>). This pattern is consistent with the <strong>polytopic ~7-transmembrane-helix architecture</strong> established for the Lgt family. The conserved catalytic motifs were localized within the sequence: the <code>GLGAGR</code> motif (Arg143 region) near positions 134–139 and the <code>FR</code> motif (Arg239 region) near position 215.</p>
+<p>Crucially, the analysis found <strong>no cleavable N-terminal signal peptide and no lipobox</strong> in Lgt itself. This establishes an important distinction: <strong>Lgt modifies lipoproteins but is not a lipoprotein</strong>. It is a resident integral membrane enzyme embedded in the cytoplasmic (inner) membrane by its transmembrane helices, and it is <em>not</em> a substrate of its own pathway. This topological conclusion is fully consistent with the structural description of <em>E. coli</em> Lgt as "<em>an integral membrane enzyme</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>).</p>
+<hr />
+<h2 id="mechanistic-model-and-interpretation">Mechanistic Model and Interpretation</h2>
+<p>Lgt sits at the <strong>head of the bacterial lipoprotein maturation pathway</strong>, one of the most conserved post-translational modification systems in bacteria.</p>
+<p><strong>Step 0 — Delivery.</strong> A preprolipoprotein is synthesized in the cytoplasm and exported across the inner membrane by the <strong>Sec</strong> (or occasionally <strong>Tat</strong>) translocon. Its signal sequence — bearing the lipobox — remains embedded in the inner membrane, presenting the invariant cysteine to enzymes on the periplasmic-facing side.</p>
+<p><strong>Step 1 — Lgt (this gene).</strong> Lgt recognizes the lipobox and transfers the diacylglyceryl group from <strong>phosphatidylglycerol</strong> onto the cysteine thiol, forming a thioether-linked <em>S</em>-diacylglyceryl-prolipoprotein and releasing <em>sn</em>-glycerol-1-phosphate. This is the <strong>committed step</strong>. Both substrate and product travel laterally through the bilayer to/from the two lipid-binding sites, and catalysis depends on the conserved arginines (Arg143/Arg239 in <em>E. coli</em>, conserved in <em>P. putida</em>).</p>
+<p><strong>Step 2 — LspA.</strong> Signal peptidase II (LspA) cleaves the signal peptide immediately upstream of the lipidated cysteine, leaving diacylglyceryl-cysteine as the new N-terminus.</p>
+<p><strong>Step 3 — Lnt.</strong> Apolipoprotein <em>N</em>-acyltransferase (Lnt) adds a third acyl chain to the free α-amino group of the cysteine, producing the mature <strong>triacylated lipoprotein</strong>.</p>
+<p><strong>Step 4 — Lol sorting.</strong> Mature lipoproteins destined for the outer membrane are extracted and trafficked by the <strong>Lol</strong> system; those with inner-membrane retention signals remain in the inner membrane.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="n">CYTOPLASM</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">Sec</span><span class="o">/</span><span class="n">Tat</span><span class="w"> </span><span class="k">export</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">preprolipoprotein</span><span class="p">)</span>
+<span class="w"> </span><span class="err">═════╪═════════════════════════════════════════</span><span class="w">  </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+<span class="w">      </span><span class="err">▼</span><span class="w">                                            </span><span class="p">(</span><span class="n">Lgt</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="n">embedded</span><span class="w"> </span><span class="n">here</span><span class="p">,</span>
+<span class="w">  </span><span class="n">preprolipoprotein</span><span class="w"> </span><span class="err">──</span><span class="n">lipobox</span><span class="err">──►</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="n">Lgt</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="err">◄──</span><span class="w"> </span><span class="n">phosphatidylglycerol</span><span class="w">   </span><span class="o">~</span><span class="mi">7</span><span class="w"> </span><span class="n">TM</span><span class="w"> </span><span class="n">helices</span><span class="p">)</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">                    </span><span class="err">▼</span><span class="w">  </span><span class="o">+</span><span class="w"> </span><span class="n">diacylglyceryl</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">Cys</span><span class="w"> </span><span class="n">thiol</span>
+<span class="w">         </span><span class="n">S</span><span class="o">-</span><span class="n">diacylglyceryl</span><span class="o">-</span><span class="n">prolipoprotein</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">                 </span><span class="p">[</span><span class="w"> </span><span class="n">LspA</span><span class="w"> </span><span class="p">]</span><span class="w">  </span><span class="k">signal</span><span class="w"> </span><span class="n">peptide</span><span class="w"> </span><span class="n">cleavage</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">                 </span><span class="p">[</span><span class="w"> </span><span class="n">Lnt</span><span class="w"> </span><span class="p">]</span><span class="w">   </span><span class="n">N</span><span class="o">-</span><span class="n">acylation</span>
+<span class="w">                    </span><span class="err">▼</span>
+<span class="w">         </span><span class="n">mature</span><span class="w"> </span><span class="n">triacylated</span><span class="w"> </span><span class="n">lipoprotein</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">                 </span><span class="p">[</span><span class="w"> </span><span class="n">Lol</span><span class="w"> </span><span class="p">]</span><span class="w">   </span><span class="n">sorting</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">OUTER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+<span class="w"> </span><span class="err">══════════════════════════════════════════════</span>
+<span class="w">   </span><span class="n">PERIPLASM</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">OUTER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+</code></pre></div>
+
+<p><strong>Localization of function.</strong> Lgt performs its chemistry <strong>at/within the cytoplasmic (inner) membrane</strong>, at the membrane–periplasm interface. It handles two hydrophobic partners — a membrane phospholipid donor and a membrane-embedded acceptor peptide — and its lateral-access mechanism reflects this. Its function is intrinsically membrane-localized and cannot occur in the aqueous cytoplasm or periplasm.</p>
+<p><strong>Why essentiality follows from function.</strong> By gating the flux of <em>all</em> lipoproteins into the maturation pathway, Lgt controls whether the cell can build a functional outer membrane. Outer-membrane lipoproteins (e.g., those involved in LPS transport, peptidoglycan attachment, and envelope stress responses) are indispensable in Proteobacteria; when Lgt is depleted, these clients cannot be lipidated and delivered, the outer membrane becomes permeable, cells become misshapen, and they die — a phenotype independent of any single lipoprotein such as Lpp. This is precisely why Lgt is essential in <em>Pseudomonas</em> and other Proteobacteria and why it is an attractive antibiotic target.</p>
+<p><strong>Transfer of evidence to <em>P. putida</em>.</strong> No dedicated biochemical study of Q88CN8 itself was found; the functional assignment rests on (i) unambiguous family/domain/HAMAP annotation, (ii) residue-level conservation of the two experimentally essential catalytic arginines demonstrated here by alignment, and (iii) conservation of the predicted polytopic inner-membrane topology. Together these make the assignment of Q88CN8 as a <em>bona fide</em> Lgt highly confident.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Paper (abbreviated)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">26729647</a></td>
+<td><em>Crystal structure of E. coli lipoprotein diacylglyceryl transferase</em></td>
+<td>Structural definition of the enzyme; two lipid-binding sites; catalytic Arg143/Arg239 essential for transfer; lateral substrate/product access; integral membrane enzyme; deletion lethal in most Gram-negatives. <strong>Primary structural/mechanistic evidence.</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28698362/">28698362</a></td>
+<td><em>Structural insights into lipoprotein N-acylation</em></td>
+<td>Defines lipobox recognition and the diacylglyceryl-addition-to-cysteine reaction; contextualizes Lgt within the multi-enzyme pathway.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31340643/">31340643</a></td>
+<td><em>Mechanism of Phosphatidylglycerol Activation Catalyzed by Prolipoprotein Diacylglyceryl Transferase</em></td>
+<td>X-ray structure; resolves how phosphatidylglycerol is activated for transfer. Mechanistic detail.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42126242/">42126242</a></td>
+<td><em>Arm and head domain in Lgt determine functional diversity among bacterial pathogens</em></td>
+<td>States Lgt catalyzes the first and committed step; essential for viability in Proteobacteria (the clade of <em>P. putida</em>).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">33875545</a></td>
+<td><em>Inhibition of E. coli Lipoprotein Diacylglyceryl Transferase...</em></td>
+<td>Lgt depletion permeabilizes the outer membrane and sensitizes to serum/antibiotics; inhibition insensitive to Lpp deletion; small-molecule inhibitor (G2824). Drug-target validation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35938851/">35938851</a></td>
+<td><em>A Defect in Lipoprotein Modification by Lgt Leads to Abnormal Morphology and Cell Death... Independent of Lpp</em></td>
+<td>Establishes that Lgt essentiality reflects the whole lipoproteome, not just Braun's lipoprotein.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32490790/">32490790</a></td>
+<td><em>Role of the unique, non-essential Lgt in [Corynebacterium]</em></td>
+<td>Provides the contrast: Lgt non-essential in some Actinobacteria; confirms the canonical reaction (diacylglyceryl to invariant Cys). Clarifies clade-dependent essentiality.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32709730/">32709730</a></td>
+<td><em>NisI Maturation and Nisin Resistance in Lactococcus lactis</em></td>
+<td>Background on lipoprotein maturation in a Gram-positive context (supporting, tangential).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32634175/">32634175</a></td>
+<td><em>TLR2 and endosomal TLR-mediated secretion of IL-10 (Listeria)</em></td>
+<td>Notes <em>lgt</em> is essential for lipoprotein formation and its immunological consequences; tangential to <em>P. putida</em> biochemistry.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41459928/">41459928</a></td>
+<td><em>Mutation of lipoprotein processing pathway gene (MRSA/β-lactam)</em></td>
+<td>Context on the medical relevance of the lipoprotein processing pathway; tangential.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on organism relevance.</strong> The strongest primary evidence (structure, mechanism, catalytic residues, essentiality) derives from <em>E. coli</em> — a Proteobacterium, like <em>P. putida</em>. The <em>Listeria</em>, <em>Lactococcus</em>, and <em>Corynebacterium</em> papers describe orthologous enzymes in Gram-positive/Actinobacterial organisms and are used only for pathway context, not to define <em>P. putida</em>-specific chemistry. Given the gene-ambiguity caveat in the research brief, only Gram-negative/Proteobacterial evidence was used to establish essentiality and mechanism for Q88CN8.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- <strong>H1 (supported):</strong> Q88CN8 is a phosphatidylglycerol–prolipoprotein diacylglyceryl transferase (EC 2.5.1.145) acting on lipobox cysteines. <em>Basis:</em> family/HAMAP assignment + directly homologous, biochemically characterized enzymes (<a href="https://pubmed.ncbi.nlm.nih.gov/28698362/">PMID: 28698362</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/42126242/">PMID: 42126242</a>).<br />
+- <strong>H2 (supported):</strong> The enzyme is a polytopic integral inner-membrane protein acting at the bilayer with a lateral-access mechanism. <em>Basis:</em> structural studies (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>) plus hydropathy analysis of Q88CN8 (this work).<br />
+- <strong>H3 (supported by inference):</strong> <em>lgt</em>/PP_5142 is essential in <em>P. putida</em>. <em>Basis:</em> essentiality across Proteobacteria/Gram-negatives (<a href="https://pubmed.ncbi.nlm.nih.gov/26729647/">PMID: 26729647</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/42126242/">PMID: 42126242</a>).<br />
+- <strong>H4 (supported):</strong> The characterized catalytic mechanism applies to <em>P. putida</em> Lgt. <em>Basis:</em> conservation of the essential Arg143/Arg239 in Q88CN8 (this work).</p>
+<p><strong>Refuted / Qualified</strong><br />
+- <strong>Universal essentiality is refuted:</strong> Lgt is dispensable in certain Actinobacteria (<a href="https://pubmed.ncbi.nlm.nih.gov/32490790/">PMID: 32490790</a>). This does not apply to <em>P. putida</em> (a Proteobacterium) but qualifies blanket "essential in all bacteria" statements.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct study of Q88CN8.</strong> No biochemical, structural, or genetic study of the <em>P. putida</em> KT2440 Lgt protein itself was identified. The functional assignment is by strong homology (family/domain/HAMAP annotation), residue conservation, and topology prediction — not by direct experiment on this ortholog.</li>
+<li><strong>Essentiality in <em>P. putida</em> is inferred, not demonstrated here.</strong> Essentiality is established for Proteobacteria in general and <em>E. coli</em> specifically; a <em>P. putida</em>-specific deletion/depletion phenotype was not located.</li>
+<li><strong>Catalytic-arginine numbering.</strong> The essential arginines are defined by <em>E. coli</em> numbering (Arg143/Arg239). The alignment confirms conservation, but exact positional numbering in the shorter Q88CN8 (268 aa vs 291 aa) will differ.</li>
+<li><strong>Client/substrate spectrum unknown for <em>P. putida</em>.</strong> The specific lipoproteome of <em>P. putida</em> KT2440 that depends on Lgt was not enumerated.</li>
+<li><strong>Topology from prediction, not experiment.</strong> The polytopic inner-membrane topology of Q88CN8 rests on hydropathy prediction plus family knowledge; no experimental topology mapping exists for this specific protein.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Confirm essentiality in <em>P. putida</em> KT2440</strong> — attempt a clean <em>lgt</em> (PP_5142) deletion; if non-viable, build a conditional depletion strain and characterize the terminal phenotype (morphology, outer-membrane permeability via NPN uptake, antibiotic/serum sensitivity), paralleling the <em>E. coli</em> studies (<a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">PMID: 33875545</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/35938851/">PMID: 35938851</a>).</li>
+<li><strong>Biochemical confirmation of activity</strong> — purify recombinant Q88CN8 in detergent/nanodiscs and assay diacylglyceryl transfer from <em>P. putida</em> PG to a synthetic <em>P. putida</em> lipobox peptide, confirming EC 2.5.1.145 activity and substrate specificity.</li>
+<li><strong>Site-directed mutagenesis of the conserved arginines</strong> — mutate the <em>P. putida</em> equivalents of Arg143/Arg239 and test loss of function by complementation, directly validating the transferred mechanism.</li>
+<li><strong>Map the <em>P. putida</em> Lgt-dependent lipoproteome</strong> — use metabolic labeling/proteomics (e.g., globomycin-based enrichment or Cys-lipidation profiling) to enumerate lipoproteins that fail to mature upon Lgt depletion.</li>
+<li><strong>Experimental topology and structure</strong> — determine membrane topology by reporter fusions and/or solve a cryo-EM/crystal structure of Q88CN8, ideally with bound PG, to confirm the two-lipid-site, lateral-access model in this organism.</li>
+<li><strong>Inhibitor cross-testing</strong> — evaluate whether known Lgt inhibitors (e.g., G2824, <a href="https://pubmed.ncbi.nlm.nih.gov/33875545/">PMID: 33875545</a>) inhibit <em>P. putida</em> Lgt, informing its utility as a broad-spectrum antibacterial target.</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>lgt</em> / <strong>PP_5142</strong> / <strong>Q88CN8</strong> in <em>Pseudomonas putida</em> KT2440 encodes <strong>phosphatidylglycerol–prolipoprotein diacylglyceryl transferase (Lgt, EC 2.5.1.145)</strong>, a polytopic integral <strong>inner-membrane</strong> enzyme that catalyzes the <strong>first and committed step of bacterial lipoprotein biogenesis</strong> — transfer of the diacylglyceryl group from phosphatidylglycerol onto the invariant lipobox cysteine of prolipoproteins. It operates within the cytoplasmic membrane via a lateral, lipid-embedded mechanism using conserved catalytic arginines that are retained in the <em>P. putida</em> sequence, initiating the conserved Lgt→LspA→Lnt maturation pathway that feeds Lol-dependent lipoprotein sorting. This activity is essential for cell viability and outer-membrane integrity in Proteobacteria, making Lgt both a cornerstone of envelope biogenesis and a validated antibacterial drug target.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lgt-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lgt-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:28698362</li>
+<li>PMID:42126242</li>
+<li>PMID:26729647</li>
+<li>PMID:31340643</li>
+<li>PMID:33875545</li>
+<li>PMID:35938851</li>
+<li>PMID:32490790</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88CN8
+gene_symbol: lgt
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: lgt encodes a multi-pass inner-membrane phosphatidylglycerol--prolipoprotein diacylglyceryl transferase that catalyzes the first lipidation step of bacterial lipoprotein maturation.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Plasma membrane is the correct GO cellular-component term for this bacterial inner-membrane Lgt enzyme.
+    action: ACCEPT
+    reason: UniProt describes PSEPK Lgt as a multi-pass cell inner membrane protein and GOA records the corresponding bacterial plasma membrane localization.
+    supported_by:
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;SUBCELLULAR LOCATION: Cell inner membrane&#34;
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;Multi-pass membrane protein&#34;
+    - reference_id: file:PSEPK/lgt/lgt-goa.tsv
+      supporting_text: &#34;GO:0005886\tplasma membrane&#34;
+- term:
+    id: GO:0008961
+    label: phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: GO:0008961 is the exact molecular function for Lgt.
+    action: ACCEPT
+    reason: UniProt/HAMAP names PP_5142 as phosphatidylglycerol--prolipoprotein diacylglyceryl transferase, assigns EC 2.5.1.145, and gives the Rhea reaction transferring a diacylglyceryl group from phosphatidylglycerol to a prolipoprotein cysteine.
+    supported_by:
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;RecName: Full=Phosphatidylglycerol--prolipoprotein diacylglyceryl transferase&#34;
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;EC=2.5.1.145&#34;
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;Reaction=L-cysteinyl-[prolipoprotein] + a 1,2-diacyl-sn-glycero-3-&#34;
+    - reference_id: file:PSEPK/lgt/lgt-goa.tsv
+      supporting_text: &#34;GO:0008961\tphosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity&#34;
+    - reference_id: file:PSEPK/lgt/lgt-deep-research-openscientist.md
+      supporting_text: &#34;The functional assignment for Q88CN8 derives from the Lgt family assignment (IPR001640, Pfam PF01790) and HAMAP rule MF_01147&#34;
+- term:
+    id: GO:0042158
+    label: lipoprotein biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Lipoprotein biosynthesis is the correct process for Lgt&#39;s prolipoprotein lipidation reaction.
+    action: ACCEPT
+    reason: Lgt catalyzes the diacylglyceryl transfer reaction described by UniProt as the first step in mature bacterial lipoprotein formation, so the lipoprotein biosynthetic process annotation is appropriate.
+    supported_by:
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;the first step in the formation of mature&#34;
+    - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+      supporting_text: &#34;PATHWAY: Protein modification; lipoprotein biosynthesis&#34;
+    - reference_id: file:PSEPK/lgt/lgt-goa.tsv
+      supporting_text: &#34;GO:0042158\tlipoprotein biosynthetic process&#34;
+references:
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/lgt/lgt-uniprot.txt
+  title: UniProtKB reviewed entry for lgt
+  findings:
+  - statement: UniProt/HAMAP supplies the reviewed Lgt name, EC/Rhea reaction, lipoprotein biosynthesis pathway, multi-pass inner-membrane location, and Lgt-family assignment.
+- id: file:PSEPK/lgt/lgt-goa.tsv
+  title: QuickGO GOA annotations for lgt
+  findings:
+  - statement: The fetched GOA table contains the three annotations reviewed for lgt.
+- id: file:interpro/panther/PTHR30589/PTHR30589-metadata.yaml
+  title: PANTHER family metadata for lgt
+  findings:
+  - statement: PANTHER places Lgt in the prolipoprotein diacylglyceryl transferase family, integrated with InterPro IPR001640.
+- id: file:PSEPK/lgt/lgt-deep-research-openscientist.md
+  title: OpenScientist gene research for lgt
+  findings:
+  - statement: The OpenScientist gene report confirms Q88CN8/PP_5142 as a bona fide Lgt-family phosphatidylglycerol--prolipoprotein diacylglyceryl transferase, finds no gene-symbol ambiguity, and notes that KT2440-specific biochemical evidence has not been located.
+core_functions:
+- description: Transfer of a diacylglyceryl group from phosphatidylglycerol to the conserved N-terminal cysteine of a prolipoprotein during bacterial lipoprotein maturation.
+  molecular_function:
+    id: GO:0008961
+    label: phosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity
+  directly_involved_in:
+  - id: GO:0042158
+    label: lipoprotein biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+    supporting_text: &#34;RecName: Full=Phosphatidylglycerol--prolipoprotein diacylglyceryl transferase&#34;
+  - reference_id: file:PSEPK/lgt/lgt-uniprot.txt
+    supporting_text: &#34;PATHWAY: Protein modification; lipoprotein biosynthesis&#34;
+  - reference_id: file:PSEPK/lgt/lgt-goa.tsv
+    supporting_text: &#34;GO:0008961\tphosphatidylglycerol-prolipoprotein diacylglyceryl transferase activity&#34;
+proposed_new_terms: []
+suggested_questions:
+- question: Is PP_5142 essential under standard KT2440 growth conditions, and are any noncanonical lipoprotein lipidation routes present in this strain?
+- question: Which KT2440 lipoprotein substrates are most dependent on Lgt-mediated lipidation for envelope localization or function?
+- question: Does PP_4236/Q88F63 carry an over-propagated Lgt-like annotation that should be corrected or qualified in a separate review?
+suggested_experiments:
+- description: Compare wild-type and conditional lgt-depletion KT2440 membrane proteomes to identify prolipoproteins that fail to mature or localize when Lgt activity is reduced.
+  experiment_type: conditional depletion and membrane proteomics
+- description: Reconstitute PP_5142 with phosphatidylglycerol and model prolipoprotein peptides to measure diacylglyceryl transfer activity and substrate preferences.
+  experiment_type: in vitro enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
